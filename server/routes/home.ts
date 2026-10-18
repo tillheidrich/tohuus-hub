@@ -91,6 +91,8 @@ const careBody = z.object({
 });
 
 const viewerOf = (req: Request) => req.actor?.userId ?? null;
+/** who asks to take a "done" back (lib/care.ts mayUndo: own ticks always, others' only an admin) */
+const undoWho = (req: Request) => ({ userId: viewerOf(req), admin: req.actor?.role === 'admin' && !req.actor?.houseGuest, actor: actorName(req) });
 /** a member with an account – not a guest (focus routes) */
 const memberOf = (req: Request) => (req.actor?.houseGuest ? null : (req.actor?.userId ?? null));
 /** a task this person may see – a private task of someone else answers 404 like a missing one */
@@ -119,7 +121,7 @@ r.get('/care', (req, res) => {
 
 r.get('/care/due', (req, res) => res.json(dueCareTasks({ viewer: viewerOf(req) })));
 /** done lately, with who did it – the work stays visible */
-r.get('/care/recent', (req, res) => res.json(recentlyDone(viewerOf(req), Math.min(60, Math.max(1, Number(req.query.days) || 14)))));
+r.get('/care/recent', (req, res) => res.json(recentlyDone(viewerOf(req), Math.min(60, Math.max(1, Number(req.query.days) || 14)), undoWho(req))));
 
 /** one task as a calendar entry to download ("In den Kalender") */
 r.get('/care/:id/ics', (req, res) => {
@@ -180,7 +182,7 @@ r.post('/care', (req, res) => {
 r.get('/care/:id', (req, res) => {
   const row = visibleTask(req, res, num(req.params.id));
   if (!row) return;
-  res.json({ ...careView(row), log: careLog(row.id), learned_every_days: learnedEveryDays(row.id) });
+  res.json({ ...careView(row), log: careLog(row.id, 20, undoWho(req)), learned_every_days: learnedEveryDays(row.id) });
 });
 
 r.patch('/care/:id', (req, res) => {
@@ -210,9 +212,15 @@ r.post('/care/:id/done', (req, res) => {
   userError(res, () => completeCareTask(num(req.params.id), actorName(req), { doneOn: b.done_on, nextDue: b.next_due, note: b.note, actorUserId: viewerOf(req) }));
 });
 
+/** Take a "done" back – the newest one of the task; `log_id` pins it (toast, "Zuletzt erledigt", history). */
 r.post('/care/:id/undo', (req, res) => {
+  const b = z.object({ log_id: z.number().int().positive().nullable().optional() }).parse(req.body ?? {});
   if (!visibleTask(req, res, num(req.params.id))) return;
-  userError(res, () => undoCareTask(num(req.params.id), actorName(req)));
+  try {
+    res.json(undoCareTask(num(req.params.id), actorName(req), { logId: b.log_id ?? null, who: undoWho(req) }));
+  } catch (e) {
+    res.status((e as { status?: number }).status ?? 400).json({ error: (e as Error).message });
+  }
 });
 
 // ---------------------------------------------------------------- focus: small steps, fresh start, gentle mode (lib/focus.ts)

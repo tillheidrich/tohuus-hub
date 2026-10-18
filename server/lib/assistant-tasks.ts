@@ -20,11 +20,14 @@ import {
   getCareTask,
   learnedEveryDays,
   listCareTasks,
+  mayUndo,
   undoCareTask,
   updateCareTask,
   type CareInput,
   type IntervalUnit,
 } from './care.js';
+import { localDay } from './catalog.js';
+import { localHour, outlookFor } from './task-outlook.js';
 import { directory } from './people.js';
 import { norm } from './text.js';
 
@@ -66,6 +69,17 @@ export const TASK_TOOL_DEFS: ToolDef[] = [
   ),
   fn('task_done', 'Mark a task as done (the next date and whose turn it is follow by themselves) – when the person says they did it.', { task: { type: 'string', description: 'task name or id' } }, ['task']),
   fn(
+    'task_undo_done',
+    'Take back the last "done" of a task when it was not done after all ("Biotonne war doch noch nicht raus", "aus Versehen abgehakt"): dates and whose turn it is go back. Only the newest entry; own entries, someone else\'s only an admin.',
+    { task: { type: 'string', description: 'task name or id' } },
+    ['task'],
+  ),
+  fn(
+    'tasks_coming_up',
+    'Heute › Demnächst: bins by the evening they go out (tonight = put out this evening; collection_day = pickup), tasks due tomorrow (Fri/Sat: next two days), tasks whose lead time started. For "Was muss heute Abend raus?", "Was kommt demnächst?".',
+    {},
+  ),
+  fn(
     'task_assign',
     'Change who keeps a task in mind, who does it, or who takes turns – only after a yes.',
     {
@@ -86,7 +100,7 @@ export const TASK_TOOL_DEFS: ToolDef[] = [
 export const TASK_TOOLS = TASK_TOOL_DEFS.map((d) => d.function.name);
 
 type Rec = (kind: string, summary: string, undo: unknown) => void;
-type Ctx = { actor: string; userId: number | null };
+type Ctx = { actor: string; userId: number | null; admin?: boolean };
 
 const WHEN: Record<string, string> = { overdue: 'overdue', today: 'due today', soon: 'due soon', ok: 'later', none: 'no date' };
 
@@ -101,7 +115,7 @@ function personKey(name: unknown, ctx: Ctx, guests = false): string | null | und
   return hit?.key;
 }
 
-function findTask(ref: unknown) {
+export function findTask(ref: unknown) {
   const all = listCareTasks({ outside: true });
   const id = typeof ref === 'number' ? ref : /^\d+$/.test(String(ref ?? '').trim()) ? Number(ref) : null;
   if (id) return all.find((x) => x.id === id);
@@ -139,6 +153,7 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
     return { tasks: xs.map(compact), more: xs.length === 30 ? 'only the first 30' : undefined };
   }
   if (name === 'tasks_overview') return tasksOverview();
+  if (name === 'tasks_coming_up') return comingUp();
   if (!ctx.userId) return { error: 'Only a signed-in member can change tasks.' };
 
   if (name === 'task_add') {
@@ -177,8 +192,26 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
   if (!task) return { error: `No task matches "${a.task}". Use tasks_list.` };
   if (name === 'task_done') {
     const out = completeCareTask(task.id, ctx.actor, { actorUserId: ctx.userId });
-    record('task_done', t('“{name}” done', { name: task.name }), { kind: 'task_undo_done', id: task.id, actor: ctx.actor });
+    // the undo takes back exactly this tick, never a newer one of somebody else
+    record('task_done', t('“{name}” done', { name: task.name }), { kind: 'task_undo_done', id: task.id, actor: ctx.actor, logId: (out as { log_id?: number }).log_id ?? null });
     return { ok: true, next_due: out.task.next_due, next_turn: out.task.doer?.name ?? null };
+  }
+  if (name === 'task_undo_done') {
+    // the app's rules (care.ts undoCareTask/mayUndo): only the newest entry; own ones, others' only an admin
+    const last = db.prepare('SELECT id, done_on, actor, actor_user_id FROM care_log WHERE task_id = ? ORDER BY id DESC LIMIT 1').get(task.id) as
+      | { id: number; done_on: string; actor: string | null; actor_user_id: number | null }
+      | undefined;
+    if (!last) return { error: t('Nothing to undo'), task: task.name };
+    const who = { userId: ctx.userId, admin: ctx.admin === true, actor: ctx.actor };
+    if (!mayUndo(last, who)) return { error: t('Only the person who did it or an admin can take it back'), done_by: last.actor, done_on: last.done_on };
+    let nextDue: string | null = null;
+    try {
+      nextDue = undoCareTask(task.id, ctx.actor, { logId: last.id, who }).next_due ?? null;
+    } catch (e) {
+      return { error: (e as Error).message };
+    }
+    record('task_undo_done', t('“{name}” is open again', { name: task.name }), { kind: 'task_redo', id: task.id, actor: last.actor ?? ctx.actor, doneOn: last.done_on, userId: last.actor_user_id });
+    return { ok: true, task: task.name, taken_back: { done_on: last.done_on, by: last.actor }, next_due: nextDue };
   }
   // task_assign
   const before = { assignee_user_id: task.assignee_user_id, doer_key: task.doer_key, rotation: task.rotation };
@@ -197,8 +230,29 @@ export function runTaskTool(ctx: Ctx, name: string, a: any, record: Rec): unknow
   return { ok: true, task: compact(out as never) };
 }
 
+/**
+ * Heute › Demnächst for the assistant (task-outlook.ts): the same selection the apps show – bins by the evening they
+ * go out, tomorrow (Fri/Sat two days), lead times. Shared tasks only.
+ */
+export function comingUp(now = new Date()) {
+  const all = listCareTasks({ outside: true });
+  const byId = new Map(all.map((x) => [x.id, x]));
+  const items = outlookFor(all as never, localDay(0), now);
+  return {
+    hour: localHour(now),
+    items: items.map((i) => ({
+      name: byId.get(i.id)?.name ?? '?',
+      when: i.when,
+      day: i.day,
+      put_out_evening_before: i.evening || undefined,
+      collection_day: i.pickup ?? undefined,
+      does_it: byId.get(i.id)?.doer?.name ?? undefined,
+    })),
+  };
+}
+
 /** Undo for the task tools (assistant-tools.ts › undo). */
-export function undoTask(u: { kind?: string; id?: number; actor?: string; before?: Record<string, unknown> }): boolean {
+export function undoTask(u: { kind?: string; id?: number; actor?: string; before?: Record<string, unknown>; logId?: number | null; doneOn?: string; userId?: number | null }): boolean {
   if (!u?.id) return false;
   const row = getCareTask(u.id);
   if (u.kind === 'task_delete') {
@@ -206,13 +260,19 @@ export function undoTask(u: { kind?: string; id?: number; actor?: string; before
     emit('care');
     return true;
   }
-  if (!row) return u.kind === 'task_undo_done' || u.kind === 'task_restore';
+  if (!row) return u.kind === 'task_undo_done' || u.kind === 'task_restore' || u.kind === 'task_redo';
   if (u.kind === 'task_undo_done') {
     try {
-      undoCareTask(u.id, u.actor ?? 'ToHuus');
+      // the tick this action made (somebody else's newer tick stays)
+      undoCareTask(u.id, u.actor ?? 'ToHuus', { logId: u.logId ?? null });
     } catch {
       /* nothing to undo */
     }
+    return true;
+  }
+  if (u.kind === 'task_redo') {
+    // "doch erledigt": the taken-back tick again, with its day and person
+    completeCareTask(u.id, u.actor ?? 'ToHuus', { doneOn: u.doneOn ?? null, actorUserId: u.userId ?? null });
     return true;
   }
   if (u.kind === 'task_restore' && u.before) {

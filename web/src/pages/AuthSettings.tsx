@@ -357,7 +357,7 @@ function PasswordCard({ a }: { a: AccountInfo }) {
       setOpen(false);
       setF({ current: '', password: '', repeat: '' });
       invalidate('auth-me', 'auth-sessions');
-      toast({ text: r.signedOut ? t('Password changed. {n} other devices were signed out.', { n: r.signedOut }) : t('Password changed.') });
+      toast({ text: r.signedOut ? t('Password changed. You were signed out everywhere else ({n} devices and connections).', { n: r.signedOut }) : t('Password changed.') });
     } catch (x) {
       setErr(errText(x));
     } finally {

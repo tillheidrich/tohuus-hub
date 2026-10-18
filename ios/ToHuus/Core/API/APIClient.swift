@@ -78,6 +78,10 @@ final class APIClient: Sendable {
             throw APIError.from(error)
         }
         let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        #if os(iOS)
+        // good moments for Apple's review dialog, and errors that rule it out for this launch (PlanMoments.swift)
+        ReviewPrompt.observe(method: req.httpMethod ?? "GET", path: req.url?.path ?? "", status: status)
+        #endif
         if (200..<300).contains(status) { return data }
         let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         if Self.serverUnreachable(status: status, json: obj, body: data) { throw APIError.offline }
@@ -88,6 +92,13 @@ final class APIClient: Sendable {
             Task { await ErrorLog.shared.record(kind: "http", message: message, route: route, status: status) }
         }
         let code = (obj?["code"] as? String) ?? (obj?["key"] as? String) ?? ""
+        #if os(iOS)
+        // no plan any more (read-only after the trial): one calm card on the main screen (PlanMoments.swift)
+        if status == 402, code == "plan.readonly" {
+            let text = message
+            DispatchQueue.main.async { NotificationCenter.default.post(name: .toHuusPlanNotice, object: text) }
+        }
+        #endif
         // 402 quota.assistant, 429 quota.receiptAi (docs/assistant.md "Limits")
         let isQuota = status == 402 || (obj?["quota"] as? Bool) == true || code.hasPrefix("quota")
         if status == 413 || code == "storage.full" { throw APIError.storageFull(message) }

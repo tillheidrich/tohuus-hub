@@ -20,6 +20,7 @@ const EXAMPLES = (): Record<ScreenContext, string[]> => ({
   guests: [t('Party on Saturday with 12 guests – what do we need?')],
   tasks: [t('What’s due today?'), t('Bathroom every Saturday, Mira and Sam take turns'), t('How do we share the housework?')],
   wishes: [t('What’s on the wish lists?'), t('Put a Lego train on my Merkliste')],
+  knowledge: [t('Mika has 29 now'), t('Make the blind measurement visible to everyone')],
 });
 
 export function AreaAssist({ path }: { path: string }) {

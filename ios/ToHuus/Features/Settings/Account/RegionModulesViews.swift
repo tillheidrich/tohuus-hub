@@ -183,6 +183,7 @@ struct ModulesView: View {
         Item(key: "money", label: L("Money"), hint: L("What food and household cost, from your receipts."), icon: "eurosign.circle"),
         Item(key: "treats", label: L("Treats"), hint: L("Wishes from the sofa: tea, a snack, a drink."), icon: "cup.and.saucer"),
         Item(key: "homeinfo", label: L("Home info"), hint: L("Care tasks and things to know about the home."), icon: "wrench.and.screwdriver"),
+        Item(key: "knowledge", label: L("What ToHuus remembers"), hint: L("Sizes, measurements, numbers. So nobody has to ask you."), icon: "brain"),
         Item(key: "guests", label: L("Guests & party"), hint: L("Guest links, a party board, orders from guests."), icon: "party.popper"),
         Item(key: "ha", label: "Home Assistant", hint: L("Only if you run Home Assistant."), icon: "house"),
     ] }

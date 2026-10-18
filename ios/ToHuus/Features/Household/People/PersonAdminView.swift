@@ -43,6 +43,8 @@ struct PersonAdminView: View {
             if canEdit { pictureSection }
             if person.kind == "child" && isAdmin { childSection }
             foodSection
+            // Haushaltswissen: sizes and other things about this person (KnowledgeView.swift)
+            if person.kind != "guest" { KnowledgeSection(api: api, ref: person.key, name: person.name, canAdd: !viewerIsGuest) }
             if isAdmin && person.kind == "guest", let g = person.guestAccess {
                 GuestAccessSections(api: api, person: person, access: g) { msg in
                     toast = ToastMessage(text: msg)

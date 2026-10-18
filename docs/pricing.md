@@ -1,4 +1,28 @@
-# Preise, Free ohne KI, "Wir können uns das nicht leisten"
+# Preise: kein Free in der Cloud, nach der Testphase „nur lesen“
+
+## Entscheidung vom 18.10.2026 (gilt)
+
+Till (18.10.2026, 03:02): „Free-User sollten wirklich nur das Nötigste haben und schnell checken, dass es ohne das Abo oder eigenen Server keinen Sinn macht.“ Entscheidung 03:06: **ToHuus Cloud hat kein Free mehr.** Grundlage: Wiki „Monetarisierung ToHuus ab Store-Start“ (18.10.2026).
+
+| Plan | What | Price |
+|---|---|---|
+| **Trial** | 14 days at Plus level with every new household, no payment details, nothing renews on its own. | 0 € |
+| **Haushalt** | Full history, price history and spending, connected households, mirrored lists, AI imports, 100 assistant messages a month, 2 GB. | 3,99 €/month or 34,99 €/year |
+| **Plus** | Haushalt plus the assistant for everyday use, week plan from the pantry, monthly analysis, substitutes, Plus recipes. 1,500 messages a month, then slower; **from 3,000 AI pauses until the month ends** (F5). 5 GB. | 5,99 €/month or 59,99 €/year |
+| **Plus for good** | optional `plus.lifetime`, same limits as Plus (incl. the AI cost cap). | set in App Store Connect |
+| **Read-only** (no plan) | After the trial or a subscription without a new plan: everything visible (full history), export, delete account/household, buy/restore, gift codes, hardship form, notification and AI-consent settings. Writing answers `402 { code: 'plan.readonly', reason: 'trial_end' }`. Ticking off the shopping list keeps working for 7 days after the end (`GRACE_DAYS`). Nothing is deleted. | – |
+| **Self-hosted** | Everything, unchanged, with your own AI. | free |
+
+- **Where:** `server/lib/plans.ts` (`afterTrial()`, `PLAN_LIMITS.readonly`, `readonlyGuard`, `READONLY_ALLOW`, `graceWrite`, `GRACE_DAYS`), wired in `server/index.ts` for `/api`. The switch back to the old Free is one place: back office › Einstellungen `trial.after` = `free` (or `TRIAL_AFTER=free`).
+- **Transition:** households without a plan when the update starts get a new 14-day trial from that moment (accounts.db schema step in `server/lib/accounts.ts`), then the same rule.
+- **Untouched:** beta gift (`beta.gift`), gift codes, hardship licences, operator plans, Plus for good. Members, children and guests never pay; one plan covers the household.
+- **AI cost cap (F5):** every model answer is priced (`server/lib/ai-prices.ts`, Mistral Small 2603 0.15/0.60 $ per million tokens, OpenRouter 18.10.2026) and added to the household (`usage_counters` kind `aiCostMicro`). From `ai.household_cost_cap` (default 3.50 USD ≈ 3 €) AI pauses for that household until the 1st (`402/429 quota.ai_paused`).
+- **End of trial (F1):** `server/lib/trial-end.ts` – mail/push 3 days before and on the last day (admins only, once per trial end, switchable), look back `GET /api/billing/trial-summary`.
+- **Apple:** subscriptions only, with a free trial run by the server, is allowed (3.1.2). The app keeps a way on at every read-only moment: plans, restore purchases, export. The iPhone app never points to buying on the web (3.1.1). App Review needs a demo household with an active trial or plan.
+
+---
+
+## Ersetzt am 18.10.2026: Entscheidung vom 15.10.2026
 
 Decision of 15 Oct 2026. Till: "In der Free-Version wirklich nur das Minimum. Man soll direkt die Testversion buchen. Und ein Funnel-Formular nach dem Motto 'Wir können uns das nicht leisten' – das landet als E-Mail bei mir, ohne dass meine Adresse sichtbar wird. Transparent: Die Abos finanzieren das mit."
 

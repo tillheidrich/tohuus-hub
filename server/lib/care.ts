@@ -676,10 +676,11 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
     } else onList = true;
     if (onList) addToShopping({ productId: p.id, text: p.name, source: 'care', addedBy: actor });
   }
+  let logId = 0;
   db.transaction(() => {
-    db.prepare('INSERT INTO care_log (task_id, done_on, actor, note, prev_last_done, prev_next_due, consumed, actor_user_id, prev_doer_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    logId = Number(db.prepare('INSERT INTO care_log (task_id, done_on, actor, note, prev_last_done, prev_next_due, consumed, actor_user_id, prev_doer_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
       id, doneOn, actor, opts.note ?? null, row.last_done, row.next_due, consumed, opts.actorUserId ?? null, row.doer_key,
-    );
+    ).lastInsertRowid);
     // sub-items start fresh for the next time; a one-off task without a next date is put away
     const fresh = row.checklist ? JSON.stringify(parseChecklist(row.checklist).map((x) => ({ ...x, done: false }))) : null;
     const oneOff = !nextDue && !row.interval_n && !row.as_needed && !ext;
@@ -690,16 +691,47 @@ export function completeCareTask(id: number, actor: string, opts: { doneOn?: str
     );
   })();
   emit('care');
-  return { task: careView(getCareTask(id)!), consumed, on_shopping_list: onList };
+  // log_id: the undo in the toast takes back exactly this tick, not a newer one of somebody else
+  return { task: careView(getCareTask(id)!), consumed, on_shopping_list: onList, log_id: logId };
 }
 
-/** Undo the last "done" (mis-tap): restores the dates and puts the consumed item back. */
-export function undoCareTask(id: number, actor: string) {
+/** Who asks to take a "done" back: the person who ticked it off may always, an admin may take back anyone's. */
+export type UndoWho = { userId?: number | null; admin?: boolean; actor?: string | null };
+
+/**
+ * May this person take this entry back? Own entries always; entries of others (or of Home Assistant, a display,
+ * the assistant) only an admin. A shared device without an account matches by its name.
+ */
+export function mayUndo(log: { actor_user_id: number | null; actor: string | null }, who: UndoWho) {
+  if (who.admin) return true;
+  if (log.actor_user_id != null) return who.userId != null && log.actor_user_id === who.userId;
+  return who.userId == null && !!who.actor && log.actor === who.actor;
+}
+
+/** The newest "done" of each task (by entry, not by day: a back-dated entry is still the newest one). */
+function newestLogIds(taskIds: number[]) {
+  if (!taskIds.length) return new Set<number>();
+  const rows = db.prepare(`SELECT MAX(id) id FROM care_log WHERE task_id IN (${taskIds.map(() => '?').join(',')}) GROUP BY task_id`).all(...taskIds) as { id: number }[];
+  return new Set(rows.map((r) => r.id));
+}
+
+/**
+ * Undo a "done" (mis-tap, or ticked off by mistake yesterday): restores the dates, who is next in turn, the
+ * sub-items stay as they are, and puts the consumed item back. Only the newest entry of a task can be taken back –
+ * the dates and the turn of later entries were worked out from it. `logId` pins the entry (so a toast or the list
+ * never takes back somebody else's newer tick); without it the newest one. With `who` the rights are checked.
+ */
+export function undoCareTask(id: number, actor: string, opts: { logId?: number | null; who?: UndoWho } = {}) {
   const last = db.prepare('SELECT * FROM care_log WHERE task_id = ? ORDER BY id DESC LIMIT 1').get(id) as
-    | { id: number; prev_last_done: string | null; prev_next_due: string | null; consumed: number; prev_doer_key: string | null }
+    | { id: number; prev_last_done: string | null; prev_next_due: string | null; consumed: number; prev_doer_key: string | null; actor: string | null; actor_user_id: number | null }
     | undefined;
   const row = getCareTask(id);
   if (!row || !last) throw userError(t('Nothing to undo'));
+  if (opts.logId != null && opts.logId !== last.id) {
+    const exists = db.prepare('SELECT 1 FROM care_log WHERE id = ? AND task_id = ?').get(opts.logId, id);
+    throw userError(exists ? t('Only the last time can be taken back') : t('Nothing to undo'));
+  }
+  if (opts.who && !mayUndo(last, opts.who)) throw Object.assign(userError(t('Only the person who did it or an admin can take it back')), { status: 403 });
   if (last.consumed > 0 && row.product_id) adjustStock({ productId: row.product_id, delta: last.consumed, reason: 'undo', actor, ref: `care:${id}` });
   db.transaction(() => {
     db.prepare(`UPDATE care_tasks SET last_done = ?, next_due = ?, archived = 0, doer_key = COALESCE(?, doer_key), updated_at = datetime('now') WHERE id = ?`).run(
@@ -715,7 +747,7 @@ export function undoCareTask(id: number, actor: string) {
  * What was done lately (stays visible – the work people did, not only what is still open): newest first, with who
  * did it. Private tasks only for their owner.
  */
-export function recentlyDone(viewer?: number | null, days = 14) {
+export function recentlyDone(viewer?: number | null, days = 14, who?: UndoWho) {
   const rows = db
     .prepare(
       `SELECT l.id, l.task_id, l.done_on, l.actor, l.actor_user_id, t.name, t.category, t.template, t.visibility, t.owner_user_id
@@ -723,9 +755,10 @@ export function recentlyDone(viewer?: number | null, days = 14) {
        WHERE l.done_on >= date('now', ?) ORDER BY l.done_on DESC, l.id DESC LIMIT 60`,
     )
     .all(`-${days} days`) as { id: number; task_id: number; done_on: string; actor: string | null; actor_user_id: number | null; name: string; category: string; template: string | null; visibility: TaskVisibility; owner_user_id: number | null }[];
-  return rows
-    .filter((r) => canSeeTask(r, viewer))
-    .map(({ owner_user_id: _o, ...r }) => r);
+  const seen = rows.filter((r) => canSeeTask(r, viewer));
+  // can_undo: the newest tick of its task, and mine (or I'm an admin) – the list offers "Rückgängig" only there
+  const newest = newestLogIds([...new Set(seen.map((r) => r.task_id))]);
+  return seen.map(({ owner_user_id: _o, ...r }) => ({ ...r, can_undo: newest.has(r.id) && mayUndo(r, who ?? { userId: viewer ?? null }) }));
 }
 
 /**
@@ -740,8 +773,12 @@ export function learnedEveryDays(taskId: number): number | null {
   return gaps[Math.floor(gaps.length / 2)];
 }
 
-export function careLog(id: number, limit = 20) {
-  return db.prepare('SELECT id, done_on, actor, note, consumed, created_at FROM care_log WHERE task_id = ? ORDER BY done_on DESC, id DESC LIMIT ?').all(id, limit);
+export function careLog(id: number, limit = 20, who?: UndoWho) {
+  const rows = db
+    .prepare('SELECT id, done_on, actor, actor_user_id, note, consumed, created_at FROM care_log WHERE task_id = ? ORDER BY done_on DESC, id DESC LIMIT ?')
+    .all(id, limit) as { id: number; done_on: string; actor: string | null; actor_user_id: number | null; note: string | null; consumed: number; created_at: string }[];
+  const newest = newestLogIds([id]);
+  return rows.map(({ actor_user_id, ...r }) => ({ ...r, can_undo: !!who && newest.has(r.id) && mayUndo({ actor_user_id, actor: r.actor }, who) }));
 }
 
 /** Find a task by id or (fuzzy) name – for MCP. */

@@ -27,7 +27,7 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [From your own server to the cloud](https://tohuus.heidrich-digital.de/help/move-to-the-cloud.html): Taking a self-hosted household into ToHuus Cloud.
 - [Self-hosting with Docker](https://tohuus.heidrich-digital.de/help/self-hosting.html): ToHuus on your own server, free under the AGPL-3.0.
 - [Privacy in short](https://tohuus.heidrich-digital.de/help/privacy-in-short.html): Where your data lives, who sees it and what never happens.
-- [Subscription and cancelling](https://tohuus.heidrich-digital.de/help/subscription.html): Free, Household and Plus, how you pay and what happens when you cancel.
+- [Subscription and cancelling](https://tohuus.heidrich-digital.de/help/subscription.html): Trial, Household and Plus, how you pay and what happens when you cancel.
 - [Frequently asked questions](https://tohuus.heidrich-digital.de/help/faq.html): Short answers to what people often ask.
 
 ## Hilfe (Deutsch)
@@ -62,7 +62,7 @@ ToHuus is a shopping and household assistant for families, couples and flatshare
 - [Selbst hosten mit Docker](https://tohuus.heidrich-digital.de/hilfe/selbst-hosten.html): ToHuus auf deinem eigenen Server, kostenlos unter AGPL-3.0.
 - [Deine Daten mitnehmen](https://tohuus.heidrich-digital.de/hilfe/daten-export.html): Export, Rezeptpaket und was beim Löschen passiert.
 - [Datenschutz kurz erklärt](https://tohuus.heidrich-digital.de/hilfe/datenschutz-kurz.html): Wo eure Daten liegen, wer sie sieht und was nie passiert.
-- [Abo und Kündigen](https://tohuus.heidrich-digital.de/hilfe/abo-und-kuendigen.html): Free, Haushalt und Plus, wie bezahlt wird und was beim Kündigen passiert.
+- [Abo und Kündigen](https://tohuus.heidrich-digital.de/hilfe/abo-und-kuendigen.html): Testphase, Haushalt und Plus, wie bezahlt wird und was beim Kündigen passiert.
 - [Gut zu wissen](https://tohuus.heidrich-digital.de/hilfe/gut-zu-wissen.html): Kurze Hinweise rund um Einkauf, Lagern und Kochen, jeweils mit Quelle.
 - [Häufige Fragen](https://tohuus.heidrich-digital.de/hilfe/fragen.html): Kurze Antworten auf das, was oft gefragt wird.
 

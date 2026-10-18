@@ -1,0 +1,5 @@
+Contact: mailto:security@tillheidrich.de
+Expires: 2027-10-18T00:00:00Z
+Preferred-Languages: de, en
+Canonical: https://tohuus.heidrich-digital.de/.well-known/security.txt
+Policy: https://github.com/tillheidrich/tohuus-hub/blob/main/SECURITY.md

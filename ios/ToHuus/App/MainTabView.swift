@@ -1,20 +1,25 @@
 import SwiftUI
 import UIKit
 
-/// The five areas (UX benchmark 2.1: Heute · Einkauf · Kochen · Zuhause · Geld) plus "Mehr".
-/// `pantry` stays for old links and widgets – it opens Zuhause on the Vorrat side.
+/// The areas (18 Oct 2026: Heute · Einkauf · Kochen · Aufgaben · Vorrat, then Geld) plus "Mehr" behind the avatar.
+/// Aufgaben and Vorrat used to share one tab "Zuhause" behind a switch – now each is a tab of its own (web: nav.tsx).
+/// The iPhone tab bar holds five: a sixth would bring the system's own "More" tab next to the avatar's Mehr. So Geld
+/// – the area people open least – takes a place only when Kochen or Vorrat is switched off; otherwise it is the first
+/// row in Mehr and opens as a sheet. iPad sidebar: all areas.
 enum AppArea: String, CaseIterable, Hashable, Identifiable {
-    case today, shopping, cooking, home, money, pantry, more
-    /// the tabs, in order
-    static let tabs: [AppArea] = [.today, .shopping, .cooking, .home, .money]
+    case today, shopping, cooking, tasks, stock, money, more
+    /// the areas, in order of the tab bar
+    static let tabs: [AppArea] = [.today, .shopping, .cooking, .tasks, .stock, .money]
+    /// places in the iPhone tab bar
+    static let barLimit = 5
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .today: return L("Today")
         case .shopping: return L("Shopping")
-        case .pantry: return L("Pantry")
-        case .home: return L("Home")
+        case .tasks: return L("Tasks")
+        case .stock: return L("Pantry")
         case .cooking: return L("Cooking")
         case .money: return L("Money")
         case .more: return L("More")
@@ -25,8 +30,8 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         switch self {
         case .today: return "sun.max"
         case .shopping: return "cart"
-        case .pantry: return "cabinet"
-        case .home: return "house"
+        case .tasks: return "checklist"
+        case .stock: return "cabinet"
         case .cooking: return "fork.knife"
         case .money: return "eurosign.circle"
         case .more: return "ellipsis.circle"
@@ -36,19 +41,53 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
     /// the module that switches this area off ("Was nutzen wir?"); nil = always there
     var module: String? {
         switch self {
-        case .pantry: return "stock"
+        case .stock: return "stock"
         case .cooking: return "cook"
         case .money: return "money"
         default: return nil
         }
     }
 
+    /// deep links, widgets, notifications, Siri: old names keep working ("home" was the shared tab, "pantry" Vorrat)
     static func from(_ s: String?) -> AppArea? {
         guard let s else { return nil }
         switch s {
-        case "pantry", "stock", "tasks", "care": return .home
+        case "pantry", "stock": return .stock
+        case "tasks", "care", "home": return .tasks
         default: return AppArea(rawValue: s)
         }
+    }
+}
+
+extension AppModel {
+    /// an area this person can use: switched on ("Was nutzt ihr?") and open for a guest's level
+    func areaVisible(_ a: AppArea) -> Bool {
+        let level = isGuest ? (guestLevel ?? "paused") : nil
+        switch a {
+        case .tasks: return MoreAccess.guestAllows(level, "/aufgaben")
+        case .stock: return moduleOn("stock") && MoreAccess.guestAllows(level, "/bestand")
+        case .cooking: return moduleOn("cook") && MoreAccess.guestAllows(level, "/kochen")
+        case .money: return moduleOn("money") && MoreAccess.guestAllows(level, "/geld")
+        case .today, .shopping, .more: return true
+        }
+    }
+
+    /// the iPhone tab bar: at most five, Geld gives way first
+    var barAreas: [AppArea] {
+        let all = AppArea.tabs.filter { areaVisible($0) }
+        return all.count > AppArea.barLimit ? all.filter { $0 != .money } : all
+    }
+
+    /// Geld is there but has no place in the iPhone tab bar → first row in Mehr
+    var moneyInMore: Bool { areaVisible(.money) && !barAreas.contains(.money) }
+}
+
+/// set on an area opened as a sheet (Geld from Mehr on the iPhone): RootChrome shows "Fertig" with it
+struct CloseAreaKey: EnvironmentKey { static let defaultValue: (() -> Void)? = nil }
+extension EnvironmentValues {
+    var closeArea: (() -> Void)? {
+        get { self[CloseAreaKey.self] }
+        set { self[CloseAreaKey.self] = newValue }
     }
 }
 
@@ -60,6 +99,8 @@ struct MainTabView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     let store: ServerStore
     @State private var area: AppArea = .today
+    /// an area without a place in the iPhone tab bar (Geld when all others are on), shown as a sheet
+    @State private var overflow: AppArea?
     @State private var showSettings = false
     @State private var showTour = false
     @State private var showAIConsent = false
@@ -85,8 +126,8 @@ struct MainTabView: View {
             // the assistant gets the tab's screen, like the web's floating button (assistant-areas.ts CONTEXTS)
             switch a {
             case .shopping: app.assistantContext = "shopping"
-            case .pantry: app.assistantContext = "stock"
-            case .home: break // HomeView sets "tasks" or "stock"
+            case .tasks: app.assistantContext = "tasks"
+            case .stock: app.assistantContext = "stock"
             case .cooking: app.assistantContext = "cook"
             case .money: app.assistantContext = "money"
             // Heute: "Was steht heute an?" (web: "/" → tasks)
@@ -95,7 +136,16 @@ struct MainTabView: View {
             default: app.assistantContext = nil
             }
         }
+        .onChange(of: overflow) { _, o in
+            // Geld as a sheet: the assistant talks about money while it is open, then about the tab again
+            if o == .money { app.assistantContext = "money" } else if o == nil { restoreContext() }
+        }
+        .sheet(item: $overflow) { a in
+            detail(a).environment(\.closeArea, { overflow = nil })
+        }
         .onAppear {
+            // the shared tab "Zuhause" remembered its side – each side is a tab of its own now (18 Oct 2026)
+            UserDefaults.standard.removeObject(forKey: "home.segment")
             applyRequestedTab(app.requestedTab)
             if AppTourView.due { showTour = true }
             #if DEBUG
@@ -119,11 +169,11 @@ struct MainTabView: View {
         // StoreKit Testing screenshot (ToHuusTests/PaywallStoreKitTests): the hosted test opens the paywall
         .onReceive(NotificationCenter.default.publisher(for: .toHuusDebugShowPaywall)) { _ in app.showPaywall = true }
         #endif
-        .onChange(of: app.modules) { _, _ in if !visible(area) { area = .today } }
+        .onChange(of: app.modules) { _, _ in if !visible(area) || (sizeClass != .regular && !app.barAreas.contains(area)) { area = .today } }
         .onChange(of: app.addRequest) { _, _ in area = .shopping }
         .onChange(of: app.searchRequest) { _, _ in
-            if area != .cooking && area != .home {
-                if visible(.home) && app.moduleOn("stock") { app.homeSegment = "stock"; area = .home } else { area = .cooking }
+            if area != .cooking && area != .stock {
+                area = visible(.stock) ? .stock : .cooking
             }
         }
         .sheet(isPresented: $app.showAssistant) {
@@ -141,9 +191,11 @@ struct MainTabView: View {
         .sheet(item: Binding(get: { app.pendingLabel.map(ScannedLabel.init) }, set: { app.pendingLabel = $0?.raw })) { l in
             LabelQuickActionView(raw: l.raw, store: store)
         }
-        .sheet(isPresented: $app.showPaywall) {
+        .sheet(isPresented: $app.showPaywall, onDismiss: { app.paywallReason = nil }) {
             PaywallView()
         }
+        // end of the trial, read-only card, review dialog (Features/Paywall/PlanMoments.swift)
+        .planMoments(store: store)
         .sheet(isPresented: $showTour, onDismiss: {
             // swiped away also counts as seen – the tour comes once per version
             AppTourView.markSeen()
@@ -199,7 +251,7 @@ struct MainTabView: View {
 
     private var tabLayout: some View {
         TabView(selection: $area) {
-            TodayView(store: store, openSettings: { showSettings = true }, openTab: { area = $0 })
+            TodayView(store: store, openSettings: { showSettings = true }, openTab: { select($0) })
                 .tabEntrance()
                 .tabItem { Label(AppArea.today.title, systemImage: AppArea.today.icon) }
                 .tag(AppArea.today)
@@ -214,13 +266,19 @@ struct MainTabView: View {
                     .tabItem { Label(AppArea.cooking.title, systemImage: AppArea.cooking.icon) }
                     .tag(AppArea.cooking)
             }
-            if visible(.home) {
-                HomeView(store: store)
+            if visible(.tasks) {
+                TasksAreaView(store: store)
                     .tabEntrance()
-                    .tabItem { Label(AppArea.home.title, systemImage: AppArea.home.icon) }
-                    .tag(AppArea.home)
+                    .tabItem { Label(AppArea.tasks.title, systemImage: AppArea.tasks.icon) }
+                    .tag(AppArea.tasks)
             }
-            if visible(.money) {
+            if visible(.stock) {
+                StockAreaView(store: store)
+                    .tabEntrance()
+                    .tabItem { Label(AppArea.stock.title, systemImage: AppArea.stock.icon) }
+                    .tag(AppArea.stock)
+            }
+            if app.barAreas.contains(.money) {
                 MoneyView(store: store)
                     .tabEntrance()
                     .tabItem { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
@@ -283,10 +341,10 @@ struct MainTabView: View {
     @ViewBuilder
     private func detail(_ a: AppArea) -> some View {
         switch a {
-        case .today: TodayView(store: store, openSettings: { area = .more }, openTab: { area = $0 })
+        case .today: TodayView(store: store, openSettings: { area = .more }, openTab: { select($0) })
         case .shopping: ShoppingView(store: store)
-        case .pantry: HomeView(store: store)
-        case .home: HomeView(store: store)
+        case .tasks: TasksAreaView(store: store)
+        case .stock: StockAreaView(store: store)
         case .cooking: CookingView(store: store)
         case .money: MoneyView(store: store)
         case .more: SettingsView(store: store, embedded: true)
@@ -295,25 +353,34 @@ struct MainTabView: View {
 }
 
 extension MainTabView {
-    func visible(_ a: AppArea) -> Bool {
-        let level = app.isGuest ? (app.guestLevel ?? "paused") : nil
-        switch a {
-        // Zuhause: tasks always, stock when switched on – guests only with a level that opens one of them
-        case .home: return MoreAccess.guestAllows(level, "/aufgaben") || (app.moduleOn("stock") && MoreAccess.guestAllows(level, "/bestand"))
-        case .cooking: return app.moduleOn("cook") && MoreAccess.guestAllows(level, "/kochen")
-        case .money: return app.moduleOn("money") && MoreAccess.guestAllows(level, "/geld")
-        case .today: return true
-        default: return a.module.map { app.moduleOn($0) } ?? true
-        }
+    func visible(_ a: AppArea) -> Bool { app.areaVisible(a) }
+
+    /// open an area: a tab, Mehr (a sheet on the iPhone) or – without a place in the tab bar – a sheet of its own
+    func select(_ a: AppArea) {
+        guard visible(a) else { area = .today; return }
+        if sizeClass == .regular { area = a; return }
+        if a == .more { app.showMore = true; return }
+        if app.barAreas.contains(a) { area = a; return }
+        // after Mehr (or another sheet) has gone – two sheets at once don't show
+        Task { try? await Task.sleep(nanoseconds: 450_000_000); overflow = a }
     }
 
     func applyRequestedTab(_ t: String?) {
         guard let t else { return }
-        if t == "pantry" || t == "stock" { app.homeSegment = "stock" }
-        if t == "tasks" || t == "care" { app.homeSegment = "tasks" }
-        let a = AppArea.from(t) ?? .today
-        area = visible(a) ? a : .today
+        select(AppArea.from(t) ?? .today)
         app.requestedTab = nil
+    }
+
+    /// the assistant's screen after the Geld sheet closed: the tab's again
+    func restoreContext() {
+        switch area {
+        case .shopping: app.assistantContext = "shopping"
+        case .tasks, .today: app.assistantContext = "tasks"
+        case .stock: app.assistantContext = "stock"
+        case .cooking: app.assistantContext = "cook"
+        case .money: app.assistantContext = "money"
+        case .more: app.assistantContext = nil
+        }
     }
 }
 

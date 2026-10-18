@@ -4,9 +4,14 @@ import SwiftUI
 /// that opens Mehr – so Mehr is one tap away everywhere, not only on Heute.
 private struct RootChrome: ViewModifier {
     @Environment(AppModel.self) private var app
+    /// an area opened as a sheet (Geld from Mehr on the iPhone, MainTabView)
+    @Environment(\.closeArea) private var closeArea
 
     func body(content: Content) -> some View {
         content.toolbar {
+            if let closeArea {
+                ToolbarItem(placement: .topBarLeading) { Button(L("Done")) { closeArea() } }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { app.showSearch = true } label: { Image(systemName: "magnifyingglass") }
                     .accessibilityLabel(L("Search"))

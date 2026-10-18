@@ -172,6 +172,12 @@ struct BillingStatus: Decodable, Sendable {
     var gift: Gift?
     /// Plus bought once, for good (optional App Store product `plus.lifetime`)
     var lifetime: Bool?
+    /// ToHuus Cloud has no Free since 18 Oct 2026: without a plan the household is read-only (writing answers 402 plan.readonly)
+    var readonly: Bool?
+    /// when the trial or the subscription ended (read-only)
+    var endedAt: String?
+    /// ticking off the shopping list still works until then
+    var graceUntil: String?
 
     struct Gift: Decodable, Sendable {
         /// beta | code | operator
@@ -193,6 +199,7 @@ struct BillingStatus: Decodable, Sendable {
         case "haushalt": return L("Household")
         case "plus": return lifetime == true ? L("Plus – for good") : L("Plus")
         case "selfhost": return L("Own server – everything included")
+        case "readonly": return L("Read-only – the trial is over")
         default: return L("Free – without AI")
         }
     }

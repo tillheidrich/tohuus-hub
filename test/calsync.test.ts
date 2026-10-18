@@ -278,3 +278,24 @@ describe('KI-Abgleich – own consent per person', () => {
     expect((await sam.req('POST', '/api/calsync/suggest', { events: events() })).status).toBe(403);
   });
 });
+
+// The iPhone writes the signed-in person's own private tasks into a calendar they pick (CalendarSyncViews.swift,
+// "Deine privaten Aufgaben"). It relies on GET /api/care: own private tasks with time and duration, `me`, never others'.
+describe('private tasks for the phone’s own calendar', () => {
+  it('GET /api/care gives the owner their private task with date, time and duration – and nobody else', async () => {
+    const made = await mira.req('POST', '/api/care', { name: 'Physio', category: 'care', visibility: 'private', next_due: day(4), due_time: '08:30', duration_min: 45 });
+    expect(made.status).toBe(200);
+    const mine = await mira.req('GET', '/api/care');
+    const task = mine.json.tasks.find((x: any) => x.name === 'Physio');
+    expect(task).toMatchObject({ visibility: 'private', next_due: day(4), due_time: '08:30', duration_min: 45 });
+    expect(task.owner_user_id).toBe(mine.json.me);
+    const theirs = await sam.req('GET', '/api/care');
+    expect(theirs.json.me).not.toBe(mine.json.me);
+    expect(theirs.json.tasks.some((x: any) => x.name === 'Physio')).toBe(false);
+    // moved in the calendar on the phone → the owner's PATCH moves the task; somebody else cannot touch it
+    expect((await mira.req('PATCH', `/api/care/${task.id}`, { next_due: day(5), due_time: '09:00', duration_min: 30 })).status).toBe(200);
+    const after = (await mira.req('GET', '/api/care')).json.tasks.find((x: any) => x.id === task.id);
+    expect(after).toMatchObject({ next_due: day(5), due_time: '09:00', duration_min: 30 });
+    expect((await sam.req('PATCH', `/api/care/${task.id}`, { next_due: day(6) })).status).toBe(404);
+  });
+});

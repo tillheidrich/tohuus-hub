@@ -156,6 +156,12 @@ struct HouseGuideView: View {
             } else if state == nil {
                 ProgressView()
             }
+            // Haushaltswissen: sizes, measurements and numbers live there (KnowledgeView.swift)
+            if let api = app.api, app.modules["knowledge"] ?? true {
+                Section {
+                    NavigationLink { KnowledgeView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "brain") }
+                } footer: { Text(L("Sizes, measurements, numbers. So nobody has to ask you.")) }
+            }
             Section {
                 HelpLink(slug: "hausinfo", title: L("House info for guests and sitters"))
                 HelpLink(slug: "hausinfo-codes", title: L("Sharing codes safely"))

@@ -77,8 +77,15 @@ export function useInstance() {
 // ------------------------------------------------------------------ /api/billing/status
 
 export interface Billing {
-  plan: 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost';
+  plan: 'free' | 'trial' | 'haushalt' | 'plus' | 'selfhost' | 'readonly';
   trialEndsAt?: string | null;
+  /** ToHuus Cloud has no Free since 18 Oct 2026: without a plan the household is read-only (writing answers 402 plan.readonly) */
+  readonly?: boolean;
+  /** when the trial or subscription ended (read-only) */
+  endedAt?: string | null;
+  /** ticking off the shopping list still works until then */
+  graceUntil?: string | null;
+  afterTrial?: 'free' | 'readonly' | null;
   renewsAt?: string | null;
   /** Plus bought once, for good (optional App Store product) */
   lifetime?: boolean;

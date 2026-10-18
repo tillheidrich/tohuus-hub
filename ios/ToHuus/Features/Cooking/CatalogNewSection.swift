@@ -105,7 +105,7 @@ struct CatalogNewSection: View {
             }
             if c.locked == true {
                 // a Plus recipe without Plus: the plans instead of saving
-                Button { app.showPaywall = true } label: { Label(L("Part of Plus"), systemImage: "lock") }
+                Button { app.openPaywall("plus_recipe") } label: { Label(L("Part of Plus"), systemImage: "lock") }
                     .font(.footnote.weight(.semibold)).frame(minHeight: 44)
                     .accessibilityLabel(LF("%@ is part of Plus", c.title))
             } else if let saved {

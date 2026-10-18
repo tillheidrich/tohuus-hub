@@ -6,6 +6,10 @@ import type { NextFunction, Request, Response } from 'express';
 import { t } from '../i18n.js';
 import { consume, entitlement, limits, type Limits } from './plans.js';
 
+/** AI is paused until the month ends (F5, 18 Oct 2026: message limit of Plus or the cost cap of the household). */
+export const aiPausedMessage = () =>
+  t('Your household has used this month’s AI allowance. It starts again on the 1st. Lists, tasks and simple commands like “milk and bread” keep working.');
+
 /** How many days back the household's history counts (rhythm, "Das habt ihr noch", money). Infinity = all. */
 export function historyDays(): number {
   return limits().historyDays ?? Infinity;
@@ -50,13 +54,13 @@ export class UsageLimitError extends Error {
 /** Count one AI recipe/product import (link, text, photo) – plans.ts importAiPerDay. */
 export function consumeImportAi(message: () => string) {
   const r = consume('importAi');
-  if (!r.ok) throw new UsageLimitError(message(), 429, 'quota.importAi', 0);
+  if (!r.ok) throw r.capped ? new UsageLimitError(aiPausedMessage(), 429, 'quota.ai_paused', 0) : new UsageLimitError(message(), 429, 'quota.importAi', 0);
 }
 
 /** Count one AI receipt read (receipts stay unlimited, only the AI reading is rate-limited per day). */
 export function consumeReceiptAi(message: () => string) {
   const r = consume('receiptAi');
-  if (!r.ok) throw new UsageLimitError(message(), 429, 'quota.receiptAi', 0);
+  if (!r.ok) throw r.capped ? new UsageLimitError(aiPausedMessage(), 429, 'quota.ai_paused', 0) : new UsageLimitError(message(), 429, 'quota.receiptAi', 0);
 }
 
 // ------------------------------------------------------------------ plan features (cloud)

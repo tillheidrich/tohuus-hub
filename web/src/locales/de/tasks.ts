@@ -239,7 +239,10 @@ export const tasks: Record<string, string> = {
   'Into a calendar you already have (e.g. your family calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Both ways”.':
     'In einen Kalender, den ihr schon habt (z. B. euren Familienkalender): in der iPhone-App unter Aufgaben › Euren Kalender lesen › „In beide Richtungen“.',
   'Just one task: open it and tap “Add to calendar”.': 'Nur eine Aufgabe: öffnen und auf „In den Kalender“ tippen.',
-  'Private tasks only appear when you choose so. Both settings are under Settings › Account.': 'Private Aufgaben erscheinen nur, wenn du das so wählst. Beides findest du unter Einstellungen › Konto.',
+  'Your private tasks into a calendar of your own (e.g. your personal iCloud calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Your private tasks”. Only yours, never anyone else’s.':
+    'Deine privaten Aufgaben in einen eigenen Kalender (z. B. deinen persönlichen iCloud-Kalender): in der iPhone-App unter Aufgaben › Euren Kalender lesen › „Deine privaten Aufgaben“. Nur deine, nie die von anderen.',
+  'Private tasks only appear when you choose so, and only your own: in Apple Calendar in “ToHuus · Mein Kalender”, which only you see; in a subscription link only if you switch on “Include my private tasks” when you create it; on the iPhone in the calendar you pick for them. Both links are under Settings › Account.':
+    'Private Aufgaben erscheinen nur, wenn du das so wählst, und nur deine eigenen: im Apple Kalender in „ToHuus · Mein Kalender“, den nur du siehst; in einem Abo-Link nur, wenn du beim Erstellen „Meine privaten Aufgaben mit aufnehmen“ einschaltest; auf dem iPhone in dem Kalender, den du für sie wählst. Beides findest du unter Einstellungen › Konto.',
   // Wer macht was (pages/WhoDoesWhat.tsx)
   'Who does what': 'Wer macht was',
   'ToHuus notices who usually does what – from what happens anyway. No points, no ranking.': 'ToHuus merkt sich, wer was meistens macht – aus dem, was ohnehin passiert. Ohne Punkte, ohne Rangliste.',
@@ -287,4 +290,6 @@ export const tasks: Record<string, string> = {
   'collection {day}': 'Abfuhr {day}',
   'tomorrow {time}': 'morgen {time}',
   'on {day}': 'am {day}',
+  '{name} is open again.': '{name} ist wieder offen.',
+  'Undo: {name}': 'Rückgängig: {name}',
 };

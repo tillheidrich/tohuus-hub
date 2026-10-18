@@ -129,6 +129,8 @@ beforeAll(async () => {
   expect(productImage).toMatch(/^\/img\/p\d+-[0-9a-f]+\.webp$/);
   // feature build: what ToHuus remembers, an assistant conversation, money and a purchase rhythm with markers
   expect((await A.post('/api/memory', { text: 'MARKERA-memory Brot vom Bäcker' })).status).toBe(200);
+  // Haushaltswissen (18 Oct 2026): a card on a free subject with a note (row id 2 – the sweep uses id 1, the line above)
+  expect((await A.post('/api/knowledge', { subject: 'MARKERA-memory Rollo', property: 'Maß', value: '120 x 160', note: 'MARKERA-memory Notiz' })).status).toBe(200);
   const chat = await A.post('/api/assistant/chat', { message: 'MARKERA-chat' });
   expect(chat.status, chat.text).toBe(200);
   // q-money: the first expense gets a PDF with a marker; a money list with a marker (both id 1 – the sweep fills :id with 1)
@@ -246,6 +248,9 @@ describe('cloud isolation', () => {
       expect(routes, r).toContain(r);
     const seen = new Set(a.found.map((f) => f.path));
     for (const r of ['/api/today', '/api/rhythm', '/api/money/overview', '/api/memory', '/api/assistant/conversations']) expect(seen, r).toContain(r);
+    // Haushaltswissen: the list, one card and its history (id 1 = the memory line above) show A's data to A only
+    for (const r of ['/api/knowledge', '/api/knowledge/1']) expect(seen, r).toContain(r);
+    expect(routes).toContain('/api/knowledge/:id/history');
     // list2: the new household-data routes show A's markers to A (so the B sweep below really checks them)
     for (const r of ['/api/list/lists', '/api/offers', '/api/list/lunchbox', '/api/caldav/passwords', '/api/push/apns', '/api/shop/trips', '/api/shop/list']) expect(seen, r).toContain(r);
     // q-money: money lists and the expense attachment
@@ -264,6 +269,14 @@ describe('cloud isolation', () => {
     expect(b.leaks).toEqual([]);
     // B cannot reveal A's code by id either
     expect((await B.post(`/api/house-guide/codes/${houseCodeA}/reveal`, {})).status).toBe(404);
+    // B cannot change, share or delete A's knowledge cards by id (B has none of its own)
+    for (const id of [1, 2]) {
+      expect((await B.req('PATCH', `/api/knowledge/${id}`, { value: 'x' })).status).toBe(404);
+      expect((await B.req('PATCH', `/api/knowledge/${id}`, { visibility: 'me' })).status).toBe(404);
+      expect((await B.req('DELETE', `/api/knowledge/${id}`)).status).toBe(404);
+      expect((await B.post(`/api/knowledge/${id}/history/0/restore`, {})).status).toBe(404);
+    }
+    expect((await A.get('/api/knowledge/2')).json.note).toContain('MARKERA');
     // global search: A finds its own things, B finds nothing of A's
     expect(JSON.stringify((await A.get('/api/search?q=MARKERA')).json.groups)).toContain('MARKERA');
     expect(JSON.stringify((await B.get('/api/search?q=MARKERA')).json.groups)).not.toContain('MARKERA');
@@ -655,17 +668,17 @@ describe('cloud accounts', () => {
 });
 
 describe('plans and quotas', () => {
-  it('trial is Plus; expired trial falls back to Free with its limits', async () => {
+  it('trial is Plus; expired trial falls back to read-only (no Free in the cloud since 18 Oct 2026)', async () => {
     const s = await A.get('/api/billing/status');
     expect(s.json.plan).toBe('trial');
     expect(s.json.limits.historyDays).toBeNull();
     accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(hA);
     const f = await A.get('/api/billing/status');
-    expect(f.json.plan).toBe('free');
-    expect(f.json.limits.historyDays).toBe(30);
-    // Free has no AI at all (15 Oct 2026, docs/pricing.md)
+    expect(f.json.plan).toBe('readonly');
+    // everything stays visible, no AI (docs/pricing.md, 18 Oct 2026)
+    expect(f.json.limits.historyDays).toBeNull();
     expect(f.json.limits.assistantPerMonth).toBe(0);
-    expect(tenancy.runInHousehold(hA, () => plans.limits().historyDays)).toBe(30);
+    expect(tenancy.runInHousehold(hA, () => plans.limits().assistantPerMonth)).toBe(0);
   });
 
   it('consume("assistant"): none on Free; other households unaffected', () => {
@@ -674,7 +687,7 @@ describe('plans and quotas', () => {
     expect(tenancy.runInHousehold(hB, () => plans.consume('assistant')).ok).toBe(true);
   });
 
-  it('Free has no AI assistant (HTTP 402 plan.assistant, simple commands still work); others go on', async () => {
+  it('after the trial no assistant at all (HTTP 402 plan.readonly, no model call); others go on', async () => {
     const ai = await import('../server/lib/ai');
     process.env.AI_API_KEY = 'sk-test';
     let calls = 0;
@@ -690,12 +703,10 @@ describe('plans and quotas', () => {
       expect((await C.req('PATCH', '/api/ai/settings', { consent: true })).status).toBe(200);
       const over = await C.post('/api/assistant/chat', { message: 'Wie geht es dir heute?' });
       expect(over.status).toBe(402);
-      expect(over.json).toMatchObject({ code: 'plan.assistant', remaining: 0 });
+      expect(over.json).toMatchObject({ code: 'plan.readonly' });
       expect(over.json.error).toBeTruthy();
-      // what the built-in reader understands still works, without a model call
-      const basic = await C.post('/api/assistant/chat', { message: 'Milch und 2 Paprika' });
-      expect(basic.status).toBe(200);
-      expect(basic.json.mode).toBe('basic');
+      // read-only: also simple commands write nothing, and no model is called
+      expect((await C.post('/api/assistant/chat', { message: 'Milch und 2 Paprika' })).status).toBe(402);
       expect(calls).toBe(0);
       // another household is not affected
       const other = new Client();
@@ -744,14 +755,16 @@ describe('plans and quotas', () => {
   });
 
   it('storage quota: 413 with a message key when full, nothing deleted', async () => {
-    accounts.setStorageBytes(hA, 100 * 1024 * 1024);
+    // a household with a plan (the trial of A ended above)
+    accounts.accountsDb().prepare(`UPDATE households SET plan = 'haushalt', plan_source = 'operator', plan_expires_at = NULL WHERE id = ?`).run(hA);
+    accounts.setStorageBytes(hA, 2048 * 1024 * 1024);
     const png = await sharp({ create: { width: 20, height: 20, channels: 3, background: '#3c3' } }).png().toBuffer();
     const fd = new FormData();
     fd.append('image', new Blob([new Uint8Array(png)], { type: 'image/png' }), 'p.png');
     const r = await A.req('POST', '/api/recipes/1/image', fd);
     expect(r.status).toBe(413);
     expect(r.json.key).toBe('storage.full');
-    expect(r.json.quotaBytes).toBe(100 * 1024 * 1024);
+    expect(r.json.quotaBytes).toBe(2048 * 1024 * 1024);
     expect((await A.get(productImage)).status).toBe(200);
     accounts.setStorageBytes(hA, 0);
   });

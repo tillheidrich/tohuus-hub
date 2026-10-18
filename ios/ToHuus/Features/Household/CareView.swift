@@ -110,6 +110,8 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
         var doneOn: String
         var actor: String?
         var note: String?
+        /// the newest tick, and mine (or I'm an admin): "Rückgängig" right here
+        var canUndo: Bool?
     }
 }
 
@@ -132,12 +134,16 @@ struct CareRecent: Decodable, Sendable, Identifiable, Hashable {
     var doneOn: String
     var actor: String?
     var name: String
+    /// the newest tick of its task, and mine (or I'm an admin) – server decides
+    var canUndo: Bool?
 }
 
 /// POST /api/care/:id/done → { task, consumed, on_shopping_list }
 struct CareDoneResult: Decodable, Sendable {
     var task: CareTask
     var onShoppingList: Bool?
+    /// this tick – the undo in the toast takes back exactly this one
+    var logId: Int?
 }
 
 extension APIClient {
@@ -156,7 +162,10 @@ extension APIClient {
         if let nextDue { body["next_due"] = nextDue }
         return try await send("POST", "api/care/\(id)/done", json: body)
     }
-    func careUndo(_ id: Int) async throws { _ = try await send("POST", "api/care/\(id)/undo", as: Ignored.self) }
+    /// take a "done" back – `logId` pins the entry (toast, "Zuletzt erledigt", history); only the newest one works
+    func careUndo(_ id: Int, logId: Int? = nil) async throws {
+        _ = try await send("POST", "api/care/\(id)/undo", json: ["log_id": logId.map { $0 as Any } ?? NSNull()], as: Ignored.self)
+    }
     /// "Ich kümmere mich" – or let go again. No points, no ranking.
     /// "Mach ich": today | tomorrow | weekend | YYYY-MM-DD; nil takes it back
     func carePromise(_ id: Int, _ when: String?) async throws {
@@ -448,6 +457,16 @@ struct CareView: View {
                                     Text(r.name)
                                     Text([CareLabels.day(r.doneOn), r.actor].compactMap { $0 }.joined(separator: " · ")).font(.caption).foregroundStyle(Theme.ink3)
                                 }
+                                if r.canUndo == true {
+                                    Spacer(minLength: 4)
+                                    Button { Task { await undoRecent(r) } } label: {
+                                        Label(L("Undo"), systemImage: "arrow.uturn.backward").labelStyle(.titleAndIcon).font(.caption.weight(.semibold))
+                                            .frame(minHeight: 32)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(Theme.ink2)
+                                    .accessibilityLabel(LF("Undo: %@", r.name))
+                                }
                             }
                         }
                         if recent.count > 5 {
@@ -650,10 +669,20 @@ struct CareView: View {
             if r.onShoppingList == true, let p = r.task.product { text += " " + LF("%@ is on the shopping list.", p.name) }
             toast = ToastMessage(text: text, actionTitle: L("Undo"), action: {
                 Task {
-                    try? await api.careUndo(t.id)
+                    try? await api.careUndo(t.id, logId: r.logId)
                     await load()
                 }
             })
+            await load()
+        } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
+    }
+
+    /// "Zuletzt erledigt › Rückgängig": ticked off by mistake, also yesterday – the task is open again
+    private func undoRecent(_ r: CareRecent) async {
+        do {
+            try await api.careUndo(r.taskId, logId: r.id)
+            Haptics.tick()
+            toast = ToastMessage(text: LF("%@ is open again.", r.name))
             await load()
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
@@ -759,8 +788,19 @@ private struct CareDetailSheet: View {
                 if let log = full?.log, !log.isEmpty {
                     Section(L("History")) {
                         ForEach(log) { l in
-                            Text([CareLabels.day(l.doneOn), l.actor, l.note].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
-                                .font(.subheadline)
+                            HStack {
+                                Text([CareLabels.day(l.doneOn), l.actor, l.note].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                                    .font(.subheadline)
+                                if l.canUndo == true {
+                                    Spacer(minLength: 4)
+                                    Button { Task { await undo(l) } } label: {
+                                        Label(L("Undo"), systemImage: "arrow.uturn.backward").labelStyle(.titleAndIcon).font(.caption.weight(.semibold))
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(Theme.ink2)
+                                    .accessibilityLabel(LF("Undo: %@", task.name))
+                                }
+                            }
                         }
                     }
                 }
@@ -838,6 +878,16 @@ private struct CareDetailSheet: View {
             try await api.careClaim(task.id, v)
             mine = v
             onChanged()
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
+    /// "Verlauf › Rückgängig": the newest tick goes, dates and turn come back – the list shows it open again
+    private func undo(_ l: CareTask.CareLogEntry) async {
+        do {
+            try await api.careUndo(task.id, logId: l.id)
+            Haptics.tick()
+            onChanged()
+            dismiss()
         } catch { self.error = APIError.from(error).localizedDescription }
     }
 }

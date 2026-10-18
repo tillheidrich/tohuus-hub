@@ -7,11 +7,12 @@
  */
 import { getSetting, setSetting } from '../db.js';
 
-export const MODULES = ['stock', 'cook', 'money', 'treats', 'homeinfo', 'guests', 'ha'] as const;
+// knowledge: Haushaltswissen „Was ToHuus sich merkt“ (18 Oct 2026) – hidden when off, the assistant still remembers
+export const MODULES = ['stock', 'cook', 'money', 'treats', 'homeinfo', 'guests', 'ha', 'knowledge'] as const;
 export type ModuleKey = (typeof MODULES)[number];
 export type Modules = Record<ModuleKey, boolean>;
 
-export const DEFAULT_MODULES: Modules = { stock: true, cook: true, money: true, treats: true, homeinfo: true, guests: true, ha: true };
+export const DEFAULT_MODULES: Modules = { stock: true, cook: true, money: true, treats: true, homeinfo: true, guests: true, ha: true, knowledge: true };
 
 export function modules(): Modules {
   const raw = getSetting<Partial<Modules>>('modules', {});

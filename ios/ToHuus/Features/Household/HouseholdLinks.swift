@@ -12,11 +12,28 @@ struct MoreSections: View {
     @State private var showFind = false
     @State private var showCheck = false
     @State private var findProduct: ProductKey?
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         Group {
+            // Geld without a place in the iPhone tab bar (five areas are on, AppModel.barAreas): first row here
+            if app.moneyInMore && sizeClass != .regular {
+                Section {
+                    Button {
+                        app.requestedTab = "money"
+                        app.showMore = false
+                        dismiss()
+                    } label: { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
+                    .foregroundStyle(Theme.ink)
+                }
+            }
             // Haushalt: the people and the guests (UX benchmark 2.3 – one list, every function at most two taps away)
             Section(L("Household")) {
+                // Haushaltswissen (18 Oct 2026): first row, its own symbol; guests see what is shared with them
+                if allows("/wissen") {
+                    NavigationLink { KnowledgeView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "brain") }
+                }
                 if allows("/einstellungen?tab=members") {
                     NavigationLink { HouseholdView(api: api) } label: { Label(L("People"), systemImage: "person.2") }
                     // GET/POST /api/invites are for admins (server/routes/invites.ts) – a member would only see "forbidden"
@@ -29,9 +46,6 @@ struct MoreSections: View {
                 }
                 if showTreats {
                     NavigationLink { TreatsView(api: api) } label: { Label(L("Treats"), systemImage: "hand.raised") }
-                }
-                if allows("/merkt-sich") {
-                    NavigationLink { MemoryView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "text.book.closed") }
                 }
             }
             // permanent guests: what the Zuhause tab shows members (Hausinfo, Wo ist was?) and their handover
@@ -77,7 +91,7 @@ struct MoreSections: View {
             NavigationStack {
                 switch k.id {
                 case "invites": InvitesView(api: api)
-                case "memory": MemoryView(api: api)
+                case "memory": KnowledgeView(api: api)
                 case "treats": TreatsView(api: api)
                 case "guestlinks", "guestlink-new": GuestLinksView(api: api)
                 case "house", "housecard-new", "housecard-edit", "housecode-new", "house-templates", "house-log": HouseGuideView()
@@ -115,7 +129,7 @@ enum MoreAccess {
         if level == "paused" { return false }
         let p = path.split(separator: "?").first.map(String.init) ?? path
         if p == "/einkauf/wuensche" || p.hasPrefix("/einkauf/wuensche/") { return false }
-        let order = ["/bestellen", "/einkauf", "/einstellungen", "/hilfe", "/hausinfo", "/uebergabe", "/so-funktioniert-tohuus", "/gut-zu-wissen"]
+        let order = ["/bestellen", "/einkauf", "/einstellungen", "/hilfe", "/hausinfo", "/uebergabe", "/so-funktioniert-tohuus", "/gut-zu-wissen", "/wissen"]
         let stock = ["/", "/bestand", "/wo", "/abgleich", "/scan", "/q/"]
         let recipes = ["/kochen", "/rezepte", "/lieblinge"]
         let familyDeny = ["/import", "/ausgaben", "/geld", "/merkt-sich", "/pflege", "/aufgaben", "/etiketten", "/willkommen", "/urlaub"]
@@ -140,6 +154,7 @@ enum MoreAccess {
         if p.hasPrefix("/bestellen") { return "treats" }
         if p.hasPrefix("/bar") { return "guests" }
         if p.hasPrefix("/pflege") { return "homeinfo" }
+        if p.hasPrefix("/wissen") || p.hasPrefix("/merkt-sich") { return "knowledge" }
         if path.contains("tab=ha") { return "ha" }
         return nil
     }

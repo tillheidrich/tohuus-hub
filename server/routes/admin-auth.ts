@@ -11,7 +11,7 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { accountByEmail } from '../lib/accounts.js';
-import { rateLimitedGlobal, verifyPassword } from '../lib/auth.js';
+import { hashPassword, rateLimitedGlobal, verifyPassword } from '../lib/auth.js';
 import { sendAuthMail } from '../lib/auth-policy.js';
 import { currentStep, matchTotp } from '../lib/auth-totp.js';
 import {
@@ -41,6 +41,7 @@ export const adminAuth = Router();
 const onlyAdminHost = (req: Request, res: Response, next: NextFunction) => (isAdminHost(req) ? next() : void res.status(404).json({ error: 'not found' }));
 adminAuth.use('/admin-auth', onlyAdminHost);
 
+const DUMMY_HASH = hashPassword('not-an-operator-password');
 const WRONG = 'E-Mail-Adresse oder Passwort stimmen nicht.';
 const BAD_CODE = 'Der Code stimmt nicht.';
 const EXPIRED = 'Die Anmeldung ist abgelaufen. Bitte fang noch einmal an.';
@@ -60,7 +61,11 @@ adminAuth.post('/admin-auth/login', async (req, res) => {
   if (rateLimitedGlobal(`admin-login-ip:${ip(req)}`, 10, 15 * 60_000) || rateLimitedGlobal(`admin-login:${email}`, 5, 15 * 60_000))
     return void res.status(429).json({ error: 'Zu viele Versuche. Bitte warte ein paar Minuten.' });
   const a = accountByEmail(email);
-  const ok = Boolean(a && isOperatorEmail(a.email) && a.password_hash?.startsWith('scrypt$') && (await verifyPassword(b.password, a.password_hash)));
+  // scrypt always runs (dummy hash for unknown addresses and accounts without a password), and the operator check
+  // comes after it: the answer time does not tell whether an address is an operator (review 18.10.2026 P2-2)
+  const hash = a?.password_hash?.startsWith('scrypt$') ? a.password_hash : DUMMY_HASH;
+  const passwordOk = await verifyPassword(b.password, hash);
+  const ok = Boolean(a && hash !== DUMMY_HASH && passwordOk && isOperatorEmail(a.email));
   if (!a || !ok) {
     audit(email.slice(0, 80), 'admin.login.failed', null, { ip: ip(req) });
     return void res.status(403).json({ error: WRONG });
@@ -72,7 +77,8 @@ adminAuth.post('/admin-auth/login', async (req, res) => {
   const ticket = newTicket({ accountId: a.id, email: a.email, stage: 'mail', mailCodeHash: codeHash(c) });
   void sendAuthMail(
     a.email,
-    `ToHuus Betrieb: Code ${c}`,
+    // the code only in the text, never in the subject (lock screens, mail lists – review 18.10.2026 P2-1)
+    'ToHuus Betrieb: dein Anmeldecode',
     'Code für den Betrieb',
     `Dein Code für die erste Anmeldung im ToHuus-Betrieb: ${c}. Er gilt 5 Minuten. Warst du das nicht, ändere bitte dein Passwort.`,
   );

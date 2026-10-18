@@ -55,6 +55,8 @@ export const PERSON_EVENTS = [
   { key: 'plan.rotation', label: 'The week plan was filled from the rotation', module: 'cook', on: false },
   { key: 'care.due', label: 'A care task is due', module: 'homeinfo', on: false },
   { key: 'party.ending', label: 'The party is ending', module: 'guests', on: false },
+  // cloud: only admins of a household in the trial get it, twice at most (trial-end.ts, 18 Oct 2026)
+  { key: 'billing.trial', label: 'My trial ends soon', module: null, on: true },
 ] as const;
 export type PersonEvent = (typeof PERSON_EVENTS)[number]['key'];
 export const PERSON_CHANNELS = ['apns', 'push', 'digest'] as const;

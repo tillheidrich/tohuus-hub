@@ -146,7 +146,7 @@ struct AssistantSheet: View {
             .navigationTitle(L("Assistant"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } } }
-            .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showPaywall) { PaywallView(reason: "assistant_plan") }
             .sheet(item: $openRecipe) { ref in
                 NavigationStack {
                     RecipeDetailView(recipeId: ref.id, store: store)

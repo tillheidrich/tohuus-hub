@@ -243,7 +243,12 @@ describe('review: AI imports count against the plan', () => {
     });
     try {
       expect((await A.req('PATCH', '/api/ai/settings', { consent: true })).status).toBe(200);
-      // Free has no AI imports (15 Oct 2026) – the first one is refused with the plan's message
+      // since 18 Oct 2026 the cloud has no Free: after the trial the household is read-only
+      const ro = await A.post('/api/recipes/import/text', { text: 'Eine Suppe: Wasser kochen.' });
+      expect(ro.status).toBe(402);
+      expect(ro.json.code).toBe('plan.readonly');
+      // the old Free (afterTrial switched back): no AI imports (15 Oct 2026) – refused with the plan's message
+      process.env.TRIAL_AFTER = 'free';
       const over = await A.post('/api/recipes/import/text', { text: 'Noch eine Suppe: Wasser kochen.' });
       expect(over.status).toBe(429);
       expect(over.json.code).toBe('quota.importAi');
@@ -253,6 +258,7 @@ describe('review: AI imports count against the plan', () => {
     } finally {
       ai.setAiFetch(null);
       delete process.env.AI_API_KEY;
+      delete process.env.TRIAL_AFTER;
     }
   });
 });

@@ -46,7 +46,7 @@ export function OperatorSettings() {
   useEffect(() => {
     if (!d) return;
     const f: Record<string, string> = {};
-    for (const k of ['AI_BASE_URL', 'AI_MODEL_TEXT', 'AI_MODEL_VISION', 'AI_MODEL_VISION_HARD', 'AI_MODEL_AUDIO', 'AI_MODEL_FALLBACKS', 'support.email'])
+    for (const k of ['AI_BASE_URL', 'AI_MODEL_TEXT', 'AI_MODEL_VISION', 'AI_MODEL_VISION_HARD', 'AI_MODEL_AUDIO', 'AI_MODEL_FALLBACKS', 'support.email', 'ai.household_cost_cap', 'billing.commission'])
       f[k] = d.settings[k]?.source === 'settings' ? (d.settings[k].value ?? '') : '';
     setForm(f);
   }, [d]);
@@ -138,6 +138,29 @@ export function OperatorSettings() {
           </button>
           <span className="small muted">{t('Empty field = back to the environment / default.')}</span>
         </div>
+      </Section>
+
+      {/* monetisation (18 Oct 2026): cost cap per household, Apple's share for the revenue estimate, what follows the trial */}
+      <Section title={t('Money')}>
+        {field('ai.household_cost_cap', t('AI cost cap per household and month'), '3.5', t('In the AI price currency (default 3.5 ≈ 3 €). Over it, AI pauses for that household until the 1st. 0 = off.'))}
+        {field('billing.commission', t('Apple’s share'), '0.15', t('For the net revenue estimate (default 0.15 with the Small Business Program).'))}
+        {(dirty('ai.household_cost_cap') || dirty('billing.commission')) && (
+          <button
+            className="btn primary"
+            onClick={() => save({ 'ai.household_cost_cap': form['ai.household_cost_cap'].trim() || null, 'billing.commission': form['billing.commission'].trim() || null })}
+          >
+            {t('Save')}
+          </button>
+        )}
+        <Seg
+          label={t('After the trial')}
+          value={d.settings['trial.after']?.value === 'free' ? 'free' : 'readonly'}
+          options={[
+            ['readonly', t('Read-only (no Free)')],
+            ['free', t('Free (old rule)')],
+          ]}
+          onChange={(v) => save({ 'trial.after': v }, t('Saved'))}
+        />
       </Section>
 
       <Section title={t('Sign-ups')}>

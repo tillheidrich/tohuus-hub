@@ -73,7 +73,7 @@ struct TasksTodayCard: View {
             let r = try await api.careDone(t.id)
             toast = ToastMessage(text: r.task.nextDue.map { LF("Done. Next time: %@", CareLabels.day($0)) } ?? L("Done."), actionTitle: L("Undo"), action: {
                 Task {
-                    try? await api.careUndo(t.id)
+                    try? await api.careUndo(t.id, logId: r.logId)
                     await load()
                 }
             })
@@ -167,7 +167,7 @@ struct TasksAheadCard: View {
             let r = try await api.careDone(t.id)
             toast = ToastMessage(text: r.task.nextDue.map { LF("Done. Next time: %@", CareLabels.day($0)) } ?? L("Done."), actionTitle: L("Undo"), action: {
                 Task {
-                    try? await api.careUndo(t.id)
+                    try? await api.careUndo(t.id, logId: r.logId)
                     await load()
                 }
             })

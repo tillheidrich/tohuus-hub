@@ -1,4 +1,5 @@
 import { EmptyArt, type ArtName } from './art';
+import { shownAsPlanHint } from './planHint';
 import { Check, Minus, Plus, X, MagnifyingGlass } from '@phosphor-icons/react';
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
@@ -294,6 +295,8 @@ export const useToast = () => useContext(ToastCtx);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [list, setList] = useState<ToastT[]>([]);
   const push = useCallback((t: Omit<ToastT, 'id'>) => {
+    // the plan card (PlanHint.tsx) already says it – no second, red message
+    if (t.error && shownAsPlanHint(t.text)) return;
     const id = Date.now() + Math.random();
     setList((l) => [...l.slice(-2), { ...t, id }]);
     setTimeout(() => setList((l) => l.filter((x) => x.id !== id)), t.action ? 5500 : 3200);

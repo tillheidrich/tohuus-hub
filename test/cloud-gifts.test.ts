@@ -121,7 +121,7 @@ describe('beta gift exception (App Review household)', () => {
       expect((await review.c.get('/api/billing/status')).json).toMatchObject({ plan: 'trial', source: 'none', gift: null });
       expect((await other.c.get('/api/billing/status')).json).toMatchObject({ plan: 'plus', source: 'beta' });
       accounts.accountsDb().prepare(`UPDATE households SET trial_ends_at = datetime('now', '-1 day') WHERE id = ?`).run(review.id);
-      expect((await review.c.get('/api/billing/status')).json).toMatchObject({ plan: 'free', gift: null });
+      expect((await review.c.get('/api/billing/status')).json).toMatchObject({ plan: 'readonly', gift: null });
     } finally {
       rs.setRuntimeSetting('beta.gift', null, 'test');
       delete process.env.BETA_GIFT_EXCEPT;

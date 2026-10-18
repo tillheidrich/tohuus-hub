@@ -16,7 +16,16 @@ export type Intent =
   | { kind: 'tasks'; day: 'today' | 'tomorrow' }
   | { kind: 'list' }
   | { kind: 'cook' }
-  | { kind: 'money' }
+  /** "Was hab ich bei Lidl ausgegeben?" – `shop` when one is named */
+  | { kind: 'money'; shop?: string }
+  /** "Die Biotonne war doch noch nicht raus" – take back the last "done" of that task (assistant-tasks.ts task_undo_done) */
+  | { kind: 'undo_done'; task: string }
+  /** "Was muss heute Abend raus?", "Was kommt demnächst?" – Heute › Demnächst (task-outlook.ts) */
+  | { kind: 'outlook' }
+  /** "Mika hat jetzt 29" – a new value for a remembered fact (memory.ts) */
+  | { kind: 'fact'; text: string }
+  /** "Welche Schuhgröße hat Mika?" – a remembered fact */
+  | { kind: 'recall'; subject: string; property: string }
   | { kind: 'remember'; text: string }
   | { kind: 'forget'; text: string }
   /** an answer to the assistant ("Ja", "nein danke", "speicher das Rezept") – never a list item; needs the conversation */
@@ -72,6 +81,110 @@ export function tasksDay(text: string): 'today' | 'tomorrow' | null {
   return /^was\s+steht\s+(?:so\s+|noch\s+|jetzt\s+)?an$/i.test(s) ? 'today' : null;
 }
 
+// ------------------------------------------------------------------ since 17 Oct 2026
+
+const DONE_WORDS = String.raw`raus|draußen|draussen|erledigt|gemacht|fertig|geputzt|gesaugt|gewischt|gegossen|rausgebracht|rausgestellt|weggebracht|gewechselt|gefüttert|gefuettert`;
+const TASK_ARTICLE = /^(?:die|der|das|den|unsere?n?|the)\s+/i;
+
+/** "Die Biotonne war doch noch nicht raus", "Bad putzen doch nicht erledigt", "Hab den Müll aus Versehen abgehakt" → the task. */
+export function undoDoneOf(text: string): string | null {
+  const s = text.replace(/[!?.…]+$/g, '').trim();
+  let m: RegExpMatchArray | null;
+  if ((m = s.match(new RegExp(String.raw`^(.+?)\s+(?:war|ist|wurde|waren|sind|wurden)\s+doch\s+(?:noch\s+)?(?:gar\s+)?nicht\s+(?:\S+\s+)?(?:${DONE_WORDS})$`, 'i')))) return m[1].replace(TASK_ARTICLE, '').trim();
+  if ((m = s.match(new RegExp(String.raw`^(.+?)\s+doch\s+(?:noch\s+)?nicht\s+(?:${DONE_WORDS})$`, 'i')))) return m[1].replace(TASK_ARTICLE, '').trim();
+  if ((m = s.match(/^(?:ich\s+)?(?:hab(?:e)?|habe\s+ich)\s+(.+?)\s+(?:aus\s+versehen|versehentlich|falsch)\s+abgehakt$/i))) return m[1].replace(TASK_ARTICLE, '').trim();
+  if ((m = s.match(/^(.+?)\s+(?:aus\s+versehen|versehentlich)\s+abgehakt$/i))) return m[1].replace(TASK_ARTICLE, '').trim();
+  if ((m = s.match(/^(?:bitte\s+)?(?:nimm|setz|mach)\s+(.+?)\s+(?:wieder\s+)?(?:zurück|zurueck|auf\s+offen|offen)$/i)) && !/^(?:das|es|alles|dies|that|it)$/i.test(m[1])) return m[1].replace(TASK_ARTICLE, '').trim();
+  if ((m = s.match(/^(.+?)\s+(?:wasn'?t|was\s+not|isn'?t|is\s+not)\s+(?:actually\s+)?(?:done|out)(?:\s+after\s+all)?$/i))) return m[1].replace(TASK_ARTICLE, '').trim();
+  return null;
+}
+
+/** "Was muss heute Abend raus?", "Welche Tonne muss raus?", "Was kommt demnächst?" */
+export function outlookAsked(text: string): boolean {
+  const s = text.replace(/[!?.…]+$/g, '').trim();
+  if (!/^(?:was|welche[rsn]?|what|which|und|steht|kommt)\b/i.test(s) && !/\?\s*$/.test(text)) return false;
+  return (
+    /\b(?:heute|morgen)\s+abend\b.*\b(?:raus|rausstellen|rausbringen|vor\s+die\s+tür)\b/i.test(s) ||
+    /\bwelche\s+(?:tonne|tonnen|müll\w*|muell\w*)\b/i.test(s) ||
+    /\b(?:muss|müssen|muessen)\b.*\braus\b/i.test(s) ||
+    /\b(?:demnächst|demnaechst|als\s+nächstes|als\s+naechstes|in\s+den\s+nächsten\s+tagen)\b/i.test(s) ||
+    /\bwas\s+kommt\s+(?:bald|noch)\b/i.test(s) ||
+    /\b(?:coming\s+up|goes\s+out\s+tonight|which\s+bin)\b/i.test(s)
+  );
+}
+
+/** "Mika hat jetzt 29", "Mika trägt jetzt Größe 116" – a corrected value (number or size), never a list line. */
+export function factUpdateOf(text: string): string | null {
+  const s = text.replace(/[!.…]+$/g, '').trim();
+  const m = s.match(/^(\p{Lu}[\p{L}-]*(?:['’]s?)?)\s+(hat|trägt|traegt|braucht|ist)\s+(?:jetzt|inzwischen|mittlerweile)\s+(.+)$/u);
+  if (!m || !/\d|^(?:größe\s+|groesse\s+)?(?:xxs|xs|s|m|l|xl|xxl|xxxl)$/i.test(m[3]) || m[3].split(' ').length > 3) return null;
+  return `${m[1]} ${m[2]} ${m[3]}`;
+}
+
+/** "Welche Schuhgröße hat Mika?", "Was ist Mikas Schuhgröße?", "Wie ist die Schuhgröße von Mika?" → subject, property. */
+export function recallOf(text: string): { subject: string; property: string } | null {
+  const s = text.replace(/[!?.…]+$/g, '').trim();
+  let m: RegExpMatchArray | null;
+  if ((m = s.match(/^(?:welche[rsn]?\s+|was\s+für\s+(?:eine?n?\s+)?)([\p{L}-]+)\s+(?:hat|trägt|traegt|braucht)\s+(\p{Lu}[\p{L}-]*)(?:\s+(?:jetzt|eigentlich|gerade|noch))?$/iu))) return { subject: m[2], property: m[1] };
+  if ((m = s.match(/^wie\s+(?:ist|lautet|war)\s+(?:die\s+|der\s+|das\s+)?([\p{L}-]+)\s+von\s+(\p{Lu}[\p{L}-]*)(?:\s+(?:jetzt|eigentlich|gerade))?$/iu))) return { subject: m[2], property: m[1] };
+  if ((m = s.match(/^(?:[Ww]as|[Ww]ie)\s+(?:ist|war)\s+(\p{Lu}[\p{L}-]*?)(?:['’]s?|s)\s+([\p{L}-]+)(?:\s+(?:jetzt|eigentlich|gerade))?$/u))) return { subject: m[1], property: m[2] };
+  if ((m = s.match(/^[Ww]hat(?:'s|\s+is)\s+(\p{Lu}[\p{L}-]*)'s\s+([\p{L}\s-]+?)$/u))) return { subject: m[1], property: m[2] };
+  if ((m = s.match(/^(?:[Ww]hich|[Ww]hat)\s+([\p{L}\s-]+?)\s+does\s+(\p{Lu}[\p{L}-]*)\s+(?:have|wear|need)$/u))) return { subject: m[2], property: m[1] };
+  return null;
+}
+
+/** "bei Lidl", "im Rewe", "at Aldi" → the shop named in a money question */
+export function shopOf(text: string): string | null {
+  const m = text.match(/\b(?:bei|beim|im|at)\s+(?:der\s+|dem\s+)?([\p{L}&'.-]{2,})/u);
+  if (!m || /^(?:uns|mir|dir|monat|jahr|woche|einkauf\w*|month|year|week)$/i.test(m[1])) return null;
+  return m[1];
+}
+
+const WD: Record<string, number> = { sonntag: 0, montag: 1, dienstag: 2, mittwoch: 3, donnerstag: 4, freitag: 5, samstag: 6, sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+const plusDays = (d: string, n: number) => {
+  const x = new Date(`${d}T12:00:00Z`);
+  x.setUTCDate(x.getUTCDate() + n);
+  return x.toISOString().slice(0, 10);
+};
+
+/**
+ * A task sentence without a model: "Zahnarzt Dienstag um 10", "Oma anrufen morgen 18:30", "Elternabend am 24.10. um
+ * 19 Uhr" → name, day (YYYY-MM-DD) and time. Rhythms ("jeden Samstag") stay for the model or the app. Pure.
+ */
+export function taskWhen(text: string, ref: string): { name: string; day: string | null; time: string | null } {
+  let s = text.replace(/[\s.!]+$/g, '').trim();
+  if (/\b(?:jede[nrs]?|alle\s+\d+|wöchentlich|woechentlich|täglich|taeglich|monatlich|abwechselnd|every|weekly|daily|monthly)\b/i.test(s)) return { name: s, day: null, time: null };
+  let time: string | null = null;
+  let day: string | null = null;
+  let m: RegExpMatchArray | null;
+  const hm = (h: string, mi?: string) => (Number(h) < 24 && Number(mi ?? 0) < 60 ? `${String(Number(h)).padStart(2, '0')}:${(mi ?? '00').padStart(2, '0')}` : null);
+  if ((m = s.match(/\s*\b(?:um|at|ab)\s+(\d{1,2})(?:[:.](\d{2}))?\s*(?:uhr|h|o'?clock)?(?=\s|$)/i)) || (m = s.match(/\s*\b(\d{1,2})[:](\d{2})\s*(?:uhr)?(?=\s|$)/i)) || (m = s.match(/\s*\b(\d{1,2})\s*uhr\b/i))) {
+    time = hm(m[1], m[2]);
+    if (time) s = s.replace(m[0], ' ');
+  }
+  if ((m = s.match(/\s*\b(?:am\s+)?(\d{1,2})\.(\d{1,2})\.(\d{2,4})?(?=\s|$)/i))) {
+    const y = m[3] ? (m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3])) : Number(ref.slice(0, 4));
+    let iso = `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    if (!m[3] && iso < ref) iso = `${y + 1}${iso.slice(4)}`;
+    if (!Number.isNaN(Date.parse(iso))) {
+      day = iso;
+      s = s.replace(m[0], ' ');
+    }
+  } else if ((m = s.match(/(?:^|\s)(?:am\s+|on\s+|nächsten\s+|naechsten\s+|next\s+)?(heute|übermorgen|uebermorgen|morgen|today|tomorrow|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|monday|tuesday|wednesday|thursday|friday|saturday|sunday)(?!\p{L})/iu))) {
+    const w = m[1].toLowerCase();
+    if (w === 'heute' || w === 'today') day = ref;
+    else if (w === 'morgen' || w === 'tomorrow') day = plusDays(ref, 1);
+    else if (w === 'übermorgen' || w === 'uebermorgen') day = plusDays(ref, 2);
+    else {
+      const cur = new Date(`${ref}T12:00:00Z`).getUTCDay();
+      day = plusDays(ref, (WD[w] - cur + 7) % 7 || 7);
+    }
+    s = s.replace(m[0], ' ');
+  }
+  const name = s.replace(/\s+/g, ' ').replace(/^[\s,;:-]+|[\s,;:-]+$/g, '').trim();
+  return { name: name || text.trim(), day, time };
+}
+
 export function parseIntent(input: string): Intent {
   const text = clean(input);
   if (!text) return { kind: 'unknown' };
@@ -94,6 +207,13 @@ export function parseIntent(input: string): Intent {
   if (!wishy && (m = text.match(/^(?:bitte\s+)?(?:merk(?:e)?\s+dir|notier(?:e)?\s+dir|remember(?:\s+that)?|note\s+that)[:,]?\s+(.+)$/i))) return { kind: 'remember', text: clean(m[1].replace(/^(?:dass|that)\s+/i, '')) };
   if ((m = text.match(/^(?:bitte\s+)?(?:vergiss|forget)[:,]?\s+(?:dass\s+|that\s+)?(.+)$/i))) return { kind: 'forget', text: clean(m[1]) };
 
+  // "Die Biotonne war doch noch nicht raus" – a task ticked off too early, never a list line
+  const undone = undoDoneOf(input.trim());
+  if (undone) return { kind: 'undo_done', task: undone };
+  // "Mika hat jetzt 29" – a new value for something ToHuus remembers
+  const fact = factUpdateOf(text);
+  if (fact) return { kind: 'fact', text: fact };
+
   // a purchase: "Hab (gestern) bei Aldi Milch, Eier und Brot für 12,40 gekauft"
   if (
     (m = text.match(
@@ -105,6 +225,9 @@ export function parseIntent(input: string): Intent {
     return { kind: 'purchase', when: m[4]?.toLowerCase() === 'yesterday' ? 'yesterday' : 'today', shop: m[2], items: items(m[1]), total: money(m[3]) };
 
   // questions
+  const asked = recallOf(input.trim());
+  if (asked) return { kind: 'recall', ...asked };
+  if (outlookAsked(input.trim())) return { kind: 'outlook' };
   const day = tasksDay(input.trim());
   if (day) return { kind: 'tasks', day };
   if ((m = text.match(/^(?:haben\s+wir|hamma|gibt\s+es|gibt's|ist)\s+(?:noch\s+)?(?:genug\s+)?(.+?)(?:\s+(?:da|im\s+haus|zu\s+hause|daheim))?\s*\??$/i)) && !/kochen|essen|liste|fällig/i.test(m[1]))
@@ -113,7 +236,10 @@ export function parseIntent(input: string): Intent {
   if (/\b(fällig|faellig|due)\b|was\s+(?:fehlt|brauchen\s+wir)|what\s+do\s+we\s+need|what'?s\s+missing/i.test(text)) return { kind: 'due' };
   if (/\b(liste|list)\b/i.test(text) && /^(?:was|zeig|show|what)/i.test(text)) return { kind: 'list' };
   if (/\b(kochen|essen|koch|cook|eat|dinner|abendessen|mittagessen)\b/i.test(text) && /^(?:was|wat|what|any|ideen?|idea)/i.test(text)) return { kind: 'cook' };
-  if (/\b(ausgegeben|ausgaben|budget|geld|spent|spending|money)\b/i.test(text)) return { kind: 'money' };
+  if (/\b(ausgegeben|ausgaben|budget|geld|spent|spending|money)\b/i.test(text)) {
+    const shop = shopOf(text);
+    return shop ? { kind: 'money', shop } : { kind: 'money' };
+  }
 
   // lists, also with several clauses: "Milch ist alle und 2 Paprika", "Wir brauchen Eier, Butter und was für Sonntag"
   const list = /\?/.test(input) ? null : readItems(text);

@@ -10,6 +10,7 @@ import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { APNS_TOKEN, apnsConfigured, listDevices as listApnsDevices, registerDevice, removeDevice, sendApns } from '../lib/apns.js';
 import { MODULES, modules, setModules } from '../lib/modules.js';
+import { config } from '../config.js';
 import { PERSON_EVENTS, memberEmail, personPrefs, presence, setPersonPrefs, setPresence } from '../lib/notify-prefs.js';
 import { activeTrips, addToTrip, endTrip, setTripPrivate, tripPrivate } from '../lib/trips.js';
 import '../lib/list-jobs.js';
@@ -235,7 +236,8 @@ r.get('/notify/prefs', async (req, res) => {
   const p = personPrefs(uid);
   const mods = modules();
   res.json({
-    events: PERSON_EVENTS.filter((e) => !e.module || mods[e.module]).map((e) => ({
+    // the trial notice exists only in the cloud (trial-end.ts)
+    events: PERSON_EVENTS.filter((e) => (!e.module || mods[e.module]) && (e.key !== 'billing.trial' || config.multiTenant)).map((e) => ({
       key: e.key,
       label: t(e.label),
       apns: Boolean(p.events[e.key]?.apns),

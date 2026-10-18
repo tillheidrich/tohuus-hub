@@ -12,6 +12,9 @@ struct PaywallView: View {
     @State private var redeem = false
     @State private var manage = false
     @State private var restoring = false
+    /// why it opened (also `AppModel.paywallReason`): one line on top, counted without tracking (PlanMoments.swift)
+    var reason: String? = nil
+    private var why: String? { reason ?? app.paywallReason }
 
     var body: some View {
         NavigationStack {
@@ -25,6 +28,10 @@ struct PaywallView: View {
                         giftNote(gift)
                         legal
                     } else {
+                        if let h = PaywallReason.headline(why) {
+                            Text(h).font(.headline).foregroundStyle(Theme.primaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                         currentPlan
                         Picker(L("Billing period"), selection: $yearly) {
                             Text(L("Monthly")).tag(false)
@@ -35,7 +42,8 @@ struct PaywallView: View {
                         planCard(plan: "haushalt", title: L("Household"), symbol: "house")
                         planCard(plan: "plus", title: L("Plus"), symbol: "sparkles")
                         if let life = storeKit.lifetime, app.billing?.lifetime != true { lifetimeCard(life) }
-                        freeCard
+                        // Free only while the server still has it (afterTrial 'free'); since 18 Oct 2026: read-only
+                        if app.billing?.plans?["free"]?.object != nil { freeCard } else { withoutPlanNote }
                         if let m = storeKit.message { Text(m).font(.footnote).foregroundStyle(Theme.info) }
                         legal
                     }
@@ -52,6 +60,7 @@ struct PaywallView: View {
                 await storeKit.loadProducts()
                 await app.refreshBilling()
             }
+            .task { await app.api?.billingEvent("paywall.view", reason: why ?? "settings") }
             .offerCodeRedemption(isPresented: $redeem) { _ in
                 Task { await app.refreshBilling() }
             }
@@ -66,8 +75,14 @@ struct PaywallView: View {
             Text(app.billing?.planLabel ?? L("Free – without AI")).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
             if app.billing?.plan == "trial", let d = ServerDate.parse(app.billing?.trialEndsAt ?? app.activeHousehold?.trialEndsAt) {
                 let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: d).day ?? 0)
-                Text(LF("Everything included for %d more days (until %@). After that Free – nothing is charged automatically.",
-                        days, d.formatted(date: .long, time: .omitted)))
+                Text(app.billing?.plans?["free"]?.object != nil
+                     ? LF("Everything included for %d more days (until %@). After that Free – nothing is charged automatically.", days, d.formatted(date: .long, time: .omitted))
+                     : LF("Everything included for %d more days (until %@). After that read-only – nothing is charged automatically and nothing is deleted.", days, d.formatted(date: .long, time: .omitted)))
+                    .font(.footnote).foregroundStyle(Theme.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if app.billing?.readonly == true {
+                Text(L("Your trial is over. Everything stays visible and you can export it in Settings. With Household or Plus you carry on."))
                     .font(.footnote).foregroundStyle(Theme.ink2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -103,7 +118,7 @@ struct PaywallView: View {
                 } else if gift.forever == true {
                     Text(L("Your household has this plan for good. Nothing is charged."))
                 } else if let d = ServerDate.parse(gift.until) {
-                    Text(LF("Your household has this plan until %@. After that Free – nothing is charged automatically.", d.formatted(date: .long, time: .omitted)))
+                    Text(LF("Your household has this plan until %@. Nothing is charged automatically and nothing is deleted.", d.formatted(date: .long, time: .omitted)))
                 }
             }
             .font(.footnote).foregroundStyle(Theme.ink2)
@@ -150,8 +165,10 @@ struct PaywallView: View {
                 }
                 Button {
                     Task {
+                        await app.api?.billingEvent("purchase.start", reason: why ?? "settings")
                         if await storeKit.purchase(product, household: app.session?.householdId) {
                             Haptics.success()
+                            await app.api?.billingEvent("purchase.done", reason: why ?? "settings")
                             await app.refreshBilling()
                         }
                     }
@@ -180,8 +197,10 @@ struct PaywallView: View {
             Text("\(product.displayPrice) \(product.periodLabel)").font(.headline).foregroundStyle(Theme.ink)
             Button {
                 Task {
+                    await app.api?.billingEvent("purchase.start", reason: why ?? "settings")
                     if await storeKit.purchase(product, household: app.session?.householdId) {
                         Haptics.success()
+                        await app.api?.billingEvent("purchase.done", reason: why ?? "settings")
                         await app.refreshBilling()
                     }
                 }
@@ -193,6 +212,15 @@ struct PaywallView: View {
             }
             .buttonStyle(PrimaryButtonStyle())
             .disabled(storeKit.purchasing != nil)
+        }
+    }
+
+    /// No Free in ToHuus Cloud (18 Oct 2026): what happens without a plan, in plain words.
+    private var withoutPlanNote: some View {
+        Card(title: L("Without a plan"), systemImage: "eye") {
+            Text(L("14 days of everything for free with every new household. After that, without a plan, everything stays visible and you can export it – adding and changing things carries on with Household or Plus. Nothing is deleted."))
+                .font(.subheadline).foregroundStyle(Theme.ink2)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -264,9 +292,14 @@ enum PlanText {
         if l["assistantPerMonth"]?.int == 0 {
             out.append(L("Without AI: the assistant understands simple sentences like “milk and bread”"))
         } else if let n = l["assistantPerMonth"]?.int {
-            out.append(l["assistantThrottleOnly"]?.bool == true
-                       ? LF("%d assistant messages a month – after that slower, never blocked", n)
-                       : LF("%d assistant messages a month", n))
+            if l["assistantThrottleOnly"]?.bool == true, let hard = l["assistantHardPerMonth"]?.int {
+                // F5 (18 Oct 2026): slower from the allowance, AI pauses at the hard limit until the month ends
+                out.append(LF("%d assistant messages a month, then slower; from %d AI pauses until the month ends", n, hard))
+            } else {
+                out.append(l["assistantThrottleOnly"]?.bool == true
+                           ? LF("%d assistant messages a month – after that slower, never blocked", n)
+                           : LF("%d assistant messages a month", n))
+            }
         }
         if let n = l["receiptAiPerDay"]?.int, n > 0 { out.append(LF("Up to %d receipt photos read a day", n)) }
         if let b = l["storageBytes"]?.double {
@@ -279,7 +312,7 @@ enum PlanText {
         switch plan {
         case "plus":
             return [L("Everything in Household"), L("Week plan from what you have at home"), L("A look back at every month"), L("New ToHuus recipes for the season, with pictures"),
-                    LF("%d assistant messages a month – after that slower, never blocked", 1500), LF("%@ for receipts and photos", "5 GB")]
+                    LF("%d assistant messages a month, then slower; from %d AI pauses until the month ends", 1500, 3000), LF("%@ for receipts and photos", "5 GB")]
         case "haushalt":
             return [L("The whole history: prices, spending, what you buy how often"), L("Connected households and shared lists"),
                     LF("%d assistant messages a month", 100), LF("%@ for receipts and photos", "2 GB")]

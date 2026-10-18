@@ -4,3 +4,15 @@ data
 .env
 .git
 test/fixtures/private
+# not needed in the image, and nothing secret in the build context (review 18.10.2026 P2-8)
+openrouter-api-key.txt
+*api-key*.txt
+*.key
+*.pem
+.xfer
+store-assets
+ios
+site
+docs
+design-prototypes
+ha-integration

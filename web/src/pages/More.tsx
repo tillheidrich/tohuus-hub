@@ -22,6 +22,7 @@ import {
   type Icon,
   Info,
   BookOpen,
+  Brain,
   Lightbulb,
   ListChecks,
   MapPin,
@@ -35,22 +36,25 @@ import {
   Suitcase,
   UsersThree,
   Wrench,
+  Coins,
 } from '@phosphor-icons/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { invalidate, post } from '../api';
 import { useInstance } from '../data';
 import { t } from '../i18n';
-import { moreGroups } from '../nav';
+import { moneyInMore, moreGroups } from '../nav';
 import { Avatar } from '../ui';
 
-const ICONS: Record<string, Icon> = { Bell, Printer, Sparkle, SquaresFour, UserCircle, Gift, Info, BookOpen, Lightbulb, ListChecks, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
+const ICONS: Record<string, Icon> = { Brain, Coins, Bell, Printer, Sparkle, SquaresFour, UserCircle, Gift, Info, BookOpen, Lightbulb, ListChecks, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
 
 export function More({ me }: { me: Me }) {
   const nav = useNavigate();
   const loc = useLocation();
   const inst = useInstance();
-  const groups = moreGroups({ guest: me.actor.houseGuest?.level, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: me.modules });
+  const gl = me.actor.houseGuest?.level;
+  // Geld without a place in the phone tab bar: first row here (phones only – the desktop sidebar has it)
+  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: me.modules, money: moneyInMore(gl, me.modules) });
   return (
     <div className="more-page">
       <header className="more-me">
@@ -69,7 +73,7 @@ export function More({ me }: { me: Me }) {
       </button>
       <div className="more-groups">
         {groups.map((g) => (
-          <section key={g.key}>
+          <section key={g.key} className={g.items.every((l) => l.phoneOnly) ? 'more-phone-only' : undefined}>
             <h2 className="eyebrow more-group-title">{g.title}</h2>
             <div className="more-list">
               {g.items.map((l) => {

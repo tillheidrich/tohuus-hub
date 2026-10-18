@@ -314,6 +314,15 @@ extension APIClient {
         _ = try await send("DELETE", "api/push/apns/\(token)", as: Ignored.self)
     }
 
+    /// DELETE /api/auth/app/devices/current – on sign-out the server forgets this app token, so a copy of it (device
+    /// backup, a sold iPad) is worthless. Best effort with a short timeout and without the 401 handler (which would
+    /// sign out again): offline, the token simply runs out 180 days after its last use.
+    func revokeOwnToken() async {
+        guard var req = try? request("DELETE", "api/auth/app/devices/current", timeout: 5) else { return }
+        req.setValue(nil, forHTTPHeaderField: "X-Household")
+        _ = try? await URLSession.shared.data(for: req)
+    }
+
     /// Plain decoding (no snake-case conversion): event keys such as "auth.new_device" must stay as they are.
     private func rawJSON(_ path: String) async throws -> JSONValue {
         let data = try await getData(path)

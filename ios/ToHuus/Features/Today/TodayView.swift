@@ -379,7 +379,7 @@ struct TodayView: View {
 
     private func canOpen(_ target: String) -> Bool {
         let p = target.split(separator: "?").first.map(String.init) ?? target
-        return ["/import", "/geld", "/ausgaben", "/einkauf", "/bestand", "/kochen", "/rezepte"].contains { p == $0 || p.hasPrefix($0 + "/") }
+        return ["/import", "/geld", "/ausgaben", "/einkauf", "/bestand", "/aufgaben", "/kochen", "/rezepte"].contains { p == $0 || p.hasPrefix($0 + "/") }
     }
 
     private func open(_ target: String) {
@@ -387,7 +387,8 @@ struct TodayView: View {
         if p.hasPrefix("/import") { path.append(Push.imports) }
         else if p.hasPrefix("/geld") || p.hasPrefix("/ausgaben") { openTab(.money) }
         else if p.hasPrefix("/einkauf") { openTab(.shopping) }
-        else if p.hasPrefix("/bestand") { openTab(.pantry) }
+        else if p.hasPrefix("/bestand") { openTab(.stock) }
+        else if p.hasPrefix("/aufgaben") { openTab(.tasks) }
         else if p.hasPrefix("/kochen") || p.hasPrefix("/rezepte") { openTab(.cooking) }
     }
 
@@ -397,7 +398,7 @@ struct TodayView: View {
         switch key {
         case "home": showFirstRun = true
         case "invite": path.append(Push.invites)
-        case "stock": if app.moduleOn("stock") { openTab(.pantry) } else { showReceipt = true }
+        case "stock": if app.moduleOn("stock") { openTab(.stock) } else { showReceipt = true }
         case "phone": path.append(Push.notifications)
         case "recipe": openTab(.cooking)
         default: break

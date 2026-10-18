@@ -65,7 +65,7 @@ import { register as register_wish } from './tools-wish.js';
 import { register as register_house } from './tools-house.js';
 import { norm } from '../lib/text.js';
 import { signImagesInHtml } from '../lib/images.js';
-import { entitlement } from '../lib/plans.js';
+import { entitlement, planOf } from '../lib/plans.js';
 import { DEVICE_PLATFORM_IDS, devicePlatformOf } from '../lib/device-platforms.js';
 
 const likeEsc = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -667,7 +667,9 @@ export async function handleMcp(req: Request, res: Response) {
     return;
   }
   // OAuth scopes: mcp:read → read-only tools only; without mcp:health no allergies or children's details
-  const readOnly = Boolean(oauth && !oauth.scopes.includes('mcp:write'));
+  // a cloud household without a plan (trial over, docs/pricing.md 18.10.) is read-only here too – no write tools at all
+  const hh = config.multiTenant ? currentHousehold() : null;
+  const readOnly = Boolean(oauth && !oauth.scopes.includes('mcp:write')) || Boolean(hh && planOf(hh.id) === 'readonly');
   const health = !oauth || oauth.scopes.includes('mcp:health');
   const server = buildMcpServer(actorName, { readOnly });
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });

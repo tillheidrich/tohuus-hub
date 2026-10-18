@@ -35,7 +35,17 @@ export const r = Router();
 const audioUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 12 * 1024 * 1024, files: 1, fields: 5 } });
 /** about a minute of speech */
 const MAX_TRANSCRIPT = 1200;
-const userOf = (req: any): AssistantUser => ({ userId: req.actor?.userId ?? null, name: req.actor?.name ?? 'unknown' });
+/** where the person talks from: the iPhone app says so (X-ToHuus-Client, its web view's user agent), else a browser */
+export const platformOf = (req: any): 'ios' | 'web' =>
+  /^(?:ios|watch)$/i.test(String(req.headers?.['x-tohuus-client'] ?? '')) || /ToHuusApp/.test(String(req.headers?.['user-agent'] ?? '')) ? 'ios' : 'web';
+/** the same rights as in the app: admins (not permanent guests) may do admin things, guests none of the member things */
+const userOf = (req: any): AssistantUser => ({
+  userId: req.actor?.userId ?? null,
+  name: req.actor?.name ?? 'unknown',
+  admin: req.actor?.role === 'admin' && !req.actor?.houseGuest,
+  guest: Boolean(req.actor?.houseGuest) || req.actor?.role === 'guest',
+  platform: platformOf(req),
+});
 
 function fail(res: any, e: unknown) {
   if (e instanceof AssistantError || e instanceof UndoError || e instanceof MemoryError) return res.status(e.status).json({ error: e.message });

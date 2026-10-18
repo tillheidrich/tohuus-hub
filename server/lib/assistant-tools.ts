@@ -20,7 +20,10 @@ import { emit } from './bus.js';
 import { addToShopping, adjustStock, fmtQty, getProduct, listProducts, markUsedUp, matchIngredient, matchProduct } from './catalog.js';
 import { cookIdeas } from './cookideas.js';
 import { createImport, linesToImport } from './imports.js';
-import { forget, isSensitive, remember, restoreMemory, type MemoryRow } from './memory.js';
+import { KNOWLEDGE_TOOL_DEFS, KNOWLEDGE_TOOLS, runKnowledgeTool } from './knowledge.js';
+import { factOf, forget, isSensitive, recallFact, remember, restoreMemory, updateFactValue, valueOnlyOf, type MemoryRow } from './memory.js';
+import { healthShareAllowed } from './people-signals.js';
+import { MORE_TOOL_DEFS, MORE_TOOLS_BY_TOPIC, runMoreTool, undoMore } from './assistant-more.js';
 import { healthConsent } from './health-consent.js';
 import { moneyOverview, fmtMoney } from './money.js';
 import { historySince } from './limits.js';
@@ -55,6 +58,13 @@ export interface ToolCtx {
   actor: string;
   userId: number | null;
   actions: AssistantAction[];
+  /** the same rights as in the app: an admin (not a permanent guest), a permanent guest */
+  admin?: boolean;
+  guest?: boolean;
+  /** where the person talks from: 'ios' (iPhone app), 'web' – app_help words things for the platform */
+  platform?: 'ios' | 'web' | null;
+  /** when this message started (ms) – confirmations must come from an earlier message (assistant-more.ts) */
+  turnStart?: number;
 }
 
 export interface AssistantAction {
@@ -143,7 +153,7 @@ export function runUndo(token: string, userId: number | null, isAdmin = false) {
         break;
       default:
         // area tools (assistant-areas.ts): merged duplicates, adapted recipes, drafted Hausinfo cards, photo stock
-        if (!undoWish(u as { kind?: string; id?: number }) && !undoTask(u as never) && !undoHome(u as never)) undoArea(u);
+        if (!undoWish(u as { kind?: string; id?: number }) && !undoTask(u as never) && !undoHome(u as never) && !undoMore(u as never, row.user_id)) undoArea(u);
     }
     db.prepare(`UPDATE assistant_undo SET used_at = datetime('now') WHERE token = ?`).run(token);
   })();
@@ -388,9 +398,35 @@ export function moneySummary(input: { month?: string | null; shop?: string | nul
 export function rememberTool(ctx: ToolCtx, input: { text: string; kind?: 'fact' | 'preference' | 'routine' | null }) {
   // health notes need the household's one-time confirmation, which only the app's sheet can ask for
   if (isSensitive(input.text) && !healthConsent()) return { ok: false, hint: healthNoteHint() };
-  const row = remember({ text: input.text, kind: input.kind ?? 'fact', source: 'assistant', createdBy: ctx.actor, confirmed: true });
+  // "Mika hat jetzt Schuhgröße 29" is the fact "Mika hat Schuhgröße 29"
+  const text = factOf(input.text) ? String(input.text).replace(/\s+(?:jetzt|now|inzwischen)\b/i, '') : String(input.text ?? '');
+  // "Mika hat jetzt 29": the new value of the one fact about Mika with a number (Schuhgröße 28 → 29)
+  const vo = !factOf(text) ? valueOnlyOf(text) : null;
+  if (vo) {
+    const u = updateFactValue(vo.subject, vo.value, { viewer: ctx.userId, createdBy: ctx.actor, source: 'assistant', includeSensitive: Boolean(healthConsent()) });
+    if (u && 'ambiguous' in u) return { ok: false, hint: t('Which one changed: {list}?', { list: joinNames(u.ambiguous) }) };
+    if (u) {
+      record(ctx, 'remember', t('Updated: {text} (before: {old})', { text: u.row.text, old: u.replaced.text }), { kind: 'restore_memory', rows: [u.replaced] });
+      return { ok: true, id: u.row.id, updated_from: u.replaced.text, now: u.row.text };
+    }
+    return { ok: false, hint: t('What is {value} – shoe size, clothing size? Say it like “{subject} has shoe size {value}”.', { value: vo.value, subject: vo.subject }) };
+  }
+  const row = remember({ text, kind: input.kind ?? 'fact', source: 'assistant', createdBy: ctx.actor, confirmed: true });
+  if (row.replaced) {
+    // the same person and property: the old value is replaced (kept as history), undo brings it back
+    record(ctx, 'remember', t('Updated: {text} (before: {old})', { text: row.text, old: row.replaced.text }), { kind: 'restore_memory', rows: [row.replaced] });
+    return { ok: true, id: row.id, updated_from: row.replaced.text, now: row.text };
+  }
   record(ctx, 'remember', t('Remembered: {text}', { text: row.text }), { kind: 'forget', id: row.id });
   return { ok: true, id: row.id };
+}
+
+/** "Welche Schuhgröße hat Mika?" without a model: the remembered fact, or null. Health facts only with consent. */
+export function recallAnswer(ctx: ToolCtx, subject: string, property: string): string | null {
+  const r = recallFact(subject, property, { viewer: ctx.userId, includeSensitive: healthShareAllowed() });
+  if (!r) return null;
+  const before = r.history[r.history.length - 1];
+  return before ? t('{text} (before: {old}).', { text: r.text.replace(/[.!]+$/, ''), old: before.text }) : `${r.text.replace(/[.!]+$/, '')}.`;
 }
 
 export const healthNoteHint = () =>
@@ -497,8 +533,14 @@ export const TOOL_DEFS: ToolDef[] = [
   fn('recipe_to_list', 'Missing ingredients of a saved recipe onto the list.', { recipe: { type: 'string' } }, ['recipe']),
   fn('money_summary', 'Spending this month (or YYYY-MM): total, budget, shops, categories, price changes, hints.', { month: { type: 'string' }, shop: { type: 'string' }, category: { type: 'string' } }),
   fn('log_purchase', 'Record a purchase the person tells about.', { shop: { type: 'string' }, total: { type: 'number' }, date: { type: 'string' }, items: arr(obj({ name: { type: 'string' }, qty: { type: 'number' }, price: { type: 'number' } }, ['name'])) }, ['items']),
-  fn('remember', 'Remember a household fact or preference – only when asked ("merk dir …").', { text: { type: 'string' }, kind: { type: 'string', enum: ['fact', 'preference', 'routine'] } }, ['text']),
-  fn('forget', 'Forget something remembered (id or text).', { text: { type: 'string' }, id: { type: 'integer' } }),
+  fn(
+    'remember',
+    // a changed value replaces the old one (memory.ts fact keys) – no second row; kept short, it goes with every call
+    'Remember a fact when asked ("merk dir …") or changed ("Mika hat jetzt 29").',
+    { text: { type: 'string' }, kind: { type: 'string', enum: ['fact', 'preference', 'routine'] } },
+    ['text'],
+  ),
+  fn('forget', 'Forget a remembered fact (id or text).', { text: { type: 'string' }, id: { type: 'integer' } }),
   fn('house_info', 'How things work at home (Hausinfo): voice commands, routines, heating, blinds, bins, TV, fuse box, numbers. Never codes.', { query: { type: 'string' } }),
   fn('budget_set', 'Set or remove a spending budget (only after a yes). mine=true: only for the speaker, private.', { amount: { type: 'number', description: 'euros; null removes' }, period: { type: 'string', enum: ['week', 'month', 'year'] }, category: str('empty = everything'), mine: { type: 'boolean' } }, ['amount']),
   fn('app_help', 'Where a feature lives in the ToHuus app and its help page (for "how do I / where is / can ToHuus …").', { query: { type: 'string' } }, ['query']),
@@ -506,6 +548,8 @@ export const TOOL_DEFS: ToolDef[] = [
   ...WISH_TOOL_DEFS,
   ...TASK_TOOL_DEFS,
   ...HOME_TOOL_DEFS,
+  ...MORE_TOOL_DEFS,
+  ...KNOWLEDGE_TOOL_DEFS,
 ];
 
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
@@ -516,6 +560,10 @@ const TOOLS_BY_TOPIC: Record<string, string[]> = {
   // Aufgaben plus Im Kopf, Rückblick, Unterwegs (assistant-home.ts)
   tasks: [...TASK_TOOLS, ...HOME_TOOLS],
   help: ['app_help'],
+  // Kalender lesen, Bons ändern/löschen, „Wie kocht ihr?“ (assistant-more.ts) – only when the message is about them
+  ...MORE_TOOLS_BY_TOPIC,
+  // Haushaltswissen (knowledge.ts): change, delete, share or make private a card
+  knowledge: KNOWLEDGE_TOOLS,
 };
 
 /** Only the tools a message can need (fewer tokens, fewer wrong calls). */
@@ -562,7 +610,7 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
       case 'budget_set':
         return budgetSetTool(ctx, a);
       case 'app_help':
-        return appHelp(String(a.query ?? ''));
+        return appHelp(String(a.query ?? ''), lang() === 'de', ctx.platform ?? null);
       case 'list_show':
         return listShow();
       case 'list_add':
@@ -603,6 +651,10 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         if (wish !== undefined) return wish;
         const task = runTaskTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
         if (task !== undefined) return task;
+        const more = runMoreTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
+        if (more !== undefined) return more;
+        const kn = runKnowledgeTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
+        if (kn !== undefined) return kn;
         const home = runHomeTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
         if (home !== undefined) return home;
         const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo, ref) => record(ctx, kind, summary, undo as Undo | null, ref) }, name, a);

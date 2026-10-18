@@ -4,6 +4,7 @@ ToHuus Hub is developed in waves: each wave adds a set of feature areas, then ge
 
 ## Unreleased
 
+- Haushaltswissen „Was ToHuus sich merkt“ (docs/knowledge.md): cards subject · property · value on people, rooms, products or free subjects, with history (restore, remove), note, photo, „Nur ich / Ganzer Haushalt“ (share and make private), „Gäste sehen es auch“, delete with undo; „Schreib es ToHuus“ reads sentences without AI. New API `/api/knowledge` (+ `/say`, history, photo), migration `knowledge-1` on `ai_memory`, module switch `knowledge`, assistant screen `knowledge` and tool `knowledge_change`. Web `/wissen`, iPhone Mehr › Haushalt; shown in person and place sheets and linked from Hausinfo.
 - Final release instead of beta (docs/release-1.0.md):
   - Sign-up is open by default.
   - Licence codes for a month, a year or for good in /betrieb › Geschenke.

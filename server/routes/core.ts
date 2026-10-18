@@ -54,6 +54,7 @@ import { applyShareView, isMasked, notPrivate } from '../lib/share-core.js';
 import { canUseList, privateRowGuard } from '../lib/lists.js';
 import { uploadQuota } from '../lib/plans.js';
 import { queueScope } from '../lib/tenancy.js';
+import { passwordChangedMailLocal, revokeMemberCredentials } from '../lib/credential-revoke.js';
 import { clearChecked, removeItem, tickItem, withOrigin } from '../lib/shopping-trust.js';
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 8, fields: 20 } });
@@ -593,6 +594,11 @@ r.patch('/users/:id', (req, res) => {
     // sign out everywhere else
     const current = req.cookies?.[SESSION_COOKIE];
     db.prepare('DELETE FROM sessions WHERE user_id = ? AND token_hash != ?').run(target, current ? sha256(current) : '');
+    // and every other way in (A07, P1-1); an admin setting someone else's password counts as a reset
+    const self = req.actor?.userId === target;
+    const bearer = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7).trim() : null;
+    revokeMemberCredentials(target, { mode: self ? 'change' : 'reset', keepTokenHash: self && bearer ? sha256(bearer) : null });
+    passwordChangedMailLocal(target);
   }
   if (b.color) db.prepare('UPDATE users SET color = ? WHERE id = ?').run(b.color, target);
   if (b.name) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(b.name, target);

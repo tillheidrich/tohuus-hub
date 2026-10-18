@@ -162,7 +162,9 @@ describe('Sign in with Apple – app', () => {
     // the paywall reads what each plan includes from the billing status
     const b = await c.get('/api/billing/status', { authorization: `Bearer ${r.json.token}` });
     expect(b.json.plan).toBe('trial');
-    expect(b.json.plans.free.assistantPerMonth).toBe(0);
+    // no Free in the cloud since 18 Oct 2026: the paywall lists Haushalt and Plus only
+    expect(b.json.plans.free).toBeUndefined();
+    expect(b.json.plans.haushalt.assistantPerMonth).toBe(100);
     expect(b.json.plans.haushalt.features.fullHistory).toBe(true);
     expect(b.json.plans.plus.storageBytes).toBe(5120 * 1024 * 1024);
   });

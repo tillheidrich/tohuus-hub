@@ -22,14 +22,18 @@ final class AppModel {
     /// pushed screens (Aufgaben, Hausinfo, Bring mir was) set their own context and give the tab's back when they go
     var screenContext: String?
     var showPaywall = false
+    /// why the paywall opened (server routes/billing.ts PAYWALL_REASONS) – PaywallView shows one line about it
+    var paywallReason: String?
+    func openPaywall(_ reason: String? = nil) {
+        paywallReason = reason
+        showPaywall = true
+    }
     /// global search (GlobalSearchView) and the Mehr sheet – opened from the magnifier and the avatar on every root screen
     var showSearch = false
     var showMore = false
     /// a ToHuus label link opened from outside (QR scanned with the camera app – universal link ".../q/<code>")
     var pendingLabel: String?
-    /// Zuhause tab: "tasks" or "stock" (HomeView), set when someone opens /aufgaben or the pantry from elsewhere
-    var homeSegment: String?
-    /// set by deep links (tohuus://shopping from the widget)
+    /// set by deep links (tohuus://shopping from the widget; tasks, stock and the old pantry/home – AppArea.from)
     var requestedTab: String?
     /// iPad kitchen mode (big week plan, recipe step by step, list to tick)
     var showKitchen = false
@@ -305,6 +309,8 @@ final class AppModel {
 
     func switchHousehold(_ h: HouseholdRef) {
         guard var s = session, let token = SessionInfo.token, s.householdId != h.id.value else { return }
+        // my private tasks of the household I leave go out of my calendar (CalendarSyncViews.swift)
+        if let old = store?.householdKey { CalendarSync.shared.forgetPrivate(household: old, keepChoice: true) }
         s.householdId = h.id.value
         s.save()
         PhoneWatchBridge.shared.forgetWatchToken()
@@ -351,7 +357,15 @@ final class AppModel {
 
     func signOut(message: String? = nil) {
         PhoneWatchBridge.shared.signOut()
-        if let api { Task { await PushManager.shared.forget(api: api) } }
+        // private tasks written into a calendar on this phone go, and the choice with them (CalendarSyncViews.swift)
+        CalendarSync.shared.signedOut()
+        // push first (needs the token), then the token itself is revoked on the server (P1-2); both best effort
+        if let api {
+            Task {
+                await PushManager.shared.forget(api: api)
+                await api.revokeOwnToken()
+            }
+        }
         store?.stopEvents()
         store = nil
         SessionInfo.clear()

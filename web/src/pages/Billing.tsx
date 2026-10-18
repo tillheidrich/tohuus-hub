@@ -17,6 +17,7 @@ const PLAN_LABEL: Record<Billing['plan'], string> = {
   haushalt: 'Haushalt',
   plus: 'Plus',
   selfhost: 'Self-hosted',
+  readonly: 'Read-only – the trial is over',
 };
 
 const fmtDay = (d?: string | null) => (d ? new Date(d.length <= 10 ? `${d}T12:00:00` : d).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' }) : '');
@@ -37,6 +38,12 @@ export function BillingCard() {
       <h2 id="plan-h" style={{ margin: 0 }}>
         {t('Plan & storage')}
       </h2>
+      {(s.plan === 'trial' || s.readonly) && <TrialLookBack />}
+      {s.readonly && (
+        <p style={{ margin: 0 }}>
+          {t('Your trial is over. With Haushalt or Plus you can carry on – or run ToHuus on your own server. Everything stays visible and you can export it.')}
+        </p>
+      )}
       <dl className="plan-facts">
         <dt>{t('Plan')}</dt>
         <dd>{s.lifetime ? t('Plus – for good') : t(PLAN_LABEL[s.plan] ?? s.plan)}</dd>
@@ -125,9 +132,48 @@ export function BillingCard() {
           ? t('A gift from us – nothing is charged. When it ends, every household keeps what it has on its own – nothing is deleted.')
           : s.gift
             ? t('A gift from us – nothing is charged.')
-            : t('Subscriptions are bought in the ToHuus iPhone app for now – one per household, everyone in it benefits. When a subscription ends, the household goes back to Free and nothing is deleted.')}
+            : t('You subscribe in the ToHuus app on the iPhone: 14 days of everything for free, then from 3,99 € a month. One plan covers the whole household. Without a plan the household is read-only, nothing is deleted and the export always works.')}
       </p>
     </section>
+  );
+}
+
+interface TrialSummary {
+  state: 'running' | 'ended' | 'none';
+  endsAt: string | null;
+  daysLeft: number | null;
+  counts: Record<'receipts' | 'receiptsTotal' | 'listTicks' | 'trips' | 'tasksDone' | 'recipesCooked' | 'assistant' | 'products', number> | null;
+  show: boolean;
+}
+
+/**
+ * "Was ToHuus in den 14 Tagen für euch gemerkt hat" (F1, server/lib/trial-end.ts): counts of the own household only,
+ * from its own database. Shown here while the trial runs and after it ended.
+ */
+function TrialLookBack() {
+  const q = useApi<TrialSummary>(['billing', 'trial-summary'], '/billing/trial-summary');
+  const c = q.data?.counts;
+  if (!c || q.data?.state === 'none') return null;
+  const money = (n: number) => n.toLocaleString(locale(), { style: 'currency', currency: 'EUR' });
+  const lines = [
+    c.listTicks > 0 && t('{n} times ticked off the list', { n: c.listTicks }),
+    c.trips > 0 && t('{n} shopping trips done', { n: c.trips }),
+    c.receipts > 0 && (c.receiptsTotal > 0 ? t('{n} receipts kept, {sum} in total', { n: c.receipts, sum: money(c.receiptsTotal) }) : t('{n} receipts kept', { n: c.receipts })),
+    c.tasksDone > 0 && t('{n} tasks done', { n: c.tasksDone }),
+    c.recipesCooked > 0 && t('{n} times cooked from a recipe', { n: c.recipesCooked }),
+    c.assistant > 0 && t('{n} questions to the assistant', { n: c.assistant }),
+    c.products > 0 && t('{n} things ToHuus remembers for you', { n: c.products }),
+  ].filter(Boolean) as string[];
+  if (lines.length < 2) return null;
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      <b>{q.data?.state === 'running' ? t('What ToHuus has remembered for you so far') : t('What ToHuus remembered for you in the 14 days')}</b>
+      <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
+        {lines.map((l) => (
+          <li key={l}>{l}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

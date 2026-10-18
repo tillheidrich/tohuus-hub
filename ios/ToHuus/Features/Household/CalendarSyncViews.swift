@@ -8,7 +8,8 @@ import UIKit
 // the phone – unless the person switches on the AI check, then titles and days of the next 30 days are sent once per
 // "Vorschläge holen" and nothing is stored.
 // Two ways: household tasks with a date can be written into an existing calendar; moving an entry there moves the
-// task, deleting it there means ToHuus doesn't write it again. Private tasks never go into a calendar from here.
+// task, deleting it there means ToHuus doesn't write it again. Private tasks go only into the calendar the person
+// picks for them ("Deine privaten Aufgaben", off by default) – only their own, never anyone else's, mapped apart.
 
 struct CalsyncData: Decodable, Sendable {
     struct Kind: Decodable, Sendable, Identifiable, Hashable {
@@ -110,8 +111,31 @@ struct CalendarSyncPrefs: Codable, Equatable {
     var lastRun: Double = 0
     /// when reading was set up on this phone – a "Kalender trennen" (from anywhere) after it ends reading here
     var connectedAt: Double?
+    /// "Deine privaten Aufgaben": the signed-in person's own private tasks into a calendar of their choice (default off)
+    var priv: PrivateWrite?
 
-    var active: Bool { !readIds.isEmpty || writeId != nil }
+    /// what ToHuus wrote into one calendar and what the person deleted there
+    struct WriteState: Codable, Equatable {
+        /// task id → calendar item identifier of the entry ToHuus wrote
+        var written: [String: String] = [:]
+        /// task id → when ToHuus last wrote that entry (an entry changed later was changed by the person)
+        var stamps: [String: Double] = [:]
+        /// tasks whose entry the person deleted in the calendar – not written again
+        var skipped: [Int] = []
+    }
+    /// kept apart from the household mapping; `owner` = the member it was set up for (another person → it stops)
+    struct PrivateWrite: Codable, Equatable {
+        var calendarId: String
+        var owner: Int?
+        var state = WriteState()
+    }
+
+    var active: Bool { !readIds.isEmpty || writeId != nil || priv != nil }
+
+    var household: WriteState {
+        get { WriteState(written: written, stamps: stamps, skipped: skipped) }
+        set { written = newValue.written; stamps = newValue.stamps; skipped = newValue.skipped }
+    }
 
     static func key(_ household: String) -> String { "calsync.\(household)" }
     static func load(_ household: String) -> CalendarSyncPrefs {
@@ -161,19 +185,69 @@ final class CalendarSync {
     /// Stop reading and writing on this phone and take ToHuus' own entries out of the calendar again.
     func forget(household: String) {
         var p = CalendarSyncPrefs.load(household)
-        if hasAccess {
-            for (_, eid) in p.written {
-                if let event = store.calendarItem(withIdentifier: eid) as? EKEvent { try? store.remove(event, span: .thisEvent, commit: false) }
-            }
-            try? store.commit()
-        }
+        remove(p.written)
+        remove(p.priv?.state.written ?? [:])
         p.readIds = []
         p.writeId = nil
         p.written = [:]
         p.stamps = [:]
         p.skipped = []
+        p.priv = nil
         p.connectedAt = nil
         p.save(household)
+    }
+
+    /// Take ToHuus' own entries out of the calendar (wherever they are now).
+    private func remove(_ written: [String: String]) {
+        guard hasAccess, !written.isEmpty else { return }
+        for (_, eid) in written {
+            if let event = store.calendarItem(withIdentifier: eid) as? EKEvent { try? store.remove(event, span: .thisEvent, commit: false) }
+        }
+        try? store.commit()
+    }
+
+    /// Another calendar for the household's tasks: ToHuus' entries leave the old one, the next run writes them anew.
+    func setHouseholdCalendar(_ id: String?, household: String) {
+        var p = CalendarSyncPrefs.load(household)
+        guard p.writeId != id else { return }
+        remove(p.written)
+        p.writeId = id
+        p.household = .init()
+        // a "Kalender trennen" from before this moment must not undo it (disconnected())
+        if id != nil && p.connectedAt == nil { p.connectedAt = Date().timeIntervalSince1970 }
+        p.save(household)
+    }
+
+    /// "Meine privaten Aufgaben eintragen in": nil = off. The old calendar loses ToHuus' private entries.
+    func setPrivateCalendar(_ id: String?, household: String) {
+        var p = CalendarSyncPrefs.load(household)
+        guard p.priv?.calendarId != id else { return }
+        remove(p.priv?.state.written ?? [:])
+        p.priv = id.map { CalendarSyncPrefs.PrivateWrite(calendarId: $0) }
+        if id != nil && p.connectedAt == nil { p.connectedAt = Date().timeIntervalSince1970 }
+        p.save(household)
+    }
+
+    /// Switching to another household: this household's private entries leave the calendar (the choice stays,
+    /// switching back writes them again). Signing out (`keepChoice: false`) also forgets the choice – the next
+    /// person on this phone starts with it off.
+    func forgetPrivate(household: String, keepChoice: Bool) {
+        var p = CalendarSyncPrefs.load(household)
+        guard let priv = p.priv else { return }
+        remove(priv.state.written)
+        if keepChoice {
+            p.priv?.state.written = [:]
+            p.priv?.state.stamps = [:]
+        } else {
+            p.priv = nil
+        }
+        p.save(household)
+    }
+
+    /// Signed out: private entries of every household on this phone go.
+    func signedOut() {
+        let keys = SharedConfig.defaults.dictionaryRepresentation().keys.filter { $0.hasPrefix("calsync.") }
+        for key in keys { forgetPrivate(household: String(key.dropFirst("calsync.".count)), keepChoice: false) }
     }
 
     struct SyncResult { var found = 0; var written = 0; var moved = 0 }
@@ -219,60 +293,87 @@ final class CalendarSync {
             result.found = dates.count
         }
 
-        // 2 – household tasks into an existing calendar, both ways
-        if let wid = p.writeId, let target = store.calendar(withIdentifier: wid), target.allowsContentModifications {
-            let tasks = try await api.care().tasks.filter { $0.nextDue != nil && $0.visibility != "private" && $0.extKind == nil && !p.skipped.contains($0.id) }
-            let ids = Set(tasks.map { String($0.id) })
-            for task in tasks {
-                let key = String(task.id)
-                if let eid = p.written[key] {
-                    guard let event = store.calendarItem(withIdentifier: eid) as? EKEvent else {
-                        // deleted in the calendar: the person doesn't want it there
-                        p.written[key] = nil
-                        p.stamps[key] = nil
-                        p.skipped.append(task.id)
-                        continue
-                    }
-                    let changedThere = (event.lastModifiedDate?.timeIntervalSince1970 ?? 0) > (p.stamps[key] ?? 0) + 2
-                    if changedThere {
-                        let day = ServerDate.day(event.startDate)
-                        let time: String? = event.isAllDay ? nil : Self.hhmm(event.startDate)
-                        if day != task.nextDue || time != task.dueTime {
-                            var body: [String: Any] = ["next_due": day, "due_time": time.map { $0 as Any } ?? NSNull()]
-                            if !event.isAllDay, let end = event.endDate { body["duration_min"] = max(5, min(1440, Int(end.timeIntervalSince(event.startDate) / 60))) }
-                            try? await api.saveCareTask(id: task.id, body)
-                            result.moved += 1
-                        }
-                        p.stamps[key] = Date().timeIntervalSince1970
-                    } else if fill(event, from: task) {
-                        _ = try? store.save(event, span: .thisEvent, commit: false)
-                        p.stamps[key] = Date().timeIntervalSince1970
-                        result.written += 1
-                    }
-                } else {
-                    let event = EKEvent(eventStore: store)
-                    event.calendar = target
-                    guard fill(event, from: task) else { continue }
-                    event.url = URL(string: "tohuus://tasks/\(task.id)")
-                    event.notes = L("From ToHuus – move it here and the task moves too.")
-                    if (try? store.save(event, span: .thisEvent, commit: false)) != nil {
-                        p.written[key] = event.calendarItemIdentifier
-                        p.stamps[key] = Date().timeIntervalSince1970
-                        result.written += 1
-                    }
+        // 2 – household tasks into an existing calendar, both ways; 3 – my own private tasks into the calendar I chose
+        let houseTarget = p.writeId.flatMap { store.calendar(withIdentifier: $0) }.flatMap { $0.allowsContentModifications ? $0 : nil }
+        let privTarget = p.priv.flatMap { store.calendar(withIdentifier: $0.calendarId) }.flatMap { $0.allowsContentModifications ? $0 : nil }
+        if houseTarget != nil || privTarget != nil {
+            let care = try await api.care()
+            let dated = care.tasks.filter { $0.nextDue != nil && $0.extKind == nil }
+            if let target = houseTarget {
+                var state = p.household
+                let tasks = dated.filter { !$0.isPrivate && !state.skipped.contains($0.id) }
+                await write(tasks, into: target, state: &state, result: &result, api: api)
+                p.household = state
+            }
+            if let target = privTarget, var priv = p.priv {
+                if let me = care.me, priv.owner == nil || priv.owner == me {
+                    // only mine – never anyone else's, even if a server ever sent them
+                    priv.owner = me
+                    let tasks = dated.filter { $0.isPrivate && $0.ownerUserId == me && !priv.state.skipped.contains($0.id) }
+                    await write(tasks, into: target, state: &priv.state, result: &result, api: api)
+                    p.priv = priv
+                } else if care.me != nil {
+                    // someone else is signed in now: take the other person's entries out and switch it off
+                    remove(priv.state.written)
+                    p.priv = nil
                 }
             }
-            // done for good, archived or without a date any more: take ToHuus' own entry away again
-            for (key, eid) in p.written where !ids.contains(key) {
-                if let event = store.calendarItem(withIdentifier: eid) as? EKEvent { try? store.remove(event, span: .thisEvent, commit: false) }
-                p.written[key] = nil
-                p.stamps[key] = nil
-            }
-            try? store.commit()
         }
         p.lastRun = Date().timeIntervalSince1970
         p.save(household)
         return result
+    }
+
+    /// Write tasks into one calendar and take over what the person changed there (date, time, duration).
+    /// Deleted there → not written again; gone from `tasks` (done for good, no date, not mine any more) → entry removed.
+    private func write(_ tasks: [CareTask], into target: EKCalendar, state: inout CalendarSyncPrefs.WriteState, result: inout SyncResult, api: APIClient) async {
+        let ids = Set(tasks.map { String($0.id) })
+        for task in tasks {
+            let key = String(task.id)
+            if let eid = state.written[key] {
+                guard let event = store.calendarItem(withIdentifier: eid) as? EKEvent else {
+                    // deleted in the calendar: the person doesn't want it there
+                    state.written[key] = nil
+                    state.stamps[key] = nil
+                    state.skipped.append(task.id)
+                    continue
+                }
+                let changedThere = (event.lastModifiedDate?.timeIntervalSince1970 ?? 0) > (state.stamps[key] ?? 0) + 2
+                if changedThere {
+                    let day = ServerDate.day(event.startDate)
+                    let time: String? = event.isAllDay ? nil : Self.hhmm(event.startDate)
+                    if day != task.nextDue || time != task.dueTime {
+                        var body: [String: Any] = ["next_due": day, "due_time": time.map { $0 as Any } ?? NSNull()]
+                        if !event.isAllDay, let end = event.endDate { body["duration_min"] = max(5, min(1440, Int(end.timeIntervalSince(event.startDate) / 60))) }
+                        try? await api.saveCareTask(id: task.id, body)
+                        result.moved += 1
+                    }
+                    state.stamps[key] = Date().timeIntervalSince1970
+                } else if fill(event, from: task) {
+                    _ = try? store.save(event, span: .thisEvent, commit: false)
+                    state.stamps[key] = Date().timeIntervalSince1970
+                    result.written += 1
+                }
+            } else {
+                let event = EKEvent(eventStore: store)
+                event.calendar = target
+                guard fill(event, from: task) else { continue }
+                event.url = URL(string: "tohuus://tasks/\(task.id)")
+                event.notes = L("From ToHuus – move it here and the task moves too.")
+                if (try? store.save(event, span: .thisEvent, commit: false)) != nil {
+                    state.written[key] = event.calendarItemIdentifier
+                    state.stamps[key] = Date().timeIntervalSince1970
+                    result.written += 1
+                }
+            }
+        }
+        // done for good, archived or without a date any more: take ToHuus' own entry away again
+        for (key, eid) in state.written where !ids.contains(key) {
+            if let event = store.calendarItem(withIdentifier: eid) as? EKEvent { try? store.remove(event, span: .thisEvent, commit: false) }
+            state.written[key] = nil
+            state.stamps[key] = nil
+        }
+        try? store.commit()
     }
 
     /// The next 30 days of the picked calendars for the AI check – titles, days, times. Bins are left out on the server.
@@ -341,6 +442,15 @@ struct CalendarSyncView: View {
         return LF("about every %d days", d)
     }
 
+    /// EventKit has no public "shared" flag, so we warn where we know: the household's own calendar (tasks are
+    /// written there for everyone) or one read for the household's bins (typically the shared family calendar).
+    private var privateWarning: String? {
+        guard let id = prefs.priv?.calendarId else { return nil }
+        if id == prefs.writeId { return L("This is the household’s calendar, too – whoever shares it sees your private tasks there.") }
+        if prefs.readIds.contains(id) { return L("You read this calendar for the household, so it is probably shared – others would see your private tasks there.") }
+        return nil
+    }
+
     private func sub(_ k: CalsyncData.Kind) -> String {
         [k.next.map { LF("next %@", ServerDate.shortDay($0) ?? $0) } ?? L("no date ahead"),
          rhythm(k),
@@ -377,6 +487,8 @@ struct CalendarSyncView: View {
                     ForEach(sync.calendars, id: \.calendarIdentifier) { c in
                         let on = prefs.readIds.contains(c.calendarIdentifier)
                         Button {
+                            // fresh from disk: a run in the background may have written entries since the screen opened
+                            prefs = CalendarSyncPrefs.load(household)
                             if on { prefs.readIds.removeAll { $0 == c.calendarIdentifier } } else { prefs.readIds.append(c.calendarIdentifier) }
                             if prefs.connectedAt == nil && !prefs.readIds.isEmpty { prefs.connectedAt = Date().timeIntervalSince1970 }
                             prefs.save(household)
@@ -504,7 +616,10 @@ struct CalendarSyncView: View {
 
             if access {
                 Section {
-                    Picker(L("Write tasks into"), selection: Binding(get: { prefs.writeId ?? "" }, set: { v in prefs.writeId = v.isEmpty ? nil : v; prefs.save(household) })) {
+                    Picker(L("Write tasks into"), selection: Binding(get: { prefs.writeId ?? "" }, set: { v in
+                        sync.setHouseholdCalendar(v.isEmpty ? nil : v, household: household)
+                        prefs = CalendarSyncPrefs.load(household)
+                    })) {
                         Text(L("No calendar")).tag("")
                         ForEach(sync.calendars.filter(\.allowsContentModifications), id: \.calendarIdentifier) { c in
                             Text("\(c.title) · \(c.source.title)").tag(c.calendarIdentifier)
@@ -513,7 +628,27 @@ struct CalendarSyncView: View {
                 } header: {
                     Text(L("Both ways"))
                 } footer: {
-                    Text(L("Household tasks with a date go into this calendar – never private ones. Move an entry there and the task moves too. Delete it there and ToHuus doesn’t write it again."))
+                    Text(L("Household tasks with a date go into this calendar – private ones only into the calendar you pick for them below. Move an entry there and the task moves too. Delete it there and ToHuus doesn’t write it again."))
+                }
+
+                Section {
+                    Picker(L("Write my private tasks into"), selection: Binding(get: { prefs.priv?.calendarId ?? "" }, set: { v in
+                        sync.setPrivateCalendar(v.isEmpty ? nil : v, household: household)
+                        prefs = CalendarSyncPrefs.load(household)
+                    })) {
+                        Text(L("Off")).tag("")
+                        ForEach(sync.calendars.filter(\.allowsContentModifications), id: \.calendarIdentifier) { c in
+                            Text("\(c.title) · \(c.source.title)").tag(c.calendarIdentifier)
+                        }
+                    }
+                    if let warning = privateWarning {
+                        Label(warning, systemImage: "exclamationmark.triangle")
+                            .font(.footnote).foregroundStyle(Theme.ink2)
+                    }
+                } header: {
+                    Text(L("Your private tasks"))
+                } footer: {
+                    Text(L("Only your own private tasks with a date, never anyone else’s. Pick a calendar only you see, like your personal iCloud calendar. Moving, deleting and done work as above."))
                 }
             }
 
@@ -707,11 +842,12 @@ struct TasksToCalendarHelpView: View {
             } header: { Text(L("Google, Outlook")) }
             Section {
                 Text(L("Into a calendar you already have (e.g. your family calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Both ways”."))
+                Text(L("Your private tasks into a calendar of your own (e.g. your personal iCloud calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Your private tasks”. Only yours, never anyone else’s."))
             } header: { Text(L("Your own calendar")) }
             Section {
                 Text(L("Just one task: open it and tap “Add to calendar”."))
             } footer: {
-                Text(L("Private tasks only appear when you choose so. The bins from your calendar are not written back – they are in there already."))
+                Text(L("Private tasks only appear when you choose so, and only your own: in Apple Calendar in “ToHuus · Mein Kalender”, which only you see; in a subscription link only if you switch on “Include my private tasks” when you create it; on the iPhone in the calendar you pick for them. The bins from your calendar are not written back – they are in there already."))
             }
         }
         .font(.subheadline)

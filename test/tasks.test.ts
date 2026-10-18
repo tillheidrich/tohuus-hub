@@ -688,7 +688,8 @@ describe('Wer macht was – habits, proposals, handing over (habits.ts)', () => 
     const open = Number(meal.run(day, 'Pasta').lastInsertRowid);
     const r = (await mira.req('GET', `/api/habits/cook?from=${day}&to=${day}`)).json;
     expect(r.lately).toMatchObject({ name: 'Sam' });
-    expect(r.suggestions).toEqual([expect.objectContaining({ entry_id: open, name: 'Sam', why: 'lately' })]);
+    // other tests may leave open meals on the same day – only ours matters here
+    expect(r.suggestions.filter((x: any) => x.entry_id === open)).toEqual([expect.objectContaining({ entry_id: open, name: 'Sam', why: 'lately' })]);
     expect(db.prepare(`SELECT COUNT(*) n FROM claims WHERE ref_id = ?`).get(open)).toEqual({ n: 0 });
     expect((await mira.req('GET', '/api/habits')).json.people.find((p: any) => p.name === 'Sam').does.map((d: any) => d.key)).toContain('cook');
   });
@@ -753,5 +754,73 @@ describe('Wochenrückblick – positive, mine only for me (weekly.ts)', () => {
     expect((await sam.req('POST', '/api/week-review/seen', { from: r.from })).status).toBe(200);
     expect((await sam.req('GET', '/api/week-review')).json.show).toBe(false);
     expect((await new Client().req('GET', '/api/week-review')).status).toBe(401);
+  });
+});
+
+describe('taking a done back later ("Zuletzt erledigt", history)', () => {
+  it('done returns its entry; the newest tick can be taken back by its log id – dates, turn and the week review follow', async () => {
+    const r = await mira.req('POST', '/api/care', { name: 'Biotonne raus', category: 'house', interval_n: 2, interval_unit: 'week', next_due: '2026-10-18', rotation: [`u${miraId}`, `u${samId}`] });
+    expect(r.status, JSON.stringify(r.json)).toBe(200);
+    const id = r.json.id;
+    const d1 = await mira.req('POST', `/api/care/${id}/done`, { done_on: '2026-10-17' });
+    expect(d1.json.log_id).toBeGreaterThan(0);
+    const d2 = await sam.req('POST', `/api/care/${id}/done`, {});
+    expect(d2.json.task.doer_key).toBe(`u${miraId}`);
+    // in the list: only Sam's newest tick offers "Rückgängig" to Sam; Mira's older one never does
+    const recent = (await sam.req('GET', '/api/care/recent')).json.filter((x: any) => x.task_id === id);
+    expect(recent.find((x: any) => x.id === d2.json.log_id).can_undo).toBe(true);
+    expect(recent.find((x: any) => x.id === d1.json.log_id).can_undo).toBe(false);
+    // the history in the detail says the same
+    const log = (await sam.req('GET', `/api/care/${id}`)).json.log;
+    expect(log.find((x: any) => x.id === d2.json.log_id).can_undo).toBe(true);
+    expect(log.find((x: any) => x.id === d1.json.log_id).can_undo).toBe(false);
+    expect(log[0].actor_user_id).toBeUndefined();
+    // an older entry can't be taken back – later dates and the turn were worked out from it
+    const old = await mira.req('POST', `/api/care/${id}/undo`, { log_id: d1.json.log_id });
+    expect(old.status).toBe(400);
+    expect(old.json.error).toBe('Nur das letzte Mal lässt sich zurücknehmen');
+    // the newest: back to the state after Mira's tick
+    const u = await sam.req('POST', `/api/care/${id}/undo`, { log_id: d2.json.log_id });
+    expect(u.status, JSON.stringify(u.json)).toBe(200);
+    expect(u.json.last_done).toBe('2026-10-17');
+    expect(u.json.next_due).toBe(d1.json.task.next_due);
+    expect(u.json.doer_key).toBe(`u${samId}`);
+    expect(db.prepare('SELECT COUNT(*) n FROM care_log WHERE task_id = ?').get(id)).toEqual({ n: 1 });
+    // a stale log id (already taken back) does nothing
+    expect((await sam.req('POST', `/api/care/${id}/undo`, { log_id: d2.json.log_id })).status).toBe(400);
+  });
+
+  it('somebody else\'s tick: a member can\'t take it back, an admin can', async () => {
+    const r = await sam.req('POST', '/api/care', { name: 'Altpapier raus', category: 'house', interval_n: 1, interval_unit: 'month' });
+    const id = r.json.id;
+    const d = await mira.req('POST', `/api/care/${id}/done`, {});
+    const row = (await sam.req('GET', '/api/care/recent')).json.find((x: any) => x.id === d.json.log_id);
+    expect(row.can_undo).toBe(false);
+    const no = await sam.req('POST', `/api/care/${id}/undo`, { log_id: d.json.log_id });
+    expect(no.status).toBe(403);
+    // without a log id the same rule holds (the old toast call)
+    expect((await sam.req('POST', `/api/care/${id}/undo`)).status).toBe(403);
+    // Mira did it herself – and as an admin she may take back Sam's ticks too
+    const d2 = await sam.req('POST', `/api/care/${id}/done`, {});
+    expect((await mira.req('GET', '/api/care/recent')).json.find((x: any) => x.id === d2.json.log_id).can_undo).toBe(true);
+    expect((await mira.req('POST', `/api/care/${id}/undo`, { log_id: d2.json.log_id })).status).toBe(200);
+    expect((await mira.req('POST', `/api/care/${id}/undo`, { log_id: d.json.log_id })).status).toBe(200);
+    expect((await mira.req('GET', `/api/care/${id}`)).json.last_done).toBeNull();
+  });
+
+  it('the rule itself: own ticks always, a shared device by its name, others only an admin', () => {
+    expect(care.mayUndo({ actor_user_id: 5, actor: 'Sam' }, { userId: 5 })).toBe(true);
+    expect(care.mayUndo({ actor_user_id: 5, actor: 'Sam' }, { userId: 6 })).toBe(false);
+    expect(care.mayUndo({ actor_user_id: 5, actor: 'Sam' }, { userId: 6, admin: true })).toBe(true);
+    expect(care.mayUndo({ actor_user_id: null, actor: 'Home Assistant' }, { userId: 6 })).toBe(false);
+    expect(care.mayUndo({ actor_user_id: null, actor: 'Küche' }, { userId: null, actor: 'Küche' })).toBe(true);
+  });
+});
+
+describe('Aufgaben has its own tab in the app', () => {
+  it('a task notification opens the Aufgaben tab, the pantry still opens Vorrat', async () => {
+    const { apnsPayload } = await import('../server/lib/apns');
+    expect(apnsPayload({ event: 'care.due', title: 'x', body: 'y', path: '/aufgaben' } as any).url).toBe('tohuus://tasks');
+    expect(apnsPayload({ event: 'stock.low', title: 'x', body: 'y', path: '/bestand' } as any).url).toBe('tohuus://pantry');
   });
 });

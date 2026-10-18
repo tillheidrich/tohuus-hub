@@ -14,6 +14,7 @@ import { t } from '../i18n.js';
 import { hashPassword, randomToken, rateLimited, rateLimitedGlobal, safeEqual, sha256 } from './auth.js';
 import { EMAIL_RE, authPolicy, cookieBase, deviceLabel, householdName, mailAvailable, normEmail, sendAuthMail, userById, userByName, userByVerifiedEmail, type UserAuthRow } from './auth-policy.js';
 import { AuthError, startSession } from './auth-sessions.js';
+import { passwordChangedMailLocal, revokeMemberCredentials } from './credential-revoke.js';
 
 export const LINK_MINUTES = 15;
 export const RESET_MINUTES = 30;
@@ -282,6 +283,9 @@ export function confirmPasswordReset(req: Request, res: Response, token: string,
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(password), row.user_id);
   db.prepare('DELETE FROM sessions WHERE user_id = ?').run(row.user_id);
   db.prepare(`UPDATE auth_tokens SET used_at = datetime('now') WHERE user_id = ? AND purpose = 'reset' AND used_at IS NULL`).run(row.user_id);
+  // a reset closes every way in: app tokens, MCP connections, CalDAV passwords, calendar links (A07, P1-1)
+  revokeMemberCredentials(row.user_id, { mode: 'reset' });
+  passwordChangedMailLocal(row.user_id);
   const u = userById(row.user_id)!;
   if (u.totp_secret) return { status: 'done' };
   startSession(req, res, u.id, 'reset');

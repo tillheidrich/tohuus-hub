@@ -76,6 +76,8 @@ interface GuideEntry {
   keys: RegExp;
   de: string;
   en: string;
+  /** in the iPhone app (and when unsure where the person is): no website, no redeeming codes (App Store 3.1.1) */
+  app?: { de: string; en: string };
   /** help page slug on the website (site/src/help.mjs, docs/help-slugs.md) */
   help?: string;
 }
@@ -83,14 +85,14 @@ interface GuideEntry {
 /** Where things live. Short on purpose: it goes to the model as a tool result. */
 export const APP_GUIDE: GuideEntry[] = [
   { keys: /liste|einkauf|list|shopping|abhaken|teilen|gemeinsam/i, de: 'Einkauf: Liste für alle im Haushalt, Abhaken im Laden, "Ich bring’s" zum Übernehmen, eigene private Listen über das Listen-Menü oben.', en: 'Shopping: one list for the household, tick off in the shop, "I’ll bring it" to claim items, private lists from the list menu at the top.', help: 'einkaufsliste' },
-  { keys: /bon|kassenbon|beleg|receipt|scan|foto.*bon|pdf|e-?mail|postfach/i, de: 'Bons: Kamera-Knopf oder Mehr › Import. Foto, PDF oder geteilter eBon; ToHuus liest Läden, Preise und Artikel, du bestätigst. In der Cloud mit Plus gibt es eine eigene Bon-Adresse zum Weiterleiten (Import › Bons per E-Mail).', en: 'Receipts: camera button or More › Import. Photo, PDF or shared e-receipt; ToHuus reads shop, prices and items, you confirm. In the cloud with Plus there is a receipt address to forward mails to (Import › Receipts by email).', help: 'kassenbons' },
+  { keys: /bon|kassenbon|beleg|receipt|scan|foto.*bon|pdf|e-?mail|postfach/i, de: 'Bons: Kamera-Knopf oder Mehr › Import. Foto, PDF oder geteilter eBon; ToHuus liest Läden, Preise und Artikel, du bestätigst. In der Cloud mit Plus gibt es eine eigene Bon-Adresse zum Weiterleiten (Import › Bons per E-Mail). Einen eingebuchten Bon öffnen › „Bon ändern“ (nimmt die Buchung zurück, du korrigierst und buchst neu) oder „Bon löschen“ (nimmt alles zurück).', en: 'Receipts: camera button or More › Import. Photo, PDF or shared e-receipt; ToHuus reads shop, prices and items, you confirm. In the cloud with Plus there is a receipt address to forward mails to (Import › Receipts by email). Open a booked receipt › “Change receipt” (takes the booking back, you correct it and book again) or “Delete receipt” (takes everything back).', help: 'kassenbons' },
   { keys: /vorrat|bestand|kühlschrank|kuehlschrank|haltbar|abgelaufen|pantry|stock|fridge|expir/i, de: 'Vorrat (freiwillig): Tab Bestand. Mengen, Haltbarkeit, "bald weg". Ein Foto vom Kühlschrank macht Vorschläge, du bestätigst.', en: 'Pantry (optional): Stock tab. Amounts, best-before, "use soon". A fridge photo makes suggestions you confirm.', help: 'vorrat' },
   { keys: /koch|rezept|was essen|gericht|cook|recipe|meal/i, de: 'Kochen: Tab Kochen. "Was geht heute" zeigt Gerichte aus dem, was da ist; Rezepte speichern, Portionen anpassen, Zutaten auf die Liste, Kochmodus.', en: 'Cooking: Cook tab. "What works today" shows meals from what is at home; save recipes, scale servings, ingredients to the list, cook mode.', help: 'kochen' },
   { keys: /import|link|instagram|tiktok|pinterest|youtube|website|social|chefkoch|bulk|viele rezepte/i, de: 'Rezepte holen: Kochen › Rezept hinzufügen › Link, Foto oder Text. Teilen aus Instagram, TikTok, Pinterest, YouTube geht direkt. Viele auf einmal über Mehr › Rezepte importieren oder eine verbundene KI (MCP).', en: 'Getting recipes: Cook › Add recipe › link, photo or text. Sharing from Instagram, TikTok, Pinterest, YouTube works directly. Many at once via More › Import recipes or a connected AI (MCP).', help: 'rezepte-importieren' },
   { keys: /cookidoo|thermomix|monsieur|cookit|bosch|lidl|kenwood|küchenmaschine|kuechenmaschine|appliance/i, de: 'Küchenmaschinen-Rezepte (Cookidoo, Monsieur Cuisine, Cookit …): Link teilen, Titel und Zutaten bestätigen. Zutaten und Schritte bringst du mit, per Screenshot oder kopiertem Text; ToHuus ruft diese Seiten in der Cloud nie selbst ab.', en: 'Appliance recipes (Cookidoo, Monsieur Cuisine, Cookit …): share the link, confirm title and ingredients. You bring ingredients and steps as screenshots or copied text; in the cloud ToHuus never fetches these sites itself.', help: 'cookidoo' },
   { keys: /wochenplan|plan|woche|abstimm|vote|week/i, de: 'Wochenplan: Kochen › Woche. Gerichte auf Tage legen, Abstimmung für den Haushalt, Zutaten der Woche auf die Liste.', en: 'Week plan: Cook › Week. Put meals on days, let the household vote, the week’s ingredients onto the list.', help: 'kochen' },
   { keys: /geld|ausgab|budget|monat|jahr|teuer|spar|money|spend|cost/i, de: 'Geld: Tab Geld. Ausgaben aus Bons, Kategorien, Läden, Preisänderungen. Budgets pro Monat oder Jahr, gemeinsam oder nur für dich (Geld › Budgets).', en: 'Money: Money tab. Spending from receipts, categories, shops, price changes. Budgets per month or year, shared or just for you (Money › Budgets).', help: 'geld' },
-  { keys: /wunsch|wünsch|merkliste|geschenk|wish|gift/i, de: 'Wünsche: Einkauf › Wünsche. Wunschlisten für jede Person; Reservierungen sieht die beschenkte Person nicht.', en: 'Wishes: Shopping › Wishes. A wish list per person; the person a gift is for never sees reservations.', help: 'wer-sieht-was' },
+  { keys: /wunsch|wünsch|merkliste|geschenk(?!code)|wish|gift(?! code)/i, de: 'Wünsche: Einkauf › Wünsche. Wunschlisten für jede Person; Reservierungen sieht die beschenkte Person nicht.', en: 'Wishes: Shopping › Wishes. A wish list per person; the person a gift is for never sees reservations.', help: 'wer-sieht-was' },
   { keys: /bring mir was|bar|bestell|snack|treat|kinder|kids/i, de: '"Bring mir was": Mehr › Bring mir was. Eine kleine Karte (Getränke, Snacks), die Familie bestellt, du bringst.', en: '"Bring me something": More › Bring me something. A small menu (drinks, snacks) the family orders from.', help: 'gut-zu-wissen' },
   { keys: /hausinfo|babysitter|gast|gäste|sitter|wlan|code|house info|guest/i, de: 'Hausinfo: Mehr › Hausinfo. Karten für Gäste und Babysitter (WLAN, Müll, Heizung …), als Link teilbar. Codes bleiben geschützt.', en: 'House info: More › House info. Cards for guests and sitters (Wi-Fi, bins, heating …), shareable as a link. Codes stay protected.', help: 'hausinfo' },
   { keys: /aufgabe|putz|haushalt|wer ist dran|abwechsel|im blick|pflege|frist|erledig|wiederkehr|apple erinnerung|erinnerungen|reminders|termin|kalender|calendar|task|chore/i, de: 'Aufgaben: Mehr › Aufgaben (und auf Heute). Haushalt wie Bad, Müll, Bettwäsche und Pflege & Fristen wie Wasserfilter oder Reisepass; einmal, wiederkehrend oder bei Bedarf; für alle oder nur für dich; mit Unterpunkten, „Ich hab’s im Blick“ und Abwechseln. Mit Uhrzeit wird eine Aufgabe zum Termin und steht als Eintrag im Kalender: Apple Kalender über Aufgaben › Erinnerungen & Kalender, Google oder Outlook über ein Kalender-Abo.', en: 'Tasks: More › Tasks (and on Today). Household chores like bathroom, bins, bed linen and care & deadlines like water filter or passport; once, recurring or when needed; for everyone or only for you; with sub-items, "I keep it in mind" and taking turns. With a time a task becomes an appointment and shows in the calendar: Apple Calendar via Tasks › Reminders & Calendar, Google or Outlook via a calendar subscription.', help: 'gut-zu-wissen' },
@@ -105,6 +107,16 @@ export const APP_GUIDE: GuideEntry[] = [
   { keys: /mitglied|einlad|teilen|partner|familie|haushalt teilen|invite|member|share household/i, de: 'Haushalt teilen: Einstellungen › Haushalt › Einladen. Rechte für Mitglieder und Gäste stellst du dort ein.', en: 'Share the household: Settings › Household › Invite. Rights for members and guests are set there.', help: 'haushalt-teilen' },
   { keys: /privat|wer sieht|sichtbar|datenschutz|privacy|who sees/i, de: 'Privat bleibt: deine Gespräche mit mir, private Listen, eigene Ausgaben und Budgets, Reservierungen auf Wünsche. Andere im Haushalt sehen das nicht.', en: 'Stays private: your chats with me, private lists, personal spending and budgets, reservations on wishes. Others in the household do not see them.', help: 'wer-sieht-was' },
   { keys: /ki|ai\b|assistent|sprechen|apple intelligence|abschalten|ausschalten|assistant|speak/i, de: 'KI: Einstellungen › Zugänge & KI. Ganz aus, nur ohne Gesundheitsdaten, oder an. Auf dem iPhone kann Apple Intelligence auf dem Gerät helfen, das schaltest du dort selbst an oder aus.', en: 'AI: Settings › Access & AI. Off, without health data, or on. On iPhone, Apple Intelligence can help on the device; you switch it on or off there.', help: 'ki-an-oder-aus' },
+  {
+    keys: /zugangscode|geschenkcode|gutschein|\bcodes?\b|einlös|einloes|access code|gift code|voucher|redeem|beta/i,
+    de: 'Codes: Einen Zugangscode brauchst du nur für ein neues Konto in der Testphase: auf der Anmeldeseite „Ich habe einen Zugangscode oder eine Einladung“, dann „Konto erstellen“. Einen Geschenkcode für ein Abo löst ein Admin des Haushalts unter Einstellungen › Abo & Speicher › Code einlösen ein. Wer zu eurem Haushalt dazukommen soll, bekommt eine Einladung (Einstellungen › Haushalt › Einladen).',
+    en: 'Codes: you only need an access code for a new account during the test phase: on the sign-in page “I have an access code or an invitation”, then “Create account”. A gift code for a plan is redeemed by an admin of the household under Settings › Plan & storage › Redeem a code. Someone who should join your household gets an invitation (Settings › Household › Invite).',
+    app: {
+      de: 'Codes: Einen Zugangscode brauchst du nur für ein neues Konto in der Testphase: auf dem Startbildschirm „Ich habe einen Zugangscode“, dann „Konto erstellen“. Wer zu eurem Haushalt dazukommen soll, bekommt eine Einladung (Einstellungen › Haushalt › Einladen).',
+      en: 'Codes: you only need an access code for a new account during the test phase: on the start screen “I have an access code”, then “Create account”. Someone who should join your household gets an invitation (Settings › Household › Invite).',
+    },
+    help: 'erste-schritte',
+  },
   { keys: /abo|plus|preis|kosten|kündig|kuendig|testen|trial|lifetime|subscription|cancel|price/i, de: 'Abo: Einstellungen › Abo. 14 Tage Plus zum Ausprobieren, danach Free, Haushalt oder Plus; Kündigen über den App Store oder dort.', en: 'Subscription: Settings › Subscription. 14 days of Plus to try, then Free, Household or Plus; cancel in the App Store or there.', help: 'abo-und-kuendigen' },
   { keys: /home assistant|alexa|siri|kurzbefehl|shortcut|widget|watch|uhr/i, de: 'Verbinden: Einstellungen › Verbindungen (Home Assistant, Siri-Kurzbefehle). Auf dem iPhone gibt es Widgets und die Apple Watch.', en: 'Connect: Settings › Connections (Home Assistant, Siri Shortcuts). On iPhone there are widgets and the Apple Watch app.', help: 'home-assistant' },
   { keys: /claude|chatgpt|mcp|eigene ki|connected ai/i, de: 'Eigene KI verbinden: Einstellungen › Verbindungen › Claude oder ChatGPT (MCP). Die KI kann dann Liste, Rezepte, Vorrat und Geld bedienen.', en: 'Connect your own AI: Settings › Connections › Claude or ChatGPT (MCP). It can then use the list, recipes, pantry and money.', help: 'claude-chatgpt' },
@@ -116,15 +128,26 @@ export const APP_GUIDE: GuideEntry[] = [
 
 const helpUrl = (slug: string) => `${config.siteUrl}/hilfe/${slug}.html`;
 
-/** The tool: matching guide entries for a question about the app (at most 3). Exported for tests. */
-export function appHelp(query: string, de = lang() === 'de') {
+/**
+ * The tool: matching guide entries for a question about the app (at most 3). Exported for tests.
+ * `platform`: 'web' (browser) gets the full text; the iPhone app – and anything unknown – gets the app wording,
+ * which never points to the website for codes or purchases (App Store Review Guideline 3.1.1).
+ */
+export function appHelp(query: string, de = lang() === 'de', platform: 'ios' | 'web' | null = null) {
   const q = String(query ?? '').toLowerCase().slice(0, 300);
   const hits = APP_GUIDE.map((g) => ({ g, score: (q.match(new RegExp(g.keys.source, 'gi')) ?? []).length })).filter((x) => x.score > 0);
   hits.sort((a, b) => b.score - a.score);
   const pickList = (hits.length ? hits.map((h) => h.g) : APP_GUIDE.slice(0, 4)).slice(0, 3);
+  const inApp = platform !== 'web';
+  const text = (g: GuideEntry) => (inApp && g.app ? (de ? g.app.de : g.app.en) : de ? g.de : g.en);
   return {
-    matches: pickList.map((g) => ({ where: de ? g.de : g.en, ...(g.help ? { help: helpUrl(g.help) } : {}) })),
+    matches: pickList.map((g) => ({ where: text(g), ...(g.help ? { help: helpUrl(g.help) } : {}) })),
     all_help: `${config.siteUrl}/hilfe/`,
-    note: hits.length ? undefined : 'No exact match: answer from these or say honestly that ToHuus does not have it.',
+    note: [
+      hits.length ? '' : 'No exact match: answer from these or say honestly that ToHuus does not have it.',
+      platform === 'ios' ? 'iPhone app: never send the person to the website or browser to redeem codes or buy anything.' : '',
+    ]
+      .filter(Boolean)
+      .join(' ') || undefined,
   };
 }

@@ -70,7 +70,8 @@ DATA_DIR/
 | `AI_*` | – | assistant, voice and receipt photos – [assistant.md](assistant.md); every OpenRouter request is pinned to Mistral (EU). Key, base URL, models and fallbacks can be overridden at runtime in the back office ([Runtime settings](#runtime-settings)) |
 | `ADMIN_HOST` | – | own host for the back office, see "Back office on its own host" |
 | `OPERATOR_EMAILS` | – | comma-separated account e-mails that may open the operator page `/betrieb` |
-| `AI_PRICE_PER_MTOK`, `AI_PRICES`, `AI_PRICE_CURRENCY` | – | prices for the AI cost estimate on `/betrieb` (`"in,out"` per million tokens, default `0.1,0.3`; JSON per model; label, default `USD`) |
+| `AI_PRICE_PER_MTOK`, `AI_PRICES`, `AI_PRICE_CURRENCY` | – | prices for the AI cost estimate on `/betrieb` and the cost cap: `AI_PRICES` JSON per model › `AI_PRICE_PER_MTOK` `"in,out"` for every model (only when set) › the table in `server/lib/ai-prices.ts` (OpenRouter list prices of 18.10.2026, e.g. Mistral Small 2603 `0.15,0.60`) › `0.15,0.60`; label, default `USD` |
+| `AI_HOUSEHOLD_COST_CAP`, `BILLING_COMMISSION`, `TRIAL_AFTER` | `3.5`, `0.15`, `readonly` | AI cost per household and month before AI pauses (price currency, `0` = off); Apple's share for the net revenue estimate on `/betrieb › Umsatz`; what follows the trial without a plan (`readonly` or `free`). Back office › Einstellungen overrides all three (`ai.household_cost_cap`, `billing.commission`, `trial.after`) |
 | `OCR_DISABLED=1`, `TESSERACT_BIN` | – | switch server text recognition off / use another binary ([receipts.md](receipts.md)) |
 
 `ADMIN_NAME`/`ADMIN_PASSWORD`, `SEED_DEMO`, `MCP_PATH_SECRET`, `OIDC_*` and `DB_ENCRYPTION_KEY` are self-host only
@@ -412,7 +413,9 @@ Cloud only. Who: accounts whose e-mail address is listed in `OPERATOR_EMAILS` (c
 | Last file sync to S3: households, files uploaded / deleted, bytes, pending for the next night, errors (`backups.lastFileSync`) | `backups/.last-file-sync` | no | no |
 | Server: process memory, container memory limit, disk free, load, uptime | the OS | no | no |
 
-Cost = prompt tokens × input price + completion tokens × output price, per million tokens: `AI_PRICES` (JSON `{ "<model>": [in, out] }`) or `AI_PRICE_PER_MTOK` (`"in,out"`, default `0.1,0.3`), currency label `AI_PRICE_CURRENCY` (default `USD`). It is an estimate, not the invoice.
+Cost = prompt tokens × input price + completion tokens × output price, per million tokens (`server/lib/ai-prices.ts`: `AI_PRICES` › `AI_PRICE_PER_MTOK` › built-in table › `0.15,0.60`), currency label `AI_PRICE_CURRENCY` (default `USD`). It is an estimate, not the invoice.
+
+**Umsatz** (`GET /api/operator/revenue`, `server/lib/revenue.ts`, 18.10.2026): active subscriptions, MRR net (estimate: gross ÷ 1.19 × (1 − `billing.commission`), yearly ÷ 12), cohorts per sign-up week (trial started/ended, paid by day 35 via `households.first_paid_at`), App Store notifications per week (new, renewed, auto-renew off, expired, refunds, billing issues), first purchases per plan and period (Production only), AI cost per plan class (`ai_cost_by_plan`: trial, haushalt, plus, lifetime, gift, none – no household), households over 1,500 / at 3,000 messages / at the cost cap, and counters for paywall views by reason, purchases and review requests (`POST /api/billing/event`, stat_events_daily). Counts of households below 3 are null. No ids, names or addresses.
 
 Never shown: household names, people, lists, receipts, conversations, e-mail addresses (the audit names accounts by id).
 

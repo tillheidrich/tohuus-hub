@@ -1,11 +1,13 @@
 /**
- * Navigation model (UX benchmark 14 Oct 2026, docs/design/ux-benchmark-2026-10-14.md): five tabs – Heute · Einkauf ·
- * Kochen · Zuhause · Geld – plus "Mehr" (one list: Haushalt, Einstellungen, Geräte, Hilfe). Zuhause holds Aufgaben and
- * Vorrat (switch at the top of both pages) and the doors Wo ist was?, Hausinfo, Urlaub. Same structure as the iPhone app.
- * Shared by the mobile tab bar, the desktop sidebar and the /mehr page.
+ * Navigation model (UX benchmark 14 Oct 2026, docs/design/ux-benchmark-2026-10-14.md; 18 Oct 2026): the areas Heute ·
+ * Einkauf · Kochen · Aufgaben · Vorrat · Geld plus "Mehr" (one list: Haushalt, Einstellungen, Geräte, Hilfe).
+ * Aufgaben and Vorrat used to share one tab "Zuhause" behind a switch – now each is a tab of its own; the doors moved
+ * along: Hausinfo and Urlaub on top of Aufgaben, Wo ist was? on top of Vorrat (home/HomeSwitch.tsx).
+ * The phone tab bar holds five (barTabs): Geld gives way first and then is the first row in Mehr. The desktop sidebar
+ * shows every area. Same structure as the iPhone app (MainTabView.swift).
  * Each entry knows how to load its page chunk, so the tab bar can prefetch on hover / touchstart.
  */
-import { Basket, ChefHat, Coins, House, HouseLine, type Icon } from '@phosphor-icons/react';
+import { Basket, ChefHat, Coins, House, ListChecks, Package, type Icon } from '@phosphor-icons/react';
 import { qc, get } from './api';
 import { guestAllows } from './people/access';
 import { t } from './i18n';
@@ -14,6 +16,7 @@ import { t } from './i18n';
 export const load = {
   shopping: () => import('./pages/Shopping'),
   stock: () => import('./pages/Stock'),
+  care: () => import('./pages/Care'),
   cook: () => import('./pages/Cook'),
   money: () => import('./pages/Money'),
   more: () => import('./pages/More'),
@@ -48,10 +51,20 @@ export const TABS: Tab[] = [
   },
   { key: '/kochen', to: '/kochen', label: () => t('Cook'), icon: ChefHat, prefetch: () => load.cook() },
   {
-    key: '/zuhause',
+    key: '/aufgaben',
     to: '/aufgaben',
-    label: () => t('Home'),
-    icon: HouseLine,
+    label: () => t('Tasks'),
+    icon: ListChecks,
+    prefetch: () => {
+      load.care();
+      warm(['care'], '/care');
+    },
+  },
+  {
+    key: '/bestand',
+    to: '/bestand',
+    label: () => t('Pantry'),
+    icon: Package,
     prefetch: () => {
       load.stock();
       warm(['products'], '/products');
@@ -60,18 +73,23 @@ export const TABS: Tab[] = [
   { key: '/geld', to: '/geld', label: () => t('Money'), icon: Coins, prefetch: () => load.money() },
 ];
 
-/** Zuhause opens the side used last (Aufgaben or Vorrat) – and only one the person may see */
-export function homeTarget(guest: string | undefined, mods?: Record<string, boolean>): string | null {
-  let last = '/aufgaben';
-  try {
-    last = localStorage.getItem('sw.home.side') === 'stock' ? '/bestand' : '/aufgaben';
-  } catch {
-    /* private mode */
-  }
-  const ok = (p: string) => guestAllows(guest as never, p) && moduleAllows(mods, p);
-  if (ok(last)) return last;
-  const other = last === '/bestand' ? '/aufgaben' : '/bestand';
-  return ok(other) ? other : null;
+/** places in the phone tab bar – a sixth would squeeze the labels */
+export const BAR_LIMIT = 5;
+
+/** the areas this person can use: switched on ("Was nutzt ihr?") and open for a guest's level */
+export function visibleTabs(guest: string | undefined, mods?: Record<string, boolean>): Tab[] {
+  return TABS.filter((l) => guestAllows(guest as never, l.to) && moduleAllows(mods, l.to));
+}
+
+/** the phone tab bar: at most five, Geld gives way first (it is then the first row in Mehr) */
+export function barTabs(tabs: Tab[]): Tab[] {
+  return tabs.length > BAR_LIMIT ? tabs.filter((l) => l.key !== '/geld').slice(0, BAR_LIMIT) : tabs;
+}
+
+/** Geld is there but has no place in the phone tab bar */
+export function moneyInMore(guest: string | undefined, mods?: Record<string, boolean>): boolean {
+  const tabs = visibleTabs(guest, mods);
+  return tabs.some((l) => l.key === '/geld') && !barTabs(tabs).some((l) => l.key === '/geld');
 }
 
 export interface MoreLink {
@@ -82,6 +100,8 @@ export interface MoreLink {
   icon: string;
   admin?: boolean;
   cloud?: boolean;
+  /** only on a phone (it has its own place in the desktop sidebar) */
+  phoneOnly?: boolean;
 }
 export interface MoreGroup {
   key: string;
@@ -90,17 +110,20 @@ export interface MoreGroup {
 }
 
 /** Everything that is not one of the five tabs, grouped. Labels are translated at call time. */
-export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolean; modules?: Record<string, boolean> }): MoreGroup[] {
+export function moreGroups(opts: { guest?: string; admin: boolean; cloud: boolean; modules?: Record<string, boolean>; money?: boolean }): MoreGroup[] {
   const groups: MoreGroup[] = [
+    // Geld without a place in the phone tab bar (moneyInMore): first row on the /mehr page
+    ...(opts.money ? [{ key: 'areas', title: t('Money'), items: [{ to: '/geld', label: t('Money'), icon: 'Coins', phoneOnly: true }] }] : []),
     {
       key: 'household',
       title: t('Household'),
       items: [
+        // Haushaltswissen (18 Oct 2026): first row of Haushalt, its own symbol; guests see what is shared with them
+        { to: '/wissen', label: t('What ToHuus remembers'), icon: 'Brain' },
         { to: '/einstellungen?tab=members', label: t('People'), icon: 'UsersThree' },
         { to: '/bar', label: t('Guests & party'), icon: 'Martini' },
         { to: '/bestellen', label: t('Treats'), icon: 'HandHeart' },
-        { to: '/merkt-sich', label: t('What ToHuus remembers'), icon: 'Notebook' },
-        // permanent guests: what members find in Zuhause, and their handover
+        // permanent guests: what members find on top of Aufgaben and Vorrat, and their handover
         ...(opts.guest
           ? [
               { to: '/wo', label: t('Where’s what?'), icon: 'MapPin' },
@@ -158,6 +181,7 @@ export function moduleOfPath(path: string): string | null {
   if (p.startsWith('/bestellen')) return 'treats';
   if (p.startsWith('/bar')) return 'guests';
   if (p.startsWith('/pflege')) return 'homeinfo';
+  if (p.startsWith('/wissen') || p.startsWith('/merkt-sich')) return 'knowledge';
   // Aufgaben (14 Oct 2026) are always there – only the old /pflege link belongs to the switchable area
   if (path.includes('tab=ha')) return 'ha';
   return null;
@@ -171,7 +195,8 @@ export const moduleAllows = (mods: Record<string, boolean> | undefined, path: st
 export function tabFor(path: string): string {
   if (path === '/') return '/';
   if (path.startsWith('/einkauf')) return '/einkauf';
-  if (['/bestand', '/scan', '/aufgaben', '/fokus', '/denkarbeit', '/woche', '/kopf', '/fuer-wen', '/pflege', '/wo', '/hausinfo', '/urlaub', '/abgleich'].some((p) => path.startsWith(p))) return '/zuhause';
+  if (['/bestand', '/scan', '/wo', '/abgleich'].some((p) => path.startsWith(p))) return '/bestand';
+  if (['/aufgaben', '/fokus', '/denkarbeit', '/woche', '/kopf', '/fuer-wen', '/pflege', '/hausinfo', '/urlaub'].some((p) => path.startsWith(p))) return '/aufgaben';
   if (path.startsWith('/kochen') || path.startsWith('/rezepte') || path.startsWith('/abstimmung')) return '/kochen';
   if (path.startsWith('/geld') || path.startsWith('/import') || path.startsWith('/ausgaben')) return '/geld';
   return '/mehr';

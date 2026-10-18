@@ -1,4 +1,5 @@
 import { Barcode, BowlFood, Camera, FileArrowUp, MagnifyingGlass, Package, Plus, QrCode, TextAa, Gear } from '@phosphor-icons/react';
+import { PlanHintHost, ReadonlyNote } from './billing/PlanHint';
 import { type ComponentType, lazy, type ReactNode, Suspense, useCallback, useEffect, useState } from 'react';
 import { setQueueScope } from './shop/offline';
 import { CrashBoundary } from './crash';
@@ -11,7 +12,7 @@ import { applyBrand } from './brand';
 import { useInstance, useToday } from './data';
 import { setLang, t } from './i18n';
 import { kidLock } from './kidlock';
-import { homeTarget, load, moduleAllows, moreGroups, TABS, tabFor } from './nav';
+import { barTabs, load, moreGroups, tabFor, visibleTabs } from './nav';
 import { GlobalSearch, useSearchHotkey } from './search/GlobalSearch';
 import { useOnboardingRedirect } from './onboarding-state';
 import { guestAllows } from './people/access';
@@ -85,7 +86,7 @@ const Bar = page(() => import('./pages/Bar'), 'Bar');
 const Order = page(() => import('./pages/Order'), 'Order');
 const MenuEditor = page(() => import('./pages/Menu'), 'MenuEditor');
 const Settings = page(() => import('./pages/Settings'), 'Settings');
-const Care = page(() => import('./pages/Care'), 'Care');
+const Care = page(load.care, 'Care');
 const Away = page(() => import('./pages/Away'), 'Away');
 const Spending = page(() => import('./pages/Spending'), 'Spending');
 const Labels = page(() => import('./pages/Labels'), 'Labels');
@@ -107,7 +108,8 @@ const Invite = page(() => import('./pages/Invite'), 'Invite');
 const AuthLanding = page(() => import('./pages/AuthLanding'), 'AuthLanding');
 const Login = page(() => import('./pages/Login'), 'Login');
 const Signup = page(() => import('./pages/Signup'), 'Signup');
-const MemoryPage = page(() => import('./pages/Memory'), 'MemoryPage');
+// Haushaltswissen „Was ToHuus sich merkt“ (18 Oct 2026) – /merkt-sich is the old address of the same page
+const KnowledgePage = page(() => import('./pages/Knowledge'), 'KnowledgePage');
 const Operator = page(() => import('./pages/Operator'), 'Operator');
 const OfflineStore = page(load.shopping, 'OfflineStore');
 
@@ -228,8 +230,9 @@ function Shell({ me }: { me: Me }) {
   const attention = today.data?.counts?.attention ?? 0;
   // "Was nutzt ihr?" (list2): switched-off areas leave the tab bar and "Mehr" (their pages stay reachable by link)
   const mods = me.modules;
-  // Zuhause opens the side used last and only one the person may see (nav.tsx homeTarget)
-  const tabs = TABS.map((l) => (l.key === '/zuhause' ? { ...l, to: homeTarget(gl, mods) ?? '' } : l)).filter((l) => l.to && guestAllows(gl, l.to) && moduleAllows(mods, l.to));
+  // every area for the desktop sidebar, at most five in the phone tab bar – Geld gives way first (nav.tsx barTabs)
+  const tabs = visibleTabs(gl, mods);
+  const phoneTabs = barTabs(tabs);
   const [search, setSearch] = useState(false);
   const openSearch = useCallback(() => setSearch(true), []);
   useSearchHotkey(openSearch);
@@ -239,9 +242,9 @@ function Shell({ me }: { me: Me }) {
   }, [openSearch]);
   const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods });
   const activeTab = tabFor(loc.pathname);
-  // gentle mode (focus): no "needs attention" counter on Zuhause
+  // gentle mode (focus): no "needs attention" counter on Vorrat
   const focus = useFocusPrefs(Boolean(me.actor.userId) && !me.actor.houseGuest);
-  const badge = (key: string) => (key === '/einkauf' && openCount ? openCount : key === '/zuhause' && attention && !focus?.gentle ? attention : 0);
+  const badge = (key: string) => (key === '/einkauf' && openCount ? openCount : key === '/bestand' && attention && !focus?.gentle ? attention : 0);
 
   if (gl === 'paused')
     return (
@@ -327,6 +330,9 @@ function Shell({ me }: { me: Me }) {
           </Suspense>
         )}
         <OfflineNote />
+        {/* ToHuus Cloud: read-only after the trial, and the calm card for plan limits (billing/PlanHint.tsx) */}
+        <ReadonlyNote />
+        <PlanHintHost />
         <div key={loc.pathname} className="page-fade">
           {/* a page that fails shows a card with "Neu laden" here – tab bar and sidebar stay (./crash.tsx) */}
           <CrashBoundary>
@@ -347,7 +353,8 @@ function Shell({ me }: { me: Me }) {
               <Route path="/abstimmung/:id" element={<VotePage />} />
               <Route path="/geld" element={<Money />} />
               <Route path="/mehr" element={<More me={me} />} />
-              <Route path="/merkt-sich" element={<MemoryPage />} />
+              <Route path="/wissen" element={<KnowledgePage me={me} />} />
+              <Route path="/merkt-sich" element={<KnowledgePage me={me} />} />
               <Route path="/betrieb" element={<Operator />} />
               <Route path="/import" element={<Imports me={me} />} />
               <Route path="/import/quality" element={<Recognition />} />
@@ -388,7 +395,7 @@ function Shell({ me }: { me: Me }) {
       </main>
 
       <nav className="tabbar" aria-label={t('Navigation')} hidden={loc.pathname.startsWith('/willkommen')}>
-        {tabs.map((l) => {
+        {phoneTabs.map((l) => {
           const on = activeTab === l.key;
           const n = badge(l.key);
           return (

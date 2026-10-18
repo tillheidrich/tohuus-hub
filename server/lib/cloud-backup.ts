@@ -178,7 +178,8 @@ export async function runNightly(force = false) {
     // expired sessions and old e-mail links go before the copy is made (they never reach a backup again)
     const gone = cleanupAccounts();
     cleanupSignInCodes();
-    if (gone.sessions || gone.links) console.log(`[accounts] removed ${gone.sessions} expired session(s), ${gone.links} old link(s)`);
+    if (gone.sessions || gone.links || gone.appTokens)
+      console.log(`[accounts] removed ${gone.sessions} expired session(s), ${gone.links} old link(s), ${gone.appTokens} unused app token(s)`);
     const acc = backupAccounts('nightly');
     if (s3) uploaded += Number(await uploadS3(acc, `_accounts/${path.basename(acc)}`, s3).catch((e) => (console.warn('[cloud-backup] accounts upload', (e as Error).message), false)));
     for (const h of allHouseholds()) {

@@ -3,14 +3,14 @@
  * areas leave the navigation, "Heute" and notifications; their data stays and comes back.
  * Used in onboarding (after "Wer gehört dazu?") and in Settings › Haushalt.
  */
-import { ArrowLeft, ArrowRight, Basket, ChefHat, Coins, Confetti, HandHeart, House, Package, Wrench } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, Basket, Brain, ChefHat, Coins, Confetti, HandHeart, House, Package, Wrench } from '@phosphor-icons/react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { invalidate, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Toggle, useToast } from '../ui';
 import './modules.css';
 
-export type ModuleKey = 'stock' | 'cook' | 'money' | 'treats' | 'homeinfo' | 'guests' | 'ha';
+export type ModuleKey = 'stock' | 'cook' | 'money' | 'treats' | 'homeinfo' | 'guests' | 'ha' | 'knowledge';
 export type Modules = Record<ModuleKey, boolean>;
 
 const ITEMS: { key: ModuleKey | 'shopping'; label: string; hint: string; icon: ReactNode }[] = [
@@ -20,6 +20,7 @@ const ITEMS: { key: ModuleKey | 'shopping'; label: string; hint: string; icon: R
   { key: 'money', label: 'Money', hint: 'What food and household cost, from your receipts.', icon: <Coins size={22} /> },
   { key: 'treats', label: 'Treats', hint: 'Wishes from the sofa: tea, a snack, a drink.', icon: <HandHeart size={22} /> },
   { key: 'homeinfo', label: 'Home info', hint: 'Care tasks and things to know about the home.', icon: <Wrench size={22} /> },
+  { key: 'knowledge', label: 'What ToHuus remembers', hint: 'Sizes, measurements, numbers. So nobody has to ask you.', icon: <Brain size={22} /> },
   { key: 'guests', label: 'Guests & party', hint: 'Guest links, a party board, orders from guests.', icon: <Confetti size={22} /> },
   { key: 'ha', label: 'Home Assistant', hint: 'Only if you run Home Assistant.', icon: <House size={22} /> },
 ];
@@ -28,7 +29,7 @@ export function ModulesPicker({ value, onChange, disabled = false }: { value: Mo
   return (
     <div className="mod-list">
       {ITEMS.map((i) => (
-        <div key={i.key} className={`mod-row ${i.key === 'shopping' || value[i.key as ModuleKey] ? 'on' : ''}`}>
+        <div key={i.key} className={`mod-row ${i.key === 'shopping' || value[i.key as ModuleKey] !== false ? 'on' : ''}`}>
           <span className="mod-ic" aria-hidden>
             {i.icon}
           </span>
@@ -39,7 +40,7 @@ export function ModulesPicker({ value, onChange, disabled = false }: { value: Mo
           {i.key === 'shopping' ? (
             <span className="small muted">{t('always')}</span>
           ) : (
-            <Toggle on={value[i.key as ModuleKey]} onChange={(v) => !disabled && onChange(i.key as ModuleKey, v)} label={t(i.label)} />
+            <Toggle on={value[i.key as ModuleKey] !== false} onChange={(v) => !disabled && onChange(i.key as ModuleKey, v)} label={t(i.label)} />
           )}
         </div>
       ))}

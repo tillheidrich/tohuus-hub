@@ -189,7 +189,7 @@ interface GuestTask {
   stand_in: { name: string; for: string; until: string } | null;
 }
 
-/** Heute for a permanent guest: the tasks handed to them ("Blumen gießen", "Felix: Fiebersaft, falls nötig"). */
+/** Heute for a permanent guest: the tasks handed to them ("Blumen gießen", "Mika: Fiebersaft, falls nötig"). */
 export function GuestTasksCard() {
   const q = useApi<{ tasks: GuestTask[] }>(['care', 'guest-tasks'], '/guest-tasks');
   const toast = useToast();

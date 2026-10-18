@@ -93,7 +93,7 @@ struct HouseholdView: View {
                 } header: { Text(L("Sign-in")) }
             }
             Section {
-                NavigationLink { MemoryView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "text.book.closed") }
+                NavigationLink { KnowledgeView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "brain") }
             } footer: {
                 if !isAdmin && loaded { Text(L("Only admins can invite people or change who belongs to the household.")) }
             }

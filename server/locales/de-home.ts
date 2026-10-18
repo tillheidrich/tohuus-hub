@@ -57,6 +57,8 @@ export const de_home: Record<string, string> = {
   'A task without interval needs a date': 'Eine Frist ohne Intervall braucht ein Datum',
   'Task not found': 'Aufgabe nicht gefunden',
   'Nothing to undo': 'Nichts zum Rückgängigmachen',
+  'Only the last time can be taken back': 'Nur das letzte Mal lässt sich zurücknehmen',
+  'Only the person who did it or an admin can take it back': 'Zurücknehmen kann nur, wer es erledigt hat, oder ein Admin',
   'overdue since {date}': 'überfällig seit {date}',
   'due today': 'heute fällig',
   'due tomorrow': 'morgen fällig',

@@ -112,6 +112,8 @@ describe('back office on its own host', () => {
     expect(l.json.next).toBe('mail');
     await new Promise((r) => setTimeout(r, 50));
     const code = mails.filter((m) => m.to === 'op@example.org').at(-1)!.text.match(/\b(\d{6})\b/)![1];
+    // the code is only in the text, never in the subject (review 18.10.2026 P2-1)
+    expect(mails.filter((m) => m.to === 'op@example.org').at(-1)!.subject).not.toMatch(/\d{6}/);
     expect((await a.post('/api/admin-auth/mail', { ticket: l.json.ticket, code: code === '000000' ? '111111' : '000000' })).status).toBe(403);
     const m = await a.post('/api/admin-auth/mail', { ticket: l.json.ticket, code });
     expect(m.json.next).toBe('enroll');

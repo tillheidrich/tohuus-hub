@@ -5,7 +5,7 @@
  */
 import dns from 'node:dns';
 import net from 'node:net';
-import { Agent, fetch as ufetch } from 'undici';
+import { Agent, buildConnector, fetch as ufetch } from 'undici';
 import { t, userError } from '../i18n.js';
 
 /** Errors with a user-facing reason (blocked address, too large …), passed through unchanged. */
@@ -30,7 +30,37 @@ const BLOCK = new net.BlockList();
 for (const [base, bits] of V4_BLOCK) BLOCK.addSubnet(base, bits, 'ipv4');
 for (const [base, bits] of V6_BLOCK) BLOCK.addSubnet(base, bits, 'ipv6');
 
+/**
+ * The server's own public addresses (env BLOCK_OWN_IPS, comma-separated IPs or CIDRs, e.g. "46.224.49.66,2a01:4f8::/64"):
+ * reaching them from inside would hit other apps on the same host through their public names (review 18.10.2026 P2-7).
+ */
+const OWN = new net.BlockList();
+export function setOwnIps(list: string | undefined) {
+  const next = new net.BlockList();
+  for (const raw of (list ?? '').split(',').map((s) => s.trim()).filter(Boolean)) {
+    const [addr, bits] = raw.split('/');
+    const type = net.isIPv6(addr) ? 'ipv6' : net.isIPv4(addr) ? 'ipv4' : null;
+    if (!type) {
+      console.warn(`[net] BLOCK_OWN_IPS: "${raw}" is not an address – ignored`);
+      continue;
+    }
+    if (bits) next.addSubnet(addr, Number(bits), type);
+    else next.addAddress(addr, type);
+  }
+  ownList = next;
+}
+let ownList: net.BlockList = OWN;
+setOwnIps(process.env.BLOCK_OWN_IPS);
+const isOwnIp = (ip: string) => {
+  try {
+    return ownList.check(ip.toLowerCase().replace(/%.*$/, ''), net.isIPv6(ip) ? 'ipv6' : 'ipv4');
+  } catch {
+    return false;
+  }
+};
+
 export function isPrivateIp(ip: string): boolean {
+  if (isOwnIp(ip)) return true;
   if (net.isIPv4(ip)) {
     const n = v4ToInt(ip);
     return V4_BLOCK.some(([base, bits]) => (n >>> (32 - bits)) === (v4ToInt(base) >>> (32 - bits)));
@@ -46,18 +76,41 @@ export function isPrivateIp(ip: string): boolean {
   return true;
 }
 
-/** Dispatcher that refuses private/internal addresses at connect time (ToHuus Cloud installs it globally). */
+/**
+ * Ports an outbound connection may use in ToHuus Cloud: 80 and 443, plus OUTBOUND_ALLOWED_PORTS (comma-separated)
+ * for a deliberate exception. Webhooks, calendar feeds and chat servers on odd ports would otherwise reach services
+ * that are only meant to be internal (review 18.10.2026 P2-7).
+ */
+export function portAllowed(port: string | number | undefined | null, extra = process.env.OUTBOUND_ALLOWED_PORTS): boolean {
+  const p = String(port ?? '');
+  if (p === '' || p === '80' || p === '443') return true;
+  return (extra ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .includes(p);
+}
+
+const lookupPublic = (hostname: string, opts: any, cb: any) => {
+  dns.lookup(hostname, { all: true }, (err, addrs) => {
+    if (err) return cb(err);
+    const list = addrs as dns.LookupAddress[];
+    if (!list.length || list.some((a) => isPrivateIp(a.address))) return cb(new SafeFetchError(t('Address not allowed')));
+    if (opts?.all) return cb(null, list);
+    cb(null, list[0].address, list[0].family);
+  });
+};
+const publicConnector = buildConnector({ lookup: lookupPublic } as any);
+
+/**
+ * Dispatcher that refuses private/internal addresses (and the server's own, BLOCK_OWN_IPS) at connect time and
+ * ports other than 80/443 (ToHuus Cloud installs it globally).
+ */
 export const privateBlockingAgent = new Agent({
-  connect: {
-    lookup: (hostname: string, opts: any, cb: any) => {
-      dns.lookup(hostname, { all: true }, (err, addrs) => {
-        if (err) return cb(err);
-        const list = addrs as dns.LookupAddress[];
-        if (!list.length || list.some((a) => isPrivateIp(a.address))) return cb(new SafeFetchError(t('Address not allowed')));
-        if (opts?.all) return cb(null, list);
-        cb(null, list[0].address, list[0].family);
-      });
-    },
+  connect: (opts: any, cb: any) => {
+    const host = String(opts.hostname ?? '').replace(/^\[|\]$/g, '');
+    if (!portAllowed(opts.port)) return cb(new SafeFetchError(t('Port not allowed')), null);
+    if (net.isIP(host) && isPrivateIp(host)) return cb(new SafeFetchError(t('Address not allowed')), null);
+    return publicConnector(opts, cb);
   },
 });
 

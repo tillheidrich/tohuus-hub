@@ -11,12 +11,13 @@
  */
 import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
-import { t } from '../i18n.js';
+import { fmtDay, t } from '../i18n.js';
+import { findTask } from './assistant-tasks.js';
 import { aiOffReason } from './ai-policy.js';
 import { addUsage, aiConfigured, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
 import { buildContext, topicsOf, type Topic } from './assistant-context.js';
 import { CONTEXT_TOPICS, contextHint, type ScreenContext } from './assistant-areas.js';
-import { looksLikeTask, parseIntent, type Intent } from './assistant-parse.js';
+import { looksLikeTask, parseIntent, taskWhen, type Intent } from './assistant-parse.js';
 import { scopeCheck, SCOPE_DE, SCOPE_EN } from './assistant-scope.js';
 import {
   cookIdeasTool,
@@ -26,6 +27,7 @@ import {
   logPurchase,
   moneySummary,
   quickItems,
+  recallAnswer,
   rememberTool,
   rhythmDueTool,
   runTool,
@@ -36,12 +38,14 @@ import {
   type AssistantAction,
   type ToolCtx,
 } from './assistant-tools.js';
-import { consumeAssistant, UsageLimitError, type ConsumeResult } from './limits.js';
-import { limits } from './plans.js';
+import { aiPausedMessage, consumeAssistant, UsageLimitError, type ConsumeResult } from './limits.js';
+import { aiPaused, limits } from './plans.js';
 
 /** HTTP 402 for the apps when the monthly assistant messages are used up. */
 export const assistantQuotaError = () =>
-  new UsageLimitError(
+  aiPaused()
+    ? new UsageLimitError(aiPausedMessage(), 402, 'quota.ai_paused', 0)
+    : new UsageLimitError(
     limits().assistantPerMonth === 0
       ? t('The assistant with AI comes with Haushalt and Plus – try it free for 14 days. Simple things like “milk and bread” work without it.')
       : t('The assistant messages for this month are used up. Simple things like “milk and bread” still work.'),
@@ -87,6 +91,11 @@ const HISTORY = 12;
 export interface AssistantUser {
   userId: number | null;
   name: string;
+  /** the same rights as in the app (routes/assistant.ts userOf): admin, permanent guest */
+  admin?: boolean;
+  guest?: boolean;
+  /** 'ios' = the iPhone app (X-ToHuus-Client / its web view), 'web' = a browser */
+  platform?: 'ios' | 'web' | null;
 }
 
 export interface ChatOutput {
@@ -242,7 +251,9 @@ export async function chatOnce(input: {
   const parsed = parseIntent(message);
   const taskLike = parsed.kind === 'add' && looksLikeTask(message, input.context ?? null);
   const intent: Intent = taskLike ? { kind: 'unknown' } : parsed;
-  const simple = fullyUnderstood(intent);
+  const ctx: ToolCtx = { actor: input.user.name, userId: input.user.userId, actions: [], admin: input.user.admin === true, guest: input.user.guest === true, platform: input.user.platform ?? null, turnStart: Date.now() };
+  // "Welche Schuhgröße hat Mika?" – answered from what ToHuus remembers, without a model, when it is there
+  const simple = fullyUnderstood(intent) || (intent.kind === 'recall' && recallAnswer(ctx, intent.subject, intent.property) != null);
   // a bare list of products ("Bananen und Haferflocken") means "put these on the list" – also when it was spoken:
   // the recording already counted (input.allowance), but the answer still comes from the built-in reader
   const allowance = aiEnabled('text') && !simple ? (input.allowance ?? consumeAssistant()) : null;
@@ -252,7 +263,6 @@ export async function chatOnce(input: {
   const conversationId = openConversation(input.conversationId, input.user, message);
   const prior = history(conversationId);
   store(conversationId, 'user', message);
-  const ctx: ToolCtx = { actor: input.user.name, userId: input.user.userId, actions: [] };
 
   let out: { reply: string; mode: 'ai' | 'basic'; usage?: Usage; remaining?: number | null; throttled?: boolean };
   if (allowance && !(simple && overQuota)) {
@@ -296,7 +306,8 @@ export function fullyUnderstood(intent: Intent): boolean {
   if (intent.kind === 'add') return intent.vague.length === 0;
   // "danke", "nein" need no model; "ja" and "speicher das Rezept" do (they refer to the last answer)
   if (intent.kind === 'reply') return intent.answer === 'thanks' || intent.answer === 'no';
-  return ['purchase', 'remember', 'forget', 'list'].includes(intent.kind);
+  // "Mika hat jetzt 29": a corrected value of something remembered (memory.ts) – no model needed
+  return ['purchase', 'remember', 'forget', 'list', 'fact'].includes(intent.kind);
 }
 
 /** The prompt for one message: only the context lines and tools its topics need (plus the screen's). Exported for tests. */
@@ -354,9 +365,40 @@ const joinList = (xs: string[]) => (xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice
 /** The built-in reader: deterministic, no network. Exported for tests. */
 /** Without a model: a task sentence becomes one task, due today – the details come in Aufgaben. */
 export function basicTask(message: string, ctx: ToolCtx): string {
-  const name = message.replace(/[\s.!]+$/g, '').trim().slice(0, 120);
-  const r = runTool(ctx, 'task_add', { name, due: localDay(0) }) as { ok?: boolean; error?: string } | undefined;
-  return r?.ok ? t('“{name}” is now in Tasks, due today. Tap it there to set how often and who.', { name }) : (r?.error ?? t('Done.'));
+  // "Zahnarzt Dienstag um 10" → "Zahnarzt", next Tuesday, 10:00 (an appointment); otherwise due today
+  const w = taskWhen(message, localDay(0));
+  const name = w.name.slice(0, 120);
+  const r = runTool(ctx, 'task_add', { name, due: w.day ?? localDay(0), ...(w.time ? { time: w.time } : {}) }) as { ok?: boolean; error?: string } | undefined;
+  if (!r?.ok) return r?.error ?? t('Done.');
+  if (w.time) return t('“{name}” is in Tasks for {day} at {time}.', { name, day: fmtDay(w.day ?? localDay(0)), time: w.time });
+  if (w.day && w.day !== localDay(0)) return t('“{name}” is in Tasks for {day}.', { name, day: fmtDay(w.day) });
+  return t('“{name}” is now in Tasks, due today. Tap it there to set how often and who.', { name });
+}
+
+type Coming = { name: string; when: 'tonight' | 'tomorrow' | 'later'; day: string; put_out_evening_before?: boolean };
+const comingItems = (ctx: ToolCtx) => ((runTool(ctx, 'tasks_coming_up', {}) as { items?: Coming[] } | undefined)?.items ?? []);
+
+/** "Was muss heute Abend raus?", "Was kommt demnächst?" – Heute › Demnächst, without a model. */
+export function basicOutlook(ctx: ToolCtx, message = ''): string {
+  const xs = comingItems(ctx);
+  const tonight = xs.filter((x) => x.when === 'tonight').map((x) => x.name);
+  const tomorrow = xs.filter((x) => x.when === 'tomorrow').map((x) => x.name);
+  const later = xs.filter((x) => x.when === 'later').slice(0, 3).map((x) => `${x.name} (${fmtDay(x.day)})`);
+  const parts: string[] = [];
+  if (tonight.length) parts.push(t('Tonight: {items}.', { items: joinList(tonight) }));
+  else if (/abend|tonight|raus|tonne/i.test(message)) parts.push(t('Nothing has to go out tonight.'));
+  if (tomorrow.length) parts.push(t('Tomorrow: {items}.', { items: joinList(tomorrow) }));
+  if (later.length) parts.push(t('Coming up: {items}.', { items: joinList(later) }));
+  return parts.length ? parts.join(' ') : t('Nothing coming up in the next days.');
+}
+
+/** "Die Biotonne war doch noch nicht raus" without a model: the last "done" of that task back (the app's rules). */
+export function basicUndoDone(ctx: ToolCtx, task: string): string {
+  const found = findTask(task);
+  if (!found) return t('I can’t find a task “{name}”.', { name: task });
+  const r = runTool(ctx, 'task_undo_done', { task: found.id }) as { ok?: boolean; error?: string; done_by?: string | null } | undefined;
+  if (r?.ok) return t('Okay, “{name}” is open again.', { name: found.name });
+  return r?.error ?? t('Nothing to undo');
 }
 
 /** One task in a spoken answer: "Zahnarzt um 10:00 (Lea)". */
@@ -381,6 +423,9 @@ export function basicTasks(ctx: ToolCtx, day: 'today' | 'tomorrow'): string {
   const parts: string[] = [];
   parts.push(today.length ? t('Today: {items}.', { items: joinList(today.map(taskBit)) }) : t('Nothing on for today.'));
   if (overdue.length) parts.push(t('Still open: {items}.', { items: joinList(overdue.map(taskBit)) }));
+  // bins for tomorrow's collection go out this evening (Heute › Demnächst)
+  const tonight = comingItems(ctx).filter((x) => x.when === 'tonight').map((x) => x.name);
+  if (tonight.length) parts.push(t('Tonight: {items}.', { items: joinList(tonight) }));
   if (!today.length && !overdue.length && soon.length) parts.push(t('Coming up: {items}.', { items: joinList(soon.map(taskBit)) }));
   return parts.join(' ');
 }
@@ -389,6 +434,20 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
   switch (intent.kind) {
     case 'tasks':
       return basicTasks(ctx, intent.day);
+    case 'outlook':
+      return basicOutlook(ctx, message);
+    case 'undo_done':
+      return basicUndoDone(ctx, intent.task);
+    case 'recall': {
+      const a = recallAnswer(ctx, intent.subject, intent.property);
+      if (a) return a;
+      break;
+    }
+    case 'fact': {
+      const res = rememberTool(ctx, { text: intent.text }) as { ok: boolean; hint?: string; updated_from?: string; now?: string };
+      if (!res.ok) return res.hint ?? '';
+      return res.updated_from ? t('Updated: {text} (before: {old}).', { text: res.now ?? intent.text, old: res.updated_from }) : t('Got it, ToHuus remembers that.');
+    }
     case 'add': {
       if (!intent.items.length) break;
       const added: string[] = [];
@@ -445,12 +504,20 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
       return almost.length ? t('Almost: {list}.', { list: almost.join('; ') }) : t('No recipe fits what is at home yet.');
     }
     case 'money': {
+      if (intent.shop) {
+        // "Was hab ich bei Lidl ausgegeben?" – this month, from the receipts and expenses
+        const s = moneySummary({ shop: intent.shop });
+        const hit = s.by_shop[0];
+        return hit ? t('At {shop} this month so far: {total}.', { shop: hit.name, total: hit.total }) : t('Nothing spent at {shop} this month so far.', { shop: intent.shop });
+      }
       const m = moneySummary({});
       return m.budget ? t('This month so far {total}, {left} left of the budget.', { total: m.total, left: m.budget.left }) : t('This month so far {total}.', { total: m.total });
     }
     case 'remember': {
-      const res = rememberTool(ctx, { text: intent.text });
+      const res = rememberTool(ctx, { text: intent.text }) as { ok: boolean; hint?: string; updated_from?: string; now?: string };
       if (!res.ok) return res.hint ?? '';
+      // "Merk dir, Mika hat Schuhgröße 29" when 28 was remembered: the old value is replaced, not doubled
+      if (res.updated_from) return t('Updated: {text} (before: {old}).', { text: res.now ?? intent.text, old: res.updated_from });
       return t('Got it, ToHuus remembers that.');
     }
     case 'reply': {

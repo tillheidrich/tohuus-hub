@@ -18,6 +18,8 @@ import type { NextFunction, Request, Response } from 'express';
 import { config } from '../config.js';
 import { accountsDb } from './accounts.js';
 import { aiUsageHook, type Usage } from './ai.js';
+import { costOf, priceOf } from './ai-prices.js';
+import { noteHouseholdAiCost } from './plans.js';
 import { s3Config } from './cloud-backup.js';
 
 export const operatorEmails = (env = process.env) =>
@@ -69,22 +71,15 @@ if (config.multiTenant)
   aiUsageHook.record = (model, u) => {
     try {
       recordAiUsage(model, u);
+      // the cost cap per household and the AI cost per plan class (plans.ts, F5/F3 of 18 Oct 2026)
+      noteHouseholdAiCost(costOf(model, u.prompt, u.completion));
     } catch (e) {
       console.warn('[operator] ai usage', (e as Error).message);
     }
   };
 
-/** Price per million tokens [input, output]: AI_PRICES (JSON { model: [in, out] }) or AI_PRICE_PER_MTOK ("in,out"). */
-export function priceOf(model: string, env = process.env): [number, number] {
-  try {
-    const per = JSON.parse(env.AI_PRICES || '{}') as Record<string, [number, number]>;
-    if (Array.isArray(per[model]) && per[model].length === 2) return [Number(per[model][0]) || 0, Number(per[model][1]) || 0];
-  } catch {
-    /* ignore a broken AI_PRICES */
-  }
-  const [i, o] = (env.AI_PRICE_PER_MTOK || '0.1,0.3').split(',').map((x) => Number(x.trim()));
-  return [Number.isFinite(i) ? i : 0, Number.isFinite(o) ? o : 0];
-}
+/** Price per million tokens [input, output] – the table and the overrides live in ai-prices.ts (18 Oct 2026). */
+export { priceOf } from './ai-prices.js';
 
 // ------------------------------------------------------------------ error rate (memory, hourly)
 
@@ -165,7 +160,7 @@ export function overview() {
     `SELECT CASE
        WHEN plan = 'trial' AND trial_ends_at > datetime('now') THEN 'trial'
        WHEN plan IN ('haushalt','plus') AND (plan_expires_at IS NULL OR plan_expires_at > datetime('now')) THEN plan
-       ELSE 'free' END AS plan, COUNT(*) n
+       ELSE 'readonly' END AS plan, COUNT(*) n
      FROM households WHERE ${live} GROUP BY 1 ORDER BY 1`,
   );
   const bySource = all<{ source: string; n: number }>(`SELECT plan_source source, COUNT(*) n FROM households WHERE ${live} AND plan IN ('haushalt','plus') GROUP BY 1`);

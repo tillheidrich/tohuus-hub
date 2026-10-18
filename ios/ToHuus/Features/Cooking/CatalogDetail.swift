@@ -114,7 +114,7 @@ struct CatalogDetailSheet: View {
     private var footer: some View {
         Group {
             if card.locked == true {
-                Button { dismiss(); app.showPaywall = true } label: { Text(L("See Plus")) }
+                Button { dismiss(); app.openPaywall("plus_recipe") } label: { Text(L("See Plus")) }
                     .buttonStyle(PrimaryButtonStyle())
             } else if let saved = savedId ?? recipe?.savedId {
                 Button { dismiss(); openRecipe(RecipeRef(id: saved)) } label: { Label(L("Open in your recipes"), systemImage: "book") }
@@ -131,7 +131,7 @@ struct CatalogDetailSheet: View {
 
     private func load() async {
         do { recipe = try await store.api.catalogRecipe(card.id); error = nil } catch {
-            if case .quota = APIError.from(error) { dismiss(); app.showPaywall = true; return }
+            if case .quota = APIError.from(error) { dismiss(); app.openPaywall("plus_recipe"); return }
             self.error = APIError.from(error).localizedDescription
         }
     }

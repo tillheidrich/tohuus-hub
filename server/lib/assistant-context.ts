@@ -7,6 +7,7 @@
  *  - the week plan and this month's money.
  */
 import { dueCareTasks } from './care.js';
+import { comingUp } from './assistant-tasks.js';
 import { db, getSetting, lang } from '../db.js';
 import { t } from '../i18n.js';
 import { listMemory } from './memory.js';
@@ -26,7 +27,7 @@ export interface ContextViewer {
 }
 
 /** What a message is about – decides which context lines and tools the model gets (smaller prompts). */
-export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests' | 'wishes' | 'tasks' | 'help';
+export type Topic = 'shopping' | 'cooking' | 'money' | 'stock' | 'house' | 'guests' | 'wishes' | 'tasks' | 'help' | 'calendar' | 'receipts' | 'kitchen' | 'knowledge';
 /** what an unclear message gets; stock, house and guests come from the screen (assistant-areas.ts) or clear words */
 export const ALL_TOPICS: Topic[] = ['shopping', 'cooking', 'money'];
 
@@ -46,8 +47,25 @@ export function topicsOf(message: string): Topic[] {
   // wish lists / Merkliste (assistant-wishes.ts): "merk dir die Kekse aus dem Artikel", "was wünscht sich Mika?"
   if (/merkliste|wunsch|wünsch|wuensch|geschenk|schenken|wishlist|\bwish|\bgift|merk dir\b.*(artikel|link|https?:)|save (this|it) for later/.test(m)) out.add('wishes');
   // questions about the app itself (assistant-scope.ts › app_help)
-  const help = /\bwie (geht|kann ich|mache ich|funktioniert|stelle? ich)|\bwo (finde|ist|sind|stell|kann ich)|\bkann (ich|man|tohuus|die app)|\bgeht das\b|einstellung|funktion|\babo\b|\bplus\b|\btour\b|hilfe|\bhow (do|can|does)\b|\bwhere (is|are|do|can)\b|\bcan (i|tohuus|the app)\b|settings|\bhelp\b/.test(m);
+  const help = /\bwie (geht|kann ich|mache ich|funktioniert|stelle? ich)|\bwo (finde|ist|sind|stell|kann ich)|\bkann (ich|man|tohuus|die app)|\bgeht das\b|einstellung|funktion|\babo\b|\bplus\b|\btour\b|hilfe|\bhow (do|can|does)\b|\bwhere (is|are|do|can)\b|\bcan (i|tohuus|the app)\b|settings|\bhelp\b|zugangscode|geschenkcode|gutschein|\bcodes?\b|einlös|einloes|access code|gift code|redeem/.test(m);
   if (help) out.add('help');
+  // taken back: "Biotonne war doch noch nicht raus", "aus Versehen abgehakt"; Demnächst: "Was muss heute Abend raus?"
+  if (/tonne|doch (?:noch )?nicht (?:\w+ )?(?:raus|erledigt|gemacht|geputzt|fertig)|versehentlich abgehakt|aus versehen abgehakt|wieder offen|demnächst|demnaechst|heute abend raus|muss .*raus\b|not done after all|coming up/.test(m)) out.add('tasks');
+  // Kalender lesen (assistant-more.ts): how far, which kinds, read again
+  if (
+    /kalender|calendar|abfuhr|grünschnitt|gruenschnitt|sperrmüll|sperrmuell|weihnachtsbaum|tannenbaum/.test(m) ||
+    (/tonne|sack|restmüll|restmuell|papier/.test(m) && /brauchen wir nicht|abwähl|abwaehl|ausschalt|abschalt|nicht mehr|wieder an\b|wieder rein/.test(m))
+  )
+    out.add('calendar');
+  // Bons: list, change the date or shop, open again, delete (assistant-more.ts)
+  if (/\bbons?\b|kassenbon|kassenzettel|beleg|quittung|eingebucht|receipts?\b/.test(m)) out.add('receipts');
+  // „Wie kocht ihr?“ (cook-style.ts): which kitchen machine
+  if (/thermomix|monsieur|cookit|küchenmaschine|kuechenmaschine|kochweise|wie (?:wir|ihr) kochen|wie kocht|kitchen machine|cooking machine|how we cook/.test(m)) {
+    out.add('kitchen');
+    out.add('cooking');
+  }
+  // Haushaltswissen (knowledge.ts): sizes, measurements, numbers – change, delete, share or make private a card
+  if (/schuhgr|kleidergr|\bgröße|\bgroesse|\bmaß\b|\bmass\b|filtergr|zählernummer|zaehlernummer|seriennummer|kundennummer|rollo|für alle sichtbar|fuer alle sichtbar|nur für mich|nur fuer mich|privat mach|korrigier|shoe size|for everyone|only for me/.test(m)) out.add('knowledge');
   return out.size ? [...out] : [...ALL_TOPICS];
 }
 
@@ -56,6 +74,16 @@ function tasksLine() {
   try {
     const xs = dueCareTasks({ outside: true });
     return xs.length ? `Tasks due: ${xs.slice(0, 10).map((x) => `${x.name} (${x.state}${x.doer ? `, ${x.doer.name}` : ''}${x.assignee ? `, in mind: ${x.assignee.name}` : ''})`).join('; ')}` : 'Tasks due: none';
+  } catch {
+    return '';
+  }
+}
+
+/** Heute › Demnächst (task-outlook.ts): bins that go out tonight, tomorrow's tasks – names only. */
+function comingUpLine() {
+  try {
+    const xs = comingUp().items.slice(0, 8);
+    return xs.length ? `Coming up: ${xs.map((x) => `${x.name} (${x.when === 'tonight' ? 'put out tonight' : x.when === 'tomorrow' ? (x.put_out_evening_before ? 'put out tomorrow evening' : 'tomorrow') : x.day})`).join('; ')}` : '';
   } catch {
     return '';
   }
@@ -133,6 +161,7 @@ export function buildContext(opts: { purpose: 'assistant' | 'mcp'; viewer?: Cont
     has('stock') || has('cooking') ? useSoonLine() : '',
     has('cooking') && week.length ? `Plan: ${week.map((w) => `${w.day} ${w.slot}: ${w.title}`).join('; ')}` : '',
     has('tasks') ? tasksLine() : '',
+    has('tasks') ? comingUpLine() : '',
     // general household know-how ("wie oft Bettwäsche wechseln?") – only with the tasks topic, so simple questions stay small
     has('tasks')
       ? 'General questions about household tasks (how often, how, with what, how to share fairly): answer briefly as a rule of thumb, then offer to make a task. No medical, legal or care advice – point to official sources.'

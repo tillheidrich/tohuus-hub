@@ -9,7 +9,7 @@ import { QuickCheckButton, WasteCard } from './FreshParts';
 import { BoxesStock } from './Leftovers';
 import { StarterSheet } from './Onboarding';
 import { DemoTag, useDemoMarks } from './Samples';
-import { HomeSwitch } from '../home/HomeSwitch';
+import { HomeDoors } from '../home/HomeSwitch';
 
 // English labels, translated at render time with t()
 const STATUS_FILTERS: [string, string][] = [
@@ -107,7 +107,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
 
   return (
     <div>
-      <HomeSwitch side="stock" />
+      <HomeDoors side="stock" />
       <header className="page-head">
         <div>
           <div className="eyebrow">{inHouse === 1 ? t('1 product at home') : t('{n} products at home', { n: inHouse })}</div>

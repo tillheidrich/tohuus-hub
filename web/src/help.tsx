@@ -65,6 +65,7 @@ const ROUTE_HELP: [RegExp, HelpSlug][] = [
   [/^\/geld/, 'geld'],
   [/^\/import$/, 'kassenbons'],
   [/^\/merkt-sich/, 'merkt-sich'],
+  [/^\/wissen/, 'merkt-sich'],
   [/^\/urlaub/, 'babysitter'],
   [/^\/bar/, 'gaeste'],
 ];

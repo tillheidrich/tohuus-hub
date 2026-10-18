@@ -68,6 +68,7 @@ import { startStats, statsCounter } from './lib/stats.js';
 import { cloudRecipes as cloudRecipesRoutes, cloudRecipesPublic } from './routes/cloud-recipes.js';
 import { startCatalogScheduler } from './lib/cloud-recipes.js';
 import { startRenewalReminders } from './lib/renewals.js';
+import { startTrialNotices } from './lib/trial-end.js';
 import { AiError } from './lib/ai.js';
 import { r as list2Routes, pub as list2Public } from './routes/list2.js';
 import { caldav } from './lib/caldav.js';
@@ -76,6 +77,7 @@ import { r as handoverRoutes, guestHandover } from './routes/handover.js';
 import { r as diagRoutes } from './routes/diag.js';
 import { r as wishRoutes } from './routes/wishes.js';
 import { r as factsRoutes } from './routes/facts.js';
+import { r as knowledgeRoutes } from './routes/knowledge.js';
 import { householdAppearance } from './lib/appearance.js';
 import { setGlobalDispatcher } from 'undici';
 import { privateBlockingAgent } from './lib/net.js';
@@ -86,7 +88,7 @@ import { r as billingRoutes, pub as billingPublic } from './routes/billing.js';
 import { serveImage, signImagesForTokenClients } from './lib/images.js';
 import { logError } from './lib/errorlog.js';
 import { NoHouseholdError, currentHousehold } from './lib/tenancy.js';
-import { QuotaError, bodyQuota } from './lib/plans.js';
+import { QuotaError, bodyQuota, readonlyGuard } from './lib/plans.js';
 import { startCloudBackups } from './lib/cloud-backup.js';
 
 // ToHuus Cloud: no outbound request of any household may reach a private/internal address (HA, webhooks, feeds …)
@@ -144,6 +146,8 @@ if (config.multiTenant) app.use('/api', statsCounter);
 
 // storage quota: the database counts too – large JSON writes are refused when the household is full (plans.ts)
 app.use('/api', bodyQuota);
+// ToHuus Cloud without a plan after the trial: read-only (plans.ts, decision of 18 Oct 2026)
+if (config.multiTenant) app.use('/api', readonlyGuard);
 
 // CSRF: cookie-authenticated writes must come from our own origin (sibling subdomains share SameSite=Lax)
 const ownOrigin = new URL(config.baseUrl).origin;
@@ -274,6 +278,7 @@ app.use('/api', houseGuideRoutes);
 app.use('/api', handoverRoutes);
 app.use('/api', diagRoutes);
 app.use('/api', wishRoutes);
+app.use('/api', knowledgeRoutes);
 // the text stays 'not found': iPhone app builds up to 1.0 (5) hide a feature by exactly this answer
 app.use('/api', (_req, res) => res.status(404).json({ error: 'not found', code: 'not_found' }));
 
@@ -361,6 +366,7 @@ export const server = app.listen(config.port, () => {
   startScheduler();
   if (config.multiTenant) startCloudBackups();
   if (config.multiTenant) startRenewalReminders();
+  if (config.multiTenant) startTrialNotices();
   if (config.multiTenant) startStats();
   if (config.multiTenant) startCatalogScheduler();
   // receipt addresses (docs/mail-inbox.md): only with MAIL_INBOUND_DOMAIN and MAIL_SMTP_PORT

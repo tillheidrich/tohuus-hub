@@ -81022,6 +81022,1842 @@
           }
         }
       }
+    },
+    "Undo: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückgängig: %@"
+          }
+        }
+      }
+    },
+    "%@ is open again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is open again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist wieder offen."
+          }
+        }
+      }
+    },
+    "Household tasks with a date go into this calendar – private ones only into the calendar you pick for them below. Move an entry there and the task moves too. Delete it there and ToHuus doesn’t write it again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Household tasks with a date go into this calendar – private ones only into the calendar you pick for them below. Move an entry there and the task moves too. Delete it there and ToHuus doesn’t write it again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgaben des Haushalts mit Datum kommen in diesen Kalender – private nur in den Kalender, den du unten für sie wählst. Verschiebst du dort einen Eintrag, zieht die Aufgabe mit. Löschst du ihn dort, trägt ToHuus ihn nicht wieder ein."
+          }
+        }
+      }
+    },
+    "Write my private tasks into": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write my private tasks into"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meine privaten Aufgaben eintragen in"
+          }
+        }
+      }
+    },
+    "Your private tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private tasks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine privaten Aufgaben"
+          }
+        }
+      }
+    },
+    "Only your own private tasks with a date, never anyone else’s. Pick a calendar only you see, like your personal iCloud calendar. Moving, deleting and done work as above.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only your own private tasks with a date, never anyone else’s. Pick a calendar only you see, like your personal iCloud calendar. Moving, deleting and done work as above."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur deine eigenen privaten Aufgaben mit Datum, nie die von anderen. Nimm einen Kalender, den nur du siehst, etwa deinen persönlichen iCloud-Kalender. Verschieben, Löschen und Erledigt funktionieren wie oben."
+          }
+        }
+      }
+    },
+    "This is the household’s calendar, too – whoever shares it sees your private tasks there.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the household’s calendar, too – whoever shares it sees your private tasks there."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist auch der Kalender für den Haushalt – wer ihn mit dir teilt, sieht dort deine privaten Aufgaben."
+          }
+        }
+      }
+    },
+    "You read this calendar for the household, so it is probably shared – others would see your private tasks there.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You read this calendar for the household, so it is probably shared – others would see your private tasks there."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Kalender liest du für den Haushalt, er ist also wohl geteilt – andere würden dort deine privaten Aufgaben sehen."
+          }
+        }
+      }
+    },
+    "Your private tasks into a calendar of your own (e.g. your personal iCloud calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Your private tasks”. Only yours, never anyone else’s.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your private tasks into a calendar of your own (e.g. your personal iCloud calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Your private tasks”. Only yours, never anyone else’s."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine privaten Aufgaben in einen eigenen Kalender (z. B. deinen persönlichen iCloud-Kalender): hier in der App unter Aufgaben › Euren Kalender lesen › „Deine privaten Aufgaben“. Nur deine, nie die von anderen."
+          }
+        }
+      }
+    },
+    "Private tasks only appear when you choose so, and only your own: in Apple Calendar in “ToHuus · Mein Kalender”, which only you see; in a subscription link only if you switch on “Include my private tasks” when you create it; on the iPhone in the calendar you pick for them. The bins from your calendar are not written back – they are in there already.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private tasks only appear when you choose so, and only your own: in Apple Calendar in “ToHuus · Mein Kalender”, which only you see; in a subscription link only if you switch on “Include my private tasks” when you create it; on the iPhone in the calendar you pick for them. The bins from your calendar are not written back – they are in there already."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Aufgaben erscheinen nur, wenn du das so wählst, und nur deine eigenen: im Apple Kalender in „ToHuus · Mein Kalender“, den nur du siehst; in einem Abo-Link nur, wenn du beim Erstellen „Meine privaten Aufgaben mit aufnehmen“ einschaltest; auf dem iPhone in dem Kalender, den du für sie wählst. Die Tonnen aus eurem Kalender werden nicht zurückgeschrieben – die stehen da ja schon drin."
+          }
+        }
+      }
+    },
+    "Password changed. You were signed out everywhere else (%d devices and connections).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password changed. You were signed out everywhere else (%d devices and connections)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort geändert. Du wurdest überall sonst abgemeldet (%d Geräte und Verbindungen)."
+          }
+        }
+      }
+    },
+    "Add to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu %@ eintragen"
+          }
+        }
+      }
+    },
+    "Add yourself": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add yourself"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selbst eintragen"
+          }
+        }
+      }
+    },
+    "Blind ground floor 120 x 160": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blind ground floor 120 x 160"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rollo Erdgeschoss 120 x 160"
+          }
+        }
+      }
+    },
+    "Bring back %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring back %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ zurückholen"
+          }
+        }
+      }
+    },
+    "Changed: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geändert: %@"
+          }
+        }
+      }
+    },
+    "Changed: %@ (before: %@)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed: %@ (before: %@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geändert: %1$@ (vorher: %2$@)"
+          }
+        }
+      }
+    },
+    "Choose a person or place": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a person or place"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person oder Ort auswählen"
+          }
+        }
+      }
+    },
+    "Cooker hood filter size 20 x 30": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cooker hood filter size 20 x 30"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunstabzug Filtergröße 20 x 30"
+          }
+        }
+      }
+    },
+    "Delete this?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das löschen?"
+          }
+        }
+      }
+    },
+    "Deleted: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelöscht: %@"
+          }
+        }
+      }
+    },
+    "Doctors and other health things stay with you unless you share them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doctors and other health things stay with you unless you share them."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ärzte und alles rund um Gesundheit bleiben bei dir, bis du sie freigibst."
+          }
+        }
+      }
+    },
+    "Earlier value is back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier value is back."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der alte Wert ist wieder da."
+          }
+        }
+      }
+    },
+    "Electricity meter number 1ESY1160": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Electricity meter number 1ESY1160"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zählernummer Strom 1ESY1160"
+          }
+        }
+      }
+    },
+    "Everyone in the household sees it now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone in the household sees it now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt sieht es der ganze Haushalt."
+          }
+        }
+      }
+    },
+    "Guests see it too": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guests see it too"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gäste sehen es auch"
+          }
+        }
+      }
+    },
+    "Mika shoe size 28": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mika shoe size 28"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mika Schuhgröße 28"
+          }
+        }
+      }
+    },
+    "Noted: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noted: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemerkt: %@"
+          }
+        }
+      }
+    },
+    "Nothing about %@ yet, e.g. sizes or measurements.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing about %@ yet, e.g. sizes or measurements."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu %@ steht hier noch nichts, zum Beispiel Größen oder Maße."
+          }
+        }
+      }
+    },
+    "Nothing shared with guests yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing shared with guests yet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nichts für Gäste freigegeben"
+          }
+        }
+      }
+    },
+    "Only for you?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only for you?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur für dich?"
+          }
+        }
+      }
+    },
+    "Only the person who wrote it can make it private.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the person who wrote it can make it private."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privat machen kann nur, wer es eingetragen hat."
+          }
+        }
+      }
+    },
+    "Only the person who wrote it can share it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the person who wrote it can share it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freigeben kann nur, wer es eingetragen hat."
+          }
+        }
+      }
+    },
+    "Only you see it now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only you see it now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt siehst nur du es."
+          }
+        }
+      }
+    },
+    "Other things": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other things"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonstiges"
+          }
+        }
+      }
+    },
+    "Paediatrician 04181 12345": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paediatrician 04181 12345"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kinderärztin 04181 12345"
+          }
+        }
+      }
+    },
+    "Permanent guests like grandma, the way House info works.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanent guests like grandma, the way House info works."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feste Gäste wie Oma, so wie bei der Hausinfo."
+          }
+        }
+      }
+    },
+    "Photo of %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo of %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto von %@"
+          }
+        }
+      }
+    },
+    "Remember something": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember something"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwas merken"
+          }
+        }
+      }
+    },
+    "Remove from the history": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from the history"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus dem Verlauf entfernen"
+          }
+        }
+      }
+    },
+    "Removed from the history.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed from the history."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus dem Verlauf entfernt."
+          }
+        }
+      }
+    },
+    "Saved as a line, or fill in the fields below to make it a card.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved as a line, or fill in the fields below to make it a card."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So wird es als Zeile gemerkt. Füllst du die Felder darunter aus, wird eine Karte daraus."
+          }
+        }
+      }
+    },
+    "Search, e.g. shoe size": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search, e.g. shoe size"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suchen, z. B. Schuhgröße"
+          }
+        }
+      }
+    },
+    "Share anyway": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share anyway"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trotzdem freigeben"
+          }
+        }
+      }
+    },
+    "Share health information?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share health information?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesundheitsinfo freigeben?"
+          }
+        }
+      }
+    },
+    "Show it to the whole household?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show it to the whole household?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für den ganzen Haushalt freigeben?"
+          }
+        }
+      }
+    },
+    "Show to everyone": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show to everyone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für alle freigeben"
+          }
+        }
+      }
+    },
+    "Sizes, measurements, numbers. So nobody has to ask you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sizes, measurements, numbers. So nobody has to ask you."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Größen, Maße, Nummern. Damit dich nicht alle fragen müssen."
+          }
+        }
+      }
+    },
+    "Sizes, measurements, numbers. Write a sentence above, ToHuus sorts it. For example:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sizes, measurements, numbers. Write a sentence above, ToHuus sorts it. For example:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Größen, Maße, Nummern. Schreib oben einen Satz, ToHuus sortiert ihn ein. Zum Beispiel:"
+          }
+        }
+      }
+    },
+    "The others see what changes from now on. The earlier values stay with you.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The others see what changes from now on. The earlier values stay with you."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die anderen sehen ab jetzt, was sich ändert. Die alten Werte bleiben bei dir."
+          }
+        }
+      }
+    },
+    "This is what ToHuus knows:": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is what ToHuus knows:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das weiß ToHuus:"
+          }
+        }
+      }
+    },
+    "This looks like health information. Then everyone in the household sees it. It goes to the assistant only if you allowed that in the settings.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This looks like health information. Then everyone in the household sees it. It goes to the assistant only if you allowed that in the settings."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sieht nach Gesundheit aus. Dann sieht es der ganze Haushalt. An den Assistenten geht es nur, wenn ihr das in den Einstellungen erlaubt habt."
+          }
+        }
+      }
+    },
+    "ToHuus doesn’t know that yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus doesn’t know that yet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das weiß ToHuus noch nicht."
+          }
+        }
+      }
+    },
+    "ToHuus found nothing that fits. Try the search.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus found nothing that fits. Try the search."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dazu hat ToHuus nichts gefunden. Probier es mit der Suche."
+          }
+        }
+      }
+    },
+    "ToHuus is no notebook and no calendar: only what belongs to your home. Codes and passwords go into House info › Codes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus is no notebook and no calendar: only what belongs to your home. Codes and passwords go into House info › Codes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus ist kein Notizbuch und kein Kalender, hier steht nur, was zu eurem Zuhause gehört. Codes und Passwörter gehören in Hausinfo › Codes."
+          }
+        }
+      }
+    },
+    "ToHuus sorts it. Or just ask.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus sorts it. Or just ask."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ToHuus sortiert. Oder frag einfach."
+          }
+        }
+      }
+    },
+    "Value, e.g. 28": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Value, e.g. 28"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wert, z. B. 28"
+          }
+        }
+      }
+    },
+    "What do you all know about your home?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What do you all know about your home?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was wisst ihr über euer Zuhause?"
+          }
+        }
+      }
+    },
+    "What exactly? e.g. shoe size": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What exactly? e.g. shoe size"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was genau? z. B. Schuhgröße"
+          }
+        }
+      }
+    },
+    "What the household shares with guests: sizes, numbers, how things work.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the household shares with guests: sizes, numbers, how things work."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was der Haushalt mit Gästen teilt: Größen, Nummern, wie was funktioniert."
+          }
+        }
+      }
+    },
+    "Who or what?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who or what?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wer oder was?"
+          }
+        }
+      }
+    },
+    "Whole household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole household"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganzer Haushalt"
+          }
+        }
+      }
+    },
+    "Write it to ToHuus, then nobody has to ask you. And you don’t have to remember it yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it to ToHuus, then nobody has to ask you. And you don’t have to remember it yourself."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreib es ToHuus, dann muss dich keiner mehr fragen. Und du musst es dir nicht selbst merken."
+          }
+        }
+      }
+    },
+    "Write it to ToHuus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it to ToHuus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreib es ToHuus."
+          }
+        }
+      }
+    },
+    "Your household memory": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household memory"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euer Haushaltsgedächtnis"
+          }
+        }
+      }
+    },
+    "e.g. Mika shoe size 28": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. Mika shoe size 28"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Mika Schuhgröße 28"
+          }
+        }
+      }
+    },
+    "e.g. Mika, living room, car": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. Mika, living room, car"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Mika, Wohnzimmer, Auto"
+          }
+        }
+      }
+    },
+    "e.g. inside measurement, without the box": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "e.g. inside measurement, without the box"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Innenmaß, ohne Kasten"
+          }
+        }
+      }
+    },
+    "in the app": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in the app"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in der App"
+          }
+        }
+      }
+    },
+    "via MCP": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "via MCP"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "über MCP"
+          }
+        }
+      }
+    },
+    "via Telegram": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "via Telegram"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "über Telegram"
+          }
+        }
+      }
+    },
+    "Your trial is over. Everything stays visible – with Household or Plus you carry on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial is over. Everything stays visible – with Household or Plus you carry on."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase ist vorbei. Alles bleibt sichtbar, mit Haushalt oder Plus geht es weiter."
+          }
+        }
+      }
+    },
+    "The assistant with AI comes with Household and Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant with AI comes with Household and Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Assistent mit KI gehört zu Haushalt und Plus."
+          }
+        }
+      }
+    },
+    "This month’s assistant messages are used up. Plus has many more.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month’s assistant messages are used up. Plus has many more."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Nachrichten an den Assistenten sind für diesen Monat aufgebraucht. Plus hat deutlich mehr."
+          }
+        }
+      }
+    },
+    "AI is paused for your household until the 1st.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is paused for your household until the 1st."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die KI pausiert für euren Haushalt bis zum 1."
+          }
+        }
+      }
+    },
+    "The week plan from what you have at home comes with Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The week plan from what you have at home comes with Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Wochenplan aus dem, was ihr zu Hause habt, gehört zu Plus."
+          }
+        }
+      }
+    },
+    "The ToHuus recipes for the season come with Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ToHuus recipes for the season come with Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ToHuus-Rezepte zur Saison gehören zu Plus."
+          }
+        }
+      }
+    },
+    "Reading photos and links with AI comes with Household and Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading photos and links with AI comes with Household and Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos und Links per KI lesen gehört zu Haushalt und Plus."
+          }
+        }
+      }
+    },
+    "The whole history and prices come with Household and Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The whole history and prices come with Household and Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der ganze Verlauf und die Preise gehören zu Haushalt und Plus."
+          }
+        }
+      }
+    },
+    "The look back at every month comes with Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The look back at every month comes with Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Rückblick auf jeden Monat gehört zu Plus."
+          }
+        }
+      }
+    },
+    "Connected households and shared lists come with Household and Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected households and shared lists come with Household and Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbundene Haushalte und geteilte Listen gehören zu Haushalt und Plus."
+          }
+        }
+      }
+    },
+    "The receipt address comes with Household and Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receipt address comes with Household and Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Bon-Adresse gehört zu Haushalt und Plus."
+          }
+        }
+      }
+    },
+    "Your trial is over. With Household or Plus you can carry on – or run ToHuus on your own server. Everything stays visible and you can export it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial is over. With Household or Plus you can carry on – or run ToHuus on your own server. Everything stays visible and you can export it."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase ist vorbei. Mit Haushalt oder Plus geht es weiter, oder ihr betreibt ToHuus selbst. Alles bleibt sichtbar und ihr könnt es exportieren."
+          }
+        }
+      }
+    },
+    "Your trial is over": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial is over"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase ist vorbei"
+          }
+        }
+      }
+    },
+    "Nothing is deleted. You can look at everything and export your data in Settings at any time. One plan covers the whole household, members and guests never pay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is deleted. You can look at everything and export your data in Settings at any time. One plan covers the whole household, members and guests never pay."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelöscht wird nichts. Ihr könnt alles ansehen und eure Daten jederzeit in den Einstellungen exportieren. Ein Abo gilt für den ganzen Haushalt, Mitglieder und Gäste zahlen nie."
+          }
+        }
+      }
+    },
+    "Ticking off the shopping list still works until %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticking off the shopping list still works until %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abhaken auf der Einkaufsliste geht noch bis zum %@."
+          }
+        }
+      }
+    },
+    "%d times ticked off the list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d times ticked off the list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d-mal auf der Liste abgehakt"
+          }
+        }
+      }
+    },
+    "%d shopping trips done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d shopping trips done"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Einkäufe erledigt"
+          }
+        }
+      }
+    },
+    "%d receipts kept, %@ in total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d receipts kept, %@ in total"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Bons übernommen, zusammen %@"
+          }
+        }
+      }
+    },
+    "%d receipts kept": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d receipts kept"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Bons übernommen"
+          }
+        }
+      }
+    },
+    "%d tasks done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tasks done"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Aufgaben erledigt"
+          }
+        }
+      }
+    },
+    "%d times cooked from a recipe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d times cooked from a recipe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d-mal nach Rezept gekocht"
+          }
+        }
+      }
+    },
+    "%d questions to the assistant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d questions to the assistant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Fragen an den Assistenten"
+          }
+        }
+      }
+    },
+    "%d things ToHuus remembers for you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d things ToHuus remembers for you"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Dinge, die ToHuus sich für euch merkt"
+          }
+        }
+      }
+    },
+    "What ToHuus has remembered for you so far": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What ToHuus has remembered for you so far"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was ToHuus sich bisher für euch gemerkt hat"
+          }
+        }
+      }
+    },
+    "What ToHuus remembered for you in the 14 days": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What ToHuus remembered for you in the 14 days"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was ToHuus sich in den 14 Tagen für euch gemerkt hat"
+          }
+        }
+      }
+    },
+    "Your trial ends on %@. After that everything stays visible and you can export it; adding and changing things carries on with Household or Plus. Nothing is charged automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial ends on %@. After that everything stays visible and you can export it; adding and changing things carries on with Household or Plus. Nothing is charged automatically."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase endet am %@. Danach bleibt alles sichtbar und ihr könnt es exportieren. Neues eintragen und ändern geht mit Haushalt oder Plus weiter. Automatisch abgebucht wird nichts."
+          }
+        }
+      }
+    },
+    "Your trial ends on %@. After that you carry on with Free. Nothing is charged automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial ends on %@. After that you carry on with Free. Nothing is charged automatically."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase endet am %@. Danach geht es mit Free weiter. Automatisch abgebucht wird nichts."
+          }
+        }
+      }
+    },
+    "Your trial is over. Everything stays visible and you can export it; adding and changing things carries on with Household or Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial is over. Everything stays visible and you can export it; adding and changing things carries on with Household or Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase ist vorbei. Alles bleibt sichtbar und ihr könnt es exportieren. Neues eintragen und ändern geht mit Haushalt oder Plus weiter."
+          }
+        }
+      }
+    },
+    "Your trial is over. You carry on with Free – the assistant with AI comes with Household and Plus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial is over. You carry on with Free – the assistant with AI comes with Household and Plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase ist vorbei. Ihr macht mit Free weiter, der Assistent mit KI gehört zu Haushalt und Plus."
+          }
+        }
+      }
+    },
+    "Everything included for %d more days (until %@). After that read-only – nothing is charged automatically and nothing is deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything included for %d more days (until %@). After that read-only – nothing is charged automatically and nothing is deleted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %d Tage alles inklusive (bis %@). Danach nur zum Ansehen, automatisch abgebucht und gelöscht wird nichts."
+          }
+        }
+      }
+    },
+    "Your trial is over. Everything stays visible and you can export it in Settings. With Household or Plus you carry on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your trial is over. Everything stays visible and you can export it in Settings. With Household or Plus you carry on."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure Testphase ist vorbei. Alles bleibt sichtbar und lässt sich in den Einstellungen exportieren. Mit Haushalt oder Plus geht es weiter."
+          }
+        }
+      }
+    },
+    "Your household has this plan until %@. Nothing is charged automatically and nothing is deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your household has this plan until %@. Nothing is charged automatically and nothing is deleted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Euer Haushalt hat diesen Tarif bis %@. Automatisch abgebucht und gelöscht wird nichts."
+          }
+        }
+      }
+    },
+    "Without a plan": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without a plan"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Abo"
+          }
+        }
+      }
+    },
+    "14 days of everything for free with every new household. After that, without a plan, everything stays visible and you can export it – adding and changing things carries on with Household or Plus. Nothing is deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "14 days of everything for free with every new household. After that, without a plan, everything stays visible and you can export it – adding and changing things carries on with Household or Plus. Nothing is deleted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder neue Haushalt hat 14 Tage alles gratis. Danach bleibt ohne Abo alles sichtbar und exportierbar, Neues eintragen und ändern geht mit Haushalt oder Plus weiter. Gelöscht wird nichts."
+          }
+        }
+      }
+    },
+    "Read-only – the trial is over": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read-only – the trial is over"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur lesen, die Testphase ist vorbei"
+          }
+        }
+      }
+    },
+    "Trial ends soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trial ends soon"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testphase endet bald"
+          }
+        }
+      }
+    },
+    "%d assistant messages a month, then slower; from %d AI pauses until the month ends": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d assistant messages a month, then slower; from %d AI pauses until the month ends"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Nachrichten an den Assistenten im Monat, danach langsamer; ab %d pausiert die KI bis zum Monatsende"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

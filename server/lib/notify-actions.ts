@@ -73,7 +73,8 @@ export function runNotifyAction(action: NotifyAction, data: Record<string, unkno
     // a second tap on the same (old) notification must not move the due date twice
     const today = new Intl.DateTimeFormat('sv-SE', { timeZone: config.timezone }).format(new Date());
     if (task.last_done === today && (!task.next_due || task.next_due > today)) return { ok: true, summary: t('Already done today'), next_due: task.next_due, already: true };
-    const r = completeCareTask(ref, actor);
+    // with the person, so they can take it back later under "Zuletzt erledigt"
+    const r = completeCareTask(ref, actor, { actorUserId: actorUserId(actor) });
     const next = r.task.next_due;
     return {
       ok: true,

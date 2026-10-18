@@ -1,4 +1,5 @@
 import {
+  ArrowCounterClockwise,
   ArrowRight,
   Bathtub,
   Bicycle,
@@ -40,7 +41,7 @@ import { TodayDeckSheet } from './Decide';
 import { durationLabel, timeLabel } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
-import { HomeSwitch } from '../home/HomeSwitch';
+import { HomeDoors } from '../home/HomeSwitch';
 import { RatgeberCards } from './RatgeberCards';
 import { FreshStartButton, SplitButton, isGentle, mergeSteps, suggestSteps } from '../focus/Focus';
 import { TasksToCalendarHelp } from './CalendarSync';
@@ -65,7 +66,7 @@ export interface CareTask {
   product: { id: number; name: string; brand: string | null; image_path: string | null; unit: string; track_mode: string; stock: number | null } | null;
   location: { id: number; name: string; icon: string } | null;
   assignee: { id: number; name: string; color: string } | null;
-  log?: { id: number; done_on: string; actor: string | null; note: string | null; consumed: number }[];
+  log?: { id: number; done_on: string; actor: string | null; note: string | null; consumed: number; can_undo?: boolean }[];
   /** Aufgaben (14 Oct 2026): household chore or care & deadline */
   category: 'house' | 'care';
   /** private = only its owner sees it ("nur für mich") */
@@ -198,12 +199,12 @@ export function useCareDone() {
   const [ask, setAsk] = useState<CareTask | null>(null);
   const run = async (task: CareTask, body: Record<string, unknown> = {}) => {
     try {
-      const r = await post<{ task: CareTask; consumed: number; on_shopping_list: boolean }>(`/care/${task.id}/done`, body);
+      const r = await post<{ task: CareTask; consumed: number; on_shopping_list: boolean; log_id?: number }>(`/care/${task.id}/done`, body);
       invalidate('care', 'products', 'shopping', 'overview');
       const extra = r.on_shopping_list && r.task.product ? ' ' + t('{name} is on the shopping list.', { name: r.task.product.name }) : '';
       toast({
         text: (r.task.next_due ? t('Done. Next time: {date}', { date: fmtDate(r.task.next_due, { day: 'numeric', month: 'short', year: 'numeric' }) }) : t('Done.')) + extra,
-        action: { label: t('Undo'), run: () => post(`/care/${task.id}/undo`).then(() => invalidate('care', 'products', 'overview')) },
+        action: { label: t('Undo'), run: () => post(`/care/${task.id}/undo`, { log_id: r.log_id ?? null }).then(() => invalidate('care', 'products', 'overview')) },
       });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
@@ -398,7 +399,7 @@ export function Care() {
 
   return (
     <div className="rise">
-      <HomeSwitch side="tasks" />
+      <HomeDoors side="tasks" />
       <header className="page-head">
         <div>
           <div className="eyebrow">
@@ -747,6 +748,7 @@ function TaskDetail({ task, me, onClose, onEdit, onDone, onLabel }: {
                     {l.actor ? ` · ${l.actor}` : ''}
                     {l.note ? ` · ${l.note}` : ''}
                   </div>
+                  {l.can_undo && <UndoDoneButton taskId={task.id} logId={l.id} name={task.name} />}
                 </div>
               ))}
             </div>
@@ -1044,9 +1046,35 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
   );
 }
 
+/**
+ * "Rückgängig" for a done that is already in the list (ticked off by mistake, also yesterday): only the newest tick
+ * of a task, only your own (an admin may take back anyone's) – the server says so with `can_undo`.
+ */
+export function UndoDoneButton({ taskId, logId, name }: { taskId: number; logId: number; name: string }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    setBusy(true);
+    try {
+      await post(`/care/${taskId}/undo`, { log_id: logId });
+      invalidate('care', 'products', 'overview');
+      toast({ text: t('{name} is open again.', { name }) });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button className="btn ghost sm" disabled={busy} onClick={run} style={{ minHeight: 44 }} aria-label={t('Undo: {name}', { name })}>
+      <ArrowCounterClockwise size={15} /> {t('Undo')}
+    </button>
+  );
+}
+
 /** "Zuletzt erledigt": the work people did stays visible for two weeks – who did what, newest first. */
 function RecentlyDone() {
-  const q = useApi<{ id: number; task_id: number; done_on: string; actor: string | null; name: string }[]>(['care', 'recent'], '/care/recent');
+  const q = useApi<{ id: number; task_id: number; done_on: string; actor: string | null; name: string; can_undo?: boolean }[]>(['care', 'recent'], '/care/recent');
   const [all, setAll] = useState(false);
   const rows = q.data ?? [];
   if (!rows.length) return null;
@@ -1064,6 +1092,7 @@ function RecentlyDone() {
               <div className="title">{r.name}</div>
               <div className="sub">{[fmtDate(r.done_on, { weekday: 'short', day: 'numeric', month: 'short' }), r.actor].filter(Boolean).join(' · ')}</div>
             </div>
+            {r.can_undo && <UndoDoneButton taskId={r.task_id} logId={r.id} name={r.name} />}
           </div>
         ))}
       </div>

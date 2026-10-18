@@ -35,13 +35,27 @@ const isPantryPepper = (s: string) => /\bpepper\b/i.test(s) && !/^\s*[\d½¼¾]+
 /** Salt, oil, stock … – always counts as in the house. */
 export const isPantryText = (text: string) => PANTRY_RE.test(text) || PANTRY_RE_EN.test(text) || isPantryPepper(text);
 
+/** A recipe's source link: an absolute http(s) URL up to 2000 characters, anything else is dropped. */
+export function safeSourceUrl(v: unknown): string | null {
+  if (typeof v !== 'string') return null;
+  const s = v.trim();
+  if (!s || s.length > 2000 || !/^https?:\/\//i.test(s)) return null;
+  try {
+    const u = new URL(s);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? s : null;
+  } catch {
+    return null;
+  }
+}
+
 export function saveRecipe(input: RecipeInput, id?: number): number {
   const vals = [
     input.title.trim(),
     input.description ?? null,
     input.image_path ?? null,
     input.source_type ?? 'own',
-    input.source_url ?? null,
+    // the web shows it as a link: only http(s), whatever the way in (MCP, import, package) – review 18.10.2026 P2-11
+    safeSourceUrl(input.source_url),
     input.servings ?? null,
     input.time_min ?? null,
     input.thermomix ? 1 : 0,

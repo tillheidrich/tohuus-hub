@@ -202,6 +202,8 @@ const CATEGORY: Record<string, string> = { 'trip.addon': 'TOHUUS_ADDON', 'rhythm
 const DEEP: [RegExp, string][] = [
   [/^\/einkauf/, 'tohuus://shopping'],
   [/^\/bestand|^\/vorrat/, 'tohuus://pantry'],
+  // Aufgaben has its own tab since 18 Oct 2026 (an older app ignores the link and simply opens)
+  [/^\/aufgaben|^\/pflege|^\/fokus/, 'tohuus://tasks'],
   [/^\/kochen/, 'tohuus://cooking'],
   [/^\/geld/, 'tohuus://money'],
   [/^\/mehr|^\/einstellungen/, 'tohuus://more'],

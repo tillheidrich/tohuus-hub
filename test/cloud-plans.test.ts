@@ -90,6 +90,14 @@ describe('plan features on the server', () => {
     expect((await autofill()).status).toBe(200);
     expect((await prices()).status).not.toBe(402);
     setPlan(id, 'free');
+    // since 18 Oct 2026 the cloud has no Free: without a plan the household is read-only (plans.ts readonlyGuard)
+    for (const r of [await autofill(), await caldav()]) {
+      expect(r.status, r.text).toBe(402);
+      expect(r.json.code).toBe('plan.readonly');
+    }
+    expect((await prices()).status).not.toBe(402);
+    // the old Free (switch afterTrial back to 'free'): feature limits instead of read-only
+    process.env.TRIAL_AFTER = 'free';
     for (const r of [await autofill(), await prices(), await caldav()]) {
       expect(r.status, r.text).toBe(402);
       expect(r.json.code).toBe('plan');
@@ -102,6 +110,7 @@ describe('plan features on the server', () => {
     expect(care.status, care.text).toBe(402);
     expect(care.json).toMatchObject({ code: 'plan', feature: 'connectedHouseholds' });
     expect((await c.post('/api/list/lists', { name: 'Baumarkt', kind: 'store' })).status).toBe(200);
+    delete process.env.TRIAL_AFTER;
     setPlan(id, 'haushalt');
     expect((await prices()).status).not.toBe(402);
     expect((await caldav()).status).toBe(200);

@@ -1,0 +1,70 @@
+// German strings for plans, the end of the trial, the plan card and the operator's revenue figures (18 Oct 2026).
+export const billing: Record<string, string> = {
+  // plan card and read-only note (billing/PlanHint.tsx)
+  'Your trial is over': 'Eure Testphase ist vorbei',
+  'AI is paused until the 1st': 'Die KI pausiert bis zum 1.',
+  'This comes with Plus': 'Das geht mit Plus',
+  'This comes with Haushalt or Plus': 'Das geht mit Haushalt oder Plus',
+  'Nothing is deleted. You can look at everything and export your data at any time.': 'Gelöscht wird nichts. Ihr könnt alles ansehen und eure Daten jederzeit exportieren.',
+  'You subscribe in the ToHuus app on the iPhone. One plan covers the whole household, members and guests never pay.':
+    'Das Abo schließt ihr in der ToHuus-App auf dem iPhone ab. Es gilt für den ganzen Haushalt, Mitglieder und Gäste zahlen nie.',
+  'Plan & data': 'Abo & Daten',
+  'With Haushalt or Plus you can carry on, or you run ToHuus on your own server. Until then you can look at everything and export it.':
+    'Mit Haushalt oder Plus geht es weiter, oder ihr betreibt ToHuus auf eurem eigenen Server. Bis dahin könnt ihr alles ansehen und exportieren.',
+  'Ticking off the shopping list still works until {date}.': 'Abhaken auf der Einkaufsliste geht noch bis zum {date}.',
+  // Settings › Abo & Speicher (pages/Billing.tsx)
+  'Read-only – the trial is over': 'Nur lesen, die Testphase ist vorbei',
+  'Your trial is over. With Haushalt or Plus you can carry on – or run ToHuus on your own server. Everything stays visible and you can export it.':
+    'Eure Testphase ist vorbei. Mit Haushalt oder Plus geht es weiter, oder ihr betreibt ToHuus selbst. Alles bleibt sichtbar und ihr könnt es exportieren.',
+  'You subscribe in the ToHuus app on the iPhone: 14 days of everything for free, then from 3,99 € a month. One plan covers the whole household. Without a plan the household is read-only, nothing is deleted and the export always works.':
+    'Das Abo schließt ihr in der ToHuus-App auf dem iPhone ab: 14 Tage alles gratis, danach ab 3,99 € im Monat. Ein Abo gilt für den ganzen Haushalt. Ohne Abo ist der Haushalt nur zum Ansehen da, gelöscht wird nichts und der Export geht immer.',
+  'What ToHuus has remembered for you so far': 'Was ToHuus sich bisher für euch gemerkt hat',
+  'What ToHuus remembered for you in the 14 days': 'Was ToHuus sich in den 14 Tagen für euch gemerkt hat',
+  '{n} times ticked off the list': '{n}-mal auf der Liste abgehakt',
+  '{n} shopping trips done': '{n} Einkäufe erledigt',
+  '{n} receipts kept, {sum} in total': '{n} Bons übernommen, zusammen {sum}',
+  '{n} receipts kept': '{n} Bons übernommen',
+  '{n} tasks done': '{n} Aufgaben erledigt',
+  '{n} times cooked from a recipe': '{n}-mal nach Rezept gekocht',
+  '{n} questions to the assistant': '{n} Fragen an den Assistenten',
+  '{n} things ToHuus remembers for you': '{n} Dinge, die ToHuus sich für euch merkt',
+  // operator › Umsatz (pages/operator/Revenue.tsx)
+  Revenue: 'Umsatz',
+  'Active subscriptions': 'Aktive Abos',
+  'MRR net (estimate)': 'MRR netto (Schätzung)',
+  '{gross} gross a month': '{gross} brutto im Monat',
+  'Will not renew': 'Verlängern sich nicht',
+  'Plus for good': 'Plus für immer',
+  'After VAT {vat} % and Apple’s share {share} %. Yearly plans spread over 12 months. Counts below {n} show as “< {n}”.':
+    'Nach {vat} % USt. und {share} % Apple-Anteil. Jahresabos auf 12 Monate verteilt. Zahlen unter {n} erscheinen als „< {n}“.',
+  'Subscriptions by plan': 'Abos nach Tarif',
+  'Trial → paid by sign-up week': 'Testphase → Abo nach Anmeldewoche',
+  'Sign-ups': 'Anmeldungen',
+  'Trial started': 'Testphase gestartet',
+  'Trial ended': 'Testphase beendet',
+  'Paid by day 35': 'Abo bis Tag 35',
+  'Rate': 'Quote',
+  'still open': 'noch offen',
+  'App Store per week': 'App Store je Woche',
+  'Renewed': 'Verlängert',
+  'Auto-renew off': 'Verlängerung aus',
+  'Expired': 'Abgelaufen',
+  'Refunds': 'Erstattungen',
+  'Billing issue': 'Zahlungsproblem',
+  'First purchases (12 weeks)': 'Erstkäufe (12 Wochen)',
+  'AI cost by plan': 'KI-Kosten nach Tarif',
+  'Households over the limits this month': 'Haushalte über den Grenzen in diesem Monat',
+  'Over 1,500 messages (slower)': 'Über 1.500 Nachrichten (langsamer)',
+  'At 3,000 messages (paused)': 'Bei 3.000 Nachrichten (pausiert)',
+  'At the cost cap of {cap}': 'An der Kostengrenze von {cap}',
+  'Paywall and purchases (8 weeks)': 'Kaufseite und Käufe (8 Wochen)',
+  // operator › Einstellungen
+  'AI cost cap per household and month': 'KI-Kostengrenze je Haushalt und Monat',
+  'In the AI price currency (default 3.5 ≈ 3 €). Over it, AI pauses for that household until the 1st. 0 = off.':
+    'In der KI-Preiswährung (Standard 3,5 ≈ 3 €). Darüber pausiert die KI für diesen Haushalt bis zum 1. 0 = aus.',
+  'Apple’s share': 'Apple-Anteil',
+  'For the net revenue estimate (default 0.15 with the Small Business Program).': 'Für die Netto-Schätzung (Standard 0,15 mit dem Small Business Program).',
+  'After the trial': 'Nach der Testphase',
+  'Read-only (no Free)': 'Nur lesen (kein Free)',
+  'Free (old rule)': 'Free (alte Regel)',
+};

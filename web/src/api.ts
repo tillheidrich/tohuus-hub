@@ -1,4 +1,5 @@
 import { QueryClient, useQuery } from '@tanstack/react-query';
+import { notePlanAnswer } from './planHint';
 import { useSyncExternalStore } from 'react';
 import { locale, num, t } from './i18n';
 
@@ -107,7 +108,11 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   const data = isJson ? await r.json() : await r.text();
   if (!r.ok) {
     const code = isJson ? ((data as any).code ?? (data as any).key) : undefined;
-    throw new ApiError(r.status, friendly(code, (isJson && (data as any).error) || r.statusText), code);
+    const message = friendly(code, (isJson && (data as any).error) || r.statusText);
+    // a plan limit or the end of the trial: one calm card instead of an error (planHint.ts, PlanHint.tsx)
+    // only for something the person just tried to do – a background read never pops up a card
+    if (method !== 'GET') notePlanAnswer(r.status, code, isJson ? (data as Record<string, unknown>) : null, message);
+    throw new ApiError(r.status, message, code);
   }
   // An API answer that is not JSON is never what a caller expects (e.g. the SPA shell for an unknown path)
   if (!isJson && r.status !== 204 && (r.headers.get('content-type') ?? '').includes('text/html')) throw new ApiError(502, t('Unexpected answer from the server'));
@@ -139,7 +144,7 @@ const TOPIC_KEYS: Record<string, string[]> = {
   imports: ['today', 'money', 'rhythm', 'imports', 'import', 'overview', 'spending', 'quality'],
   orders: ['today', 'orders', 'overview'],
   notifications: ['notifications'],
-  settings: ['billing', 'settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share'],
+  settings: ['billing', 'settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share', 'memory', 'knowledge'],
   care: ['care'],
   away: ['away'],
   tour: ['tour', 'overview', 'products', 'recipes', 'shopping', 'onboarding'],

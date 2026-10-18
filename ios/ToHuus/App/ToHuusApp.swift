@@ -73,7 +73,8 @@ struct ToHuusApp: App {
         guard app.phase == .signedIn else { return }
         switch url.host() {
         case "assistant": app.showAssistant = true
-        case "shopping", "today", "pantry", "cooking", "money", "more": app.requestedTab = url.host()
+        // tasks (also tohuus://tasks/<id> from a calendar entry) and stock; pantry/home/care for old links (AppArea.from)
+        case "shopping", "today", "pantry", "stock", "tasks", "care", "home", "cooking", "money", "more": app.requestedTab = url.host()
         case "kitchen": app.showKitchen = true
         default: break
         }

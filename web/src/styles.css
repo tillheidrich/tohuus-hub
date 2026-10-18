@@ -10754,7 +10754,13 @@ button.rcard {
   cursor: pointer;
 }
 
-/* Zuhause switch on Aufgaben and Vorrat (home/HomeSwitch.tsx) */
+/* Mehr: rows only a phone needs (Geld without a place in the tab bar, nav.tsx moneyInMore) */
+@media (min-width: 960px) {
+  .more-phone-only {
+    display: none;
+  }
+}
+/* the doors on top of Aufgaben (Hausinfo, Urlaub) and Vorrat (Wo ist was?) – home/HomeSwitch.tsx */
 .home-switch {
   display: flex;
   flex-direction: column;

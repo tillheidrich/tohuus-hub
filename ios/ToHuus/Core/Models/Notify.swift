@@ -111,6 +111,7 @@ struct NotifyPrefs: Decodable, Sendable, Equatable {
         case "budget.warning": return L("Budget nearly used")
         case "plan.vote": return L("Food vote")
         case "plan.rotation": return L("Week plan filled")
+        case "billing.trial": return L("Trial ends soon")
         default: return key
         }
     }

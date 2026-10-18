@@ -6,10 +6,10 @@
  * The same view renders on the guest/sitter page (GuestHouse), readable offline once opened (cards only – a code
  * value is never stored on the device), and as a printable A4 sheet "Für den Babysitter".
  */
-import { ArrowLeft, Copy, Eye, EyeSlash, Key, LinkSimple, Lock, Microphone, NotePencil, Phone, Plus, Printer, Sparkle, Trash, WifiHigh, Wrench } from '@phosphor-icons/react';
+import { ArrowLeft, Brain, Copy, Eye, EyeSlash, Key, LinkSimple, Lock, Microphone, NotePencil, Phone, Plus, Printer, Sparkle, Trash, WifiHigh, Wrench } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { api, del, get, invalidate, patch, post, put, useApi } from '../api';
 import { HowTo } from '../help';
@@ -485,6 +485,12 @@ export function HouseGuidePage({ me }: { me: Me }) {
           <h1>{t('House info')}</h1>
         </div>
         <div className="actions">
+          {/* Haushaltswissen: sizes, measurements and numbers live there (pages/Knowledge.tsx) */}
+          {me.modules?.knowledge !== false && (
+            <Link className="btn ghost" to="/wissen">
+              <Brain size={16} /> {t('What ToHuus remembers')}
+            </Link>
+          )}
           {!empty && (
             <button className="btn ghost" onClick={() => setPrint(true)}>
               <Printer size={16} /> {t('Print')}

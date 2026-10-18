@@ -282,7 +282,7 @@ export function statsView(days = 56) {
         `SELECT CASE
            WHEN plan = 'trial' AND trial_ends_at > datetime('now') THEN 'trial'
            WHEN plan IN ('haushalt','plus') AND (plan_expires_at IS NULL OR plan_expires_at > datetime('now')) THEN plan
-           ELSE 'free' END AS plan, COUNT(*) n FROM households WHERE ${live} GROUP BY 1 ORDER BY 1`,
+           ELSE 'readonly' END AS plan, COUNT(*) n FROM households WHERE ${live} GROUP BY 1 ORDER BY 1`,
       )
       .all() as { plan: string; n: number }[]
   ).map((p) => ({ plan: p.plan, n: suppress(p.n) }));

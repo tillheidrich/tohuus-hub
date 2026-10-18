@@ -92,6 +92,15 @@ migrate(
   `ALTER TABLE api_tokens ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
   ALTER TABLE api_tokens ADD COLUMN device TEXT;`,
 );
+// App tokens run out APP_TOKEN_DAYS after their last use (P1-2, review 18.10.2026). Existing ones start counting now.
+export const APP_TOKEN_DAYS = 180;
+migrate(
+  'app-tokens-2',
+  `ALTER TABLE api_tokens ADD COLUMN expires_at TEXT;
+  UPDATE api_tokens SET expires_at = datetime('now', '+180 days') WHERE scope = 'app';`,
+);
+/** SQL value for a new app token's end */
+export const APP_TOKEN_EXPIRES_SQL = `datetime('now', '+${APP_TOKEN_DAYS} days')`;
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -212,11 +221,16 @@ export function userActor(userId: number, extra: Partial<Actor> = {}): Actor | n
 export function actorFromBearer(token: string | undefined): Actor | null {
   if (!token || token.length > 300) return null;
   if (config.multiTenant && !currentHousehold()) return null;
-  const row = db.prepare('SELECT id, name, scope, user_id FROM api_tokens WHERE token_hash = ?').get(sha256(token)) as
-    | { id: number; name: string; scope: string; user_id: number | null }
+  const row = db.prepare('SELECT id, name, scope, user_id, expires_at <= datetime(\'now\') AS expired FROM api_tokens WHERE token_hash = ?').get(sha256(token)) as
+    | { id: number; name: string; scope: string; user_id: number | null; expired: number | null }
     | undefined;
   if (!row) return null;
-  db.prepare(`UPDATE api_tokens SET last_used_at = datetime('now') WHERE id = ?`).run(row.id);
+  if (row.scope === 'app' && row.expired === 1) {
+    // unused for APP_TOKEN_DAYS: gone for good (a token without an end gets one below)
+    db.prepare('DELETE FROM api_tokens WHERE id = ?').run(row.id);
+    return null;
+  }
+  db.prepare(`UPDATE api_tokens SET last_used_at = datetime('now')${row.scope === 'app' ? `, expires_at = ${APP_TOKEN_EXPIRES_SQL}` : ''} WHERE id = ?`).run(row.id);
   // an app token acts as the member it belongs to – nothing more
   if (row.scope === 'app') return row.user_id ? userActor(row.user_id, { scope: 'app' }) : null;
   return { kind: 'token', name: row.name, role: row.scope === 'full' ? 'admin' : 'member', scope: row.scope };

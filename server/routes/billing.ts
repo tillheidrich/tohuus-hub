@@ -7,7 +7,7 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { config } from '../config.js';
-import { requireAdmin, requireAuth } from '../lib/auth.js';
+import { rateLimitedGlobal, requireAdmin, requireAuth } from '../lib/auth.js';
 import { GiftError, giftOf, redeemPlanCode } from '../lib/gifts.js';
 import { accountsDb, getHousehold, type HouseholdRow } from '../lib/accounts.js';
 import {
@@ -20,10 +20,13 @@ import {
   type AppleRenewal,
   type AppleTransaction,
 } from '../lib/apple.js';
-import { APPLE_PRODUCTS, LIFETIME_PRODUCT, PLAN_LIMITS, checkStorage, currentPlan, limits, usage, type Limits } from '../lib/plans.js';
+import { APPLE_PRODUCTS, GRACE_DAYS, LIFETIME_PRODUCT, PLAN_LIMITS, afterTrial, aiPaused, checkStorage, currentPlan, inGrace, limits, usage, type Limits } from '../lib/plans.js';
+import { countEvent, platformOf } from '../lib/stats.js';
+import { markTrialSummarySeen, trialSummary } from '../lib/trial-end.js';
 import { currentHousehold } from '../lib/tenancy.js';
 import { APPLE_MANAGE_URL, recordRenewal, reminderWanted, renewalOf } from '../lib/renewals.js';
 import { db } from '../db.js';
+import { t } from '../i18n.js';
 
 export const r = Router();
 export const pub = Router();
@@ -42,6 +45,18 @@ export function billingStatus() {
   return {
     plan,
     trialEndsAt: plan === 'trial' ? (h?.trial_ends_at ?? null) : null,
+    /**
+     * No Free in the cloud (18 Oct 2026): true when the household has no plan – everything is visible and exportable,
+     * writing answers 402 plan.readonly. `graceUntil`: ticking off the shopping list still works until then.
+     */
+    readonly: plan === 'readonly',
+    endedAt: plan === 'readonly' && h ? ((h.plan === 'trial' ? h.trial_ends_at : h.plan_expires_at) ?? null) : null,
+    graceUntil:
+      plan === 'readonly' && h && inGrace(h.id)
+        ? new Date(Date.parse(`${String(h.plan === 'trial' ? h.trial_ends_at : h.plan_expires_at).replace(' ', 'T')}Z`) + GRACE_DAYS * 86400_000).toISOString()
+        : null,
+    /** what follows the trial without a plan: 'readonly' (default) or 'free' (plans.ts afterTrial) */
+    afterTrial: config.multiTenant ? afterTrial() : null,
     // the next charge (App Store renewal info), else the end of the paid period; null when it will not renew
     renewsAt: apple ? (ren ? (ren.auto_renew ? (ren.renews_at ?? h!.plan_expires_at) : null) : h!.plan_expires_at) : null,
     /** paid until (also when it will not renew) */
@@ -60,6 +75,7 @@ export function billingStatus() {
       historyDays: l.historyDays,
       assistantPerMonth: nullIfInf(l.assistantPerMonth),
       assistantThrottleOnly: l.assistantThrottleOnly,
+      assistantHardPerMonth: nullIfInf(l.assistantHardPerMonth),
       uploadsPerDay: l.uploadsPerDay,
       receiptAiPerDay: l.receiptAiPerDay,
       importAiPerDay: l.importAiPerDay,
@@ -71,10 +87,15 @@ export function billingStatus() {
       uploadsToday: usage('upload'),
       receiptAiToday: usage('receiptAi'),
       storageBytes: st.usedBytes,
+      /** AI pauses until the month ends: 'hard' (Plus message limit) or 'cost' (cost cap), else null (F5) */
+      aiPaused: aiPaused(),
     },
     products: config.multiTenant ? Object.entries(APPLE_PRODUCTS).map(([id, p]) => ({ id, ...p })) : [],
     /** what each plan includes (the paywall explains them in plain words) – same fields as `limits` */
-    plans: config.multiTenant ? { free: planLimits(PLAN_LIMITS.free), haushalt: planLimits(PLAN_LIMITS.haushalt), plus: planLimits(PLAN_LIMITS.plus) } : null,
+    // Free only while it exists (afterTrial 'free'); since 18 Oct 2026 the cloud has Haushalt and Plus only
+    plans: config.multiTenant
+      ? { ...(afterTrial() === 'free' ? { free: planLimits(PLAN_LIMITS.free) } : {}), haushalt: planLimits(PLAN_LIMITS.haushalt), plus: planLimits(PLAN_LIMITS.plus) }
+      : null,
   };
 }
 
@@ -82,6 +103,7 @@ const planLimits = (l: Limits) => ({
   historyDays: l.historyDays,
   assistantPerMonth: nullIfInf(l.assistantPerMonth),
   assistantThrottleOnly: l.assistantThrottleOnly,
+  assistantHardPerMonth: nullIfInf(l.assistantHardPerMonth),
   receiptAiPerDay: l.receiptAiPerDay,
   importAiPerDay: l.importAiPerDay,
   storageBytes: l.storageBytes,
@@ -111,6 +133,9 @@ r.post('/billing/redeem', requireAuth, requireAdmin, (req, res) => {
   // the web view inside the iPhone app identifies itself (WebSettingsView.swift) and gets no code redemption
   if (/ToHuusApp/.test(String(req.headers['user-agent'] ?? ''))) return void res.status(403).json({ error: 'web only', code: 'billing.web_only' });
   const { code } = z.object({ code: z.string().trim().min(4).max(60) }).parse(req.body ?? {});
+  // codes can be chosen by hand (6+ characters): no endless guessing – per household and per address (P2-3)
+  if (rateLimitedGlobal(`redeem:${currentHousehold()!.id}`, 10, 60 * 60_000) || rateLimitedGlobal(`redeem-ip:${req.ip}`, 20, 60 * 60_000))
+    return void res.status(429).json({ error: t('Too many attempts. Please wait a few minutes.'), code: 'rate_limited' });
   try {
     const out = redeemPlanCode(currentHousehold()!.id, code);
     res.json({ ok: true, ...out, status: billingStatus() });
@@ -118,6 +143,52 @@ r.post('/billing/redeem', requireAuth, requireAdmin, (req, res) => {
     if (e instanceof GiftError) return void res.status(e.status).json({ error: e.message, code: e.code });
     throw e;
   }
+});
+
+/**
+ * The look back at the end of the 14-day trial (trial-end.ts, F1 of 18 Oct 2026): counts of the own household only.
+ * `show` is true once per person and trial end; POST …/seen hides it.
+ */
+r.get('/billing/trial-summary', requireAuth, (req, res) => {
+  if (!config.multiTenant || req.actor?.houseGuest) return void res.json({ state: 'none', show: false });
+  res.json(trialSummary(currentHousehold()!.id, req.actor?.userId));
+});
+r.post('/billing/trial-summary/seen', requireAuth, (req, res) => {
+  if (config.multiTenant && req.actor?.userId) markTrialSummarySeen(currentHousehold()!.id, req.actor.userId);
+  res.json({ ok: true });
+});
+
+/** Why a paywall opened (F2) – the same list in the apps (PaywallReason). */
+export const PAYWALL_REASONS = [
+  'trial_end',
+  'assistant_plan',
+  'assistant_quota',
+  'ai_paused',
+  'week_plan',
+  'plus_recipe',
+  'receipt_ai',
+  'import_ai',
+  'history',
+  'price_history',
+  'monthly',
+  'connected',
+  'mirror',
+  'mail_inbox',
+  'knowledge_ask',
+  'settings',
+] as const;
+const BILLING_EVENTS = ['paywall.view', 'purchase.start', 'purchase.done', 'purchase.cancel', 'review.request'] as const;
+
+/**
+ * Counters only (F3): how often a paywall opened and why, purchases started/finished, review dialog requested.
+ * stats.countEvent: day, event, platform – no household, no person.
+ */
+r.post('/billing/event', requireAuth, (req, res) => {
+  const b = z.object({ event: z.enum(BILLING_EVENTS), reason: z.enum(PAYWALL_REASONS).optional() }).safeParse(req.body ?? {});
+  if (!b.success) return void res.status(400).json({ error: 'invalid event' });
+  if (config.multiTenant && !rateLimitedGlobal(`billing-event:${currentHousehold()!.id}`, 120, 60 * 60_000))
+    countEvent(b.data.reason ? `${b.data.event}:${b.data.reason}` : b.data.event, platformOf(req));
+  res.json({ ok: true });
 });
 
 /** Personal: the e-mail 3 days before a yearly renewal (admins get it; default on). */
@@ -163,6 +234,9 @@ export function applyAppleTransaction(householdId: string, tx: AppleTransaction)
       d.prepare(`UPDATE households SET plan = 'free', plan_expires_at = NULL WHERE id = ? AND original_transaction_id = ?`).run(householdId, tx.originalTransactionId);
       return;
     }
+    // revenue figures (F3): the first real App Store purchase of the household; TestFlight purchases do not count
+    if ((tx.environment ?? 'Production') === 'Production')
+      d.prepare(`UPDATE households SET first_paid_at = COALESCE(first_paid_at, ?, datetime('now')) WHERE id = ?`).run(sqlTime(tx.purchaseDate), householdId);
     // never shorten a running subscription because an older transaction arrives late
     const h = getHousehold(householdId)!;
     // Plus for good (lifetime) is never replaced by a subscription; only its own refund ends it (above)

@@ -1,0 +1,13 @@
+# gitleaks configuration (CI step "Secrets", SECURITY.md, review 18.10.2026 P1-3).
+# Default rules plus an allowlist for the two known test fixtures – both are made-up values, not secrets:
+#   test/mail-inbound.test.ts       MAIL_INBOUND_SECRET: 'a-long-test-secret-0123456789'
+#   test/review-findings.test.ts    password: 'wrong-guess-123'
+# Never widen this to whole directories: a real key in test/ must still be found.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "known test fixtures (made-up values)"
+condition = "AND"
+paths = ['''^test/mail-inbound\.test\.ts$''', '''^test/review-findings\.test\.ts$''']
+regexes = ['''a-long-test-secret-0123456789''', '''wrong-guess-123''']

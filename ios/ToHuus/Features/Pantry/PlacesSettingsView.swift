@@ -457,6 +457,8 @@ struct PlaceEditSheet: View {
                 } footer: {
                     Text(L("Directions help babysitters and visitors find it."))
                 }
+                // Haushaltswissen: measurements and numbers of this room (KnowledgeView.swift)
+                KnowledgeSection(api: api, ref: "l\(place.id)", name: place.name)
                 Section {
                     Button {
                         Task { await archive() }

@@ -197,11 +197,11 @@ describe.skipIf(!hasOpenssl)('Apple billing', () => {
     const dup = await note('DID_RENEW', {}, undefined, renewUuid);
     expect(dup.json.duplicate).toBe(true);
     expect((await note('EXPIRED', {}, 'VOLUNTARY')).status).toBe(200);
-    expect((await call('GET', '/api/billing/status')).json.plan).toBe('free');
+    expect((await call('GET', '/api/billing/status')).json.plan).toBe('readonly');
     await note('SUBSCRIBED', {}, 'RESUBSCRIBE');
     expect((await call('GET', '/api/billing/status')).json.plan).toBe('plus');
     await note('REFUND', {});
-    expect((await call('GET', '/api/billing/status')).json.plan).toBe('free');
+    expect((await call('GET', '/api/billing/status')).json.plan).toBe('readonly');
     // a notification signed by somebody else changes nothing
     const fake = await call(
       'POST',
@@ -210,7 +210,7 @@ describe.skipIf(!hasOpenssl)('Apple billing', () => {
       false,
     );
     expect(fake.status).toBe(400);
-    expect((await call('GET', '/api/billing/status')).json.plan).toBe('free');
+    expect((await call('GET', '/api/billing/status')).json.plan).toBe('readonly');
   });
 
   it('subscription trust: next renewal date from the renewal info, "Abo verwalten", one reminder 3 days before a yearly renewal', async () => {
@@ -280,7 +280,7 @@ describe.skipIf(!hasOpenssl)('Apple billing', () => {
       false,
     );
     expect(refund.status, refund.text).toBe(200);
-    expect((await call('GET', '/api/billing/status')).json).toMatchObject({ plan: 'free', lifetime: false });
+    expect((await call('GET', '/api/billing/status')).json).toMatchObject({ plan: 'readonly', lifetime: false });
   });
 
   it('the real Apple Root CA G3 is embedded', async () => {

@@ -11,7 +11,8 @@ import { Router, type NextFunction, type Request, type Response } from 'express'
 import { z } from 'zod';
 import { brand, db, lang } from '../db.js';
 import { t } from '../i18n.js';
-import { NAME_MAX, PASSWORD_MIN, hashPassword, rateLimited, rateLimitedGlobal, requireAdmin, requireAuth, resolveActor, verifyPassword } from '../lib/auth.js';
+import { NAME_MAX, PASSWORD_MIN, hashPassword, rateLimited, rateLimitedGlobal, requireAdmin, requireAuth, resolveActor, sha256, verifyPassword } from '../lib/auth.js';
+import { passwordChangedMailLocal, revokeMemberCredentials, revokedCount } from '../lib/credential-revoke.js';
 import {
   SECRET_MASK,
   authPolicy,
@@ -304,7 +305,11 @@ r.post(
     if (hasPassword(u) && !(await verifyPassword(b.current ?? '', u.password_hash))) throw new AuthError(401, t('Your current password is not right.'));
     db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(b.password), id);
     const signedOut = revokeOtherSessions(id, req.actor?.sessionId);
-    return { ok: true, signedOut };
+    // and every other way in: other app tokens, MCP connections, CalDAV passwords, private calendar links (A07, P1-1)
+    const bearer = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7).trim() : null;
+    const revoked = revokeMemberCredentials(id, { mode: 'change', keepTokenHash: bearer ? sha256(bearer) : null });
+    passwordChangedMailLocal(id);
+    return { ok: true, signedOut: signedOut + revokedCount(revoked) };
   }),
 );
 

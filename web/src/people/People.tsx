@@ -34,6 +34,7 @@ import { Seg, Sheet, Skeleton, useToast } from '../ui';
 import { Avatar, type Face } from './Avatar';
 import { PersonProfileSheet } from './Ratings';
 import { useHealthConsent } from './HealthConsent';
+import { KnowledgeFor } from '../pages/Knowledge';
 
 export type GuestLevel = 'order' | 'stock' | 'recipes' | 'family';
 export type EffectiveLevel = GuestLevel | 'paused';
@@ -199,6 +200,8 @@ function PersonSheet({ personKey, me, admin, people, onClose }: { personKey: str
             {p.prefs.dislikes.length > 0 && <div className="muted">{t('Doesn’t like')}: {p.prefs.dislikes.join(', ')}</div>}
           </div>
         )}
+        {/* Haushaltswissen: sizes and other things about this person (pages/Knowledge.tsx) */}
+        {p.kind !== 'guest' && me.modules?.knowledge !== false && <KnowledgeFor refKey={p.key} name={p.name} canAdd={!guestViewer} />}
         {admin && p.kind === 'guest' && <GuestAccess p={p} />}
         {admin && p.kind !== 'child' && !self && <SignInFor p={p} />}
         {admin && p.kind !== 'child' && !self && <KindSwitch p={p} />}

@@ -40,7 +40,8 @@ import { eventIcs, eventObjectOf, feedIcs, mapEventObject, parseEvent, utcToLoca
 import { notPrivate } from './share-core.js';
 import { removeItem, tickItem } from './shopping-trust.js';
 import { houseGuestFor } from './people-policy.js';
-import { runInHousehold, slugInToken } from './tenancy.js';
+import { currentHousehold, runInHousehold, slugInToken } from './tenancy.js';
+import { planOf } from './plans.js';
 
 migrate(
   'caldav-1',
@@ -489,6 +490,11 @@ function withMember(req: Request, res: Response, fn: (member: { user_id: number;
     // a member who was made a permanent guest (or paused) keeps no CalDAV access: guests never get app passwords
     if (houseGuestFor(m.user_id)) return deny(res);
     if (rateLimited(`caldav:${m.user_id}`, 600, 60_000)) return void res.status(429).type('text/plain').send('slow down');
+    // cloud household without a plan (trial over): reading keeps working, changes are refused – docs/pricing.md 18.10.
+    if (config.multiTenant && (req.method === 'PUT' || req.method === 'DELETE')) {
+      const h = currentHousehold();
+      if (h && planOf(h.id) === 'readonly') return void res.status(403).type('text/plain').send('ToHuus: read-only until a plan is active');
+    }
     fn(m);
   };
   if (!config.multiTenant) return go();

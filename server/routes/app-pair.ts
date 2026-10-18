@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { config } from '../config.js';
 import { db, getSetting } from '../db.js';
 import { t } from '../i18n.js';
-import { randomToken, rateLimitedGlobal, resolveActor, sha256 } from '../lib/auth.js';
+import { APP_TOKEN_EXPIRES_SQL, randomToken, rateLimitedGlobal, resolveActor, sha256 } from '../lib/auth.js';
 import { AuthError } from '../lib/auth-sessions.js';
 import { currentHousehold } from '../lib/tenancy.js';
 import * as accountsModule from '../lib/accounts.js';
@@ -202,7 +202,7 @@ appPair.post(
       const u = db.prepare('SELECT id, name, role FROM users WHERE id = ?').get(p.userId) as { id: number; name: string; role: string } | undefined;
       if (!u) throw wrong();
       const token = `sw_app_${randomToken(30)}`;
-      db.prepare(`INSERT INTO api_tokens (name, token_hash, prefix, scope, user_id, device) VALUES (?, ?, ?, 'app', ?, ?)`).run(
+      db.prepare(`INSERT INTO api_tokens (name, token_hash, prefix, scope, user_id, device, expires_at) VALUES (?, ?, ?, 'app', ?, ?, ${APP_TOKEN_EXPIRES_SQL})`).run(
         `App · ${b.device}`,
         sha256(token),
         token.slice(0, 11),

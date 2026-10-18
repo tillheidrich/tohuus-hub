@@ -120,7 +120,8 @@ struct GlobalSearchView: View {
     }
 
     private func openTab(_ tab: String) {
-        if tab == "tasks" || tab == "stock" { app.homeSegment = tab; app.requestedTab = "home" } else { app.requestedTab = tab }
+        // Aufgaben and Vorrat are tabs of their own (AppArea.from)
+        app.requestedTab = tab
         dismiss()
     }
 
@@ -209,7 +210,7 @@ enum SearchRegistry {
                 Entry(title: L("QR labels"), words: "etiketten qr drucken aufkleber", icon: "qrcode", target: .labels),
                 Entry(title: L("Signed-in devices"), words: "geräte abmelden sitzungen", icon: "laptopcomputer.and.iphone", target: .devices),
                 Entry(title: L("Guests & party"), words: "gäste party bar gastlink", icon: "wineglass", target: .guests),
-                Entry(title: L("What ToHuus remembers"), words: "gedächtnis merkt sich", icon: "text.book.closed", target: .memory),
+                Entry(title: L("What ToHuus remembers"), words: "gedächtnis merkt sich wissen schuhgröße größe maß nummer", icon: "brain", target: .memory),
                 Entry(title: L("Wishes & Merkliste"), words: "wünsche geschenke merkliste", icon: "gift", target: .wishes),
                 Entry(title: L("Receipts & imports"), words: "bons kassenbon rechnung import", icon: "doc.text", target: .receipts),
                 Entry(title: L("Spending in detail"), words: "ausgaben diagramm export", icon: "chart.bar", target: .spending),
@@ -251,7 +252,7 @@ enum SearchRegistry {
         case .devices: SignedInDevicesView(api: api)
         case .guests: GuestsPartyView(store: store)
         case .treats: TreatsView(api: api)
-        case .memory: MemoryView(api: api)
+        case .memory: KnowledgeView(api: api)
         case .wishes: WishesView(api: api)
         case .receipts: ImportsListView(store: store)
         case .spending: SpendView(store: store)

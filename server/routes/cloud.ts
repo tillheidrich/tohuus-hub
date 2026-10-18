@@ -16,6 +16,7 @@ import { db, getSetting, lang, setSetting } from '../db.js';
 import { t } from '../i18n.js';
 import { LANG_CODES, isLang } from '../languages.js';
 import {
+  APP_TOKEN_EXPIRES_SQL,
   NAME_MAX,
   PASSWORD_MIN,
   SESSION_COOKIE,
@@ -47,6 +48,7 @@ import * as cloudPasskeys from '../lib/cloud-passkeys.js';
 import * as cloudApple from '../lib/cloud-apple.js';
 import { householdPerson, isHouseholdAdmin, syncMembership } from '../lib/membership-sync.js';
 import { appPair } from './app-pair.js';
+import { passwordChangedText, revokeAccountCredentials, revokedCount } from '../lib/credential-revoke.js';
 
 export const instance = Router();
 export const appAuth = Router();
@@ -187,7 +189,7 @@ appAuth.post(
       const userId = await selfhostAppUser(req, b);
       const u = db.prepare('SELECT id, name, role FROM users WHERE id = ?').get(userId) as { id: number; name: string; role: string };
       const token = `sw_app_${randomToken(30)}`;
-      db.prepare(`INSERT INTO api_tokens (name, token_hash, prefix, scope, user_id, device) VALUES (?, ?, ?, 'app', ?, ?)`).run(
+      db.prepare(`INSERT INTO api_tokens (name, token_hash, prefix, scope, user_id, device, expires_at) VALUES (?, ?, ?, 'app', ?, ?, ${APP_TOKEN_EXPIRES_SQL})`).run(
         `App · ${b.device}`,
         sha256(token),
         token.slice(0, 11),
@@ -227,6 +229,21 @@ appAuth.get(
     const id = (await CA()).cloudIdentity(req);
     if (!id) throw new AuthError(401, 'unauthorized');
     return ((await A()).appTokensOf(id.accountId) as any[]).map((x) => ({ ...x, current: x.id === id.appTokenId }));
+  }),
+);
+
+/**
+ * The app signs out: its own token is removed on the server, so a copy (device backup, sold iPad) is worthless
+ * (P1-2, review 18.10.2026). Answers 200 also for an unknown token – the app deletes its local data either way.
+ */
+appAuth.delete(
+  '/auth/app/devices/current',
+  wrap(async (req) => {
+    const a = req.headers.authorization;
+    const bearer = a?.startsWith('Bearer ') ? a.slice(7).trim() : '';
+    if (!bearer.startsWith('sw_app_') || bearer.length > 200) throw new AuthError(401, 'unauthorized');
+    if (!cloudMode()) return { ok: db.prepare(`DELETE FROM api_tokens WHERE token_hash = ? AND scope = 'app'`).run(sha256(bearer)).changes > 0 };
+    return { ok: (await A()).revokeAppTokenByToken(bearer) };
   }),
 );
 
@@ -434,6 +451,18 @@ function setSessionCookie(res: Response, token: string) {
   res.cookie(SESSION_COOKIE, token, { ...cookieBase(), maxAge: 180 * 86400000, path: '/' });
 }
 
+/** "Du wurdest überall abgemeldet" – after a password change or reset, in the account's language (A07). */
+function passwordChangedMail(accountId: number) {
+  const a = accountsModule.accountById(accountId);
+  if (!a || !canSendMail()) return;
+  void inAccountLang(a.lang, () =>
+    sendAuthMail(a.email, t('Your password was changed'), t('You were signed out everywhere'), passwordChangedText(), {
+      url: `${config.baseUrl}/anmelden`,
+      label: t('Sign in'),
+    }),
+  );
+}
+
 export async function startCloudSession(req: Request, res: Response, accountId: number, householdId: string | null, method: string) {
   const acc = await A();
   const prev = req.cookies?.[SESSION_COOKIE];
@@ -548,10 +577,11 @@ cloudPub.post(
     const b = signupReq.parse(req.body ?? {});
     const email = normEmail(b.email);
     if (!EMAIL_RE.test(email)) throw new AuthError(400, t('That doesn’t look like an e-mail address.'));
-    // beta gate (lib/beta.ts): open / invite (allowlisted address or access code) / closed
-    const gate = betaModule.signupGate(email, b.betaCode);
+    // counted before the beta gate: wrong access codes count as attempts too (review 18.10.2026 P2-3)
     if (rateLimitedGlobal(`signup-ip:${req.ip}`, 5, 60 * 60_000) || rateLimitedGlobal(`signup-mail:${email}`, 3, 60 * 60_000))
       throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
+    // beta gate (lib/beta.ts): open / invite (allowlisted address or access code) / closed
+    const gate = betaModule.signupGate(email, b.betaCode);
     const acc = await A();
     if (acc.accountByEmail(email)) throw new AuthError(409, t('There is already an account with this address – please sign in.'));
     const region = (b.region && REGIONS.some((r) => r.code === b.region!.toUpperCase()) ? b.region.toUpperCase() : defaultRegionCode(b.lang));
@@ -764,14 +794,13 @@ cloudPub.post(
     const acc = await A();
     const accountId = acc.consumeAuthLink('reset', b.token);
     if (!accountId) throw new AuthError(410, t('This link has expired or was already used.'));
-    acc.accountsDb().transaction(() => {
-      acc.accountsDb().prepare(`UPDATE accounts SET password_hash = ?, verified_at = COALESCE(verified_at, datetime('now')) WHERE id = ?`).run(hashPassword(b.password), accountId);
-      // a new password signs out every other browser and app
-      acc.accountsDb().prepare('DELETE FROM sessions WHERE account_id = ?').run(accountId);
-      acc.accountsDb().prepare('DELETE FROM app_tokens WHERE account_id = ?').run(accountId);
-    })();
+    acc.accountsDb().prepare(`UPDATE accounts SET password_hash = ?, verified_at = COALESCE(verified_at, datetime('now')) WHERE id = ?`).run(hashPassword(b.password), accountId);
+    // a reset closes every way in: browsers, apps, MCP connections, CalDAV passwords, calendar links (A07, P1-1)
+    const revoked = revokeAccountCredentials(accountId, 'reset');
+    (await import('../lib/cloud-codes.js')).burnSignInCodes(accountId);
+    passwordChangedMail(accountId);
     await startCloudSession(req, res, accountId, acc.membershipsOf(accountId)[0]?.household_id ?? null, 'reset');
-    return { status: 'signed_in' };
+    return { status: 'signed_in', signedOut: revokedCount(revoked) };
   }),
 );
 
@@ -1062,11 +1091,14 @@ cloud.post(
     const b = z.object({ current: z.string().max(200).optional(), password: z.string().min(CLOUD_PASSWORD_MIN).max(200) }).parse(req.body ?? {});
     const acc = await A();
     const a = acc.accountById(id.accountId)!;
+    if (rateLimitedGlobal(`pwchange:${a.id}`, 8, 15 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
     if (a.password_hash?.startsWith('scrypt$') && !(await verifyPassword(b.current ?? '', a.password_hash))) throw new AuthError(400, t('The current password is wrong.'));
     acc.accountsDb().prepare('UPDATE accounts SET password_hash = ? WHERE id = ?').run(hashPassword(b.password), a.id);
-    // other browsers sign in again; apps keep their device tokens (revocable under devices)
-    if (id.sessionId) acc.accountsDb().prepare('DELETE FROM sessions WHERE account_id = ? AND id != ?').run(a.id, id.sessionId);
-    return { ok: true };
+    // everything else is signed out: other browsers, other apps, MCP connections, CalDAV passwords, private calendar
+    // links (A07, P1-1). Only the session or app token that made the change stays.
+    const revoked = revokeAccountCredentials(a.id, 'change', { sessionId: id.sessionId ?? null, appTokenId: id.appTokenId ?? null });
+    passwordChangedMail(a.id);
+    return { ok: true, signedOut: revokedCount(revoked), revoked };
   }),
 );
 
@@ -1164,6 +1196,27 @@ cloud.delete(
 wellKnown.get(['/.well-known/apple-app-site-association', '/apple-app-site-association'], (_req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=3600');
   res.type('application/json').send(JSON.stringify(cloudPasskeys.appleAppSiteAssociation()));
+});
+
+// ---------------------------------------------------------------- security.txt (RFC 9116, cloud host)
+
+/** where to report a vulnerability (SECURITY.md); Expires always one year ahead, as the file is generated */
+export const SECURITY_CONTACT = 'mailto:security@tillheidrich.de';
+export function securityTxt(now = new Date()) {
+  const expires = new Date(now.getTime() + 365 * 86400_000);
+  expires.setUTCHours(0, 0, 0, 0);
+  return [
+    `Contact: ${SECURITY_CONTACT}`,
+    `Expires: ${expires.toISOString().replace('.000Z', 'Z')}`,
+    'Preferred-Languages: de, en',
+    `Canonical: ${config.baseUrl.replace(/\/$/, '')}/.well-known/security.txt`,
+    'Policy: https://github.com/tillheidrich/tohuus-hub/blob/main/SECURITY.md',
+    '',
+  ].join('\n');
+}
+wellKnown.get(['/.well-known/security.txt', '/security.txt'], (_req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.type('text/plain; charset=utf-8').send(securityTxt());
 });
 
 // members join by invitation and sign in with their own account – no household passwords, PINs, TOTP or SSO here

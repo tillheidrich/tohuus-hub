@@ -75,6 +75,10 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     'beta.gift': z.enum(['haushalt', 'plus']),
     points: z.enum(['on', 'off']),
     year_review: z.enum(['on', 'off']),
+    // monetisation (18 Oct 2026): cost cap per household and month in the AI price currency, Apple's commission share
+    'ai.household_cost_cap': z.string().trim().regex(/^\d{1,3}([.,]\d{1,2})?$/, 'amount like 3.5'),
+    'billing.commission': z.string().trim().regex(/^0([.,]\d{1,3})?$/, 'share like 0.15'),
+    'trial.after': z.enum(['free', 'readonly']),
   };
 
   r.put('/operator/settings', fresh, (req, res) => {

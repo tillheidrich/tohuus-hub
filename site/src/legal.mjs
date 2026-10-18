@@ -131,7 +131,7 @@ export function legalCopy(k) {
           ['Sitzungen mit IP-Adresse und Gerätekennung', 'Bis du dich abmeldest, das Gerät entfernst oder die Sitzung nach 180 Tagen abläuft.'],
           ['Zähler für Anmeldeversuche', 'Im Arbeitsspeicher, höchstens eine Stunde.'],
           ['Kaufbelege von Apple', 'Bis der Haushalt gelöscht wird, dann löschen wir sie mit. Verkäufer ist Apple, die Kaufbelege führt Apple. Aus den Sicherungskopien der Kontoverwaltung verschwinden sie mit deren Ablauf.'],
-          ['Nach dem Ende eines Abos', 'Wird nichts gelöscht. Der Haushalt geht auf den Tarif Free zurück.'],
+          ['Nach dem Ende eines Abos', 'Wird nichts gelöscht. Der Haushalt bleibt lesbar, Export und Löschen gehen weiter.'],
           ['Anfragen über das Formular „Wir können uns das gerade nicht leisten“', '180 Tage nach unserer Antwort. Aus den Sicherungskopien der Kontoverwaltung verschwinden sie mit deren Ablauf.'],
         ]) },
 
@@ -186,7 +186,7 @@ export function legalCopy(k) {
     summaryH: 'Kurz gesagt',
     summary: [
       'ToHuus wird laufend weiterentwickelt. Funktionen können sich ändern, und es kann Ausfälle geben.',
-      'Free kostet nichts. Abos laufen über Apple und werden dort gekündigt.',
+      'Die Testphase kostet nichts. Abos laufen über Apple und werden dort gekündigt.',
       'Eure Inhalte bleiben eure. Wir nutzen sie nur, damit ToHuus für euch funktioniert.',
       'Die Allergie-Warnung ersetzt nicht den Blick auf die Zutatenliste.',
     ],
@@ -208,11 +208,11 @@ export function legalCopy(k) {
 
       { id: 'tarife', h: 'Tarife und Preise', body:
         dl([
-          ['Free', '0 €, ohne KI. Gemeinsame Liste mit Einkaufsmodus, Aufgaben, „Im Kopf“, Wochenplan und Rezepte von Hand, Rückblicke und Teilen. Der Assistent versteht nur einfache Sätze ohne KI. ToHuus merkt sich 30 Tage zurück, 20 Uploads am Tag, 100 MB Speicher.'],
+          ['Testphase', '14 Tage alles aus Plus, ohne Zahlungsdaten. Danach beginnt kein Abo automatisch.'],
           ['Haushalt', '3,99 € im Monat oder 34,99 € im Jahr. Dazu die ganze Geschichte mit Preisverlauf und Ausgaben, verbundene Haushalte, Bons, Screenshots und Fotos von Papierlisten mit KI lesen, 100 Nachrichten im Monat, 2 GB Speicher.'],
           ['Plus', '5,99 € im Monat oder 59,99 € im Jahr. Dazu Wochenplan aus dem, was da ist, Monatsauswertung vom Assistenten, 1.500 Nachrichten im Monat, 5 GB Speicher.'],
         ])
-        + p('Maßgeblich ist der Preis, den der App Store beim Kauf anzeigt. Jeder neue Haushalt nutzt 14 Tage lang den Tarif Plus, ohne Zahlungsdaten und ohne dass danach automatisch ein Abo beginnt. Nach der Testphase oder wenn ein Abo endet, geht der Haushalt auf Free zurück. Gelöscht wird dabei nichts. Ältere Einträge sind dann bis zum nächsten Abo nicht sichtbar.') },
+        + p('Maßgeblich ist der Preis, den der App Store beim Kauf anzeigt. Jeder neue Haushalt nutzt 14 Tage lang den Tarif Plus, ohne Zahlungsdaten und ohne dass danach automatisch ein Abo beginnt. Nach der Testphase oder wenn ein Abo endet, ist der Haushalt in der ToHuus Cloud nur noch lesbar: Ihr seht alles, könnt exportieren, löschen, ein Abo abschließen oder wiederherstellen, aber nichts Neues eintragen. Die Einkaufsliste lässt sich noch 7 Tage lang abhaken. Gelöscht wird dabei nichts. Wer ToHuus selbst betreibt, ist davon nicht betroffen.') },
 
       { id: 'apple', h: 'Bezahlen und Kündigen über Apple', body:
         ul('Abos kaufst du in der iPhone-App über den App Store. Vertragspartner für den Kauf und die Zahlung ist Apple, es gelten die Bedingungen von Apple für Medienservices.',
@@ -224,11 +224,11 @@ export function legalCopy(k) {
       { id: 'kontingente', h: 'Kontingente und faire Nutzung', body:
         p('Damit der Dienst für alle bezahlbar bleibt, gelten je Haushalt diese Grenzen:')
         + dl([
-          ['Nachrichten an den Assistenten', 'Free keine (ohne KI), Haushalt 100, Plus 1.500 im Monat. In Free und wenn das Kontingent aufgebraucht ist, versteht der Assistent weiter die üblichen Sätze wie „Milch ist alle“ ohne Sprachmodell. In Plus wird über 1.500 nicht gesperrt, die Antworten werden kürzer.'],
-          ['Bons mit Sprachmodell lesen', 'Free keine, Haushalt 40, Plus 60 am Tag. Bons als PDF der meisten Märkte brauchen kein Sprachmodell und sind nicht begrenzt.'],
-          ['Importe mit Sprachmodell', 'Rezepte und Produkte aus Links, Texten oder Fotos: Free keine, Haushalt 40, Plus 100 am Tag.'],
-          ['Uploads', 'Free 20, Haushalt 200, Plus 300 am Tag.'],
-          ['Speicher', 'Free 100 MB, Haushalt 2 GB, Plus 5 GB für Fotos, Bon-Dateien und Datenbank. Ist der Speicher voll, sind neue Uploads gesperrt, bis ihr Platz schafft oder den Tarif wechselt. Gelöscht wird nichts, und kleine Änderungen im Alltag funktionieren weiter.'],
+          ['Nachrichten an den Assistenten', 'Haushalt 100, Plus 1.500 im Monat. Ist das Kontingent aufgebraucht, versteht der Assistent weiter die üblichen Sätze wie „Milch ist alle“ ohne Sprachmodell. In Plus antwortet er über 1.500 langsamer, ab 3.000 Nachrichten oder bei sehr hohen Kosten für das Sprachmodell pausiert die KI bis zum Monatsende.'],
+          ['Bons mit Sprachmodell lesen', 'Haushalt 40, Plus 60 am Tag. Bons als PDF der meisten Märkte brauchen kein Sprachmodell und sind nicht begrenzt.'],
+          ['Importe mit Sprachmodell', 'Rezepte und Produkte aus Links, Texten oder Fotos: Haushalt 40, Plus 100 am Tag.'],
+          ['Uploads', 'Haushalt 200, Plus 300 am Tag.'],
+          ['Speicher', 'Haushalt 2 GB, Plus 5 GB für Fotos, Bon-Dateien und Datenbank. Ist der Speicher voll, sind neue Uploads gesperrt, bis ihr Platz schafft oder den Tarif wechselt. Gelöscht wird nichts, und kleine Änderungen im Alltag funktionieren weiter.'],
         ])
         + p('Bitte nutze ToHuus für deinen Haushalt und nicht automatisiert in großen Mengen. Ändern wir Kontingente zu deinem Nachteil, gilt das für laufende Abos erst ab dem nächsten Abrechnungszeitraum, und wir sagen es vorher an.') },
 
@@ -251,8 +251,8 @@ export function legalCopy(k) {
 
       { id: 'ende', h: 'Löschen, Kündigen, Sperren', body:
         ul('Du kannst deinen Haushalt und dein Konto jederzeit in der App löschen. Ein laufendes Abo kündigst du zusätzlich bei Apple, sonst verlängert es sich weiter.',
-          'Wir können die Nutzung von Free mit einer Frist von vier Wochen beenden. Bezahlte Abos laufen bis zum Ende des bezahlten Zeitraums. Ohne Frist sperren oder beenden dürfen wir nur aus wichtigem Grund, etwa bei Angriffen auf den Dienst oder bei rechtswidrigen Inhalten.',
-          'Wir behalten uns vor, Haushalte im Tarif Free zu löschen, die seit zwölf Monaten niemand geöffnet hat. Vorher schreiben wir den Admins zweimal per E-Mail, die letzte Nachricht mindestens vier Wochen vor dem Löschen. Bis dahin genügt es, ToHuus einmal zu öffnen. Derzeit löschen wir inaktive Haushalte nicht.',
+          'Bezahlte Abos laufen bis zum Ende des bezahlten Zeitraums. Ohne Frist sperren oder beenden dürfen wir nur aus wichtigem Grund, etwa bei Angriffen auf den Dienst oder bei rechtswidrigen Inhalten.',
+          'Wir behalten uns vor, Haushalte ohne Abo zu löschen, die seit zwölf Monaten niemand geöffnet hat. Vorher schreiben wir den Admins zweimal per E-Mail, die letzte Nachricht mindestens vier Wochen vor dem Löschen. Bis dahin genügt es, ToHuus einmal zu öffnen. Derzeit löschen wir inaktive Haushalte nicht.',
           'Endet die Nutzung, kannst du vorher deine Daten exportieren.') },
 
       { id: 'haftung', h: 'Haftung', body:
@@ -381,7 +381,7 @@ export function legalCopy(k) {
           ['Sessions with IP address and user agent', 'Until you sign out, remove the device or the session expires after 180 days.'],
           ['Counters for sign-in attempts', 'In memory, one hour at most.'],
           ['Purchase records from Apple', 'Until the household is deleted, then we delete them too. Apple is the seller and keeps the purchase records. They disappear from the backups of the account database as those expire.'],
-          ['After a subscription ends', 'Nothing is deleted. The household goes back to the Free plan.'],
+          ['After a subscription ends', 'Nothing is deleted. The household stays readable; export and deletion keep working.'],
           ['Requests through the form “We can’t afford this right now”', '180 days after we reply. They disappear from the backups of the account database as those expire.'],
         ]) },
 
@@ -437,7 +437,7 @@ export function legalCopy(k) {
     summaryH: 'In short',
     summary: [
       'ToHuus is developed continuously. Features can change, and there can be outages.',
-      'Free costs nothing. Subscriptions run through Apple and are cancelled there.',
+      'The trial costs nothing. Subscriptions run through Apple and are cancelled there.',
       'Your content stays yours. We only use it so that ToHuus works for you.',
       'The allergy warning does not replace reading the ingredients list.',
     ],
@@ -459,11 +459,11 @@ export function legalCopy(k) {
 
       { id: 'plans', h: 'Plans and prices', body:
         dl([
-          ['Free', '€0, without AI. Shared list with shop mode, tasks, “On my mind”, week plan and recipes by hand, reviews and sharing. The assistant only understands simple sentences, without AI. ToHuus remembers 30 days back, 20 uploads a day, 100 MB storage.'],
+          ['Trial', '14 days of everything in Plus, without payment details. No subscription starts automatically afterwards.'],
           ['Household (Haushalt)', '€3.99 a month or €34.99 a year. Adds the full history with price history and spending, connected households, receipts, screenshots and photos of paper lists read with AI, 100 messages a month, 2 GB storage.'],
           ['Plus', '€5.99 a month or €59.99 a year. Adds the week plan from what is at home, a monthly review from the assistant, 1,500 messages a month, 5 GB storage.'],
         ])
-        + p('The price shown by the App Store at the time of purchase applies. Every new household gets 14 days of the Plus plan, without payment details and without a subscription starting automatically afterwards. After the trial, or when a subscription ends, the household goes back to Free. Nothing is deleted. Older entries are then hidden until the next subscription.') },
+        + p('The price shown by the App Store at the time of purchase applies. Every new household gets 14 days of the Plus plan, without payment details and without a subscription starting automatically afterwards. After the trial, or when a subscription ends, the household in ToHuus Cloud becomes read-only: you see everything and can export, delete, subscribe or restore, but not add anything new. The shopping list can still be checked off for 7 days. Nothing is deleted. Self-hosted ToHuus is not affected.') },
 
       { id: 'apple', h: 'Paying and cancelling through Apple', body:
         ul('You buy subscriptions in the iPhone app through the App Store. Apple is the contracting party for the purchase and the payment, and Apple’s Media Services terms apply.',
@@ -475,11 +475,11 @@ export function legalCopy(k) {
       { id: 'allowances', h: 'Allowances and fair use', body:
         p('To keep the service affordable for everyone, these limits apply per household:')
         + dl([
-          ['Assistant messages', 'Free none (no AI), Household 100, Plus 1,500 a month. In Free and when the allowance is used up, the assistant still understands the usual sentences such as “we are out of milk” without a language model. In Plus nothing is blocked above 1,500; the answers get shorter.'],
-          ['Reading receipts with a language model', 'Free none, Household 40, Plus 60 a day. PDF receipts from most shops need no language model and are not limited.'],
-          ['Imports with a language model', 'Recipes and products from links, texts or photos: Free none, Household 40, Plus 100 a day.'],
-          ['Uploads', 'Free 20, Household 200, Plus 300 a day.'],
-          ['Storage', 'Free 100 MB, Household 2 GB, Plus 5 GB for photos, receipt files and the database. When storage is full, new uploads are blocked until you free up space or change plan. Nothing is deleted, and small everyday changes keep working.'],
+          ['Assistant messages', 'Household 100, Plus 1,500 a month. When the allowance is used up, the assistant still understands the usual sentences such as “we are out of milk” without a language model. In Plus it answers more slowly above 1,500; from 3,000 messages or at very high language-model cost, AI pauses until the end of the month.'],
+          ['Reading receipts with a language model', 'Household 40, Plus 60 a day. PDF receipts from most shops need no language model and are not limited.'],
+          ['Imports with a language model', 'Recipes and products from links, texts or photos: Household 40, Plus 100 a day.'],
+          ['Uploads', 'Household 200, Plus 300 a day.'],
+          ['Storage', 'Household 2 GB, Plus 5 GB for photos, receipt files and the database. When storage is full, new uploads are blocked until you free up space or change plan. Nothing is deleted, and small everyday changes keep working.'],
         ])
         + p('Please use ToHuus for your household and not automatically in large volumes. If we change allowances to your disadvantage, this applies to running subscriptions only from the next billing period, and we announce it beforehand.') },
 
@@ -502,8 +502,8 @@ export function legalCopy(k) {
 
       { id: 'ending', h: 'Deleting, cancelling, suspending', body:
         ul('You can delete your household and your account in the app at any time. A running subscription must also be cancelled with Apple, otherwise it keeps renewing.',
-          'We can end the use of Free with four weeks’ notice. Paid subscriptions run until the end of the paid period. We may only suspend or end use without notice for good cause, for example attacks on the service or unlawful content.',
-          'We reserve the right to delete households on the Free plan that nobody has opened for twelve months. Before that, we write to the admins twice by e-mail, the last message at least four weeks before deletion. Until then, opening ToHuus once is enough. We do not delete inactive households at present.',
+          'Paid subscriptions run until the end of the paid period. We may only suspend or end use without notice for good cause, for example attacks on the service or unlawful content.',
+          'We reserve the right to delete households without a subscription that nobody has opened for twelve months. Before that, we write to the admins twice by e-mail, the last message at least four weeks before deletion. Until then, opening ToHuus once is enough. We do not delete inactive households at present.',
           'Before your use ends, you can export your data.') },
 
       { id: 'liability', h: 'Liability', body:

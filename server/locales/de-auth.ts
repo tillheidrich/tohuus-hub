@@ -80,4 +80,8 @@ export const de_auth: Record<string, string> = {
     'Die ToHuus-App auf diesem Gerät meldet sich mit deinem Konto an. Tippe nur auf „Verbinden“, wenn du das gerade in der App gestartet hast.',
   'This link is incomplete. Please start again in the app.': 'Dieser Link ist unvollständig. Fang in der App bitte nochmal an.',
   'This code doesn’t work (any more). Create a new one in the web app.': 'Dieser Code passt nicht (mehr). Erstell in der Web-App einen neuen.',
+  'Your password was changed': 'Dein Passwort wurde geändert',
+  'You were signed out everywhere': 'Du wurdest überall abgemeldet',
+  'Your ToHuus password was just changed. For your safety you were signed out everywhere else: other browsers and apps, connected AI assistants (MCP), CalDAV passwords and calendar links with your private tasks. Sign in again where you need it and create new links. If this wasn’t you, reset your password right away and write to us.':
+    'Dein ToHuus-Passwort wurde gerade geändert. Zu deiner Sicherheit wurdest du überall sonst abgemeldet: andere Browser und Apps, verbundene KI-Assistenten (MCP), CalDAV-Passwörter und Kalender-Links mit deinen privaten Aufgaben. Melde dich dort, wo du es brauchst, neu an und leg neue Links an. Warst du das nicht, setz dein Passwort sofort zurück und schreib uns.',
 };

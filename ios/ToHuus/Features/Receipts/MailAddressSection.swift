@@ -62,7 +62,7 @@ struct MailAddressSection: View {
                         Text(L("With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them."))
                             .font(.subheadline).foregroundStyle(Theme.ink2)
                         if app.purchasesAvailable {
-                            Button(L("See plans")) { app.showPaywall = true }.buttonStyle(SecondaryButtonStyle())
+                            Button(L("See plans")) { app.openPaywall("mail_inbox") }.buttonStyle(SecondaryButtonStyle())
                         }
                     }
                 }

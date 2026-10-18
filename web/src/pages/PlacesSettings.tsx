@@ -12,6 +12,7 @@ import { FORM_HINT, FORM_LABEL, PRESET_LABEL, type HomePreset, type HouseholdFor
 import { t } from '../i18n';
 import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
 import { Ic } from '../placeicons';
+import { KnowledgeFor } from './Knowledge';
 
 /** English source texts for the three climates – the words the UI uses everywhere. */
 export const CLIMATE_LABEL: Record<Climate, string> = { ambient: 'Room temperature', chilled: 'Chilled', frozen: 'Freezing' };
@@ -416,6 +417,8 @@ function PlaceSheet({ place, places, personal, onClose }: { place: Location | nu
           <label htmlFor="pl-hint">{t('Directions')}</label>
           <input id="pl-hint" className="input" defaultValue={current.hint ?? ''} maxLength={200} placeholder={t('Directions, e.g. in the hallway, second door on the right')} onBlur={(e) => e.target.value !== (current.hint ?? '') && save({ hint: e.target.value })} />
         </div>
+        {/* Haushaltswissen: measurements and numbers of this room (pages/Knowledge.tsx) */}
+        <KnowledgeFor refKey={`l${current.id}`} name={current.name} />
         <div className="row wrap" style={{ gap: 8 }}>
           <button className="btn" onClick={() => save({ archived: true }).then(onClose)}>
             <Archive size={16} /> {t('Archive')}

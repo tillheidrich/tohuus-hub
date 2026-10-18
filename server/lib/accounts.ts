@@ -131,6 +131,34 @@ const SCHEMA: string[] = [
   // operators can pause an account (back office › Konten, routes/operator-accounts.ts)
   `ALTER TABLE accounts ADD COLUMN blocked_at TEXT;
   ALTER TABLE accounts ADD COLUMN blocked_reason TEXT;`,
+  // app tokens run out APP_TOKEN_DAYS after their last use (P1-2 of the review of 18.10.2026); existing tokens start
+  // counting now, so nobody is signed out by the update
+  `ALTER TABLE app_tokens ADD COLUMN expires_at TEXT;
+  UPDATE app_tokens SET expires_at = datetime('now', '+180 days');
+  CREATE INDEX app_tokens_expires ON app_tokens(expires_at);`,
+  // revenue figures and the end of the trial (monetisation page of 18 Oct 2026, F1/F3/F5): when a household first paid
+  // through the App Store, the AI cost per month and plan class (no household), and which trial notices went out
+  `ALTER TABLE households ADD COLUMN first_paid_at TEXT;
+  UPDATE households SET first_paid_at = (SELECT MIN(COALESCE(b.purchase_date, b.created_at)) FROM billing_transactions b WHERE b.household_id = households.id AND b.source = 'apple');
+  CREATE TABLE ai_cost_by_plan (
+    month TEXT NOT NULL,
+    plan TEXT NOT NULL,
+    requests INTEGER NOT NULL DEFAULT 0,
+    cost_micro INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (month, plan)
+  );
+  CREATE TABLE trial_notices (
+    household_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    ends_at TEXT NOT NULL,
+    sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (household_id, kind, ends_at)
+  );`,
+  // no Free in ToHuus Cloud from 18 Oct 2026 (read-only after the trial): households without a plan at the update get
+  // a fair transition – 14 days of the Plus trial from now, then the same rule as everybody (plans.ts readonlyGuard)
+  `UPDATE households SET plan = 'trial', trial_ends_at = datetime('now', '+14 days')
+   WHERE deleted_at IS NULL AND (plan = 'free' OR (plan = 'trial' AND (trial_ends_at IS NULL OR trial_ends_at <= datetime('now')))
+     OR (plan IN ('haushalt','plus') AND plan_expires_at IS NOT NULL AND plan_expires_at <= datetime('now')));`,
 ];
 
 let adb: DB | null = null;
@@ -198,6 +226,7 @@ function shredRows(d: DB, id: string) {
     d.prepare('UPDATE sessions SET household_id = NULL WHERE household_id = ?').run(id);
     d.prepare('UPDATE app_tokens SET household_id = NULL WHERE household_id = ?').run(id);
     d.prepare('DELETE FROM usage_counters WHERE household_id = ?').run(id);
+    d.prepare('DELETE FROM trial_notices WHERE household_id = ?').run(id);
     // Apple is the seller and keeps the purchase records; we keep nothing about a deleted household
     d.prepare('DELETE FROM billing_transactions WHERE household_id = ?').run(id);
   })();
@@ -258,6 +287,8 @@ export interface HouseholdRow {
   trial_ends_at: string | null;
   wrapped_dek: string | null;
   storage_bytes: number;
+  /** first App Store purchase (revenue figures, F3 of 18 Oct 2026) */
+  first_paid_at?: string | null;
   created_at: string;
   last_active_at: string;
   deleted_at: string | null;
@@ -470,13 +501,14 @@ export function sessionByToken(token: string | undefined | null): SessionRow | u
 }
 /**
  * Daily: expired sessions and used or expired e-mail links leave accounts.db (privacy policy: sessions are kept only
- * while they are valid). App tokens are not touched – they are revoked by the person under "devices".
+ * while they are valid). App tokens go when they were not used for APP_TOKEN_DAYS (P1-2).
  */
-export function cleanupAccounts(): { sessions: number; links: number } {
+export function cleanupAccounts(): { sessions: number; links: number; appTokens: number } {
   const d = accountsDb();
   const sessions = d.prepare(`DELETE FROM sessions WHERE expires_at <= datetime('now')`).run().changes;
   const links = d.prepare(`DELETE FROM auth_links WHERE expires_at <= datetime('now', '-1 day') OR used_at <= datetime('now', '-1 day')`).run().changes;
-  return { sessions, links };
+  const appTokens = d.prepare(`DELETE FROM app_tokens WHERE expires_at <= datetime('now')`).run().changes;
+  return { sessions, links, appTokens };
 }
 
 export const destroyCloudSession = (token: string) => accountsDb().prepare('DELETE FROM sessions WHERE token_hash = ?').run(sha256(token));
@@ -486,12 +518,14 @@ export const setSessionHousehold = (sessionId: number, householdId: string | nul
 // ---------------------------------------------------------------- app / device tokens
 
 export const APP_TOKEN_PREFIX = 'sw_app_';
+/** an app token runs out this many days after it was last used (sliding: every use pushes the end back) */
+export const APP_TOKEN_DAYS = 180;
 
 export function createAppToken(accountId: number, device: string, householdId: string | null): { token: string; id: number } {
   assertNotBlocked(accountId);
   const token = `${APP_TOKEN_PREFIX}${rand(32)}`;
   const info = accountsDb()
-    .prepare('INSERT INTO app_tokens (token_hash, prefix, account_id, device, household_id) VALUES (?, ?, ?, ?, ?)')
+    .prepare(`INSERT INTO app_tokens (token_hash, prefix, account_id, device, household_id, expires_at) VALUES (?, ?, ?, ?, ?, datetime('now', '+${APP_TOKEN_DAYS} days'))`)
     .run(sha256(token), token.slice(0, 11), accountId, device.slice(0, 80) || 'App', householdId);
   return { token, id: Number(info.lastInsertRowid) };
 }
@@ -506,11 +540,16 @@ export interface AppTokenRow {
 export function appTokenByToken(token: string): AppTokenRow | undefined {
   if (!token.startsWith(APP_TOKEN_PREFIX) || token.length > 200) return undefined;
   const d = accountsDb();
-  const row = d.prepare('SELECT id, account_id, device, household_id, last_used_at FROM app_tokens WHERE token_hash = ?').get(sha256(token)) as AppTokenRow | undefined;
+  const row = d
+    .prepare(`SELECT id, account_id, device, household_id, last_used_at FROM app_tokens WHERE token_hash = ? AND expires_at > datetime('now')`)
+    .get(sha256(token)) as AppTokenRow | undefined;
   if (row && (!row.last_used_at || Date.parse(`${row.last_used_at.replace(' ', 'T')}Z`) < Date.now() - 5 * 60_000))
-    d.prepare(`UPDATE app_tokens SET last_used_at = datetime('now') WHERE id = ?`).run(row.id);
+    d.prepare(`UPDATE app_tokens SET last_used_at = datetime('now'), expires_at = datetime('now', '+${APP_TOKEN_DAYS} days') WHERE id = ?`).run(row.id);
   return row;
 }
+/** The app signs out: its own token is removed on the server (P1-2). */
+export const revokeAppTokenByToken = (token: string) =>
+  token.startsWith(APP_TOKEN_PREFIX) && token.length <= 200 ? accountsDb().prepare('DELETE FROM app_tokens WHERE token_hash = ?').run(sha256(token)).changes > 0 : false;
 export const setAppTokenHousehold = (id: number, householdId: string) => accountsDb().prepare('UPDATE app_tokens SET household_id = ? WHERE id = ?').run(householdId, id);
 export const appTokensOf = (accountId: number) =>
   accountsDb().prepare('SELECT id, prefix, device, household_id, created_at, last_used_at FROM app_tokens WHERE account_id = ? ORDER BY id DESC').all(accountId);

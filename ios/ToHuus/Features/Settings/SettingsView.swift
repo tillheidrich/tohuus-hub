@@ -107,7 +107,7 @@ struct SettingsView: View {
                         }
                     }
                     if app.purchasesAvailable {
-                        Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.showPaywall = true; if !embedded { dismiss() } }
+                        Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.openPaywall("settings"); if !embedded { dismiss() } }
                         if app.billing?.source == "apple" || app.billing?.isPaid == true {
                             Button(L("Manage subscription")) {
                                 // Apple's sheet; the plain link when it can't be shown (e.g. the subscription is on another Apple account)

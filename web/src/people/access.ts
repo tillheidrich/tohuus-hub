@@ -7,7 +7,7 @@ export function guestAllows(level: EffectiveLevel | undefined, path: string) {
   if (level === 'paused') return false;
   // wish lists are never for guests (server: people-policy NEVER "wishes")
   if (path === '/einkauf/wuensche' || path.startsWith('/einkauf/wuensche/')) return false;
-  const ORDER = ['/bestellen', '/einkauf', '/einstellungen', '/hilfe', '/hausinfo', '/uebergabe', '/so-funktioniert-tohuus', '/gut-zu-wissen'];
+  const ORDER = ['/bestellen', '/einkauf', '/einstellungen', '/hilfe', '/hausinfo', '/uebergabe', '/so-funktioniert-tohuus', '/gut-zu-wissen', '/wissen'];
   const STOCK = ['/', '/bestand', '/wo', '/abgleich', '/scan', '/q/'];
   const RECIPES = ['/kochen', '/rezepte', '/lieblinge'];
   const FAMILY_DENY = ['/import', '/ausgaben', '/geld', '/merkt-sich', '/pflege', '/aufgaben', '/etiketten', '/willkommen', '/urlaub'];

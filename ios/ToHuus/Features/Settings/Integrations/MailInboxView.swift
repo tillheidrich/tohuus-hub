@@ -90,7 +90,7 @@ struct MailInboxView: View {
                 Text(L("With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them."))
                     .font(.subheadline)
                 if app.purchasesAvailable {
-                    Button(L("See plans")) { app.showPaywall = true }
+                    Button(L("See plans")) { app.openPaywall("mail_inbox") }
                 }
             } header: {
                 Text(L("Receipts by e-mail"))

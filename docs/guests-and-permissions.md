@@ -34,7 +34,7 @@ Discreet and private shopping items are hidden from guests, and the overview nev
 
 ### Tasks handed to a guest (15 Oct 2026)
 
-Grandma waters the plants and feeds the cats while you're on holiday; your aunt helps at home while you're in hospital, or looks after Felix today. A permanent guest can be given single tasks:
+Grandma waters the plants and feeds the cats while you're on holiday; your aunt helps at home while you're in hospital, or looks after the little one today. A permanent guest can be given single tasks:
 - as their **doer**;
 - as the **stand-in** in "Zu Hause, solange … weg ist" on a trip. `homePlan` lists permanent guests as takers, marked `guest: true`.
 

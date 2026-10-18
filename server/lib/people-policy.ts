@@ -161,6 +161,8 @@ const ORDER: Rule[] = [
   read(/^\/share\/items\/mine$/),
   // Hausinfo (house-guide.ts): every level reads what is shared with it (each card/code has its own visibility)
   read(/^\/house-guide$/),
+  // Haushaltswissen (knowledge.ts): only entries an adult marked "für Gäste" – the route filters, guests never write
+  read(/^\/knowledge$/),
   write(/^\/house-guide\/codes\/\d+\/reveal$/),
   // holiday handover (handover.ts): what is shared with this guest for a trip, and ticking it
   read(/^\/handover\/mine$/),

@@ -1,0 +1,149 @@
+/* "Was ToHuus sich merkt" – Haushaltswissen (pages/Knowledge.tsx) */
+.kn-page {
+  max-width: 720px;
+}
+.kn-say {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.kn-say-label {
+  font-weight: 700;
+}
+.kn-say-label .muted {
+  font-weight: 400;
+}
+.kn-say-row {
+  display: flex;
+  gap: 8px;
+}
+.kn-say-row .input {
+  flex: 1;
+  min-width: 0;
+}
+.kn-say-row .btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+.kn-only-me {
+  gap: 8px;
+  min-height: 44px;
+  align-items: center;
+}
+.kn-only-me input {
+  width: 20px;
+  height: 20px;
+}
+.kn-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 16px;
+}
+.kn-answer .hrow,
+.kn-for .hrow {
+  list-style: none;
+}
+.kn-filter {
+  gap: 8px;
+  margin: 0 0 12px;
+  align-items: center;
+}
+.kn-search {
+  position: relative;
+  margin: 0 0 12px;
+}
+.kn-search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-2);
+}
+.kn-search .input {
+  width: 100%;
+  padding-left: 36px;
+}
+.kn-groups {
+  display: grid;
+  gap: 12px;
+}
+.kn-row {
+  padding: 0;
+}
+.kn-open {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+button.kn-open {
+  cursor: pointer;
+}
+.kn-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.kn-prop {
+  color: var(--ink-2);
+  font-size: var(--fs-s);
+}
+.kn-value {
+  font-size: 1.0625rem;
+  overflow-wrap: anywhere;
+}
+.kn-note {
+  white-space: pre-line;
+}
+.kn-badges {
+  display: inline-flex;
+  gap: 6px;
+  color: var(--ink-2);
+}
+.kn-badge {
+  display: inline-flex;
+  align-items: center;
+}
+.kn-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.kn-photo-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex: none;
+}
+.kn-photo {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.kn-history .hrow {
+  align-items: center;
+}
+.kn-ask {
+  margin-top: 12px;
+}
+.kn-foot {
+  margin: 16px 0 0;
+}
+.kn-for {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

@@ -335,7 +335,7 @@ struct WeekPlanSection: View {
     }
 
     private func fillWeek() async {
-        guard plusAvailable else { app.showPaywall = true; return }
+        guard plusAvailable else { app.openPaywall("week_plan"); return }
         model.busy = "fill"
         defer { model.busy = "" }
         do {
@@ -344,7 +344,7 @@ struct WeekPlanSection: View {
             Haptics.success()
             store.touch("recipes")
         } catch {
-            if case .quota = APIError.from(error) { app.showPaywall = true } else { feedback.fail(error) }
+            if case .quota = APIError.from(error) { app.openPaywall("week_plan") } else { feedback.fail(error) }
         }
         await model.load(store.api)
     }

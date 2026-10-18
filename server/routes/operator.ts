@@ -26,6 +26,7 @@ import { audit, isOperatorEmail, overview } from '../lib/operator.js';
 import { operatorAdmin } from './operator-admin.js';
 import { operatorAccounts } from './operator-accounts.js';
 import { pulseAggregate } from '../lib/pulse.js';
+import { revenueView } from '../lib/revenue.js';
 import { adminHost, adminSessionOf, isAdminHost } from '../lib/admin-auth.js';
 
 export const r = Router();
@@ -98,6 +99,12 @@ r.get('/operator/overview', fresh, async (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   // the weekly question (list2 pulse): anonymous counts of households that chose to share – no household id
   res.json({ ...overview(), pulse: await pulseAggregate().catch(() => []) });
+});
+
+/** /betrieb › Umsatz: revenue figures, aggregated only (revenue.ts, F3 of 18 Oct 2026) */
+r.get('/operator/revenue', fresh, (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(revenueView());
 });
 
 r.get('/operator/pulse', fresh, async (_req, res) => {

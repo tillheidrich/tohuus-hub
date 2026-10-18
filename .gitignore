@@ -6,3 +6,9 @@ test/fixtures/private
 *.log
 .DS_Store
 !server/data/
+# secrets and signed upload scripts never go into git (review 18.10.2026 P2-8/P2-9; gitleaks in CI checks it too)
+openrouter-api-key.txt
+*api-key*.txt
+*.key
+*.pem
+store-assets/_wiki/

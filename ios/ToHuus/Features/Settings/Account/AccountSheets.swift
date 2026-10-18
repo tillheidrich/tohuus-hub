@@ -70,7 +70,7 @@ struct PasswordChangeSheet: View {
         do {
             let r = try await api.send("POST", "api/auth/me/password", json: body, as: JSONValue.self)
             let n = r["signedOut"]?.int ?? 0
-            onDone(n > 0 ? LF("Password changed. %d other devices were signed out.", n) : L("Password changed."))
+            onDone(n > 0 ? LF("Password changed. You were signed out everywhere else (%d devices and connections).", n) : L("Password changed."))
             dismiss()
         } catch {
             self.error = APIError.from(error).localizedDescription

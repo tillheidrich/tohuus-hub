@@ -226,9 +226,10 @@ export function TasksToCalendarHelp() {
         <li>{t('Apple Calendar (iPhone, Mac): set up “Reminders & Calendar” once. Tasks with a date then show in “ToHuus · Kalender”, and moving them there moves the task.')}</li>
         <li>{t('Google Calendar, Outlook and others: create a subscription link and add it there. Read-only, it updates about every hour.')}</li>
         <li>{t('Into a calendar you already have (e.g. your family calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Both ways”.')}</li>
+        <li>{t('Your private tasks into a calendar of your own (e.g. your personal iCloud calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Your private tasks”. Only yours, never anyone else’s.')}</li>
         <li>{t('Just one task: open it and tap “Add to calendar”.')}</li>
       </ul>
-      <p className="small muted" style={{ margin: '8px 0 0' }}>{t('Private tasks only appear when you choose so. Both settings are under Settings › Account.')}</p>
+      <p className="small muted" style={{ margin: '8px 0 0' }}>{t('Private tasks only appear when you choose so, and only your own: in Apple Calendar in “ToHuus · Mein Kalender”, which only you see; in a subscription link only if you switch on “Include my private tasks” when you create it; on the iPhone in the calendar you pick for them. Both links are under Settings › Account.')}</p>
     </details>
   );
 }

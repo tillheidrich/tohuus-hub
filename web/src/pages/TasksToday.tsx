@@ -39,11 +39,11 @@ export function TasksTodayCard({ today }: { today: string }) {
   if (!total) return null;
   const done = async (x: TaskLite) => {
     try {
-      const r = await post<{ task: TaskLite }>(`/care/${x.id}/done`, {});
+      const r = await post<{ task: TaskLite; log_id?: number }>(`/care/${x.id}/done`, {});
       invalidate('care');
       toast({
         text: r.task.next_due ? t('Done. Next time: {date}', { date: fmtDate(r.task.next_due, { day: 'numeric', month: 'short' }) }) : t('Done.'),
-        action: { label: t('Undo'), run: () => post(`/care/${x.id}/undo`).then(() => invalidate('care')) },
+        action: { label: t('Undo'), run: () => post(`/care/${x.id}/undo`, { log_id: r.log_id ?? null }).then(() => invalidate('care', 'products', 'overview')) },
       });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
@@ -136,11 +136,11 @@ export function TasksAheadCard() {
   const max = focus?.gentle ? Math.min(2, focus?.todayMax ?? 2) : 3;
   const done = async (x: TaskLite) => {
     try {
-      const r = await post<{ task: TaskLite }>(`/care/${x.id}/done`, {});
+      const r = await post<{ task: TaskLite; log_id?: number }>(`/care/${x.id}/done`, {});
       invalidate('care');
       toast({
         text: r.task.next_due ? t('Done. Next time: {date}', { date: fmtDate(r.task.next_due, { day: 'numeric', month: 'short' }) }) : t('Done.'),
-        action: { label: t('Undo'), run: () => post(`/care/${x.id}/undo`).then(() => invalidate('care')) },
+        action: { label: t('Undo'), run: () => post(`/care/${x.id}/undo`, { log_id: r.log_id ?? null }).then(() => invalidate('care', 'products', 'overview')) },
       });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
