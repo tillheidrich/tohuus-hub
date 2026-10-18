@@ -44,10 +44,24 @@ export interface ApnsConfig {
   host: string | null;
 }
 
+/**
+ * The .p8 content as pasted into a dashboard: newlines may arrive as "\\n", as spaces or not at all, sometimes wrapped
+ * in quotes (Coolify, 18.10.2026: "DECODER routines::unsupported"). Rebuild a clean PEM from the base64 body.
+ */
+export function normalizePem(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const s = raw.replace(/\\n/g, '\n').trim().replace(/^["']|["']$/g, '');
+  const m = s.match(/-----BEGIN ([A-Z ]+)-----([\s\S]*?)-----END \1-----/);
+  const label = m ? m[1] : 'PRIVATE KEY';
+  const body = (m ? m[2] : s).replace(/[^A-Za-z0-9+/=]/g, '');
+  if (!body) return undefined;
+  return `-----BEGIN ${label}-----\n${body.match(/.{1,64}/g)!.join('\n')}\n-----END ${label}-----\n`;
+}
+
 export function apnsConfig(): ApnsConfig | null {
   const keyId = process.env.APNS_KEY_ID?.trim();
   const teamId = process.env.APNS_TEAM_ID?.trim();
-  const key = process.env.APNS_KEY_P8?.replace(/\\n/g, '\n').trim();
+  const key = normalizePem(process.env.APNS_KEY_P8);
   if (!keyId || !teamId || !key) return null;
   const env = process.env.APNS_ENV === 'production' || process.env.APNS_ENV === 'sandbox' ? process.env.APNS_ENV : 'device';
   return {
