@@ -468,7 +468,8 @@ export function parseGenericReceipt(text: string, opts: GenericOptions = {}): Pa
       assumed.push({ kind: 'discount', amount: missingDiscount });
       receiptDiscount = Math.round((receiptDiscount - missingDiscount) * 100) / 100;
       if (!near(rest, 0)) assumed.push({ kind: 'deposit', amount: rest });
-    } else if (looksLikeDeposit(diff)) assumed.push({ kind: 'deposit', amount: diff });
+    } else if (looksLikeDeposit(diff) && DEPOSIT.test(clean)) assumed.push({ kind: 'deposit', amount: diff });
+    // without any trace of deposit on the receipt a gap of 1,00 is just as likely a missed item: only suggest it
     else suggestion = diff < 0 ? { kind: 'discount', amount: -diff } : { kind: diff <= 3 ? 'deposit' : 'line', amount: diff };
     for (const a of assumed.filter((x) => x.kind === 'deposit'))
       lines.push({ raw: `Pfand ${a.amount.toFixed(2).replace('.', ',')} (assumed from the total)`, name: 'Pfand', qty: 1, unit: null, price: a.amount, unitPrice: a.amount, status: 'deposit', ocrConfidence: 0.5 });
