@@ -68,7 +68,7 @@ struct ReviewTeaser: View {
     @State private var peek: YearReviewPeek?
 
     var body: some View {
-        Group {
+        LoadSlot {
             if let p = peek, p.allowed, let year = p.season {
                 NavigationLink {
                     YearReviewView(api: api)

@@ -143,7 +143,7 @@ struct TodayView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                CardStack(spacing: Theme.Space.s4) {
                     header
                     SyncBadge(online: store.isOnline, pending: store.pendingCount)
                     if let note = OfflineNote.for(["api/today"]) { note }

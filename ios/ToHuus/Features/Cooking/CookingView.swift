@@ -195,7 +195,7 @@ struct CookingView: View {
 
     private var column: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Theme.Space.s4) {
+            CardStack(spacing: Theme.Space.s4) {
                 Picker("", selection: $tab) {
                     Text(L("What shall we cook?")).tag(0)
                     Text(L("Week")).tag(1)

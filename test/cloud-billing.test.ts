@@ -127,7 +127,7 @@ afterAll(() => server?.close());
 describe.skipIf(!hasOpenssl)('Apple billing', () => {
   it('starts in the 14-day trial (Plus)', async () => {
     const s = await call('GET', '/api/billing/status');
-    expect(s.json).toMatchObject({ plan: 'trial', source: 'none', limits: { historyDays: null, assistantPerMonth: 1500 } });
+    expect(s.json).toMatchObject({ plan: 'trial', source: 'none', limits: { historyDays: null, assistantPerMonth: 800 } });
     expect(s.json.trialEndsAt).toBeTruthy();
     expect(s.json.products.map((p: any) => p.id)).toContain('de.heidrichdigital.tohuus.haushalt.yearly');
   });

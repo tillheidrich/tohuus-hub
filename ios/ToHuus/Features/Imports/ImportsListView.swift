@@ -28,12 +28,9 @@ struct ImportsListView: View {
                 Text(L("Many checkouts show a QR code for the digital receipt. Scan it and ToHuus fetches the receipt."))
             }
             // receipts by e-mail: the cloud address, or the self-hosted mailbox (each hides itself where it doesn't apply)
-            Section {
-                MailAddressSection(store: store)
-                InboxStatusCard(store: store)
-            }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            // (each brings its own section and starts its own loading, Design/LoadSlot.swift)
+            MailAddressSection(store: store, inList: true)
+            InboxStatusCard(store: store, inList: true)
             if let error {
                 Section { ErrorBanner(message: error) { Task { await load() } } }
                     .listRowBackground(Color.clear)

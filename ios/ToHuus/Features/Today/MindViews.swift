@@ -382,7 +382,7 @@ struct MindTodayCard: View {
     @State private var toast: ToastMessage?
 
     var body: some View {
-        Group {
+        LoadSlot {
             if let d = data {
                 Card(title: L("On my mind"), systemImage: "brain") {
                     VStack(alignment: .leading, spacing: Theme.Space.s3) {

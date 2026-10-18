@@ -247,10 +247,10 @@ section { scroll-margin-top: 12px; }
 }
 
 /* ------------------------------------------------------------ section rhythm */
-.ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 64px 0 72px; border-top: var(--stroke) solid var(--ink); }
+.three, .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 64px 0 72px; border-top: var(--stroke) solid var(--ink); }
 .levels { padding: 8px 0 72px; }
 @media (min-width: 960px) {
-  .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 112px 0 120px; }
+  .three, .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 112px 0 120px; }
   .levels { padding: 0 0 120px; }
 }
 
@@ -785,9 +785,9 @@ body.legal-page { padding-bottom: 0; }
 h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.06; letter-spacing: -0.02em; }
 .hero h1 { font-size: clamp(42px, 6.2vw, 78px); line-height: 1.02; }
 .intro { font-size: clamp(17px, 1.6vw, 19px); line-height: 1.55; }
-.ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 56px 0 64px; }
+.three, .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 56px 0 64px; }
 @media (min-width: 960px) {
-  .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 96px 0 104px; }
+  .three, .ask, .jobs, .house, .how, .who, .nd, .diff, .good, .calm, .ways, .prices, .privacy, .host, .why, .faq { padding: 96px 0 104px; }
 }
 /* lists with a dividing rule (nd, diff, who): no box, no shadow; the icon sits beside the title, not above it */
 .nd-grid, .forms { gap: 0 40px; border-top: var(--stroke) solid var(--ink); }
@@ -816,3 +816,33 @@ h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.06; letter-spacing: -0.
 .tf-steps li::before { grid-row: auto; }
 .tf-note { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; color: var(--ink-2); }
 .anchor { display: block; position: relative; top: -24px; height: 0; }
+
+/* Build 15 (18.10.2026): three steps, without/with receipt, "Und dazu" */
+.three-steps { margin-top: 40px; display: grid; gap: 14px; }
+.three-steps li { position: relative; display: grid; align-content: start; gap: 8px; padding: 28px 24px 26px; border-radius: var(--r-lg); background: var(--surface); box-shadow: inset 0 0 0 var(--stroke) var(--line-strong); overflow: hidden; isolation: isolate; }
+.three-no { position: absolute; right: 14px; top: -14px; z-index: -1; font-family: var(--display); font-size: 120px; line-height: 1; color: var(--primary-soft); }
+.three-ico { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--primary-soft); color: var(--primary-text); }
+.three-ico .ico { width: 22px; height: 22px; }
+.three-steps li:nth-child(2) .three-ico { background: var(--sand); color: var(--ink); }
+.three-steps li:nth-child(3) .three-ico { background: var(--sage-soft); color: var(--ink); }
+.three-steps b { margin-top: 8px; font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.15; }
+.three-steps li > span:last-child { font-size: 16px; color: var(--ink-2); }
+@media (min-width: 900px) {
+  .three-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .three-steps li:nth-child(2) { margin-top: 24px; }
+  .three-steps li:nth-child(3) { margin-top: 48px; }
+}
+.receipt.om { max-width: 540px; }
+.om-h { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.om-h b { font-size: 20px; }
+.om-h b + b { color: var(--primary-text); }
+.receipt.om li { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; font-size: 15px; }
+.receipt.om li > span { display: flex; gap: 8px; align-items: flex-start; color: var(--ink); }
+.receipt.om li .ok { flex: none; margin-top: 2px; }
+@media (max-width: 479px) {
+  .om-h, .receipt.om li { grid-template-columns: 1fr; gap: 6px; }
+  .om-h b + b { display: none; }
+}
+.more-h { margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary-text); font-family: var(--font); }
+.more-grid { margin-top: 20px; }
+@media (min-width: 1100px) { .more-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }

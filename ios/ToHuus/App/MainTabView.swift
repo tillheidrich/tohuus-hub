@@ -6,12 +6,19 @@ import UIKit
 /// The iPhone tab bar holds five: a sixth would bring the system's own "More" tab next to the avatar's Mehr. So Geld
 /// – the area people open least – takes a place only when Kochen or Vorrat is switched off; otherwise it is the first
 /// row in Mehr and opens as a sheet. iPad sidebar: all areas.
+/// "Deine Leiste" (18 Oct 2026, NavBarSettings.swift, docs/navigation.md): each person may pick up to four areas next
+/// to Heute in their own order (Haushaltswissen too); then the tab bar and the top of the iPad sidebar show exactly
+/// those, and every other area is a row at the top of Mehr. The raw values are the ids the server stores.
 enum AppArea: String, CaseIterable, Hashable, Identifiable {
-    case today, shopping, cooking, tasks, stock, money, more
-    /// the areas, in order of the tab bar
+    case today, shopping, cooking, tasks, stock, money, knowledge, more
+    /// the areas, in order of the tab bar (the default – Haushaltswissen only comes in by an own choice)
     static let tabs: [AppArea] = [.today, .shopping, .cooking, .tasks, .stock, .money]
+    /// the areas a person can put next to Heute ("Deine Leiste")
+    static let pickable: [AppArea] = [.shopping, .cooking, .tasks, .stock, .money, .knowledge]
     /// places in the iPhone tab bar
     static let barLimit = 5
+    /// places next to Heute
+    static let slots = barLimit - 1
     var id: String { rawValue }
 
     var title: String {
@@ -22,6 +29,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .stock: return L("Pantry")
         case .cooking: return L("Cooking")
         case .money: return L("Money")
+        case .knowledge: return L("Knowledge")
         case .more: return L("More")
         }
     }
@@ -34,6 +42,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .stock: return "cabinet"
         case .cooking: return "fork.knife"
         case .money: return "eurosign.circle"
+        case .knowledge: return "brain"
         case .more: return "ellipsis.circle"
         }
     }
@@ -44,6 +53,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .stock: return "stock"
         case .cooking: return "cook"
         case .money: return "money"
+        case .knowledge: return "knowledge"
         default: return nil
         }
     }
@@ -54,6 +64,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         switch s {
         case "pantry", "stock": return .stock
         case "tasks", "care", "home": return .tasks
+        case "knowledge", "wissen": return .knowledge
         default: return AppArea(rawValue: s)
         }
     }
@@ -68,18 +79,38 @@ extension AppModel {
         case .stock: return moduleOn("stock") && MoreAccess.guestAllows(level, "/bestand")
         case .cooking: return moduleOn("cook") && MoreAccess.guestAllows(level, "/kochen")
         case .money: return moduleOn("money") && MoreAccess.guestAllows(level, "/geld")
+        case .knowledge: return moduleOn("knowledge") && MoreAccess.guestAllows(level, "/wissen")
         case .today, .shopping, .more: return true
         }
     }
 
-    /// the iPhone tab bar: at most five, Geld gives way first
-    var barAreas: [AppArea] {
+    /// the default iPhone tab bar: at most five, Geld gives way first
+    var defaultBarAreas: [AppArea] {
         let all = AppArea.tabs.filter { areaVisible($0) }
         return all.count > AppArea.barLimit ? all.filter { $0 != .money } : all
     }
 
-    /// Geld is there but has no place in the iPhone tab bar → first row in Mehr
-    var moneyInMore: Bool { areaVisible(.money) && !barAreas.contains(.money) }
+    /// the person's own areas ("Deine Leiste") or nil for the default; guests always get the default
+    var ownBar: [AppArea]? { isGuest ? nil : NavBarPrefs.shared.tabs }
+
+    /// the iPhone tab bar: Heute first, then the person's own areas (switched-off ones are left out) or the default
+    var barAreas: [AppArea] {
+        guard let own = ownBar else { return defaultBarAreas }
+        return Array(([AppArea.today] + own.filter { areaVisible($0) }).prefix(AppArea.barLimit))
+    }
+
+    /// the iPad sidebar's areas: every area by default, the person's own bar once they chose one
+    var sidebarAreas: [AppArea] { ownBar == nil ? AppArea.tabs.filter { areaVisible($0) } : barAreas }
+
+    /// areas without a place in the bar → rows at the top of Mehr. Default: only Geld (when five others are on).
+    /// With an own bar: every area that isn't in it – except Haushaltswissen, which has its row in Mehr › Haushalt.
+    var areasInMore: [AppArea] {
+        guard ownBar != nil else { return moneyInMore ? [.money] : [] }
+        return AppArea.pickable.filter { $0 != .knowledge && areaVisible($0) && !barAreas.contains($0) }
+    }
+
+    /// Geld is there but has no place in the default iPhone tab bar → first row in Mehr
+    var moneyInMore: Bool { areaVisible(.money) && !defaultBarAreas.contains(.money) }
 }
 
 /// set on an area opened as a sheet (Geld from Mehr on the iPhone): RootChrome shows "Fertig" with it
@@ -102,6 +133,8 @@ struct MainTabView: View {
     /// an area without a place in the iPhone tab bar (Geld when all others are on), shown as a sheet
     @State private var overflow: AppArea?
     @State private var showSettings = false
+    /// "Deine Leiste" from a long press on the tab bar
+    @State private var showBarEditor = false
     @State private var showTour = false
     @State private var showAIConsent = false
     /// "Was ist neu" (beta): entries this person hasn't seen yet
@@ -150,6 +183,8 @@ struct MainTabView: View {
             if AppTourView.due { showTour = true }
             #if DEBUG
             if UserDefaults.standard.bool(forKey: "debugSettings") { showSettings = true }
+            // simulator check: "Deine Leiste" as after a long press on the tab bar
+            if UserDefaults.standard.bool(forKey: "debugNavBar") { showBarEditor = true }
             if UserDefaults.standard.bool(forKey: "debugPaywall") { app.showPaywall = true }
             if UserDefaults.standard.bool(forKey: "debugKitchen") { app.showKitchen = true }
             // screenshots without a Simulator window: -debugLandscape YES turns the iPad interface
@@ -169,7 +204,8 @@ struct MainTabView: View {
         // StoreKit Testing screenshot (ToHuusTests/PaywallStoreKitTests): the hosted test opens the paywall
         .onReceive(NotificationCenter.default.publisher(for: .toHuusDebugShowPaywall)) { _ in app.showPaywall = true }
         #endif
-        .onChange(of: app.modules) { _, _ in if !visible(area) || (sizeClass != .regular && !app.barAreas.contains(area)) { area = .today } }
+        .onChange(of: app.modules) { _, _ in keepAreaInBar() }
+        .onChange(of: NavBarPrefs.shared.tabs) { _, _ in keepAreaInBar() }
         .onChange(of: app.addRequest) { _, _ in area = .shopping }
         .onChange(of: app.searchRequest) { _, _ in
             if area != .cooking && area != .stock {
@@ -250,39 +286,28 @@ struct MainTabView: View {
     // MARK: iPhone
 
     private var tabLayout: some View {
+        // the bar of this person (AppModel.barAreas): the default or "Deine Leiste", in their order
         TabView(selection: $area) {
-            TodayView(store: store, openSettings: { showSettings = true }, openTab: { select($0) })
+            ForEach(app.barAreas) { a in
+                Group {
+                    if a == .today {
+                        TodayView(store: store, openSettings: { showSettings = true }, openTab: { select($0) })
+                    } else {
+                        detail(a)
+                    }
+                }
                 .tabEntrance()
-                .tabItem { Label(AppArea.today.title, systemImage: AppArea.today.icon) }
-                .tag(AppArea.today)
-            ShoppingView(store: store)
-                .tabEntrance()
-                .tabItem { Label(AppArea.shopping.title, systemImage: AppArea.shopping.icon) }
-                .badge(store.list.openCount)
-                .tag(AppArea.shopping)
-            if visible(.cooking) {
-                CookingView(store: store)
-                    .tabEntrance()
-                    .tabItem { Label(AppArea.cooking.title, systemImage: AppArea.cooking.icon) }
-                    .tag(AppArea.cooking)
+                // a long press on the bar opens "Deine Leiste" (not for guests – they keep the default)
+                .background(TabBarLongPress { if !app.isGuest { showBarEditor = true } })
+                .tabItem { Label(a.title, systemImage: a.icon) }
+                .badge(a == .shopping ? store.list.openCount : 0)
+                .tag(a)
             }
-            if visible(.tasks) {
-                TasksAreaView(store: store)
-                    .tabEntrance()
-                    .tabItem { Label(AppArea.tasks.title, systemImage: AppArea.tasks.icon) }
-                    .tag(AppArea.tasks)
-            }
-            if visible(.stock) {
-                StockAreaView(store: store)
-                    .tabEntrance()
-                    .tabItem { Label(AppArea.stock.title, systemImage: AppArea.stock.icon) }
-                    .tag(AppArea.stock)
-            }
-            if app.barAreas.contains(.money) {
-                MoneyView(store: store)
-                    .tabEntrance()
-                    .tabItem { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
-                    .tag(AppArea.money)
+        }
+        .sheet(isPresented: $showBarEditor) {
+            NavigationStack {
+                NavBarSettingsView()
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { showBarEditor = false } } }
             }
         }
         .overlay(alignment: .bottomTrailing) {
@@ -299,7 +324,7 @@ struct MainTabView: View {
         NavigationSplitView {
             List(selection: Binding<AppArea?>(get: { area }, set: { if let a = $0 { area = a } })) {
                 Section {
-                    ForEach(AppArea.tabs.filter { visible($0) }) { a in
+                    ForEach(app.sidebarAreas) { a in
                         NavigationLink(value: a) {
                             Label(a.title, systemImage: a.icon)
                                 .badge(a == .shopping ? store.list.openCount : 0)
@@ -307,6 +332,12 @@ struct MainTabView: View {
                     }
                 }
                 Section {
+                    // "Deine Leiste": the areas not in it come next, before Mehr
+                    if app.ownBar != nil {
+                        ForEach(app.areasInMore) { a in
+                            NavigationLink(value: a) { Label(a.title, systemImage: a.icon) }
+                        }
+                    }
                     NavigationLink(value: AppArea.more) { Label(AppArea.more.title, systemImage: AppArea.more.icon) }
                     if visible(.cooking) {
                         Button {
@@ -347,6 +378,11 @@ struct MainTabView: View {
         case .stock: StockAreaView(store: store)
         case .cooking: CookingView(store: store)
         case .money: MoneyView(store: store)
+        case .knowledge:
+            // Haushaltswissen as an area of its own ("Deine Leiste") – otherwise a row in Mehr › Haushalt
+            if let api = app.api {
+                NavigationStack { KnowledgeView(api: api).rootChrome() }
+            }
         case .more: SettingsView(store: store, embedded: true)
         }
     }
@@ -379,7 +415,14 @@ extension MainTabView {
         case .stock: app.assistantContext = "stock"
         case .cooking: app.assistantContext = "cook"
         case .money: app.assistantContext = "money"
-        case .more: app.assistantContext = nil
+        case .knowledge, .more: app.assistantContext = nil
+        }
+    }
+
+    /// the open area left the bar (switched off, or taken out of "Deine Leiste") → back to Heute
+    func keepAreaInBar() {
+        if !visible(area) || (sizeClass != .regular && !app.barAreas.contains(area)) || (sizeClass == .regular && area != .more && !app.sidebarAreas.contains(area) && !app.areasInMore.contains(area)) {
+            area = .today
         }
     }
 }

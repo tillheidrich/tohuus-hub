@@ -103,9 +103,10 @@ describe('F5 model prices', () => {
 describe('F5 AI cost cap and hard limit', () => {
   it('pauses AI for a household over the cost cap, books the cost under its plan class', async () => {
     const { c, id } = await household('cap@example.org');
-    inHh(id, () => plans.noteHouseholdAiCost(1));
+    // a new household is in its trial: the trial cap (1 USD) applies
+    inHh(id, () => plans.noteHouseholdAiCost(0.5));
     expect(inHh(id, () => plans.consume('assistant')).ok).toBe(true);
-    inHh(id, () => plans.noteHouseholdAiCost(plans.DEFAULT_AI_COST_CAP));
+    inHh(id, () => plans.noteHouseholdAiCost(plans.DEFAULT_AI_COST_CAPS.trial));
     const r = inHh(id, () => plans.consume('assistant'));
     expect(r).toMatchObject({ ok: false, capped: 'cost' });
     expect(inHh(id, () => plans.consume('receiptAi'))).toMatchObject({ ok: false, capped: 'cost' });
@@ -113,26 +114,53 @@ describe('F5 AI cost cap and hard limit', () => {
     expect(inHh(id, () => plans.consume('upload')).ok).toBe(true);
     const st = await c.get('/api/billing/status');
     expect(st.json.usage.aiPaused).toBe('cost');
-    expect(st.json.limits.assistantHardPerMonth).toBe(3000);
+    expect(st.json.limits.assistantHardPerMonth).toBe(1500);
     const month = new Date().toISOString().slice(0, 7);
     const row = accounts.accountsDb().prepare(`SELECT requests, cost_micro FROM ai_cost_by_plan WHERE month = ? AND plan = 'trial'`).get(month) as { requests: number; cost_micro: number };
     expect(row.requests).toBeGreaterThanOrEqual(2);
-    expect(row.cost_micro).toBeGreaterThanOrEqual(4_500_000);
+    expect(row.cost_micro).toBeGreaterThanOrEqual(1_500_000);
     // the assistant answers with the calm message instead of a model call
     const a = await c.post('/api/assistant/chat', { message: 'Was kann ich heute kochen, wenn noch Reis und Paprika da sind?' });
     if (a.status === 402) expect(a.json.code).toBe('quota.ai_paused');
   });
 
-  it('Plus is slowed from 1,500 and pauses at 3,000 messages', async () => {
+  it('Plus is slowed from 800 and pauses at 1,500 messages', async () => {
     const { id } = await household('hard@example.org');
     accounts.accountsDb().prepare(`UPDATE households SET plan = 'plus', plan_source = 'operator', plan_expires_at = NULL WHERE id = ?`).run(id);
     const month = new Date().toISOString().slice(0, 7);
-    accounts.usageAdd(id, 'assistant', month, 1600);
+    expect(plans.PLAN_LIMITS.plus).toMatchObject({ assistantPerMonth: 800, assistantHardPerMonth: 1500 });
+    accounts.usageAdd(id, 'assistant', month, 799);
+    expect(inHh(id, () => plans.consume('assistant'))).toMatchObject({ ok: true, remaining: 0 });
     expect(inHh(id, () => plans.consume('assistant'))).toMatchObject({ ok: true, throttled: true });
-    accounts.usageAdd(id, 'assistant', month, 3000 - 1601);
+    accounts.usageAdd(id, 'assistant', month, 1500 - 801);
     expect(inHh(id, () => plans.consume('assistant'))).toMatchObject({ ok: false, capped: 'hard' });
     expect(inHh(id, () => plans.aiPaused())).toBe('hard');
     expect(inHh(id, () => plans.planClass(id))).toBe('plus');
+  });
+
+  it('cost cap per plan: Haushalt 1.50, Plus 2.50, trial 1 USD; settings and environment override', async () => {
+    expect(plans.DEFAULT_AI_COST_CAPS).toEqual({ haushalt: 1.5, plus: 2.5, trial: 1 });
+    expect(plans.aiCostCap('haushalt', {})).toBe(1.5);
+    expect(plans.aiCostCap('plus', {})).toBe(2.5);
+    expect(plans.aiCostCap('trial', {})).toBe(1);
+    // Plus for good, gifts and anything else with AI use the Plus cap
+    expect(plans.capClassOf('selfhost')).toBe('plus');
+    expect(plans.aiCostCap('haushalt', { AI_HOUSEHOLD_COST_CAP_HAUSHALT: '2,0' })).toBe(2);
+    expect(plans.aiCostCap('trial', { AI_HOUSEHOLD_COST_CAP_TRIAL: 'x' })).toBe(1);
+    // the old single setting is the Plus cap
+    expect(plans.aiCostCap('plus', { AI_HOUSEHOLD_COST_CAP: '3.5' })).toBe(3.5);
+    const { id } = await household('capplan@example.org');
+    accounts.accountsDb().prepare(`UPDATE households SET plan = 'haushalt', plan_source = 'operator', plan_expires_at = NULL WHERE id = ?`).run(id);
+    inHh(id, () => plans.noteHouseholdAiCost(1.4));
+    expect(inHh(id, () => plans.consume('receiptAi')).ok).toBe(true);
+    const before = plans.householdsAtCostCap();
+    inHh(id, () => plans.noteHouseholdAiCost(0.1));
+    expect(inHh(id, () => plans.consume('receiptAi'))).toMatchObject({ ok: false, capped: 'cost' });
+    expect(plans.householdsAtCostCap()).toBe(before + 1);
+    // the same cost is fine for Plus (2.50)
+    accounts.accountsDb().prepare(`UPDATE households SET plan = 'plus' WHERE id = ?`).run(id);
+    expect(inHh(id, () => plans.consume('receiptAi')).ok).toBe(true);
+    expect(plans.householdsAtCostCap()).toBe(before);
   });
 });
 

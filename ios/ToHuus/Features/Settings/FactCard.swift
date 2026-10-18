@@ -33,18 +33,28 @@ struct FactCard: View {
     @Environment(AppModel.self) private var app
     @State private var fact: Fact?
     @State private var sharing: ShareCardSpec?
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let f = fact {
-                if inList { Section { content(f) } } else { content(f).padding(Theme.Space.s4).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg)).overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1)) }
+        // not a Group: .task on an empty Group never runs, the card would never load (Design/LoadSlot.swift)
+        if inList {
+            // in a List there is no invisible view to hang a .task on: load from the body
+            let _ = loader.run(id: topic) { await load() }
+            if let f = fact { Section { content(f).sheet(item: $sharing) { spec in ShareCardSheet(spec: spec) } } }
+        } else {
+            LoadSlot {
+                if let f = fact {
+                    content(f).padding(Theme.Space.s4).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg)).overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+                }
             }
+            .task(id: topic) { await load() }
+            .sheet(item: $sharing) { spec in ShareCardSheet(spec: spec) }
         }
-        .task(id: topic) {
-            guard app.householdIsGerman else { fact = nil; return }
-            fact = FactCache.ofTheDay(await FactCache.load(api), topic: topic)
-        }
-        .sheet(item: $sharing) { spec in ShareCardSheet(spec: spec) }
+    }
+
+    private func load() async {
+        guard app.householdIsGerman else { fact = nil; return }
+        fact = FactCache.ofTheDay(await FactCache.load(api), topic: topic)
     }
 
     private func content(_ f: Fact) -> some View {

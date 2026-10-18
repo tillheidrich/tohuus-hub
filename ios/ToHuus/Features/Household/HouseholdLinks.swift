@@ -17,15 +17,22 @@ struct MoreSections: View {
 
     var body: some View {
         Group {
-            // Geld without a place in the iPhone tab bar (five areas are on, AppModel.barAreas): first row here
-            if app.moneyInMore && sizeClass != .regular {
+            // areas without a place in the iPhone tab bar (AppModel.areasInMore): Geld by default, with "Deine Leiste"
+            // every area not in it – first rows here, and the shortcut to change the bar
+            if sizeClass != .regular && (!app.areasInMore.isEmpty || app.ownBar != nil) {
                 Section {
-                    Button {
-                        app.requestedTab = "money"
-                        app.showMore = false
-                        dismiss()
-                    } label: { Label(AppArea.money.title, systemImage: AppArea.money.icon) }
-                    .foregroundStyle(Theme.ink)
+                    ForEach(app.areasInMore) { a in
+                        Button {
+                            app.requestedTab = a.rawValue
+                            app.showMore = false
+                            dismiss()
+                        } label: { Label(a.title, systemImage: a.icon) }
+                        .foregroundStyle(Theme.ink)
+                    }
+                    if !app.isGuest {
+                        NavigationLink { NavBarSettingsView() } label: { Label(L("Adjust the bar"), systemImage: "dock.rectangle") }
+                            .foregroundStyle(Theme.ink2)
+                    }
                 }
             }
             // Haushalt: the people and the guests (UX benchmark 2.3 – one list, every function at most two taps away)

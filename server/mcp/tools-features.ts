@@ -59,7 +59,7 @@ export function register(s: McpServer, actorName: string) {
     async (a) => {
       try {
         if (isSensitive(a.text) && !healthConsent()) return fail(healthNoteHint());
-        const row = remember({ text: a.text, kind: a.kind, person: a.person ?? null, source: 'assistant', createdBy: actorName, confirmed: true });
+        const row = remember({ text: a.text, kind: a.kind, person: a.person ?? null, source: 'assistant', createdBy: actorName, confirmed: true, origin: 'mcp' });
         return text({ ok: true, id: row.id, sensitive: Boolean(row.sensitive) });
       } catch (e) {
         if (e instanceof MemoryError) return fail(e.message);

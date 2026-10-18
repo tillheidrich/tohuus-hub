@@ -4,9 +4,11 @@
  * Run from the repo root:  node site/src/build.mjs
  *
  * Product frame and wording: docs/plan-2026-10-12.md and the strategy "ToHuus merkt sich, was zu Hause fehlt"
- * (12.10.2026). ToHuus is the shopping and household assistant of a home: Einkauf, Kochen, Geld. Outward verb
- * "merkt sich", never "Gedächtnis"; "KI" is never the promise; data claims only where they can be checked.
- * No real names of the maker's family anywhere (copy, alt texts, screenshots). Demo people: Sam, Mira, Ben.
+ * (12.10.2026). Since 18.10.2026 (Build 15) the frame is wider: "Ein Ort für den Haushalt: was fehlt, was ansteht,
+ * was zu tun ist, was es kostet und was ihr übers Zuhause wisst. Einkaufen ist der Einstieg, nicht die ganze App."
+ * "Gedächtnis" may be used outward now ("euer Gedächtnis für zu Hause"); ToHuus replaces no calendar and no notes app.
+ * "KI" is never the promise; data claims only where they can be checked. No other app names in the hero or the
+ * three steps. No real names of the maker's family anywhere (copy, alt texts, screenshots). Demo people: Sam, Mira, Mika.
  *
  * Design: "Dutch Detail" (docs/design/2026-10-11-dutch-detail-system.md): same tokens, fonts and icons as the app.
  * Signature elements: the illustrated homes, the green block with circles, the ticket with punch notches, the
@@ -59,6 +61,7 @@ const ICONS = {
   power: 'Power', plug: 'Plug', house: 'House', question: 'Question', scan: 'Scan', watch: 'Watch', image: 'ImageSquare', share: 'ShareNetwork',
   wifi: 'WifiHigh', pin: 'MapPin', coffee: 'Coffee', moonstars: 'MoonStars', aid: 'FirstAidKit', baby: 'Baby', users: 'Users', paw: 'PawPrint',
   suitcase: 'Suitcase', bed: 'Bed', timer: 'Timer', target: 'Target', feather: 'Feather', tag: 'Tag',
+  brain: 'Brain', gift: 'Gift', calendar: 'CalendarBlank', pencil: 'PencilSimpleLine', magnifier: 'MagnifyingGlass', shelf: 'Archive',
 };
 const symbol = (id, name) => {
   const C = Ph[`${name}Icon`] || Ph[name];
@@ -77,59 +80,86 @@ const ico = (n, cls = 'ico') => {
 const COPY = {
   de: {
     lang: 'de', locale: 'de_DE', alt: 'en_GB', url: `${SITE}de/`, base: '../', other: '../', otherLang: 'en',
-    title: 'ToHuus · Merkt sich, was zu Hause fehlt',
-    desc: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet, aus euren Kassenbons und eurer Liste. Für iPhone und im Browser, in der ToHuus Cloud oder auf dem eigenen Server.',
+    title: 'ToHuus · Euer Gedächtnis für zu Hause',
+    desc: 'Ein Ort für den Haushalt: was fehlt, was ansteht, was zu tun ist, was es kostet und was ihr übers Zuhause wisst. Für iPhone und im Browser, in der ToHuus Cloud oder auf dem eigenen Server.',
     ogAlt: 'Das ToHuus-Zeichen, der Satz „Damit nicht einer alles im Kopf haben muss.“ und vier gezeichnete Wohnformen.',
     skip: 'Zum Inhalt springen', navLabel: 'Hauptnavigation', railLabel: 'Schnellnavigation',
     themeLabel: 'Dunkles Design', homeLabel: 'ToHuus Startseite', langLabel: 'Sprache', copy: 'Kopieren', copied: 'Kopiert',
-    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'iphone-app', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll', diff: 'was-anders-ist', good: 'gut-zu-wissen', calm: 'ruhig-gebaut' },
+    legalLabel: 'Rechtliches', tocLabel: 'Inhalt', back: 'Zur Startseite', ids: { jobs: 'einkauf', cook: 'kochen', money: 'geld', levels: 'einstieg', how: 'so-merkt-es-sich', who: 'fuer-wen', ways: 'zwei-wege', prices: 'preise', privacy: 'datenschutz', host: 'selbst-hosten', why: 'warum', faq: 'fragen', install: 'installieren', tf: 'iphone-app', ha: 'home-assistant', house: 'hausinfo', nd: 'kopf-voll', diff: 'was-anders-ist', good: 'gut-zu-wissen', calm: 'ruhig-gebaut', three: 'so-gehts', om: 'ohne-mit' },
     nav: [['#funktionen', 'Funktionen'], ['#preise', 'Preise'], ['#datenschutz', 'Datenschutz'], ['#selbst-hosten', 'Selbst hosten'], ['HELP', 'Hilfe'], ['BLOG', 'Ratgeber']],
-    rail: [['#einkauf', 'Einkauf', 'basket'], ['#kochen', 'Kochen', 'pot'], ['#geld', 'Geld', 'wallet'], ['#preise', 'Preise', 'receipt']],
+    rail: [['#einkauf', 'Liste', 'basket'], ['#aufgaben', 'Aufgaben', 'calendar'], ['#wissen', 'Wissen', 'brain'], ['#preise', 'Preise', 'receipt']],
     hero: {
-      label: 'Der smarte Assistent für euren Haushalt',
-      h1: 'Damit nicht einer alles <span class="hl">im Kopf</span> haben muss.',
-      lede: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet. Dafür reichen eure Kassenbons und eure gemeinsame Liste.',
+      label: 'Euer Gedächtnis für zu Hause',
+      h1: 'Ein Ort für <span class="hl">den Haushalt.</span>',
+      lede: 'Was fehlt, was ansteht, was zu tun ist, was es kostet und was ihr übers Zuhause wisst: ToHuus hält es an einem Ort fest, damit nicht einer alles im Kopf haben muss. Einkaufen ist der Einstieg, nicht die ganze App.',
       ios: 'Im App Store laden', iosSub: 'iPhone, iPad und Apple Watch', gh: 'Selbst hosten auf GitHub',
       facts: ['Server in Deutschland (Hetzner)', 'Kein Tracking, keine Werbung', 'Selbst hosten kostenlos'],
       tiles: { flat: 'Wohnung', shared: 'WG', terraced: 'Reihenhaus', house: 'Haus' },
       tilesLabel: 'Vier gezeichnete Wohnformen: eine Wohnung, eine WG, Reihenhäuser und ein Haus.',
-      shot: 'ToHuus auf dem iPhone, Seite Heute: unter „Fällig“ stehen Pizza Margherita, Reis und Spülmittel mit dem Hinweis, wie oft ihr sie kauft, jeweils mit Auf die Liste und Haben wir noch, darunter die Karte „Liste“ mit sechs Sachen.',
+      shot: 'ToHuus auf dem iPhone, Seite Heute: oben was fällig ist, darunter die Karte „Demnächst“ mit der Tonne, die heute Abend raus muss, und den Terminen der nächsten Tage.',
+    },
+    three: {
+      label: 'So geht’s', h2: 'Ihr schreibt es rein, ToHuus sortiert es ein.',
+      intro: 'Ordner, Kategorien oder eine Tabelle braucht ihr dafür nicht. Zu pflegen gibt es nichts.',
+      steps: [
+        ['pencil', 'Reinschreiben', 'Tippen, sagen oder einen Bon fotografieren: „Milch ist alle“, „Gelbe Tonne alle zwei Wochen“, „Mika hat jetzt Schuhgröße 31“.'],
+        ['list', 'ToHuus sortiert', 'Die Milch kommt auf die Liste, die Tonne zu den Aufgaben und die Schuhgröße ins Haushaltswissen. Was ToHuus nicht sicher versteht, legt es euch zum Bestätigen vor, statt zu raten.'],
+        ['magnifier', 'Jederzeit finden', 'Auf Heute steht, was ansteht. Alles andere findet ihr über die Suche, oder ihr fragt einfach: „Welche Schuhgröße hat Mika?“'],
+      ],
     },
     ask: {
       label: 'Haben wir noch …?', h2: 'Meistens weiß es nur eine Person.',
-      p: 'Ob noch Kaffee da ist, was diese Woche gekocht wird und wann das Waschmittel alle ist, weiß in vielen Haushalten genau einer. Die anderen fragen nach oder kaufen doppelt. ToHuus nimmt diesen Teil aus dem Kopf und legt ihn dorthin, wo alle nachsehen können.',
-      p2: 'Danach wissen alle, was fehlt, und keiner muss es sich merken.',
-      bonTitle: 'Im Kopf', bonFoot: 'Steht jetzt in ToHuus',
-      list: ['Haben wir noch Kaffee?', 'Was essen wir heute?', 'Ist noch Milch da?', 'Hast du Klopapier mitgebracht?', 'Brauchen wir was für Sonntag?', 'Was hat der Einkauf diesen Monat gekostet?'],
+      p: 'Ob noch Kaffee da ist, wann die Tonne raus muss und wie breit das Rollo im Bad ist, weiß in vielen Haushalten genau einer. Die anderen fragen nach, kaufen doppelt oder vergessen es. ToHuus nimmt diesen Teil aus dem Kopf und legt ihn dorthin, wo alle nachsehen können.',
+      p2: 'Danach weiß es der ganze Haushalt, und keiner muss es sich allein merken.',
+      bonTitle: 'Ohne ToHuus', bonTitle2: 'Mit ToHuus', bonFoot: 'Nichts zu pflegen',
+      list: [
+        ['Haben wir noch Kaffee?', 'Steht im Vorrat oder schon auf der Liste.'],
+        ['Wer bringt heute die Tonne raus?', 'Steht am Vorabend auf Heute, mit Namen.'],
+        ['Welche Schuhgröße hat Mika gerade?', 'Einmal eingetragen, jederzeit gefunden.'],
+        ['Was essen wir heute?', 'Der Kochplaner zeigt, was mit dem Vorrat geht.'],
+        ['Was hat der Einkauf diesen Monat gekostet?', 'Die Bons rechnen mit.'],
+        ['Wo hatte ich das bloß aufgeschrieben?', 'In ToHuus. Ihr fragt einfach.'],
+      ],
     },
     jobs: {
-      label: 'Was ToHuus macht', h2: 'Einkauf, Kochen und Geld hängen zusammen.',
-      intro: 'Aus dem, was ihr einkauft, wird gekocht, und dafür geht das Geld weg. Deshalb kümmert sich ToHuus um alle drei. Und um das, was ein Zuhause sonst noch ausmacht: die Aufgaben, die immer wiederkommen, einander was Gutes tun und Wünsche festhalten.',
+      label: 'Was drin ist', h2: 'Alles, was im Haushalt ansteht, an einem Ort.',
+      intro: 'Einkaufen ist bei den meisten der Anfang, deshalb fängt ToHuus dort an. Aber was ihr einkauft, steht im Vorrat, wird gekocht und kostet Geld, und daneben gibt es Aufgaben, Termine und eine Menge Wissen über euer Zuhause. ToHuus hält das zusammen. Einen Kalender oder eure Notizen-App ersetzt es nicht, es holt sich nur, was zum Haushalt gehört. Und unten steht, was ihr braucht: Die Leiste in der App stellt ihr selbst zusammen, wer kein Geld oder keinen Vorrat braucht, lässt es weg.',
       list: [
-        { id: 'einkauf', no: '1', label: 'Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
-          alt: 'Einkaufsliste in ToHuus: oben das Feld „Was fehlt?“, darunter Vorschläge wie Pizza Margherita mit „alle ~32 Tage“, darunter nach Bereichen sortierte Einträge wie Erdbeer-Eis mit dem Hinweis „im Vorrat knapp“.',
+        { id: 'einkauf', no: '1', label: 'Liste und Einkauf', h3: 'ToHuus merkt sich, was fehlt.', shot: 'shopping',
+          alt: 'Einkaufsliste in ToHuus: oben das Feld „Was fehlt?“, darunter Vorschläge mit dem Hinweis, wie oft ihr sie kauft, darunter nach Bereichen sortierte Einträge.',
           p: 'Aus euren Bons und dem, was ihr auf der Liste abhakt, sieht ToHuus, wie oft ihr etwas kauft. Ist es wieder so weit, erscheint es als Vorschlag mit Grund. Einen Vorrat müsst ihr dafür nicht führen.',
           points: ['Eine Liste, live auf allen Handys, auch während einer im Laden steht', 'Wer etwas übernimmt, tippt auf „Ich hol’s“', 'Im Laden nach Gängen sortiert, auch ohne Netz'] },
-        { id: 'kochen', no: '2', label: 'Kochen', h3: 'Daraus könnt ihr heute kochen.', shot: 'cook',
-          alt: 'Seite Kochen, „Was kochen wir?“: für heute Abend geplant Lasagne, der Knopf „Entscheidet ihr für uns“, Filter nach Zeit und vegetarisch, darunter „Geht sofort“ mit Gnocchi-Pfanne und Ofengemüse mit Feta.',
+        { id: 'aufgaben', no: '2', label: 'Aufgaben und Termine', h3: 'Die Tonne steht am Vorabend auf Heute.', shot: 'tasks',
+          alt: 'Seite Aufgaben in ToHuus: fällige Aufgaben mit der Person, die dran ist, und dem Knopf Fertig, darunter was in den nächsten Tagen kommt.',
+          p: 'Bad putzen, Bettwäsche wechseln, der Schornsteinfeger um halb neun: ToHuus merkt sich, was wann dran ist und wer es macht. Unter „Demnächst“ seht ihr, was morgen und in den nächsten Tagen kommt, die Tonne schon an dem Abend, an dem sie raus muss. Die Abfuhrtermine liest ToHuus auf Wunsch aus eurem Kalender, ohne ihn zu ersetzen.',
+          points: ['Einmal, wiederkehrend oder bei Bedarf, für alle oder nur für dich', 'Aufgaben mit Datum auf Wunsch in eurem Kalender, private in deinem eigenen', 'Wenn ihr euch abwechselt, gibt „Erledigt“ die Aufgabe weiter. Aus Versehen abgehakt? Ein Tipp nimmt es zurück'] },
+        { id: 'vorrat', no: '3', label: 'Vorrat', h3: 'Was da ist und was bald weg muss.', shot: 'pantry',
+          alt: 'Seite Vorrat in ToHuus: Sachen nach Orten wie Kühlschrank und Vorratsschrank, oben was bald weg muss.',
+          p: 'Wer mag, führt einen Vorrat, im Kühlschrank, im Gefrierfach oder im Keller, auf Wunsch mit Haltbarkeit. Was bald weg muss, steht oben, und was alle ist, kommt mit einem Tipp auf die Liste. Wer keinen Vorrat führen will, lässt es einfach, die Liste funktioniert auch ohne.',
+          points: ['Nur die Orte, die es bei euch wirklich gibt', '„Ist alle“ setzt es direkt auf die Liste', 'Der Kochplaner schaut zuerst in den Vorrat'] },
+        { id: 'kochen', no: '4', label: 'Kochen', h3: 'Daraus könnt ihr heute kochen.', shot: 'cook',
+          alt: 'Seite Kochen, „Was kochen wir?“: das geplante Essen für heute Abend, Filter nach Zeit und vegetarisch, darunter Gerichte, die sofort gehen.',
           p: 'Der Kochplaner fängt bei dem an, was zu Hause ist. Er zeigt, was sofort geht, wo nur eine Zutat fehlt und was bald weg muss. Wer mag, plant die Woche, und was dafür fehlt, kommt mit einem Tipp auf die Liste.',
           points: ['Rezepte von Hand, per Link, vom Foto oder aus anderen Apps', 'Viele auf einmal als Rezeptpaket, auch von deiner eigenen KI gebaut', 'Mit und ohne Küchenmaschine, Allergien werden beim Vorschlagen berücksichtigt'] },
-        { id: 'geld', no: '3', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
-          alt: 'Seite Geld für Oktober 2026: bisher 59,18 Euro, 23 Prozent weniger als im Vormonat, darunter die Einkäufe bei REWE und EDEKA mit Datum und Betrag.',
+        { id: 'geld', no: '5', label: 'Geld', h3: 'Ihr seht, wohin das Geld für Essen und Haushalt geht.', shot: 'money',
+          alt: 'Seite Geld in ToHuus: die Ausgaben des Monats im Vergleich zum Vormonat, darunter die Einkäufe mit Laden, Datum und Betrag.',
           p: 'Jeder Bon zählt mit. ToHuus zeigt, was ein Monat gekostet hat, in welchem Laden und für welche Kategorie, und vergleicht mit dem Vormonat. Ein Haushaltsbuch müsst ihr dafür nicht führen.',
-          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Sachen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, für alle oder nur für dich, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
-        { id: 'aufgaben', no: '4', label: 'Aufgaben', h3: 'Wer bringt diese Woche den Müll raus?', shot: 'tasks',
-          alt: 'Seite Aufgaben im Bereich Zuhause: das Feld „Neue Aufgabe, z. B. Papiermüll rausbringen“, darunter fällig Bad putzen (heute) und Müll rausbringen (morgen), jeweils mit der Person, die dran ist, und dem Knopf Fertig.',
-          p: 'Bad putzen, Bettwäsche wechseln, den Wasserfilter tauschen oder der Termin mit dem Schornsteinfeger: ToHuus merkt sich, was wann dran ist und wer es macht. Wenn ihr euch abwechselt, gibt „Erledigt“ die Aufgabe an den Nächsten weiter. Ranglisten gibt es nicht, Sterne nur, wenn ihr sie einschaltet. Dafür gibt es einen ruhigen Blick darauf, wer gerade woran denkt.',
-          points: ['Einmal, wiederkehrend oder bei Bedarf, für alle oder nur für dich', 'Termine mit Uhrzeit stehen in Apple Kalender, Google oder Outlook, Aufgaben in Apple Erinnerungen', 'Auch Kinder können dran sein, und was keiner im Blick hat, fällt auf'] },
-        { id: 'bring-mir-was', no: '5', label: 'Bring mir was', h3: 'Einer liegt auf dem Sofa, einer steht in der Küche.', shot: 'treats',
-          alt: 'Seite Bring mir was: „Was hättest du gern?“, darunter Karten wie Was Süßes, Was zu trinken, Was zum Knabbern und Aus dem Kühlschrank, dazu die Reiter Gäste und Party.',
-          p: 'Wer gerade festsitzt, im Bett, beim Zubettbringen oder mit Kind auf dem Arm, wünscht sich mit zwei Tipps eine Kleinigkeit. Die anderen sehen es sofort, einer sagt „Ich bring’s“, und eure Karte zeigt nur, was wirklich da ist. Für Besuch gibt es eine eigene Karte, und am Partyabend bestellen die Gäste direkt von eurer Partykarte.',
-          points: ['Eure eigene Karte: Süßes, Getränke, Snacks, aus dem Kühlschrank', 'Gäste wünschen sich etwas über einen Link, ganz ohne App', 'Party: ihr seht, was bestellt ist und was noch da ist'] },
-        { id: 'wuensche', no: '6', label: 'Wünsche', h3: 'Wunschlisten, die nichts verraten.', shot: 'wishes',
-          alt: 'Seite Wünsche: die Liste „Weihnachten Mika“ mit vier Wünschen, einer davon vergeben, und die „Merkliste Kekse“ mit drei Wünschen.',
-          p: 'Geburtstag, Weihnachten oder einfach eine Merkliste: Wünsche mit Foto, mehreren Links, Preis und Notiz. Wer etwas reserviert, sieht der Rest der Familie, die beschenkte Person aber nie. Eine Liste lässt sich ganz oder in Teilen per Nachricht verschicken.',
-          points: ['Foto, Links, Preis und „wer könnte das schenken“', 'Private Listen, die nur du siehst', 'Teilen als Link oder fertige Nachricht'] },
+          points: ['Ausgaben nach Monat, Laden und Kategorie', 'Preisänderungen bei Sachen, die ihr oft kauft', 'Budgets pro Woche, Monat oder Jahr, mit Hinweis bei 80 Prozent', 'Export als CSV'] },
+        { id: 'wissen', no: '6', label: 'Haushaltswissen', h3: 'Was ihr übers Zuhause wisst, an einem Ort.', shot: 'knowledge',
+          alt: 'Seite „Was ToHuus sich merkt“: Karten nach Personen, Räumen und Dingen, zum Beispiel Mikas Schuhgröße, das Rollo im Wohnzimmer und der Zählerstand für Strom.',
+          p: 'Schuhgrößen, Rollo-Maße, Zählerstände, welcher Beutel in den Staubsauger gehört: Das steht sonst auf Zetteln, in alten Chats oder in genau einem Kopf. In ToHuus wird daraus eine Karte, zum Beispiel „Mika · Schuhgröße: 31“. Ändert sich der Wert, bleibt der alte im Verlauf.',
+          points: ['Eintragen mit einem Satz, etwa „Rollo Wohnzimmer 120 x 160“, das geht auch ohne KI', 'Für den ganzen Haushalt oder nur für dich', 'Gesundheitsangaben bleiben privat, Codes und Passwörter gehören in die Hausinfo', 'Mitbringen aus Markdown (auch aus Obsidian oder Notion exportiert), TXT, CSV oder JSON, und jederzeit wieder exportieren'] },
+        { id: 'assistent', no: '7', label: 'Assistent', h3: 'Ein Satz reicht.', shot: 'assistant',
+          alt: 'Der Assistent in ToHuus: die Nachricht „Milch ist alle und Spüli fast leer“ und die Antwort, was auf die Liste gekommen ist, mit der Möglichkeit, es zurückzunehmen.',
+          p: '„Milch ist alle und Spüli fast leer“, „Schornsteinfeger am Dienstag um halb neun“, „Merk dir, Mikas Jackengröße ist 128“. Der Assistent setzt es auf die Liste, legt die Aufgabe an oder trägt es ins Haushaltswissen ein und sagt dir, was er gemacht hat. Jeder Schritt lässt sich zurücknehmen.',
+          points: ['Tippen oder sprechen, auf dem iPhone und im Browser', 'Die häufigen kurzen Sätze versteht er auch ohne KI', 'KI nur mit eurer Zustimmung, über Mistral'] },
+      ],
+      moreLabel: 'Und dazu',
+      more: [
+        ['coffee', 'Bring mir was', 'Wer auf dem Sofa festsitzt, wünscht sich mit zwei Tipps eine Kleinigkeit, und einer sagt „Ich bring’s“. Auch für Besuch und den Partyabend.'],
+        ['gift', 'Wünsche', 'Wunschlisten mit Foto, Link und Preis. Wer etwas reserviert, sieht die Familie, die beschenkte Person nie.'],
+        ['wifi', 'Hausinfo', 'Gäste-WLAN, wie die Heizung geht und wichtige Nummern, für Babysitter und Besuch über einen Link ohne Konto.'],
+        ['suitcase', 'Wenn ihr weg seid', 'Die Übergabe für Tier- und Blumensitter, mit Fotos und einem Link, der nach eurer Rückkehr endet.'],
       ],
     },
     house: {
@@ -217,10 +247,10 @@ const COPY = {
       note: 'ToHuus setzt keinen Keller, keine Gefriertruhe und keinen Thermomix voraus. Ihr legt fest, welche Orte es bei euch gibt.',
     },
     diff: {
-      label: 'Was anders ist', h2: 'Nicht das Tool für alles. Der Teil, der Haushalt ist.',
-      intro: 'ToHuus ist der smarte Assistent, der nicht den Anspruch hat, das Tool für alles zu sein. Für Termine, Notizen und Nachrichten habt ihr schon gute Apps. ToHuus nimmt sich davon, was Haushalt ist, und arbeitet mit ihnen zusammen.',
+      label: 'Was anders ist', h2: 'Ersetzt nichts, was ihr schon habt. Führt zusammen.',
+      intro: 'ToHuus ist kein Kalender, keine Notizen-App und kein Chat, dafür habt ihr schon gute Apps. ToHuus nimmt sich davon, was Haushalt ist, und arbeitet mit ihnen zusammen. Abfuhrtermine kommen aus eurem Kalender, Aufgaben gehen auf Wunsch zurück, und Listen gehen als Text an Notizen oder Nachrichten.',
       list: [
-        ['list', 'Ein Ort für Liste, Kochen, Aufgaben und Geld', 'Was ihr einkauft, wird gekocht, und dafür geht das Geld weg. ToHuus verbindet das aus euren Bons und eurer Liste. Vier Apps nebeneinander braucht ihr dafür nicht.'],
+        ['list', 'Ein Ort für Liste, Aufgaben, Vorrat, Kochen, Geld und Wissen', 'Was ihr einkauft, steht im Vorrat, wird gekocht und kostet Geld. Was ihr übers Zuhause wisst, liegt gleich daneben. Sechs Apps nebeneinander braucht ihr dafür nicht.'],
         ['users', 'Lernt, wer was macht, ohne Punkte', 'ToHuus merkt sich, wer eine Aufgabe meistens übernimmt, und schlägt es beim nächsten Mal vor. Punkte, Ranglisten und Serien gibt es nicht, Sterne nur, wenn ihr sie einschaltet.'],
         ['feather', 'Im Kopf & nebenbei erledigt', 'Unter „Im Kopf“ steht, woran jemand gerade denkt, unter „Nebenbei erledigt“, was ohne Liste passiert ist. Die anderen können „Danke“ sagen. Gezählt wird dabei nichts.'],
         ['sparkle', 'Was habt ihr heute gelöst?', 'Abends fragt ToHuus auf Heute ab und zu nach, was ihr ohne App geschafft habt. Die Antwort ist immer freundlich, und so lernt ToHuus, wer was macht. Du kannst die Frage abschalten.'],
@@ -232,12 +262,12 @@ const COPY = {
       ],
       tableH: 'Neben anderen Apps', cols: ['Gut für', 'Was ToHuus anders macht'],
       rows: [
-        ['Bring!', 'Eine geteilte Einkaufsliste, im Laden schnell mit einer Hand bedient.', 'Auch eine geteilte Liste, im Laden nach Gängen sortiert. Dazu merkt ToHuus sich aus Bons und Häkchen, wann etwas wieder fällig ist, und hängt Kochen und Geld daran.'],
-        ['Cozi, FamilyWall', 'Familienkalender, Listen und Nachrichten an einem Ort.', 'Kein eigener Kalender und kein Chat. Termine gehen in den Kalender, den ihr schon nutzt. ToHuus kümmert sich um Einkauf, Kochen, Geld und Aufgaben.'],
+        ['Einkaufslisten-Apps', 'Eine geteilte Einkaufsliste, im Laden schnell mit einer Hand bedient.', 'Auch eine geteilte Liste, im Laden nach Gängen sortiert. Dazu merkt ToHuus sich aus Bons und Häkchen, wann etwas wieder fällig ist, und hängt Aufgaben, Vorrat, Kochen und Geld daran.'],
+        ['Cozi, FamilyWall', 'Familienkalender, Listen und Nachrichten an einem Ort.', 'Kein eigener Kalender und kein Chat. ToHuus liest Abfuhrtermine aus eurem Kalender und trägt Aufgaben auf Wunsch dort ein. Im Mittelpunkt steht, was im Haushalt zu tun und zu wissen ist.'],
         ['OurHome', 'Aufgaben für die Familie mit Punkten und Belohnungen.', 'Aufgaben mit Abwechseln, aber ohne Punkte und Ranglisten. ToHuus lernt, wer was meistens macht.'],
         ['Fair Play, FairShare', 'Unsichtbare Arbeit sichtbar machen, über Bereiche, die ihr miteinander aufteilt.', 'Die Bereiche lernt ToHuus aus eurem Alltag. „Im Kopf“ zeigt auch das Kleine, das auf keiner Karte steht.'],
         ['Todoist, Apple Erinnerungen', 'Aufgabenlisten für alles, vom Job bis zum Einkauf.', 'Nur Haushalt, dafür mit Abwechseln, Vorschlägen und dem Blick darauf, wer was im Kopf hat. Aufgaben stehen auf Wunsch zusätzlich in Apple Erinnerungen.'],
-        ['Apple Notizen', 'Schnell etwas aufschreiben und teilen.', 'ToHuus ersetzt sie nicht: Listen gehen als Text an Notizen, Mail oder Nachrichten.'],
+        ['Apple Notizen', 'Schnell etwas aufschreiben und teilen.', 'ToHuus ersetzt sie nicht. Was zum Haushalt gehört, etwa Rollo-Maße oder Zählerstände, steht als Karte im Haushaltswissen, und Listen gehen als Text an Notizen, Mail oder Nachrichten.'],
       ],
       note: 'Stand Oktober 2026, nach den Beschreibungen der Anbieter und unserer eigenen Recherche. Die Namen gehören ihren Inhabern, ToHuus steht in keiner Verbindung zu ihnen.',
       share: 'Zahlen und Sätze zum Teilen', shareHref: 'teilen.html',
@@ -280,8 +310,8 @@ const COPY = {
       per: '/ Monat', or: 'oder', year: '/ Jahr', storage: 'Speicher',
       plans: [
         { name: 'Testphase', price: '0 €', sub: '14 Tage', storage: '5 GB', items: ['Alles aus Plus, 14 Tage lang', 'Startet mit jedem neuen Haushalt, ohne Zahlungsdaten', 'Danach ab 3,99 € im Monat, abgebucht wird nichts von selbst', 'Ohne Abo bleibt alles sichtbar und exportierbar'] },
-        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Gemeinsame Liste mit Einkaufsmodus, Aufgaben, Wochenplan und Rezepte', 'Die ganze Geschichte mit Preisverlauf und Ausgaben', 'Verbundene Haushalte und gespiegelte Listen', 'Bons, Screenshots und Fotos mit KI lesen lassen', '100 Nachrichten an den Assistenten im Monat'] },
-        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Der Assistent für jeden Tag', 'Wochenplan aus dem, was da ist', 'Monatsauswertung und Ersatz aus dem Vorrat', 'Neue ToHuus-Rezepte zur Jahreszeit, mit Bild', '1.500 Nachrichten im Monat. Wird es mehr, antwortet er langsamer, ab 3.000 pausiert die KI bis zum Monatsende'], mark: '14 Tage zum Ausprobieren' },
+        { name: 'Haushalt', price: '3,99 €', year: '34,99 €', storage: '2 GB', items: ['Gemeinsame Liste mit Einkaufsmodus, Aufgaben, Wochenplan und Rezepte', 'Die ganze Geschichte mit Preisverlauf und Ausgaben', 'Verbundene Haushalte und gespiegelte Listen', 'Bons, Screenshots und Fotos mit KI lesen lassen', 'Haushaltswissen mit Import und Export', 'Der Assistent für ab und zu'] },
+        { name: 'Plus', price: '5,99 €', year: '59,99 €', storage: '5 GB', items: ['Alles aus Haushalt', 'Der Assistent für jeden Tag', 'Wochenplan aus dem, was da ist', 'Monatsauswertung und Ersatz aus dem Vorrat', 'Neue ToHuus-Rezepte zur Jahreszeit, mit Bild', 'Viel mehr Nachrichten an den Assistenten, mit einer fairen Obergrenze pro Monat'], mark: '14 Tage zum Ausprobieren' },
         { name: 'Selbst hosten', price: '0 €', sub: 'AGPL-3.0', storage: 'so viel dein Server hat', items: ['Alles freigeschaltet', 'Mit eigener KI, jeder OpenAI-kompatible Anbieter geht, oder ganz ohne', 'iPhone-App, Web-App, Home Assistant, MCP'], host: true },
       ],
       fund: 'Mit jedem Abo finanziert ihr auch Lizenzen für Familien, die es sich gerade nicht leisten können. Werbung gibt es bei uns nicht, und eure Daten verkaufen wir nicht.',
@@ -378,7 +408,9 @@ const COPY = {
         ['Wer zahlt, wenn wir zu viert sind?', 'Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.'],
         ['Was passiert, wenn ich das Abo kündige?', 'Gelöscht wird nichts. Ihr könnt weiter alles ansehen und eure Daten exportieren, nur Neues eintragen und ändern geht ohne Abo nicht mehr. Abhaken auf der Einkaufsliste klappt noch sieben Tage. Mit dem nächsten Abo ist alles wieder da. Oder ihr betreibt ToHuus auf eurem eigenen Server, dort ist es kostenlos.'],
         ['Was passiert mit meinen Daten, wenn ich lösche?', 'Zuerst wird der Schlüssel des Haushalts vernichtet, damit ist die Datenbank nicht mehr lesbar. Danach werden die Dateien und die Sicherungen des Haushalts gelöscht. Sicherungskopien der Kontoverwaltung, die noch den verschlüsselten Schlüssel enthalten, laufen nach ihrer Frist ab.'],
-        ['Ist ToHuus ein Familienkalender?', 'Nein. ToHuus kümmert sich um Einkauf, Kochen, das Geld dafür und die Aufgaben im Haushalt. Termine wie der Schornsteinfeger landen in dem Kalender, den ihr sowieso nutzt, also Apple Kalender, Google oder Outlook. Eine eigene Kalenderansicht oder einen Chat gibt es bewusst nicht, Sterne nur, wenn ihr sie einschaltet.'],
+        ['Ist ToHuus nur eine Einkaufsliste?', 'Nein. Die Liste ist bei den meisten der Einstieg. Dazu kommen Aufgaben und Termine, Vorrat, Kochen, Geld, das Haushaltswissen und der Assistent, alles im selben Haushalt und für alle, die dazugehören.'],
+        ['Was ist das Haushaltswissen?', 'Karten für das, was ihr übers Zuhause wisst: Schuhgrößen, Rollo-Maße, Zählerstände, welcher Filter in die Dunstabzugshaube gehört. Jede Karte gehört zu einer Person, einem Raum oder einem Ding, ändert sich ein Wert, bleibt der alte im Verlauf. Einträge sind für den ganzen Haushalt oder nur für dich, Gesundheitsangaben bleiben privat, und Codes oder Passwörter nimmt ToHuus hier nicht an.'],
+        ['Ist ToHuus ein Familienkalender?', 'Nein, und es ersetzt auch keinen. Auf Wunsch liest ToHuus die Abfuhrtermine aus eurem Kalender und trägt Aufgaben mit Datum dort ein, deine privaten Aufgaben in deinen eigenen Kalender. Unter „Demnächst“ auf Heute steht, was in den nächsten Tagen kommt. Eine eigene Kalenderansicht oder einen Chat gibt es bewusst nicht.'],
       ],
     },
     foot: {
@@ -390,59 +422,86 @@ const COPY = {
   },
   en: {
     lang: 'en', locale: 'en_GB', alt: 'de_DE', url: SITE, base: '', other: 'de/', otherLang: 'de',
-    title: 'ToHuus · Remembers what your home is missing',
-    desc: 'ToHuus remembers for your household what is there, what is missing and what it costs, from your receipts and your list. For iPhone and the browser, in ToHuus Cloud or on your own server.',
+    title: 'ToHuus · The memory of your home',
+    desc: 'One place for the household: what is missing, what is coming up, what needs doing, what it costs and what you know about your home. For iPhone and the browser, in ToHuus Cloud or on your own server.',
     ogAlt: 'The ToHuus mark, the line “So one person doesn’t have to keep it all in their head.” and four drawn homes.',
     skip: 'Skip to content', navLabel: 'Main', railLabel: 'Quick navigation',
     themeLabel: 'Dark theme', homeLabel: 'ToHuus home', langLabel: 'Language', copy: 'Copy', copied: 'Copied',
-    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'iphone-app', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind', diff: 'what-is-different', good: 'good-to-know', calm: 'calm-by-design' },
+    legalLabel: 'Legal', tocLabel: 'Contents', back: 'Back to the home page', ids: { jobs: 'shopping', cook: 'cooking', money: 'money', levels: 'getting-started', how: 'how-it-remembers', who: 'who', ways: 'two-ways', prices: 'pricing', privacy: 'privacy', host: 'self-hosting', why: 'why', faq: 'faq', install: 'install', tf: 'iphone-app', ha: 'home-assistant', house: 'house-info', nd: 'a-lot-on-your-mind', diff: 'what-is-different', good: 'good-to-know', calm: 'calm-by-design', three: 'how-it-works', om: 'without-with' },
     nav: [['#features', 'Features'], ['#pricing', 'Pricing'], ['#privacy', 'Privacy'], ['#self-hosting', 'Self-hosting'], ['HELP', 'Help']],
-    rail: [['#shopping', 'Shopping', 'basket'], ['#cooking', 'Cooking', 'pot'], ['#money', 'Money', 'wallet'], ['#pricing', 'Pricing', 'receipt']],
+    rail: [['#shopping', 'List', 'basket'], ['#chores', 'Chores', 'calendar'], ['#knowledge', 'Knowledge', 'brain'], ['#pricing', 'Pricing', 'receipt']],
     hero: {
-      label: 'The smart assistant for your home',
-      h1: 'So one person doesn’t have to keep it all <span class="hl">in their head.</span>',
-      lede: 'ToHuus remembers for your household what is there, what is missing and what it costs. Your receipts and your shared list are all it needs.',
+      label: 'The memory of your home',
+      h1: 'One place for <span class="hl">your household.</span>',
+      lede: 'What is missing, what is coming up, what needs doing, what it costs and what you know about your home: ToHuus keeps it in one place, so one person doesn’t have to keep it all in their head. Shopping is where it starts, not the whole app.',
       ios: 'Download on the App Store', iosSub: 'iPhone, iPad and Apple Watch', gh: 'Self-host from GitHub',
       facts: ['Servers in Germany (Hetzner)', 'No tracking, no ads', 'Self-hosting is free'],
       tiles: { flat: 'Flat', shared: 'Flat share', terraced: 'Terraced house', house: 'House' },
       tilesLabel: 'Four drawn homes: a flat, a flat share, terraced houses and a house.',
-      shot: 'ToHuus on the iPhone, Today page: under “Due” are pizza, rice and washing up liquid with how often you buy them, each with Put on the list and Still have it, below them the card “List” with six things.',
+      shot: 'ToHuus on the iPhone, Today page: what is due on top, below it the card “Coming up” with the bin that goes out tonight and the next few days.',
+    },
+    three: {
+      label: 'How it works', h2: 'You put it in, ToHuus puts it in place.',
+      intro: 'No folders, no categories, no spreadsheet. There is nothing to maintain.',
+      steps: [
+        ['pencil', 'Put it in', 'Type it, say it or snap a receipt: “We’re out of milk”, “Recycling bin every two weeks”, “Mika’s shoe size is 12 now”.'],
+        ['list', 'ToHuus sorts it', 'The milk goes on the list, the bin into your chores and the shoe size into your home knowledge. If ToHuus isn’t sure what you mean, it asks you to confirm instead of guessing.'],
+        ['magnifier', 'Find it any time', 'Today shows what is coming up. Everything else you find with search, or you just ask: “What shoe size is Mika?”'],
+      ],
     },
     ask: {
       label: 'Do we still have …?', h2: 'Usually only one person knows.',
-      p: 'Whether there is coffee left, what is for dinner this week and when the detergent runs out: in many households exactly one person knows. Everyone else asks or buys it twice. ToHuus takes that part out of one head and puts it where everybody can look.',
-      p2: 'Then everyone knows what is missing, and nobody has to remember it.',
-      bonTitle: 'On your mind', bonFoot: 'Now in ToHuus',
-      list: ['Do we still have coffee?', 'What are we eating tonight?', 'Is there any milk left?', 'Did you get toilet roll?', 'Do we need anything for Sunday?', 'What did the shopping cost this month?'],
+      p: 'Whether there is coffee left, when the bins go out and how wide the bathroom blind is: in many households exactly one person knows. Everyone else asks, buys it twice or forgets. ToHuus takes that part out of one head and puts it where everybody can look.',
+      p2: 'Then the whole household knows, and nobody has to remember it alone.',
+      bonTitle: 'Without ToHuus', bonTitle2: 'With ToHuus', bonFoot: 'Nothing to maintain',
+      list: [
+        ['Do we still have coffee?', 'It’s in the pantry or already on the list.'],
+        ['Who is putting the bins out tonight?', 'It shows on Today the evening before, with a name.'],
+        ['What shoe size is Mika now?', 'Added once, found any time.'],
+        ['What are we eating tonight?', 'The cook planner shows what works with what you have.'],
+        ['What did the shopping cost this month?', 'Your receipts keep count.'],
+        ['Where did I write that down?', 'In ToHuus. Just ask.'],
+      ],
     },
     jobs: {
-      label: 'What ToHuus does', h2: 'Shopping, cooking and money belong together.',
-      intro: 'What you buy is what you cook, and that is where the money goes. So ToHuus looks after all three. And after the rest of what makes a home: the tasks that keep coming back, doing each other a good turn and keeping track of wishes.',
+      label: 'What’s inside', h2: 'Everything your home needs keeping track of, in one place.',
+      intro: 'For most people shopping is where it starts, so that is where ToHuus starts. But what you buy ends up in the pantry, gets cooked and costs money, and next to it there are chores, appointments and a lot of knowledge about your home. ToHuus keeps that together. It doesn’t replace your calendar or your notes app, it only takes what belongs to the household. And the bar at the bottom shows what you need: you choose what goes there, and leave out money or the pantry if you don’t use them.',
       list: [
-        { id: 'shopping', no: '1', label: 'Shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
-          alt: 'Shopping list in ToHuus: the field “What’s missing?” on top, below it suggestions like pizza with “every ~32 days”, below that entries sorted by area such as strawberry ice cream with “running low in stock”.',
-          p: 'From your receipts and what you tick off the list, ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. You do not have to keep a stock list for that.',
+        { id: 'shopping', no: '1', label: 'List and shopping', h3: 'ToHuus remembers what is missing.', shot: 'shopping',
+          alt: 'Shopping list in ToHuus: the field “What’s missing?” on top, below it suggestions with how often you buy them, below that entries sorted by area.',
+          p: 'From your receipts and what you tick off the list, ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. You do not have to keep a pantry for that.',
           points: ['One list, live on every phone, also while someone is in the shop', 'Whoever takes something taps “I’ll get it”', 'Sorted by aisle in the shop, even without signal'] },
-        { id: 'cooking', no: '2', label: 'Cooking', h3: 'You can cook this today.', shot: 'cook',
-          alt: 'Cooking page, “What shall we cook?”: creamed spinach with potatoes and fried egg planned for tonight, the button “You decide for us”, filters for time and vegetarian, below it “Works right now” with a gnocchi skillet and roast vegetables.',
+        { id: 'chores', no: '2', label: 'Chores and appointments', h3: 'The bins show up the evening before.', shot: 'tasks',
+          alt: 'Chores page in ToHuus: due tasks with the person whose turn it is and a Done button, below them what is coming up in the next days.',
+          p: 'Cleaning the bathroom, changing the beds, the boiler service at half past eight: ToHuus remembers what is due when and who does it. Under “Coming up” you see what is due tomorrow and in the next days, and the bins on the evening they need to go out. If you like, ToHuus reads the collection days from your calendar without replacing it.',
+          points: ['Once, recurring or when needed, for everyone or only for you', 'Dated chores in your calendar if you like, private ones in your own', 'If you take turns, “Done” passes the task on. Ticked off by mistake? One tap undoes it'] },
+        { id: 'pantry', no: '3', label: 'Pantry', h3: 'What you have, and what to use up.', shot: 'pantry',
+          alt: 'Pantry page in ToHuus: things by place such as fridge and cupboard, with what should be used soon on top.',
+          p: 'If you like, keep a pantry, in the fridge, the freezer or the cellar, with best-before dates if you want them. What should be used soon comes first, and what has run out goes on the list in one tap. Don’t want a pantry? Skip it, the list works without one.',
+          points: ['Only the places you really have', '“Run out” puts it straight on the list', 'The cook planner looks in the pantry first'] },
+        { id: 'cooking', no: '4', label: 'Cooking', h3: 'You can cook this today.', shot: 'cook',
+          alt: 'Cooking page, “What shall we cook?”: tonight’s planned dinner, filters for time and vegetarian, below it dishes that work right now.',
           p: 'The cook planner starts with what is at home. It shows what works right now, where only one ingredient is missing and what should be used soon. Plan the week if you like, and whatever it needs goes on the list in one tap.',
           points: ['Recipes by hand, from a link, a photo or other apps', 'Many at once as a recipe pack, even built by your own AI', 'With or without a kitchen machine, and allergies are taken into account'] },
-        { id: 'money', no: '3', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
-          alt: 'Money page for October 2026: £47.40 so far, 22 % less than last month, below it the purchases at Tesco and Sainsbury’s with date and amount.',
+        { id: 'money', no: '5', label: 'Money', h3: 'You see where the money for food and household goes.', shot: 'money',
+          alt: 'Money page in ToHuus: this month’s spending compared with last month, below it the purchases with shop, date and amount.',
           p: 'Every receipt counts. ToHuus shows what a month cost, in which shop and for which category, and compares it with the month before. You do not need to keep a ledger.',
-          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week, month or year, shared or just for you, with a note at 80 percent', 'CSV export'] },
-        { id: 'tasks', no: '4', label: 'Tasks', h3: 'Whose turn is it to take out the bins?', shot: 'tasks',
-          alt: 'Tasks page in the Home area: the field “New task, e.g. take out the paper bin”, below it due Clean the bathroom (today) and Take out the bins (tomorrow), each with the person whose turn it is and a Done button.',
-          p: 'Cleaning the bathroom, changing the bed linen, the water filter or the chimney sweep’s visit: ToHuus remembers what is due when and who does it. If you take turns, “Done” passes the task on to the next person. There are no rankings, just a calm look at who keeps what in mind, and stars only if you switch them on.',
-          points: ['Once, recurring or when needed, for everyone or only for you', 'Appointments with a time show up in Apple Calendar, Google or Outlook, tasks in Apple Reminders', 'Children can have a turn too, and what nobody keeps in mind gets noticed'] },
-        { id: 'bring-me-something', no: '5', label: 'Bring me something', h3: 'One of you is on the sofa, one is in the kitchen.', shot: 'treats',
-          alt: 'Treats page: “What would you like?”, with cards such as Something sweet, Something to drink, Something to nibble and From the fridge, plus tabs for Guests and Party.',
-          p: 'Whoever is stuck, in bed, at bedtime or with a child on their arm, asks for a little something in two taps. The others see it right away, someone says “I’ll bring it”, and your menu only shows what is actually at home. Visitors get their own menu, and on party night guests order straight from your party menu.',
-          points: ['Your own menu: sweets, drinks, snacks, from the fridge', 'Guests ask through a link, no app needed', 'Party: you see what was ordered and what is left'] },
-        { id: 'wishes', no: '6', label: 'Wishes', h3: 'Wish lists that give nothing away.', shot: 'wishes',
-          alt: 'Wishes page: the list “Christmas for Mika” with three wishes and “New biscuits & finds” with two.',
-          p: 'Birthdays, Christmas or just a list of things to remember: wishes with a photo, several links, a price and a note. The family sees who reserved what, the person it is for never does. Send a whole list or part of it as a message.',
-          points: ['Photo, links, price and “who could give this”', 'Private lists only you can see', 'Share as a link or a ready-made message'] },
+          points: ['Spending by month, shop and category', 'Price changes on things you buy often', 'Budgets per week, month or year, with a note at 80 percent', 'CSV export'] },
+        { id: 'knowledge', no: '6', label: 'Home knowledge', h3: 'What you know about your home, in one place.', shot: 'knowledge',
+          alt: 'The page “What ToHuus remembers”: cards by person, room and thing, for example Mika’s shoe size, the living room blind and the electricity meter reading.',
+          p: 'Shoe sizes, blind measurements, meter readings, which bags fit the hoover: otherwise that lives on scraps of paper, in old chats or in exactly one head. In ToHuus it becomes a card, for example “Mika · Shoe size: 12”. When the value changes, the old one stays in the history.',
+          points: ['Add it in one sentence, like “Living room blind 120 x 160”, which works without AI too', 'For the whole household or only for you', 'Health details stay private, codes and passwords belong in the house info', 'Bring it along from Markdown (Obsidian or Notion exports too), TXT, CSV or JSON, and export it any time'] },
+        { id: 'assistant', no: '7', label: 'Assistant', h3: 'One sentence is enough.', shot: 'assistant',
+          alt: 'The assistant in ToHuus: a message asking to add milk and washing-up liquid and the answer saying what went on the list, with a way to undo it.',
+          p: '“We’re out of milk and nearly out of washing-up liquid”, “Boiler service on Tuesday at half past eight”, “Remember, Mika’s coat size is 7 to 8 years”. The assistant puts it on the list, adds the chore or saves it to your home knowledge and tells you what it did. Every step can be undone.',
+          points: ['Type or speak, on the iPhone and in the browser', 'It understands the common short sentences even without AI', 'AI only with your consent, through Mistral'] },
+      ],
+      moreLabel: 'Also inside',
+      more: [
+        ['coffee', 'Bring me something', 'Stuck on the sofa? Ask for a little something in two taps, and someone says “I’ll bring it”. Also for visitors and party night.'],
+        ['gift', 'Wishes', 'Wish lists with photo, link and price. The family sees who reserved what, the person it is for never does.'],
+        ['wifi', 'House info', 'Guest Wi-Fi, how the heating works and important numbers, for sitters and visitors through a link, no account needed.'],
+        ['suitcase', 'While you’re away', 'The handover for pet and plant sitters, with photos and a link that ends after you are back.'],
       ],
     },
     house: {
@@ -530,10 +589,10 @@ const COPY = {
       note: 'ToHuus does not assume a cellar, a chest freezer or a Thermomix. You decide which places your home has.',
     },
     diff: {
-      label: 'What is different', h2: 'Not the tool for everything. The part that is home.',
-      intro: 'ToHuus is the smart assistant that does not try to be the tool for everything. For appointments, notes and messages you already have good apps. ToHuus takes from them what is household work and works alongside them.',
+      label: 'What is different', h2: 'Replaces nothing you already have. Brings it together.',
+      intro: 'ToHuus is not a calendar, a notes app or a chat, you already have good apps for that. ToHuus takes from them what is household work and works alongside them. Collection days come from your calendar, chores go back into it if you like, and lists go as text to Notes or Messages.',
       list: [
-        ['list', 'One place for the list, cooking, tasks and money', 'What you buy gets cooked, and that is where the money goes. ToHuus links them from your receipts and your list. You do not need four apps side by side.'],
+        ['list', 'One place for the list, chores, pantry, cooking, money and knowledge', 'What you buy ends up in the pantry, gets cooked and costs money. What you know about your home sits right next to it. You do not need six apps side by side.'],
         ['users', 'Learns who does what, without points', 'ToHuus remembers who usually takes on a task and suggests them next time. There are no points, rankings or streaks, and stars only if you switch them on.'],
         ['feather', 'On my mind & done on the side', '“On my mind” shows what someone is thinking about, “Done on the side” what happened without a list. The others can say “Thanks”. Nothing is counted.'],
         ['sparkle', 'What did you sort out today?', 'Now and then in the evening, Today asks what you got done without the app. The answer is always kind, and it is how ToHuus learns who does what. You can switch the question off.'],
@@ -545,12 +604,12 @@ const COPY = {
       ],
       tableH: 'Next to other apps', cols: ['Good for', 'What ToHuus does differently'],
       rows: [
-        ['Bring!', 'A shared shopping list, quick to use with one hand in the shop.', 'A shared list too, sorted by aisle in the shop. On top, ToHuus learns from receipts and ticks when something is due again, and links cooking and money to it.'],
-        ['Cozi, FamilyWall', 'Family calendar, lists and messages in one place.', 'No calendar of its own and no chat. Appointments go into the calendar you already use. ToHuus looks after shopping, cooking, money and tasks.'],
+        ['Shopping list apps', 'A shared shopping list, quick to use with one hand in the shop.', 'A shared list too, sorted by aisle in the shop. On top, ToHuus learns from receipts and ticks when something is due again, and links chores, pantry, cooking and money to it.'],
+        ['Cozi, FamilyWall', 'Family calendar, lists and messages in one place.', 'No calendar of its own and no chat. ToHuus reads collection days from your calendar and adds chores to it if you like. It focuses on what there is to do and to know at home.'],
         ['OurHome', 'Family chores with points and rewards.', 'Tasks with taking turns, but no points or rankings. ToHuus learns who usually does what.'],
         ['Fair Play, FairShare', 'Making invisible work visible, through areas you split between you.', 'ToHuus learns the areas from your everyday life. “On my mind” also shows the small things that are on no card.'],
         ['Todoist, Apple Reminders', 'To-do lists for everything, from work to shopping.', 'Only the household, but with taking turns, suggestions and a view of who keeps what in mind. Tasks can also appear in Apple Reminders.'],
-        ['Apple Notes', 'Writing something down quickly and sharing it.', 'ToHuus does not replace it: lists go as text to Notes, Mail or Messages.'],
+        ['Apple Notes', 'Writing something down quickly and sharing it.', 'ToHuus does not replace it. What belongs to the household, like blind measurements or meter readings, is a card in your home knowledge, and lists go as text to Notes, Mail or Messages.'],
       ],
       note: 'As of October 2026, based on the providers’ own descriptions and our research. The names belong to their owners; ToHuus is not affiliated with them.',
       share: 'Figures and lines to share', shareHref: 'share.html',
@@ -593,8 +652,8 @@ const COPY = {
       per: '/ month', or: 'or', year: '/ year', storage: 'Storage',
       plans: [
         { name: 'Trial', price: '€0', sub: '14 days', storage: '5 GB', items: ['Everything in Plus for 14 days', 'Starts with every new household, no payment details', 'Then from €3.99 a month, nothing is charged on its own', 'Without a plan everything stays visible and exportable'] },
-        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Shared list with shop mode, tasks, week plan and recipes', 'The full history with prices and spending', 'Connected households and mirrored lists', 'Receipts, screenshots and photos read with AI', '100 assistant messages a month'] },
-        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'The assistant for every day', 'Week plan from what is at home', 'Monthly review and substitutes from your stock', 'New seasonal ToHuus recipes (in German), with pictures', '1,500 messages a month. Beyond that it answers more slowly, from 3,000 AI pauses until the month ends'], mark: '14 days to try' },
+        { name: 'Household', price: '€3.99', year: '€34.99', storage: '2 GB', items: ['Shared list with shop mode, tasks, week plan and recipes', 'The full history with prices and spending', 'Connected households and mirrored lists', 'Receipts, screenshots and photos read with AI', 'Home knowledge with import and export', 'The assistant now and then'] },
+        { name: 'Plus', price: '€5.99', year: '€59.99', storage: '5 GB', items: ['Everything in Household', 'The assistant for every day', 'Week plan from what is at home', 'Monthly review and substitutes from your stock', 'New seasonal ToHuus recipes (in German), with pictures', 'Far more assistant messages, with a fair monthly limit'], mark: '14 days to try' },
         { name: 'Self-hosted', price: '€0', sub: 'AGPL-3.0', storage: 'as much as your server has', items: ['Everything unlocked', 'With your own AI, any OpenAI-compatible provider, or none at all', 'iPhone app, web app, Home Assistant, MCP'], host: true },
       ],
       fund: 'Every subscription also pays for licences for families who cannot afford one right now. There are no ads, and we do not sell your data.',
@@ -691,7 +750,9 @@ const COPY = {
         ['Who pays if there are four of us?', 'One subscription covers the whole household. Members, children, guests and connected households pay nothing.'],
         ['What happens if I cancel?', 'Nothing is deleted. You can still look at everything and export your data; adding and changing things stops without a plan. Ticking off the shopping list keeps working for seven days. With the next subscription everything is back. Or you run ToHuus on your own server, where it is free.'],
         ['What happens to my data when I delete it?', 'First the household’s key is destroyed, so the database can no longer be read. Then the household’s files and backups are deleted. Backup copies of the account directory, which still hold the encrypted key, expire after their retention period.'],
-        ['Is ToHuus a family calendar?', 'No. ToHuus looks after shopping, cooking, the money for both and the household tasks. Appointments such as the chimney sweep go into the calendar you already use, Apple Calendar, Google or Outlook. There is deliberately no calendar view of its own and no chat; stars only if you switch them on.'],
+        ['Is ToHuus just a shopping list?', 'No. For most people the list is where it starts. Next to it are chores and appointments, the pantry, cooking, money, home knowledge and the assistant, all in the same household and for everyone in it.'],
+        ['What is home knowledge?', 'Cards for what you know about your home: shoe sizes, blind measurements, meter readings, which filter fits the cooker hood. Each card belongs to a person, a room or a thing, and when a value changes the old one stays in the history. Entries are for the whole household or only for you, health details stay private, and ToHuus does not take codes or passwords here.'],
+        ['Is ToHuus a family calendar?', 'No, and it doesn’t replace one. If you like, ToHuus reads the collection days from your calendar and adds dated chores to it, your private chores to your own calendar. “Coming up” on Today shows what is due in the next days. There is deliberately no calendar view and no chat.'],
       ],
     },
     foot: {
@@ -705,7 +766,7 @@ const COPY = {
 
 // ---------------------------------------------------------------- screenshots
 /** Every screenshot slot the page uses. The build fails when a file is missing, so no placeholder ever ships. */
-const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'treats', 'wishes', 'tasks', 'houseinfo', 'houseinfo-guest', 'focus', 'loadcards'];
+const SHOTS = ['today', 'today-dark', 'shopping', 'cook', 'money', 'import', 'tasks', 'pantry', 'knowledge', 'assistant', 'houseinfo', 'houseinfo-guest', 'focus', 'loadcards'];
 const WIDTHS = [480, 960];
 for (const lang of Object.keys(COPY)) for (const n of SHOTS) for (const w of WIDTHS) {
   const f = path.join(ROOT, `assets/shots/${lang}/${n}-${w}.webp`);
@@ -893,6 +954,7 @@ function page(c) {
   const id = c.ids;
   const H = c.hero;
   const A = c.ask;
+  const E = c.three;
   const J = c.jobs;
   const L = c.levels;
   const W = c.how;
@@ -933,18 +995,31 @@ function page(c) {
   </div>
 </section>
 
-<section class="ask" aria-labelledby="ask-h">
+<section class="three" id="${id.three}" aria-labelledby="three-h">
+  <div class="wrap">
+    <div class="sec-head">
+      ${label(E.label, ' reveal')}
+      <h2 class="reveal" id="three-h">${E.h2}</h2>
+      <p class="intro reveal">${E.intro}</p>
+    </div>
+    <ol class="three-steps">
+${E.steps.map(([i, t, x], k) => `      <li class="reveal" style="--d:${k * 80}ms"><span class="three-no" aria-hidden="true">${k + 1}</span><span class="three-ico">${ico(i)}</span><b>${t}</b><span>${x}</span></li>`).join('\n')}
+    </ol>
+  </div>
+</section>
+
+<section class="ask" id="${id.om}" aria-labelledby="ask-h">
   <div class="wrap ask-grid">
     <div>
-      
+      ${label(A.label, ' reveal')}
       <h2 class="reveal" id="ask-h">${A.h2}</h2>
       <p class="intro reveal">${A.p}</p>
       <p class="pull reveal">${A.p2}</p>
     </div>
-    <div class="receipt reveal" role="group" aria-label="${A.bonTitle}">
-      <div class="receipt-h"><b>${A.bonTitle}</b><span aria-hidden="true">ToHuus</span></div>
-      <ul>
-${A.list.map((q) => `        <li><s>${q}</s>${ico('check', 'ico ok')}</li>`).join('\n')}
+    <div class="receipt om reveal" role="table" aria-label="${A.bonTitle} / ${A.bonTitle2}">
+      <div class="receipt-h om-h" role="row"><b role="columnheader">${A.bonTitle}</b><b role="columnheader">${A.bonTitle2}</b></div>
+      <ul role="rowgroup">
+${A.list.map(([q, a]) => `        <li role="row"><s role="cell">${q}</s><span role="cell">${ico('check', 'ico ok')}${a}</span></li>`).join('\n')}
       </ul>
       <p class="receipt-f">${A.bonFoot}</p>
     </div>
@@ -955,6 +1030,7 @@ ${A.list.map((q) => `        <li><s>${q}</s>${ico('check', 'ico ok')}</li>`).joi
   <div class="wrap">
     <div class="sec-head">
       
+      ${label(J.label, ' reveal')}
       <h2 class="reveal" id="jobs-h">${J.h2}</h2>
       <p class="intro reveal">${J.intro}</p>
     </div>
@@ -966,10 +1042,14 @@ ${J.list.map((j, k) => `    <article class="job${k % 2 ? ' flip' : ''}" id="${j.
         <ul class="ticks">${j.points.map((p) => `<li>${ico('check')}<span>${p}</span></li>`).join('')}</ul>
       </div>
       <div class="job-visual reveal">
-        <span class="job-shape s${k + 1}" aria-hidden="true"></span>
+        <span class="job-shape s${(k % 5) + 1}" aria-hidden="true"></span>
         ${device(img(c, j.shot, j.alt))}
       </div>
     </article>`).join('\n')}
+    <h3 class="more-h reveal">${J.moreLabel}</h3>
+    <ul class="nd-grid more-grid">
+${J.more.map(([i, t, x], k) => `      <li class="reveal" style="--d:${(k % 4) * 50}ms"><span class="nd-ico">${ico(i)}</span><b>${t}</b><span>${x}</span></li>`).join('\n')}
+    </ul>
   </div>
 </section>
 
@@ -1972,7 +2052,7 @@ fs.writeFileSync(path.join(ROOT, 'llms.txt'), `# ToHuus
 
 > ${COPY.en.desc}
 
-ToHuus is a shopping and household assistant for families, couples and flatshares (iPhone app and web app, in ToHuus Cloud or self-hosted with Docker, with a Home Assistant integration). It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, keeps the household's recurring tasks and appointments (with Apple Reminders and calendar sync), lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info for guests, babysitters and house sitters (guest Wi-Fi with a join QR code, how things work, house rules, bedtimes, important numbers; codes such as door or alarm codes are kept apart, revealed only on purpose and never sent to AI) plus holiday handovers. For heads with a lot going on (ADHD, autism, a packed week) tasks split into small steps, a focus view shows one thing at a time, a visible timer helps to start, a personal gentle mode drops red warnings and counters, and an allowance for extras keeps impulse buys in view; there are no streaks, points or rankings. Servers in Germany, no tracking, no ads, open source (AGPL).
+ToHuus is one place for the household: what is missing, what is coming up, what needs doing, what it costs and what you know about your home. Shopping is where it starts, not the whole app. It is for families, couples, flatshares and people living alone (iPhone app and web app, in ToHuus Cloud or self-hosted with Docker, with a Home Assistant integration). It keeps home knowledge as cards (shoe sizes, blind measurements, meter readings; codes and passwords are refused, health details stay private), shows what is coming up on Today (bins the evening they go out, read from your calendar if you like) and has an assistant that adds to the list, chores and home knowledge from one sentence. It learns from receipts and the shared shopping list how often a household buys things and suggests them when they are due, plans meals from what is at home, shows where the money for food and household goes, keeps the household's recurring tasks and appointments (with Apple Reminders and calendar sync), lets people at home ask each other for a little something ("Bring me something", German "Bring mir was"), keeps wish lists with reservations hidden from the person they are for, and holds house info for guests, babysitters and house sitters (guest Wi-Fi with a join QR code, how things work, house rules, bedtimes, important numbers; codes such as door or alarm codes are kept apart, revealed only on purpose and never sent to AI) plus holiday handovers. For heads with a lot going on (ADHD, autism, a packed week) tasks split into small steps, a focus view shows one thing at a time, a visible timer helps to start, a personal gentle mode drops red warnings and counters, and an allowance for extras keeps impulse buys in view; there are no streaks, points or rankings. Servers in Germany, no tracking, no ads, open source (AGPL).
 
 ## Website
 - [ToHuus (English)](${SITE}): what it does, pricing, privacy, self-hosting

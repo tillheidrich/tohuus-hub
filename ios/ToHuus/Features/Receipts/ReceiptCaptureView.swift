@@ -28,7 +28,7 @@ struct ReceiptCaptureView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                CardStack(spacing: Theme.Space.s4) {
                     Text(L("Receipts show ToHuus what you bought, what it cost and how often. Paper, photo, PDF or e-receipt – all fine."))
                         .foregroundStyle(Theme.ink2)
                     Toggle(isOn: $readOnDevice) {

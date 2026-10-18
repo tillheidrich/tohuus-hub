@@ -11,7 +11,7 @@ struct WgBalanceCard: View {
     @State private var shared = false
 
     var body: some View {
-        Group {
+        LoadSlot {
             if shared, let b = balance, b.people.contains(where: { ($0.paid ?? 0) != 0 }) {
                 Card(title: L("Who is ahead"), systemImage: "person.2") {
                     VStack(alignment: .leading, spacing: Theme.Space.s2) {

@@ -26,7 +26,7 @@ struct ImportReviewView: View {
     var body: some View {
         ScrollView {
             if let imp {
-                VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                CardStack(spacing: Theme.Space.s4) {
                     header(imp)
                     // list2 G: who paid and for whom; care lists – lines for the household you shop for
                     WhoPaidPanel(store: store, importId: importId)

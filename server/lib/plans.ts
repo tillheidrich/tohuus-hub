@@ -59,8 +59,13 @@ export interface Limits {
 }
 
 const MB = 1024 * 1024;
-/** Plus, trial and Plus for good: from 1,500 messages slower, from 3,000 AI pauses until the month ends (F5, 18 Oct 2026) */
-export const PLUS_HARD_MESSAGES = 3000;
+/**
+ * Plus, trial and Plus for good: from 800 messages slower (shorter answers), from 1,500 AI pauses until the month ends.
+ * 18 Oct 2026 (2), docs/pricing.md: 1,500/3,000 replaced – at ~0.13–0.46 cent per message (measured prompt sizes ×
+ * tool rounds, Mistral Small 2603) 3,000 messages alone cost more than a yearly Plus brings in after Apple and VAT.
+ */
+export const PLUS_FAIR_MESSAGES = 800;
+export const PLUS_HARD_MESSAGES = 1500;
 const base = { fullHistory: false, priceHistory: false, connectedHouseholds: false, mirrorLists: false, importQuota: false, weekPlanFromPantry: false, monthlyAnalysis: false, substituteFromStock: false, plusRecipes: false };
 const haushaltFeatures = { ...base, fullHistory: true, priceHistory: true, connectedHouseholds: true, mirrorLists: true, importQuota: true };
 const plusFeatures = { ...haushaltFeatures, weekPlanFromPantry: true, monthlyAnalysis: true, substituteFromStock: true, plusRecipes: true };
@@ -71,9 +76,9 @@ export const PLAN_LIMITS: Record<Plan, Limits> = {
   // nothing to run; the 14-day trial (Plus) starts with every new household.
   free: { historyDays: 30, assistantPerMonth: 0, assistantThrottleOnly: false, assistantHardPerMonth: 0, uploadsPerDay: 20, receiptAiPerDay: 0, importAiPerDay: 0, storageBytes: 100 * MB, features: base },
   haushalt: { historyDays: null, assistantPerMonth: 100, assistantThrottleOnly: false, assistantHardPerMonth: 100, uploadsPerDay: 200, receiptAiPerDay: 40, importAiPerDay: 40, storageBytes: 2048 * MB, features: haushaltFeatures },
-  plus: { historyDays: null, assistantPerMonth: 1500, assistantThrottleOnly: true, assistantHardPerMonth: PLUS_HARD_MESSAGES, uploadsPerDay: 300, receiptAiPerDay: 60, importAiPerDay: 100, storageBytes: 5120 * MB, features: plusFeatures },
+  plus: { historyDays: null, assistantPerMonth: PLUS_FAIR_MESSAGES, assistantThrottleOnly: true, assistantHardPerMonth: PLUS_HARD_MESSAGES, uploadsPerDay: 300, receiptAiPerDay: 60, importAiPerDay: 100, storageBytes: 5120 * MB, features: plusFeatures },
   // the 14-day trial is Plus
-  trial: { historyDays: null, assistantPerMonth: 1500, assistantThrottleOnly: true, assistantHardPerMonth: PLUS_HARD_MESSAGES, uploadsPerDay: 300, receiptAiPerDay: 60, importAiPerDay: 100, storageBytes: 5120 * MB, features: plusFeatures },
+  trial: { historyDays: null, assistantPerMonth: PLUS_FAIR_MESSAGES, assistantThrottleOnly: true, assistantHardPerMonth: PLUS_HARD_MESSAGES, uploadsPerDay: 300, receiptAiPerDay: 60, importAiPerDay: 100, storageBytes: 5120 * MB, features: plusFeatures },
   selfhost: {
     historyDays: null,
     assistantPerMonth: null,
@@ -288,18 +293,44 @@ export function consume(kind: UsageKind, n = 1): ConsumeResult {
 
 /** micro units of the AI price currency (ai-prices.ts) per household and calendar month, in usage_counters */
 export const AI_COST_KIND = 'aiCostMicro';
-export const DEFAULT_AI_COST_CAP = 3.5;
+/**
+ * Cost cap per household and month in the AI price currency, per plan (18 Oct 2026 (2), docs/pricing.md). Chosen so
+ * that no plan loses money at the cap, even yearly and with Apple's 30 %: Haushalt yearly brings 1.72 € a month net
+ * (30 %), Plus yearly 2.94 €; 1 USD of AI ≈ 0.91 € incl. OpenRouter's fee. The trial is lower: it pays nothing.
+ * Plus for good and a Plus gift use the Plus cap. (Was one cap of 3.50 USD for every plan.)
+ */
+export const DEFAULT_AI_COST_CAPS = { haushalt: 1.5, plus: 2.5, trial: 1 } as const;
+export type CostCapClass = keyof typeof DEFAULT_AI_COST_CAPS;
+/** the Plus cap – kept under its old name for callers and tests */
+export const DEFAULT_AI_COST_CAP = DEFAULT_AI_COST_CAPS.plus;
 const monthOf = (d = new Date()) => d.toISOString().slice(0, 7);
 
+/** setting and environment names per cap class; `ai.household_cost_cap` (the old single cap) is the Plus cap */
+const CAP_SOURCES: Record<CostCapClass, { setting: 'ai.household_cost_cap' | 'ai.household_cost_cap.haushalt' | 'ai.household_cost_cap.trial'; env: string }> = {
+  plus: { setting: 'ai.household_cost_cap', env: 'AI_HOUSEHOLD_COST_CAP' },
+  haushalt: { setting: 'ai.household_cost_cap.haushalt', env: 'AI_HOUSEHOLD_COST_CAP_HAUSHALT' },
+  trial: { setting: 'ai.household_cost_cap.trial', env: 'AI_HOUSEHOLD_COST_CAP_TRIAL' },
+};
+
+/** Which cap a plan uses: Haushalt, trial, everything else with AI (Plus, Plus for good, gifts) the Plus cap. */
+export const capClassOf = (plan: Plan): CostCapClass => (plan === 'haushalt' ? 'haushalt' : plan === 'trial' ? 'trial' : 'plus');
+
 /**
- * Cost cap per household and month in the AI price currency (default 3.50 USD ≈ 3 €): back office › Einstellungen
- * `ai.household_cost_cap`, else AI_HOUSEHOLD_COST_CAP, else the default. 0 = off.
+ * Cost cap per household and month in the AI price currency for a plan (default Plus): back office › Einstellungen
+ * (`ai.household_cost_cap` = Plus, `ai.household_cost_cap.haushalt`, `ai.household_cost_cap.trial`), else the
+ * environment (AI_HOUSEHOLD_COST_CAP, …_HAUSHALT, …_TRIAL), else DEFAULT_AI_COST_CAPS. 0 = off.
  */
-export function aiCostCap(env: NodeJS.ProcessEnv = process.env): number {
-  const raw = runtimeSetting('ai.household_cost_cap') ?? env.AI_HOUSEHOLD_COST_CAP;
-  const n = raw === undefined || raw === '' ? DEFAULT_AI_COST_CAP : Number(String(raw).replace(',', '.'));
-  return Number.isFinite(n) && n >= 0 ? n : DEFAULT_AI_COST_CAP;
+export function aiCostCap(plan: Plan | CostCapClass = 'plus', env: NodeJS.ProcessEnv = process.env): number {
+  const cls: CostCapClass = plan === 'haushalt' || plan === 'trial' || plan === 'plus' ? plan : capClassOf(plan as Plan);
+  const src = CAP_SOURCES[cls];
+  const fallback = DEFAULT_AI_COST_CAPS[cls];
+  const raw = (cloud() ? runtimeSetting(src.setting) : undefined) ?? env[src.env];
+  const n = raw === undefined || raw === '' ? fallback : Number(String(raw).replace(',', '.'));
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
 }
+
+/** All three caps (back office, /betrieb › Umsatz). */
+export const aiCostCaps = (env: NodeJS.ProcessEnv = process.env) => ({ haushalt: aiCostCap('haushalt', env), plus: aiCostCap('plus', env), trial: aiCostCap('trial', env) });
 
 /** What the household's AI cost this month (price currency). */
 export function aiCostThisMonth(householdId: string, month = monthOf()): number {
@@ -308,8 +339,18 @@ export function aiCostThisMonth(householdId: string, month = monthOf()): number 
 }
 
 export function aiCostReached(householdId: string): boolean {
-  const cap = aiCostCap();
+  const cap = aiCostCap(planOf(householdId));
   return cap > 0 && aiCostThisMonth(householdId) >= cap;
+}
+
+/** How many households reached their plan's cost cap this month (operator figures, no ids). */
+export function householdsAtCostCap(month = monthOf()): number {
+  if (!cloud()) return 0;
+  const rows = acc().accountsDb().prepare(`SELECT household_id, n FROM usage_counters WHERE kind = ? AND period = ?`).all(AI_COST_KIND, month) as { household_id: string; n: number }[];
+  return rows.filter((r) => {
+    const cap = aiCostCap(planOf(r.household_id));
+    return cap > 0 && r.n / 1e6 >= cap;
+  }).length;
 }
 
 /** Why AI is paused for the current household this month, or null (shown in /billing/status and the messages). */

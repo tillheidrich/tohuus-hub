@@ -210,7 +210,7 @@ export function legalCopy(k) {
         dl([
           ['Testphase', '14 Tage alles aus Plus, ohne Zahlungsdaten. Danach beginnt kein Abo automatisch.'],
           ['Haushalt', '3,99 € im Monat oder 34,99 € im Jahr. Dazu die ganze Geschichte mit Preisverlauf und Ausgaben, verbundene Haushalte, Bons, Screenshots und Fotos von Papierlisten mit KI lesen, 100 Nachrichten im Monat, 2 GB Speicher.'],
-          ['Plus', '5,99 € im Monat oder 59,99 € im Jahr. Dazu Wochenplan aus dem, was da ist, Monatsauswertung vom Assistenten, 1.500 Nachrichten im Monat, 5 GB Speicher.'],
+          ['Plus', '5,99 € im Monat oder 59,99 € im Jahr. Dazu Wochenplan aus dem, was da ist, Monatsauswertung vom Assistenten, 800 Nachrichten im Monat, 5 GB Speicher.'],
         ])
         + p('Maßgeblich ist der Preis, den der App Store beim Kauf anzeigt. Jeder neue Haushalt nutzt 14 Tage lang den Tarif Plus, ohne Zahlungsdaten und ohne dass danach automatisch ein Abo beginnt. Nach der Testphase oder wenn ein Abo endet, ist der Haushalt in der ToHuus Cloud nur noch lesbar: Ihr seht alles, könnt exportieren, löschen, ein Abo abschließen oder wiederherstellen, aber nichts Neues eintragen. Die Einkaufsliste lässt sich noch 7 Tage lang abhaken. Gelöscht wird dabei nichts. Wer ToHuus selbst betreibt, ist davon nicht betroffen.') },
 
@@ -224,7 +224,7 @@ export function legalCopy(k) {
       { id: 'kontingente', h: 'Kontingente und faire Nutzung', body:
         p('Damit der Dienst für alle bezahlbar bleibt, gelten je Haushalt diese Grenzen:')
         + dl([
-          ['Nachrichten an den Assistenten', 'Haushalt 100, Plus 1.500 im Monat. Ist das Kontingent aufgebraucht, versteht der Assistent weiter die üblichen Sätze wie „Milch ist alle“ ohne Sprachmodell. In Plus antwortet er über 1.500 langsamer, ab 3.000 Nachrichten oder bei sehr hohen Kosten für das Sprachmodell pausiert die KI bis zum Monatsende.'],
+          ['Nachrichten an den Assistenten', 'Haushalt 100, Plus 800 im Monat. Ist das Kontingent aufgebraucht, versteht der Assistent weiter die üblichen Sätze wie „Milch ist alle“ ohne Sprachmodell. In Plus antwortet er über 800 kürzer und langsamer, ab 1.500 Nachrichten oder bei sehr hohen Kosten für das Sprachmodell pausiert die KI bis zum Monatsende.'],
           ['Bons mit Sprachmodell lesen', 'Haushalt 40, Plus 60 am Tag. Bons als PDF der meisten Märkte brauchen kein Sprachmodell und sind nicht begrenzt.'],
           ['Importe mit Sprachmodell', 'Rezepte und Produkte aus Links, Texten oder Fotos: Haushalt 40, Plus 100 am Tag.'],
           ['Uploads', 'Haushalt 200, Plus 300 am Tag.'],
@@ -461,7 +461,7 @@ export function legalCopy(k) {
         dl([
           ['Trial', '14 days of everything in Plus, without payment details. No subscription starts automatically afterwards.'],
           ['Household (Haushalt)', '€3.99 a month or €34.99 a year. Adds the full history with price history and spending, connected households, receipts, screenshots and photos of paper lists read with AI, 100 messages a month, 2 GB storage.'],
-          ['Plus', '€5.99 a month or €59.99 a year. Adds the week plan from what is at home, a monthly review from the assistant, 1,500 messages a month, 5 GB storage.'],
+          ['Plus', '€5.99 a month or €59.99 a year. Adds the week plan from what is at home, a monthly review from the assistant, 800 messages a month, 5 GB storage.'],
         ])
         + p('The price shown by the App Store at the time of purchase applies. Every new household gets 14 days of the Plus plan, without payment details and without a subscription starting automatically afterwards. After the trial, or when a subscription ends, the household in ToHuus Cloud becomes read-only: you see everything and can export, delete, subscribe or restore, but not add anything new. The shopping list can still be checked off for 7 days. Nothing is deleted. Self-hosted ToHuus is not affected.') },
 
@@ -475,7 +475,7 @@ export function legalCopy(k) {
       { id: 'allowances', h: 'Allowances and fair use', body:
         p('To keep the service affordable for everyone, these limits apply per household:')
         + dl([
-          ['Assistant messages', 'Household 100, Plus 1,500 a month. When the allowance is used up, the assistant still understands the usual sentences such as “we are out of milk” without a language model. In Plus it answers more slowly above 1,500; from 3,000 messages or at very high language-model cost, AI pauses until the end of the month.'],
+          ['Assistant messages', 'Household 100, Plus 800 a month. When the allowance is used up, the assistant still understands the usual sentences such as “we are out of milk” without a language model. In Plus it answers more briefly and slowly above 800; from 1,500 messages or at very high language-model cost, AI pauses until the end of the month.'],
           ['Reading receipts with a language model', 'Household 40, Plus 60 a day. PDF receipts from most shops need no language model and are not limited.'],
           ['Imports with a language model', 'Recipes and products from links, texts or photos: Household 40, Plus 100 a day.'],
           ['Uploads', 'Household 200, Plus 300 a day.'],

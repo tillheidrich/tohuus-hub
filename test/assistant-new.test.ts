@@ -466,3 +466,29 @@ describe('with a model (fake)', () => {
     expect(cookStyle.cookStyles()).toEqual(before);
   });
 });
+
+// ------------------------------------------------------------------ Haushaltswissen with a model (18 Oct, knowledge-io.ts)
+
+describe('Haushaltswissen with a model: read with history, take over a pasted note', () => {
+  it('knowledge_find and knowledge_import come with the topic; the import has one undo', async () => {
+    const bodies = model([() => call('knowledge_import', { text: '## Mika\n- Handschuhgröße: 5\n- Mützengröße: 50' }), () => ({ role: 'assistant', content: 'Erledigt.' })]);
+    const r = await till.chat('Nimm diese Notiz auf bitte, sortier sie: Mika Handschuhgröße 5 und Mützengröße 50');
+    expect(r.json.mode).toBe('ai');
+    const names = bodies[0].tools.map((x: any) => x.function.name);
+    expect(names).toEqual(expect.arrayContaining(['knowledge_find', 'knowledge_import', 'knowledge_change']));
+    expect(toolResult(bodies[1])).toMatchObject({ ok: true, created: 2, updated: 0 });
+    expect(r.json.actions[0].undo).toMatch(/^[0-9a-f]{32}$/);
+    // Lea cannot take Till's import back
+    expect((await lea.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`)).status).toBe(404);
+
+    const b2 = model([() => call('knowledge_find', { query: 'Mika Handschuhgröße' }), () => ({ role: 'assistant', content: 'Größe 5.' })]);
+    await till.chat('Merk dir, Mika hat Handschuhgröße 6');
+    await till.chat('Welche Handschuhgröße hatte Mika vorher? Schau im Verlauf');
+    const found = toolResult(b2[1]);
+    expect(found.entries[0]).toMatchObject({ subject: 'Mika', property: 'Handschuhgröße', value: '6', visible_to: 'household' });
+    expect(found.entries[0].history[0]).toMatchObject({ value: '5' });
+
+    expect((await till.req('POST', `/api/assistant/undo/${r.json.actions[0].undo}`)).json.ok).toBe(true);
+    expect(memory.listMemory({ includeSensitive: true }).some((m: any) => /Mützengröße/.test(m.text))).toBe(false);
+  });
+});

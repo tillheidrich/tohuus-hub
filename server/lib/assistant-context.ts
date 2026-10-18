@@ -65,7 +65,7 @@ export function topicsOf(message: string): Topic[] {
     out.add('cooking');
   }
   // Haushaltswissen (knowledge.ts): sizes, measurements, numbers – change, delete, share or make private a card
-  if (/schuhgr|kleidergr|\bgröße|\bgroesse|\bmaß\b|\bmass\b|filtergr|zählernummer|zaehlernummer|seriennummer|kundennummer|rollo|für alle sichtbar|fuer alle sichtbar|nur für mich|nur fuer mich|privat mach|korrigier|shoe size|for everyone|only for me/.test(m)) out.add('knowledge');
+  if (/schuhgr|kleidergr|\bgröße|\bgroesse|\bmaß\b|\bmass\b|filtergr|zählernummer|zaehlernummer|seriennummer|kundennummer|rollo|für alle sichtbar|fuer alle sichtbar|nur für mich|nur fuer mich|privat mach|korrigier|shoe size|for everyone|only for me|notiz auf|notizen auf|importier|ins wissen|haushaltswissen|\bverlauf\b|vorher\?|take this note|import this/.test(m)) out.add('knowledge');
   return out.size ? [...out] : [...ALL_TOPICS];
 }
 

@@ -10,7 +10,7 @@ struct CookIdeasStrip: View {
     @State private var added: Set<Int> = []
 
     var body: some View {
-        Group {
+        LoadSlot {
             if !ideas.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
                     CookHeading(title: L("You can cook this today"))

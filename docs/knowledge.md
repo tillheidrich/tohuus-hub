@@ -71,6 +71,57 @@ Core helpers in memory.ts: `setEntryValue` (new value, old one into history), `v
 Every write answers `undo` – a token for the existing `POST /api/assistant/undo/:token` (assistant_undo, 24 h,
 only for the same person). `GET/POST/DELETE /api/memory` stays for old clients.
 
+## Import und Export (18 Oct 2026, `server/lib/knowledge-io.ts`)
+
+Fully without AI. Two steps, stateless: the app sends the file (or pasted text) to the preview, the person picks,
+then the same file again with the picked rows.
+
+| | |
+|---|---|
+| `POST /api/knowledge/import/preview` | multipart `file` **or** `{ text, format?, filename? }`, plus `target` (`household`\|`me`), `onDuplicate` (`update`\|`skip`) → `{ items, counts, skipped, truncated, room, needsHealthConsent }`. Nothing is written. |
+| `POST /api/knowledge/import` | the same + `pick` (indexes, JSON array; multipart: as a string) + `consent` → `{ created, updated, skipped, failed, undo }`. One undo token for everything (`assistant_undo` kind `knowledge_import`: new rows go, changed rows get their old value back). |
+| `GET /api/knowledge/export?format=md\|csv\|json&ids=1,2&q=` | a download (`Content-Disposition: attachment`, `no-store`), only what this person sees. |
+
+**Reading** (`parseImport`):
+- **Markdown**: headings = subject (the deepest one; „Notizen“, „Weiteres“, „Notes“, „Haushaltswissen“ … hold loose
+  lines), list points and short lines `Key: Value` (also Obsidian `Key:: Value`, `Key = Value`, tab) = one card,
+  other text = a note line (with the heading in front, cut to 300 characters at sentence ends), an indented line under
+  a point = its note. Front matter (YAML/TOML) dropped, code blocks skipped, tables read like CSV, setext headings.
+  Obsidian/Notion: `[[Link|Alias]]` and `[text](url)` become text, embeds/images go, `#tags` lose the `#`, Notion page
+  ids in headings go, `_(nur für mich)_` / `_(auch für Gäste)_` (our export) set the visibility. A time („um 10:30“)
+  is no key.
+- **Text**: every line stands for itself; `Mika:` alone is a heading until the next empty line; the reader without AI
+  (`parseStatement`) finds cards in sentences („Rollo Erdgeschoss 120 x 160“).
+- **CSV**: delimiter detected (`;` `,` tab `|`), RFC 4180 quotes, headers in German or English (Thema/Gegenstand/
+  Person/Ort, Eintrag/Eigenschaft/Name, Wert/Inhalt, Text, Notiz, Sichtbarkeit, Gäste …), without a header by position
+  (3+ columns: subject, property, value, note), our formula guard `'=` taken off again.
+- **JSON**: our export (`{ format: 'tohuus-knowledge', version: 1, entries }`), `{ entries }` or a plain list
+  (strings or objects). History is not imported (it belongs to the people who changed it).
+
+**Upload rules** (SECURITY.md): ≤ 512 KB, ≤ 5000 lines, ≤ 200 entries per import (the rest is cut, `truncated`);
+extension `.md/.markdown/.txt/.csv/.tsv/.json`, MIME `text/*`, JSON, CSV or `octet-stream`; the **bytes** decide:
+PDF, ZIP/Office, PNG/JPEG/GIF/WebP, gzip, RTF, executables, SQLite, OLE and NUL bytes → 415. UTF-8 (BOM ok), UTF-16
+(BOM), else Windows-1252 (Excel). Raw HTML never comes through: comments, `script/style/iframe/object` and all tags
+are dropped, entities become plain characters (the apps render text only). Control characters go.
+
+**Preview rules**: duplicates are the same subject + property (or the same line), whoever sees it – the one with the
+same visibility first – against what this person sees (never someone else's private cards) and inside the file
+(`twice`). Same value → `skip unchanged`; different → `update` (the card keeps its place and visibility, the old value
+goes into the history) or `skip exists` with `onDuplicate: skip`. Codes/passwords → `blocked secret`; no room left
+(300 rows) → `blocked limit`. Health-related lines are always **private** (never shared by an import); without the
+household's consent the apply answers 409 `health_consent` (the apps show their consent sheet and repeat with
+`consent: true`); the assistant and MCP leave them out instead.
+
+**Export**: Markdown (`# Haushaltswissen`, one `##` per subject sorted like the app, `- Property: Value`, note
+indented, plain lines under „Notizen“, private/guest marks), CSV (UTF-8 with BOM, `;` in German and `,` in English,
+cells starting with `= + - @` get a `'`), JSON (with the history this person may see – shared entries only from when
+they were shared, see `view()`). Photos are not exported (`photo: true` in JSON). All three import again without
+changes (round trip tested).
+
+Apps: web `KnowledgeIO.tsx` (header buttons „Importieren“ / „Exportieren“ on `/wissen`; export: everything or what
+the search shows), iPhone `KnowledgeIOSheets.swift` (menu „…“ in the toolbar; `fileImporter` for Files, paste field,
+preview with ticks, consent alert; export via `ShareLink`, which also offers „In Dateien sichern“).
+
 ## Reader without AI (`say`, `parseStatement`)
 
 „Mika Schuhgröße 28“, „Mikas Schuhgröße ist 29“, „Rollo Wohnzimmer 120 x 160“ (Wohnzimmer is a room → subject),
@@ -89,6 +140,22 @@ Property words: `PROPS` in knowledge.ts.
   pattern as receipt_change, pending per household). Health entries are never shared via the assistant.
 - `remember` / `forget` and the built-in reader („Mika hat jetzt 29“, „Welche Schuhgröße hat …?“) keep working on
   the same rows. Prompt size: the tool only comes with the topic/screen (test/assistant-eval keeps < 5500).
+
+## Assistant and MCP – who can do what (18 Oct 2026)
+
+| Function | Assistant without AI | Assistant with AI | MCP |
+|---|---|---|---|
+| Write down / correct a card | „Mika Schuhgröße 28“, „Merk dir …“, „Mika hat jetzt 29“ | `remember`, `knowledge_change set` (`only_me`) | `knowledge_set`, `remember` |
+| Ask | „Welche Schuhgröße hat Mika?“ | `knowledge_find` + context | `knowledge_search`, `knowledge_get` |
+| Earlier values | „Was war Mikas Mützengröße vorher?“, „Verlauf von …“ | `knowledge_find` (history) | `knowledge_get` (history) |
+| Delete | „Vergiss …“ (with undo) | `knowledge_change delete` (after a yes) | `knowledge_delete` |
+| Share / make private | „Mach … für alle sichtbar / nur für mich“ → „Ja“ | `knowledge_change share/private` (after a yes) | `knowledge_visibility` (member only) |
+| Take over a note | „Nimm diese Notiz auf:“ + text (one undo) | `knowledge_import` | `knowledge_import` |
+| Export | – (in the app) | – | `knowledge_export` |
+
+Without AI the sentences are read in `assistant-parse.ts` (`note_import`, `knowledge_history`,
+`knowledge_visibility`) and answered in `assistant.ts` without a model and without counting; a plain „Ja“ confirms
+the reader's own open question (`lastPending`, 10 minutes). Tests: `test/knowledge-io.test.ts`, `test/assistant-new.test.ts`.
 
 ## Apps (same on web and iPhone)
 
@@ -118,4 +185,4 @@ nach außen“). No labels (ADHS, personality types). Examples use Mira, Mika, S
 - The admin JSON export filters private rows but exports the full history of a shared entry (incl. values from before
   it was shared).
 - A deleted card keeps its photo file (needed for undo); no cleanup job yet.
-- MCP `remember` does not set `origin: 'mcp'` yet.
+- „Öffnen in …“ / share extension for .md/.csv files on the iPhone (document types in Info.plist + onOpenURL) – today the import goes through the Files picker.

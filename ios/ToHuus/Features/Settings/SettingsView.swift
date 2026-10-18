@@ -67,6 +67,10 @@ struct SettingsView: View {
                         } label: { Label(L("With or without AI"), systemImage: "sparkles") }
                     }
                     NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
+                    // "Deine Leiste": which areas sit in the tab bar next to Heute (per person, NavBarSettings.swift)
+                    if !app.isGuest {
+                        NavigationLink { NavBarSettingsView() } label: { Label(L("Your bar"), systemImage: "dock.rectangle") }
+                    }
                     if let api = app.api, !app.isGuest {
                         NavigationLink { StartModeView(api: api, isAdmin: app.isAdmin) } label: { Label(L("What should be tracked?"), systemImage: "checklist") }
                         LunchboxSettingsLink(api: api)

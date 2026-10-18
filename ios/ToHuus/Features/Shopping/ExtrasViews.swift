@@ -55,41 +55,41 @@ struct ExtrasListSection: View {
     let refresh: Int
     @State private var week: ExtrasWeek?
     @State private var open = false
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let w = week, w.on, let weekly = w.weekly, weekly > 0 {
-                Section {
-                    Button {
-                        withAnimation { open.toggle() }
-                    } label: {
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Label(w.line, systemImage: "sparkles").foregroundStyle(Theme.ink)
-                                Spacer()
-                                Text(w.over == true ? L("used up") : w.left.map { LF("%@ left", w.amount($0)) } ?? "")
-                                    .font(.caption).foregroundStyle(Theme.ink3)
-                            }
-                            meter(w, weekly: weekly)
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run(id: refresh) { week = try? await api.extrasWeek() }
+        if let w = week, w.on, let weekly = w.weekly, weekly > 0 {
+            Section {
+                Button {
+                    withAnimation { open.toggle() }
+                } label: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label(w.line, systemImage: "sparkles").foregroundStyle(Theme.ink)
+                            Spacer()
+                            Text(w.over == true ? L("used up") : w.left.map { LF("%@ left", w.amount($0)) } ?? "")
+                                .font(.caption).foregroundStyle(Theme.ink3)
                         }
+                        meter(w, weekly: weekly)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityHint(L("Shows what counts as extra this week"))
-                    if open {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(w.isMoney ? LF("Bought: %@. Still on the list: about %@.", w.amount(w.used), w.amount(w.planned))
-                                           : LF("Bought: %@. Still on the list: %@.", w.amount(w.used), w.amount(w.planned)))
-                            if let n = w.unpriced, n > 0 { Text(LF("%d without a price yet.", n)) }
-                            if !w.items.isEmpty { Text(w.items.map { ($0.done == true ? "✓ " : "") + $0.text }.joined(separator: " · ")) }
-                            if w.over == true { Text(L("This week’s extras are used up. Nothing is blocked – you decide.")) }
-                            Text(L("Mark a row as extra (or not) in its details."))
-                        }
-                        .font(.caption).foregroundStyle(Theme.ink3)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(L("Shows what counts as extra this week"))
+                if open {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(w.isMoney ? LF("Bought: %@. Still on the list: about %@.", w.amount(w.used), w.amount(w.planned))
+                                       : LF("Bought: %@. Still on the list: %@.", w.amount(w.used), w.amount(w.planned)))
+                        if let n = w.unpriced, n > 0 { Text(LF("%d without a price yet.", n)) }
+                        if !w.items.isEmpty { Text(w.items.map { ($0.done == true ? "✓ " : "") + $0.text }.joined(separator: " · ")) }
+                        if w.over == true { Text(L("This week’s extras are used up. Nothing is blocked – you decide.")) }
+                        Text(L("Mark a row as extra (or not) in its details."))
                     }
+                    .font(.caption).foregroundStyle(Theme.ink3)
                 }
             }
         }
-        .task(id: refresh) { week = try? await api.extrasWeek() }
     }
 
     private func meter(_ w: ExtrasWeek, weekly: Double) -> some View {

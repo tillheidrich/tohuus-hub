@@ -17,7 +17,7 @@ struct WhoPaidPanel: View {
     private var multi: Bool { members.count > 1 }
 
     var body: some View {
-        Group {
+        LoadSlot {
             if loaded, let info, multi || !care.isEmpty || me != nil {
                 VStack(alignment: .leading, spacing: Theme.Space.s3) {
                     Button { withAnimation(.easeOut(duration: 0.2)) { open.toggle() } } label: {

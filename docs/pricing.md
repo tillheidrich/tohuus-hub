@@ -1,6 +1,56 @@
 # Preise: kein Free in der Cloud, nach der Testphase „nur lesen“
 
-## Entscheidung vom 18.10.2026 (gilt)
+## Nachtrag 18.10.2026 (2): KI-Grenzen und Kostenbremse je Tarif (gilt)
+
+Till (18.10.2026): „Mache ich überhaupt Plus bei 1.500 KI-Nachrichten im Monat?“ Antwort: bei typischer Nutzung ja, deutlich. Wer die alten Grenzen ausreizt, kostete aber mehr, als ein Plus-Jahresabo nach Apple und USt. bringt. Deshalb neu:
+
+| | vorher | jetzt |
+|---|---|---|
+| Plus und Testphase: Nachrichten in voller Länge | 1.500 / Monat | **800 / Monat** |
+| Plus und Testphase: KI pausiert bis Monatsende ab | 3.000 | **1.500** (dazwischen kürzere Antworten, max. 250 Token) |
+| Haushalt: Nachrichten | 100 | 100 (unverändert) |
+| KI-Kostenbremse je Haushalt und Monat | 3,50 $ für alle | **Haushalt 1,50 $, Plus und Plus für immer 2,50 $, Testphase 1,00 $** |
+| Bons/Importe mit KI pro Tag | Haushalt 40/40, Plus 60/100 | unverändert (die Kostenbremse schützt) |
+| Preise | 3,99/34,99 €, 5,99/59,99 € | **unverändert** |
+
+**Wo:** `server/lib/plans.ts` (`PLUS_FAIR_MESSAGES`, `PLUS_HARD_MESSAGES`, `DEFAULT_AI_COST_CAPS`, `capClassOf`, `aiCostCap(plan)`, `householdsAtCostCap`), Einstellungen in `/betrieb` › Geld: `ai.household_cost_cap` (= Plus, wie bisher), neu `ai.household_cost_cap.haushalt` und `ai.household_cost_cap.trial`; Umgebung `AI_HOUSEHOLD_COST_CAP`, `…_HAUSHALT`, `…_TRIAL`. **Prüfen:** Steht in `/betrieb` noch ein gespeicherter Wert 3.5, gilt er weiter für Plus – Feld leeren.
+
+### Kosten je Vorgang (abgeleitet, nicht gemessen)
+
+Gemessen wurde die Prompt-Größe (`promptFor` mit einem Testhaushalt, 15 Einträge auf der Liste): System-Prompt mit Kontext 2.100–3.100 Zeichen, Werkzeugdefinitionen 0,9–10,4 Tsd. Zeichen (3–25 Werkzeuge je Thema; alle 45 zusammen 19 Tsd.), zusammen **≈ 850–3.850 Token** (3,5 Zeichen/Token). Dazu bis 12 frühere Nachrichten und je Werkzeug-Runde das Ergebnis (bis 8.000 Zeichen); bis 4 Runden je Nachricht (`MAX_ROUNDS`). Echte Token aus `ai_usage_daily` waren nicht lesbar (kein Zugriff in den Container); `/betrieb › Umsatz` zeigt sie ab jetzt je Tarif.
+
+| Vorgang (Mistral Small 2603, 0,15/0,60 $ je Mio.) | Eingabe / Ausgabe Token | Kosten |
+|---|---|---|
+| Nachricht leicht (1 Runde) | 2.500 / 120 | 0,045 ct $ |
+| Nachricht typisch (2 Runden, ein Werkzeug) | 7.700 / 240 | **0,13 ct $** |
+| Nachricht aufwendig (3 Runden, Rezept) | 27.000 / 900 | 0,46 ct $ |
+| Nachricht Maximum (4 Runden, voller Verlauf) | 54.000 / 1.600 | 0,9 ct $ |
+| Bon, 1 Foto (Bild ≈ 2.500 Token bei 1.600 px) | 3.100 / 1.200 | 0,12 ct $ |
+| Bon mit zweitem Versuch Mistral Large 4 (1,36/4,18 $) | + 3.100 / 1.200 | + 0,92 ct $ |
+| Bon im Mittel (Annahme: jeder 4. braucht Large) | | **≈ 0,35 ct $** |
+| Import Rezept (Link/Text/Foto) | 4.700 / 1.000 | 0,13–0,15 ct $ |
+| Wochenplan, Monatsauswertung | 5.000 / 3.000 | ≈ 0,26 ct $ |
+
+1 $ KI ≈ 0,91 € (Kurs 0,86 + 5,5 % OpenRouter-Gebühr, Annahme).
+
+### Deckungsbeitrag je Haushalt und Monat (€, nach 19 % USt. und Apple)
+
+Netto: Haushalt 2,85 € (Monat) / 2,08 € (Jahr), Plus 4,28 € / 3,57 € bei 15 %; bei 30 %: 2,35 / 1,72 / 3,52 / 2,94 €. Apple führt die USt. ab – Kleinunternehmer ändert daran nichts. Server/Speicher anteilig 0,05–0,12 € (Maximum: volle 2 bzw. 5 GB, 0,17 / 0,35 €).
+
+Nutzungsprofile: **leicht** 30 Nachrichten, 8 Bons; **typisch** Haushalt 100 Nachr. + 20 Bons (0,27 $), Plus 150 Nachr. + 20 Bons + 10 Importe (0,37 $); **stark** Haushalt 100 Nachr. + 120 Bons (0,72 $), Plus 600 Nachr. + 60 Bons + 30 Importe (1,77 $); **Maximum** = Kostenbremse voll.
+
+| Tarif (Apple 15 % / 30 %) | leicht | typisch | stark | Maximum alt (3,50 $) | Maximum neu |
+|---|---|---|---|---|---|
+| Haushalt Monat | 2,74 / 2,23 | 2,54 / 2,03 | 2,08 / 1,57 | **−0,50 / −1,00** | 1,32 / 0,82 |
+| Haushalt Jahr | 1,97 / 1,60 | 1,77 / 1,40 | 1,31 / 0,94 | **−1,26 / −1,63** | 0,55 / 0,18 |
+| Plus Monat | 4,15 / 3,40 | 3,87 / 3,12 | 2,55 / 1,80 | 0,75 / 0,00 | 1,66 / 0,91 |
+| Plus Jahr | 3,44 / 2,81 | 3,17 / 2,53 | 1,84 / 1,21 | 0,05 / **−0,58** | 0,95 / 0,32 |
+
+Ohne Bremse hätte ein Plus-Haushalt an den alten Grenzen (3.000 Nachrichten, 60 Bons/Tag, 100 Importe/Tag) rund 16 $ im Monat gekostet. **Testphase:** typisch ≈ 0,10 $ (40 Nachrichten, 6 Bons); höchstens 1 $ je Kalendermonat (eine Testphase kann zwei Monate berühren: ≤ 1,81 €; vorher bis 6,35 €). Bei 10 % Umwandlung kostet die Testphase je zahlendem Haushalt ≈ 0,90 € einmalig.
+
+---
+
+## Entscheidung vom 18.10.2026 (gilt, außer KI-Grenzen und Kostenbremse – ersetzt durch Nachtrag (2))
 
 Till (18.10.2026, 03:02): „Free-User sollten wirklich nur das Nötigste haben und schnell checken, dass es ohne das Abo oder eigenen Server keinen Sinn macht.“ Entscheidung 03:06: **ToHuus Cloud hat kein Free mehr.** Grundlage: Wiki „Monetarisierung ToHuus ab Store-Start“ (18.10.2026).
 

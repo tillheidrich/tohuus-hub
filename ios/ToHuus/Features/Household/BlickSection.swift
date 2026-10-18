@@ -43,44 +43,44 @@ struct BlickSection: View {
         "money": ("wallet.pass", "Money", "brought in receipts and bills"),
         "tasks": ("checklist", "Tasks", "did household tasks"),
     ]
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let b = blick, !b.areas.contains(where: \.active) {
-                // nothing to show yet: the mental load check still is
-                Section { LoadCardsLink(api: api) }
-            }
-            if let b = blick, b.areas.contains(where: \.active) {
-                Section {
-                    ForEach(b.areas.filter(\.active)) { a in areaRow(a) }
-                    LoadCardsLink(api: api)
-                    if !b.looseTasks.isEmpty {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Label(L("Nobody keeps these in mind yet"), systemImage: "eye").font(.subheadline.weight(.semibold))
-                            ForEach(b.looseTasks) { x in
-                                Button(x.name) { onOpenTask(x.id) }.font(.subheadline).frame(minHeight: 32)
-                            }
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run(id: refresh) { blick = try? await api.blick() }
+        if let b = blick, !b.areas.contains(where: \.active) {
+            // nothing to show yet: the mental load check still is
+            Section { LoadCardsLink(api: api) }
+        }
+        if let b = blick, b.areas.contains(where: \.active) {
+            Section {
+                ForEach(b.areas.filter(\.active)) { a in areaRow(a) }
+                LoadCardsLink(api: api)
+                if !b.looseTasks.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label(L("Nobody keeps these in mind yet"), systemImage: "eye").font(.subheadline.weight(.semibold))
+                        ForEach(b.looseTasks) { x in
+                            Button(x.name) { onOpenTask(x.id) }.font(.subheadline).frame(minHeight: 32)
                         }
                     }
-                    if b.members >= 2 {
-                        Toggle(isOn: Binding(get: { b.meCompare }, set: { on in Task { await setCompare(on) } })) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L("Compare shares"))
-                                Text(b.compare ? L("Everyone agreed – shares are shown.") : LF("Shares appear only when everyone agrees (%d of %d).", b.optedIn, b.members))
-                                    .font(.caption).foregroundStyle(Theme.ink3)
-                            }
-                        }
-                        .tint(Theme.primary)
-                    }
-                    if let error { Text(error).font(.caption).foregroundStyle(Theme.empty) }
-                } header: {
-                    Text(L("Who keeps what in mind"))
-                } footer: {
-                    Text(LF("The last %d days. Noticing and planning is work too.", b.days))
                 }
+                if b.members >= 2 {
+                    Toggle(isOn: Binding(get: { b.meCompare }, set: { on in Task { await setCompare(on) } })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("Compare shares"))
+                            Text(b.compare ? L("Everyone agreed – shares are shown.") : LF("Shares appear only when everyone agrees (%d of %d).", b.optedIn, b.members))
+                                .font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    .tint(Theme.primary)
+                }
+                if let error { Text(error).font(.caption).foregroundStyle(Theme.empty) }
+            } header: {
+                Text(L("Who keeps what in mind"))
+            } footer: {
+                Text(LF("The last %d days. Noticing and planning is work too.", b.days))
             }
         }
-        .task(id: refresh) { blick = try? await api.blick() }
     }
 
     private func areaRow(_ a: Blick.Area) -> some View {

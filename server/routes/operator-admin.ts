@@ -76,7 +76,9 @@ export function operatorAdmin(fresh: import('express').RequestHandler) {
     points: z.enum(['on', 'off']),
     year_review: z.enum(['on', 'off']),
     // monetisation (18 Oct 2026): cost cap per household and month in the AI price currency, Apple's commission share
-    'ai.household_cost_cap': z.string().trim().regex(/^\d{1,3}([.,]\d{1,2})?$/, 'amount like 3.5'),
+    'ai.household_cost_cap': z.string().trim().regex(/^\d{1,3}([.,]\d{1,2})?$/, 'amount like 2.5'),
+    'ai.household_cost_cap.haushalt': z.string().trim().regex(/^\d{1,3}([.,]\d{1,2})?$/, 'amount like 1.5'),
+    'ai.household_cost_cap.trial': z.string().trim().regex(/^\d{1,3}([.,]\d{1,2})?$/, 'amount like 1'),
     'billing.commission': z.string().trim().regex(/^0([.,]\d{1,3})?$/, 'share like 0.15'),
     'trial.after': z.enum(['free', 'readonly']),
   };

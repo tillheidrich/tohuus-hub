@@ -155,7 +155,7 @@ struct PaywallView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let product {
-                VStack(alignment: .leading, spacing: 2) {
+                CardStack(spacing: 2) {
                     Text("\(product.displayPrice) \(product.periodLabel)").font(.headline).foregroundStyle(Theme.ink)
                     IntroOfferLine(product: product)
                     if yearly, let monthly = storeKit.product(plan: plan, yearly: false) {
@@ -312,7 +312,7 @@ enum PlanText {
         switch plan {
         case "plus":
             return [L("Everything in Household"), L("Week plan from what you have at home"), L("A look back at every month"), L("New ToHuus recipes for the season, with pictures"),
-                    LF("%d assistant messages a month, then slower; from %d AI pauses until the month ends", 1500, 3000), LF("%@ for receipts and photos", "5 GB")]
+                    LF("%d assistant messages a month, then slower; from %d AI pauses until the month ends", 800, 1500), LF("%@ for receipts and photos", "5 GB")]
         case "haushalt":
             return [L("The whole history: prices, spending, what you buy how often"), L("Connected households and shared lists"),
                     LF("%d assistant messages a month", 100), LF("%@ for receipts and photos", "2 GB")]
@@ -329,7 +329,7 @@ struct IntroOfferLine: View {
     @State private var eligible = false
 
     var body: some View {
-        Group {
+        LoadSlot {
             if eligible, let offer = product.subscription?.introductoryOffer {
                 Text(text(offer)).font(.caption).foregroundStyle(Theme.ink2).fixedSize(horizontal: false, vertical: true)
             }

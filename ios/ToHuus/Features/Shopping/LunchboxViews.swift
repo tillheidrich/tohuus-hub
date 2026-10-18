@@ -9,44 +9,44 @@ struct LunchboxSuggestionSection: View {
     @State private var pausing = false
     @State private var until = Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
     @State private var busy = false
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let due = box?.due, !(due.items ?? []).isEmpty {
-                Section {
-                    VStack(alignment: .leading, spacing: Theme.Space.s2) {
-                        Label {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L("Lunchbox for the week")).font(.subheadline.weight(.semibold))
-                                Text((due.items ?? []).joined(separator: ", ")).font(.caption).foregroundStyle(Theme.ink2)
-                            }
-                        } icon: {
-                            Image(systemName: "takeoutbag.and.cup.and.straw").foregroundStyle(Theme.primaryText)
-                        }
-                        if pausing {
-                            DatePicker(L("Holidays until"), selection: $until, in: Date()..., displayedComponents: .date)
-                                .font(.subheadline)
-                        }
-                        HStack {
-                            Button(L("Put on the list")) { Task { await add() } }
-                                .buttonStyle(.borderedProminent).tint(Theme.primary)
-                                .disabled(busy)
-                            if pausing {
-                                Button(L("Pause")) { Task { await pause() } }.buttonStyle(.bordered)
-                            } else {
-                                Button { pausing = true } label: { Label(L("Holidays"), systemImage: "sun.horizon") }
-                                    .buttonStyle(.bordered)
-                            }
-                        }
-                        .controlSize(.small)
-                    }
-                    .padding(.vertical, 4)
-                }
-                .listRowBackground(Theme.primarySoft)
-            }
-        }
-        .task(id: store.revision("shopping")) {
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run(id: store.revision("shopping")) {
             box = try? await store.api.lunchbox()
+        }
+        if let due = box?.due, !(due.items ?? []).isEmpty {
+            Section {
+                VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("Lunchbox for the week")).font(.subheadline.weight(.semibold))
+                            Text((due.items ?? []).joined(separator: ", ")).font(.caption).foregroundStyle(Theme.ink2)
+                        }
+                    } icon: {
+                        Image(systemName: "takeoutbag.and.cup.and.straw").foregroundStyle(Theme.primaryText)
+                    }
+                    if pausing {
+                        DatePicker(L("Holidays until"), selection: $until, in: Date()..., displayedComponents: .date)
+                            .font(.subheadline)
+                    }
+                    HStack {
+                        Button(L("Put on the list")) { Task { await add() } }
+                            .buttonStyle(.borderedProminent).tint(Theme.primary)
+                            .disabled(busy)
+                        if pausing {
+                            Button(L("Pause")) { Task { await pause() } }.buttonStyle(.bordered)
+                        } else {
+                            Button { pausing = true } label: { Label(L("Holidays"), systemImage: "sun.horizon") }
+                                .buttonStyle(.bordered)
+                        }
+                    }
+                    .controlSize(.small)
+                }
+                .padding(.vertical, 4)
+            }
+            .listRowBackground(Theme.primarySoft)
         }
     }
 
@@ -150,19 +150,15 @@ struct LunchboxSettingsView: View {
 /// Settings row: "Brotdosen-Klassiker" – only for families (web: shown on Settings › Household when form = family).
 struct LunchboxSettingsLink: View {
     let api: APIClient
-    @State private var family = false
+    @Environment(AppModel.self) private var app
 
+    // a row inside Settings' section: no own load here (a .task on the empty row would never run, and a hidden
+    // row can't host one without leaving an empty line) – AppModel knows the form from GET /api/me
     var body: some View {
-        Group {
-            if family {
-                NavigationLink { LunchboxSettingsView(api: api) } label: {
-                    Label(L("Lunchbox regulars"), systemImage: "takeoutbag.and.cup.and.straw")
-                }
+        if app.householdForm == "family" && app.isMemberUser {
+            NavigationLink { LunchboxSettingsView(api: api) } label: {
+                Label(L("Lunchbox regulars"), systemImage: "takeoutbag.and.cup.and.straw")
             }
-        }
-        .task {
-            let me = try? await api.meLite()
-            family = me?.home?["form"]?.string == "family" && me?.isMember == true
         }
     }
 }

@@ -1,0 +1,47 @@
+/* "Deine Leiste" (navbar.tsx, docs/navigation.md) */
+.navbar-card {
+  max-width: 560px;
+}
+.navbar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+.navbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--line);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.navbar-row:first-child {
+  border-top: 0;
+}
+.navbar-row.fixed {
+  color: var(--ink-2);
+}
+.navbar-ic {
+  width: 20px;
+  display: inline-flex;
+  justify-content: center;
+  color: var(--ink-3);
+}
+.navbar-ic.grip {
+  cursor: grab;
+}
+.navbar-acts {
+  display: inline-flex;
+  gap: 2px;
+}
+/* long press on the phone bar opens the editor – no link preview / callout on top of it */
+.tabbar {
+  -webkit-touch-callout: none;
+}

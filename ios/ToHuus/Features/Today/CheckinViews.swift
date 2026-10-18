@@ -88,7 +88,7 @@ struct CheckinCard: View {
     private var count: Int { picked.count + extra.count + (text.trimmingCharacters(in: .whitespaces).isEmpty ? 0 : 1) }
 
     var body: some View {
-        Group {
+        LoadSlot {
             if let d = data, d.ask {
                 Card(title: d.question ?? L("What did you solve today?"), systemImage: "moon.stars") {
                     VStack(alignment: .leading, spacing: Theme.Space.s3) {
@@ -252,26 +252,26 @@ struct CheckinSettingSection: View {
     let api: APIClient
     @State private var on: Bool?
     @State private var error: String?
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let on {
-                Section {
-                    Toggle(isOn: Binding(get: { on }, set: { v in Task { await set(v) } })) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(L("Ask in the evening what got solved"))
-                            Text(L("On Heute from 5 pm, every other evening at most. No push, no streak."))
-                                .font(.caption).foregroundStyle(Theme.ink3)
-                        }
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run { on = (try? await api.checkin())?.on }
+        if let on {
+            Section {
+                Toggle(isOn: Binding(get: { on }, set: { v in Task { await set(v) } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Ask in the evening what got solved"))
+                        Text(L("On Heute from 5 pm, every other evening at most. No push, no streak."))
+                            .font(.caption).foregroundStyle(Theme.ink3)
                     }
-                    .tint(Theme.primary)
-                    if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
-                } footer: {
-                    Text(L("Only for you – the others decide for themselves."))
                 }
+                .tint(Theme.primary)
+                if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
+            } footer: {
+                Text(L("Only for you – the others decide for themselves."))
             }
         }
-        .task { on = (try? await api.checkin())?.on }
     }
 
     private func set(_ v: Bool) async {

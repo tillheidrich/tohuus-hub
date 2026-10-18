@@ -32,16 +32,17 @@ import geld from './posts/b-geld.mjs';
 import kochen from './posts/c-kochen.mjs';
 import zuhause from './posts/d-zuhause.mjs';
 import aufgaben from './posts/e-aufgaben.mjs';
+import einOrt from './posts/f-ein-ort.mjs';
 
 export const BLOG_DIR = { de: 'ratgeber', en: 'blog' };
 
 export const BLOG_COPY = {
   de: {
-    title: 'Ratgeber', label: 'Ratgeber', h1: 'Einkauf, Kochen, Geld und Aufgaben im Haushalt',
+    title: 'Ratgeber', label: 'Ratgeber', h1: 'Einkauf, Aufgaben, Kochen, Geld und Wissen im Haushalt',
     lede: 'Praktische Antworten für Familien, Paare, WGs und alle, die allein wohnen: wie ihr Einkauf, Essensplanung, Haushaltsgeld und Aufgaben organisiert.',
     desc: 'Ratgeber von ToHuus: Einkaufslisten teilen, Essen planen, Haushaltsgeld im Blick behalten, für Familien, Paare und WGs.',
     back: 'Alle Beiträge', other: 'English version', published: 'Veröffentlicht', updated: 'Aktualisiert', faq: 'Häufige Fragen',
-    help: 'Passend aus der Hilfe', tryIt: 'ToHuus ausprobieren', tryText: 'ToHuus merkt sich für euren Haushalt, was da ist, was fehlt und was es kostet.',
+    help: 'Passend aus der Hilfe', tryIt: 'ToHuus ausprobieren', tryText: 'Ein Ort für den Haushalt: was fehlt, was ansteht, was zu tun ist, was es kostet und was ihr übers Zuhause wisst.',
     sources: 'Quellen', source: 'Quelle:', factsHere: 'Fakten zum Mitnehmen', factsNote: 'Jede Karte lässt sich als Bild speichern oder auf dem Handy direkt teilen.', factsAll: 'Alle Fakten',
     factsTitle: 'Fakten rund um Einkauf, Kochen und Haushaltsgeld', factsH1: 'Fakten zum Mitnehmen', factsLink: 'Alle Fakten als Karten',
     factsLede: '{n} Zahlen aus unseren Beiträgen, jede mit Quelle. Jede Karte lässt sich als Bild speichern oder teilen.',
@@ -53,7 +54,7 @@ export const BLOG_COPY = {
     lede: 'Practical answers for families, couples and flatshares: how to organise shopping, meal planning and household money together.',
     desc: 'The ToHuus blog: sharing a shopping list, planning meals and keeping an eye on household money, for families, couples and flatshares.',
     back: 'All posts', other: 'Deutsche Version', published: 'Published', updated: 'Updated', faq: 'Frequently asked questions',
-    help: 'From the help', tryIt: 'Try ToHuus', tryText: 'ToHuus remembers what is at home, what is missing and what it costs.',
+    help: 'From the help', tryIt: 'Try ToHuus', tryText: 'One place for the household: what is missing, what is coming up, what needs doing, what it costs and what you know about your home.',
     sources: 'Sources', source: 'Source:', factsHere: 'Facts to take away', factsNote: 'Every card can be saved as an image or shared straight from your phone.', factsAll: 'All facts',
     factsTitle: 'Facts on shopping, cooking and household money', factsH1: 'Facts to take away', factsLink: 'All facts as cards',
     factsLede: '{n} figures from our posts, each with its source. Every card can be saved as an image or shared.',
@@ -64,7 +65,7 @@ export const BLOG_COPY = {
 
 /** The posts: German ones in site/src/posts/<group>.mjs (one file per topic group), English ones to follow. */
 export const POSTS = {
-  de: [...einkauf, ...geld, ...kochen, ...zuhause, ...aufgaben],
+  de: [...einkauf, ...geld, ...kochen, ...zuhause, ...aufgaben, ...einOrt],
   en: [],
 };
 

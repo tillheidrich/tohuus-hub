@@ -139,6 +139,33 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 | `forget` | Forget something ToHuus remembers (by id or text) |
 | `household_context` | The household right now: people (likes/dislikes; health data only with consent), open list, due by rhythm, week plan, money this month, what ToHuus remembers (read-only) |
 
+### Haushaltswissen and tasks (9) – 18 Oct 2026
+
+`server/mcp/tools-knowledge.ts`, logic in `server/lib/knowledge.ts` / `knowledge-io.ts` (docs/knowledge.md).
+
+| Tool | |
+|---|---|
+| `knowledge_search` | Cards "subject · property: value" and note lines, by words; each with who sees it and its earlier values (read-only) |
+| `knowledge_get` | One card by id with its visible history (read-only) |
+| `knowledge_export` | The knowledge as file text: `md`, `csv` or `json` (read-only) |
+| `knowledge_set` | New card or new value (old one into the history); `only_me` for a member connection |
+| `knowledge_import` | A pasted note/list (Markdown, text, CSV, our JSON) → cards and note lines, duplicates updated |
+| `knowledge_visibility` | Share a private card / make a household card private (member connection only; health cards are shared only in the app) |
+| `knowledge_delete` | Delete one card (`destructiveHint`) |
+| `tasks_coming_up` | Heute › Demnächst: bins by the evening they go out, tomorrow, lead times (read-only) |
+| `undo_task_done` | Take back the newest "done" of a task (app rules: own ticks, others only an admin member) |
+
+**Who is asking:** an OAuth connection acts as its member – it sees household cards plus that member's own private
+ones, never anyone else's. An API token acts for the household: household cards only; `only_me`, sharing and
+health-related cards are refused (409 `health_person`, no person to keep them private for), and `undo_task_done`
+needs a member. Health-related cards are filtered like all MCP answers (`hidden_health_entries` counts them) unless
+the household shares health data with AI **and** the connection has `mcp:health`. `remember` now stores `origin: mcp`.
+
+**Read-only:** an `mcp:read` connection and a cloud household without a plan (`planOf() === 'readonly'`, Build 15)
+get only `knowledge_search`, `knowledge_get`, `knowledge_export`, `tasks_coming_up` (plus the other read tools);
+the write tools are not even listed. Tests: `test/knowledge-io.test.ts` › "MCP" (tools/list and tools/call over HTTP
+with an API token, an OAuth read+write member and an OAuth read-only member).
+
 ### Places (4)
 
 `get_home_setup`, `set_household_form`, `add_place`, `update_place` (`server/mcp/tools-places.ts`).
@@ -147,7 +174,7 @@ An "AI assistant" token can only reach `/mcp`, nothing else in the API. The tran
 
 `region_info`, `send_household_message`, `display_status`, `print_ticket`, `send_ticket`, `backup_now`, `household_members`, `getting_started_status`, `data_overview`
 
-Per module: core 23, fresh 6, labels 5, shop 3, share 6, cook2 3, recipes2 4, people 3, plan2 10, party 4, menu 4, kids 2, away 5, home 5, spend2 4, retail 2, quality 4, ha2 4, intl 1, channels 1, kiosk 1, print 2, data 2, onboard 1, tour 1, places 4, features 4. Total 114.
+Per module (before 18 Oct): core 23, fresh 6, labels 5, shop 3, share 6, cook2 3, recipes2 4, people 3, plan2 10, party 4, menu 4, kids 2, away 5, home 5, spend2 4, retail 2, quality 4, ha2 4, intl 1, channels 1, kiosk 1, print 2, data 2, onboard 1, tour 1, places 4, features 4. Total 114, plus knowledge 9 (18 Oct).
 
 To count them yourself:
 

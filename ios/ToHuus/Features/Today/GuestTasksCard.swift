@@ -41,7 +41,7 @@ struct GuestTasksCard: View {
     @State private var error: String?
 
     var body: some View {
-        Group {
+        LoadSlot {
             if !tasks.isEmpty {
                 Card(title: L("Your tasks here"), systemImage: "checklist") {
                     VStack(alignment: .leading, spacing: Theme.Space.s3) {

@@ -63,6 +63,7 @@ import { register as register_places } from './tools-places.js';
 import { register as register_list2 } from './tools-list2.js';
 import { register as register_wish } from './tools-wish.js';
 import { register as register_house } from './tools-house.js';
+import { register as register_knowledge } from './tools-knowledge.js';
 import { norm } from '../lib/text.js';
 import { signImagesInHtml } from '../lib/images.js';
 import { entitlement, planOf } from '../lib/plans.js';
@@ -130,7 +131,8 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
         "Answer in the user's language. Product, location and recipe names are stored in the household's language - use them as they are. " +
         'YOU read photos (receipt, freezer, recipe card) yourself and pass the recognised data in structured form: ' +
         'purchases/receipts → record_purchase (by default queued for review in the app), recipes → save_recipe. ' +
-        'If a product name is unclear, use search_stock before changing stock.',
+        'If a product name is unclear, use search_stock before changing stock. ' +
+        'Sizes, measurements, numbers and notes the household wrote down: knowledge_search (write with knowledge_set or knowledge_import, only when asked).',
     },
   ));
   // OAuth scope mcp:read: tools that are not marked read-only are not offered at all (fail closed)
@@ -623,6 +625,7 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
   register_ha2(s, actorName);
   register_menu(s, actorName);
   register_features(s, actorName);
+  register_knowledge(s, actorName);
   return s;
 }
 

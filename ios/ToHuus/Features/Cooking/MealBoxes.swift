@@ -13,7 +13,7 @@ struct PlanBoxPicksSection: View {
     @State private var boxes: [LeftoverBox] = []
 
     var body: some View {
-        Group {
+        LoadSlot {
             if !boxes.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
                     CookHeading(title: L("Leftovers & frozen"), hint: L("Already cooked – plan it and just warm it up."))

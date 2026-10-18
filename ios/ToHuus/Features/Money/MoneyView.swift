@@ -27,7 +27,7 @@ struct MoneyView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                CardStack(spacing: Theme.Space.s4) {
                     if !(meta?.members ?? []).isEmpty { MoneyViewSwitch(view: $view) }
                     if view == "mine" {
                         Label(L("Only what belongs to you: your personal entries and items marked for you. Nobody else sees them."), systemImage: "lock")

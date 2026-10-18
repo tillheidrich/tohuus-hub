@@ -87,6 +87,10 @@ final class AppModel {
     func moduleOn(_ key: String) -> Bool { modules[key] ?? true }
     /// a household of one: "Bring mir was" (asking someone at home) is hidden, like on the web
     private(set) var singleHousehold = false
+    /// who lives here (GET /api/me → home.form: single|couple|family|shared|…), nil until loaded
+    private(set) var householdForm: String?
+    /// a person of the household, not a device or service login (GET /api/me → actor.kind == user)
+    private(set) var isMemberUser = false
     /// a permanent guest (Mehr shows the handover shared with them instead of trips and care)
     private(set) var isGuest = false
     /// the permanent guest's level (order | stock | recipes | family | paused) – Mehr filters like the web's guestAllows
@@ -102,11 +106,14 @@ final class AppModel {
             isChild = me.isChild
             if let m = me.modules { modules = m }
             singleHousehold = me.isSingleHousehold
+            householdForm = me.home?["form"]?.string
+            isMemberUser = me.actor?["kind"]?.string == "user"
             isGuest = me.isGuest
             guestLevel = me.guestLevel
             isAdmin = me.role == "admin"
             householdLanguage = me.language
             if let p = me.listPrefs { ListPrefsSync.adopt(p) }
+            NavBarPrefs.shared.adopt(me.nav, api: api)
             ShareFooter.adopt(site: me.siteUrl, on: me.shareFooter)
         }
         if let s: AIStatus = try? await api.get("api/assistant/status") {

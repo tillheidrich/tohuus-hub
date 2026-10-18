@@ -14,7 +14,7 @@ interface RevenueView {
   cohorts: { week: string; signups: N; trialStarted: N; trialEnded: N; paidByDay35: N; rate: number | null; final: boolean }[];
   notifications: ({ week: string } & Record<string, number>)[];
   purchases: { plan: string; period: string; n: N }[];
-  ai: { byPlan: { month: string; plan: string; requests: number; cost: number }[]; limitsReached: { overFairUse: N; atHardLimit: N; atCostCap: N; costCap: number } };
+  ai: { byPlan: { month: string; plan: string; requests: number; cost: number }[]; limitsReached: { overFairUse: N; atHardLimit: N; atCostCap: N; costCap: number; costCaps?: { haushalt: number; plus: number; trial: number }; fairUse?: number; hardLimit?: number } };
   events: { event: string; total: N; byPlatform: Record<string, N> }[];
 }
 
@@ -99,9 +99,16 @@ export function OperatorRevenue() {
         <Section title={t('Households over the limits this month')}>
           <Rows
             rows={[
-              [t('Over 1,500 messages (slower)'), c(d.ai.limitsReached.overFairUse)],
-              [t('At 3,000 messages (paused)'), c(d.ai.limitsReached.atHardLimit)],
-              [t('At the cost cap of {cap}', { cap: `${d.ai.limitsReached.costCap} ${d.assumptions.aiCurrency}` }), d.ai.limitsReached.atCostCap === null && d.ai.limitsReached.costCap === 0 ? '–' : c(d.ai.limitsReached.atCostCap)],
+              [t('Over {n} messages (slower)', { n: (d.ai.limitsReached.fairUse ?? 800).toLocaleString(locale()) }), c(d.ai.limitsReached.overFairUse)],
+              [t('At {n} messages (paused)', { n: (d.ai.limitsReached.hardLimit ?? 1500).toLocaleString(locale()) }), c(d.ai.limitsReached.atHardLimit)],
+              [
+                t('At the cost cap of {cap}', {
+                  cap: d.ai.limitsReached.costCaps
+                    ? `${t('Household plan')} ${d.ai.limitsReached.costCaps.haushalt} · Plus ${d.ai.limitsReached.costCaps.plus} · ${t('Trial')} ${d.ai.limitsReached.costCaps.trial} ${d.assumptions.aiCurrency}`
+                    : `${d.ai.limitsReached.costCap} ${d.assumptions.aiCurrency}`,
+                }),
+                d.ai.limitsReached.atCostCap === null ? '–' : c(d.ai.limitsReached.atCostCap),
+              ],
             ]}
           />
         </Section>

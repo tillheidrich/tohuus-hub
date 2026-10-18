@@ -4,50 +4,70 @@ import SwiftUI
 /// "Check now". Hidden in ToHuus Cloud (the server answers `available: false`) – there the receipt address does the job.
 struct InboxStatusCard: View {
     let store: ServerStore
+    /// a row of its own in a List (Belege) instead of a card in a scroll view
+    var inList = false
     @Environment(AppModel.self) private var app
     @State private var info: InboxInfo?
     @State private var checking = false
     @State private var toast: ToastMessage?
     @State private var showSettings = false
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let d = info, d.available != false {
-                if !d.configured {
-                    if app.isAdmin {
-                        Button { showSettings = true } label: {
-                            HStack(alignment: .top, spacing: Theme.Space.s3) {
-                                icon
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(L("Receipts by e-mail")).font(.headline).foregroundStyle(Theme.ink)
-                                    Text(L("Connect a mailbox once – eBons and pickup notices then arrive here by themselves."))
-                                        .font(.subheadline).foregroundStyle(Theme.ink2)
-                                }
-                                Spacer(minLength: 0)
-                                Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.ink3)
+        // not a Group: .task on an empty Group never runs, the card would never load (Design/LoadSlot.swift)
+        if inList {
+            // a row of its own in a List (Belege), as before: no background, slim insets
+            // no invisible view to hang a .task on in a List: load from the body
+            let _ = loader.run(id: store.revision("inbox")) { await load() }
+            if let d = info, d.available != false, d.configured || app.isAdmin {
+                Section { sheets(card).toast($toast) }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            }
+        } else {
+            sheets(LoadSlot { card }).task(id: store.revision("inbox")) { await load() }.toast($toast)
+        }
+    }
+
+    @ViewBuilder private var card: some View {
+        if let d = info, d.available != false {
+            if !d.configured {
+                if app.isAdmin {
+                    Button { showSettings = true } label: {
+                        HStack(alignment: .top, spacing: Theme.Space.s3) {
+                            icon
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L("Receipts by e-mail")).font(.headline).foregroundStyle(Theme.ink)
+                                Text(L("Connect a mailbox once – eBons and pickup notices then arrive here by themselves."))
+                                    .font(.subheadline).foregroundStyle(Theme.ink2)
                             }
-                            .padding(Theme.Space.s4)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
-                            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
-                            .contentShape(Rectangle())
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.ink3)
                         }
-                        .buttonStyle(.plain)
+                        .padding(Theme.Space.s4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+                        .contentShape(Rectangle())
                     }
-                } else {
-                    configured(d)
+                    .buttonStyle(.plain)
                 }
+            } else {
+                configured(d)
             }
         }
-        .task(id: store.revision("inbox")) { info = try? await store.api.inbox() }
-        .sheet(isPresented: $showSettings, onDismiss: { store.touch("inbox") }) {
+    }
+
+    private func load() async { info = try? await store.api.inbox() }
+
+    private func sheets(_ v: some View) -> some View {
+        v.sheet(isPresented: $showSettings, onDismiss: { store.touch("inbox") }) {
             NavigationStack {
                 // Settings › Access & AI › receipt inbox (Settings/Integrations, same screen as in Settings)
                 MailInboxView(api: store.api)
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { showSettings = false } } }
             }
         }
-        .toast($toast)
     }
 
     private var icon: some View {

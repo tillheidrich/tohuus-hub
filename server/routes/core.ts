@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { config, smtpEnabled } from '../config.js';
 import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
+import { navFor } from '../lib/nav-prefs.js';
 import { listPrefs } from '../lib/list2.js';
 import { modules } from '../lib/modules.js';
 import { homeSetup, localizeBaseNames } from '../lib/places.js';
@@ -106,6 +107,8 @@ r.get('/me', (req, res) => {
     listPrefs: listPrefs(actor.kind === 'user' ? actor.userId : null),
     // "Was nutzen wir?" – areas the household switched off are hidden in the app (data stays)
     modules: modules(),
+    // "Deine Leiste": the areas this person keeps in the bar at the bottom (null = default, lib/nav-prefs.ts)
+    nav: navFor(actor.kind === 'user' ? actor.userId : null),
     version: process.env.npm_package_version ?? '0.1.0',
     // stamps the web app's offline queue (shop/offline.ts) – changes are only replayed for this household and person
     scope: queueScope(actor.kind === 'user' ? actor.userId : null, actor.kind),

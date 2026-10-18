@@ -16,7 +16,8 @@ struct TasksTodayCard: View {
     private var doneToday: Int { tasks.filter { $0.lastDone.map { String($0.prefix(10)) } == today }.count }
 
     var body: some View {
-        Group {
+        // a LoadSlot, not a Group: .task on an empty Group never runs, so the card would never load (Design/LoadSlot.swift)
+        LoadSlot {
             let total = open.count + doneToday
             if total > 0 {
                 Card(title: L("Tasks today"), systemImage: "checklist") {
@@ -104,7 +105,8 @@ struct TasksAheadCard: View {
     private var max: Int { FocusFlags.gentle ? min(2, FocusFlags.todayMax ?? 2) : 3 }
 
     var body: some View {
-        Group {
+        // a LoadSlot, not a Group: .task on an empty Group never runs, so the card would never load (Design/LoadSlot.swift)
+        LoadSlot {
             let rows = rows
             if !rows.isEmpty {
                 Card(title: L("Coming up"), systemImage: "calendar") {

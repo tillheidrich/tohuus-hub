@@ -47,7 +47,7 @@ struct StarsCard: View {
     @State private var s: StarsWeek?
 
     var body: some View {
-        Group {
+        LoadSlot {
             if let s, s.on, let w = s.week {
                 Card(title: L("Stars this week"), systemImage: "star.fill") {
                     VStack(alignment: .leading, spacing: 4) {
@@ -73,39 +73,39 @@ struct StarsSettingsSection: View {
     let admin: Bool
     @State private var s: StarsWeek?
     @State private var error: String?
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let s, s.allowed {
-                Section {
-                    Toggle(L("Count stars"), isOn: Binding(get: { s.on }, set: { v in Task { await save(on: v, areas: s.areas.isEmpty ? ["tasks"] : s.areas) } }))
-                        .tint(Theme.primary)
-                        .disabled(!admin)
-                    if s.on {
-                        ForEach(StarsLabels.areas, id: \.self) { a in
-                            let sel = s.areas.contains(a)
-                            Button {
-                                Task { await save(on: true, areas: sel ? s.areas.filter { $0 != a } : s.areas + [a]) }
-                            } label: {
-                                HStack {
-                                    Text(StarsLabels.title(a)).foregroundStyle(Theme.ink)
-                                    Spacer()
-                                    if sel { Image(systemName: "checkmark").foregroundStyle(Theme.primaryText) }
-                                }
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run { s = try? await api.stars() }
+        if let s, s.allowed {
+            Section {
+                Toggle(L("Count stars"), isOn: Binding(get: { s.on }, set: { v in Task { await save(on: v, areas: s.areas.isEmpty ? ["tasks"] : s.areas) } }))
+                    .tint(Theme.primary)
+                    .disabled(!admin)
+                if s.on {
+                    ForEach(StarsLabels.areas, id: \.self) { a in
+                        let sel = s.areas.contains(a)
+                        Button {
+                            Task { await save(on: true, areas: sel ? s.areas.filter { $0 != a } : s.areas + [a]) }
+                        } label: {
+                            HStack {
+                                Text(StarsLabels.title(a)).foregroundStyle(Theme.ink)
+                                Spacer()
+                                if sel { Image(systemName: "checkmark").foregroundStyle(Theme.primaryText) }
                             }
-                            .disabled(!admin || (sel && s.areas.count == 1))
-                            .accessibilityAddTraits(sel ? .isSelected : [])
                         }
+                        .disabled(!admin || (sel && s.areas.count == 1))
+                        .accessibilityAddTraits(sel ? .isSelected : [])
                     }
-                    if let error { Text(error).font(.caption).foregroundStyle(Theme.empty) }
-                } header: {
-                    Text(L("Stars"))
-                } footer: {
-                    Text(L("Optional. A star for each thing someone does for the household – a task, the list, planning a meal, a receipt. You see your week together and your own stars; no rankings, no streaks. Gentle mode hides them."))
                 }
+                if let error { Text(error).font(.caption).foregroundStyle(Theme.empty) }
+            } header: {
+                Text(L("Stars"))
+            } footer: {
+                Text(L("Optional. A star for each thing someone does for the household – a task, the list, planning a meal, a receipt. You see your week together and your own stars; no rankings, no streaks. Gentle mode hides them."))
             }
         }
-        .task { s = try? await api.stars() }
     }
 
     private func save(on: Bool, areas: [String]) async {

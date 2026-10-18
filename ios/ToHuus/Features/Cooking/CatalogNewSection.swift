@@ -18,7 +18,7 @@ struct CatalogNewSection: View {
     }
 
     var body: some View {
-        Group {
+        LoadSlot {
             if !cards.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
                     HStack(alignment: .firstTextBaseline) {

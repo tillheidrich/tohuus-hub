@@ -45,6 +45,7 @@ import { LunchboxCard } from '../shop/forms';
 import { PulseSettingsCard } from '../pulse';
 import { ModulesCard } from './Modules';
 import { CookStyleCard } from './CookStyle';
+import { NavBarCard } from '../navbar';
 
 type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
 
@@ -129,6 +130,7 @@ export function Settings({ me }: { me: Me }) {
       {tab === 'account' && <MyPerson me={me} />}
       {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
       {tab === 'account' && me.actor.userId && <MyListViewCard />}
+      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <NavBarCard me={me} />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <FocusSettingsCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CheckinSettingsCard />}
       {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarReadCard />}

@@ -12,7 +12,8 @@ import { applyBrand } from './brand';
 import { useInstance, useToday } from './data';
 import { setLang, t } from './i18n';
 import { kidLock } from './kidlock';
-import { barTabs, load, moreGroups, tabFor, visibleTabs } from './nav';
+import { areasInMore, load, moreGroups, myBar, mySidebar, tabFor } from './nav';
+import { NavBarPage, navPrefOf, useBarLongPress, useNavSync } from './navbar';
 import { GlobalSearch, useSearchHotkey } from './search/GlobalSearch';
 import { useOnboardingRedirect } from './onboarding-state';
 import { guestAllows } from './people/access';
@@ -53,6 +54,8 @@ export interface Me {
   home?: import('./household').HomeSetup;
   /** "Was nutzt ihr?" – areas the household switched off (list2) */
   modules?: Record<string, boolean>;
+  /** "Deine Leiste": the person's own areas next to Heute (null = default; navbar.tsx, docs/navigation.md) */
+  nav?: { tabs: string[] | null };
 }
 
 // ------------------------------------------------------------------ route chunks (plan 2026-10-12: shell + Heute load first, every other page on demand)
@@ -230,9 +233,15 @@ function Shell({ me }: { me: Me }) {
   const attention = today.data?.counts?.attention ?? 0;
   // "Was nutzt ihr?" (list2): switched-off areas leave the tab bar and "Mehr" (their pages stay reachable by link)
   const mods = me.modules;
-  // every area for the desktop sidebar, at most five in the phone tab bar – Geld gives way first (nav.tsx barTabs)
-  const tabs = visibleTabs(gl, mods);
-  const phoneTabs = barTabs(tabs);
+  // every area for the desktop sidebar, at most five in the phone tab bar – Geld gives way first (nav.tsx barTabs).
+  // "Deine Leiste": once the person picked their own areas, the bar and the top of the sidebar show exactly those
+  // (in their order) and the other areas move to the top of Mehr (nav.tsx myBar / areasInMore).
+  useNavSync(me);
+  const navPref = navPrefOf(me);
+  const tabs = mySidebar(gl, mods, navPref);
+  const phoneTabs = myBar(gl, mods, navPref);
+  const openBarEditor = useCallback(() => nav('/leiste'), [nav]);
+  const barPress = useBarLongPress(openBarEditor);
   const [search, setSearch] = useState(false);
   const openSearch = useCallback(() => setSearch(true), []);
   useSearchHotkey(openSearch);
@@ -240,7 +249,8 @@ function Shell({ me }: { me: Me }) {
     window.addEventListener('tohuus:search', openSearch);
     return () => window.removeEventListener('tohuus:search', openSearch);
   }, [openSearch]);
-  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods });
+  // the desktop sidebar's Mehr: with an own bar, the other areas come first (on a phone they are rows of /mehr)
+  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods, areas: navPref ? areasInMore(gl, mods, navPref) : undefined });
   const activeTab = tabFor(loc.pathname);
   // gentle mode (focus): no "needs attention" counter on Vorrat
   const focus = useFocusPrefs(Boolean(me.actor.userId) && !me.actor.houseGuest);
@@ -277,7 +287,7 @@ function Shell({ me }: { me: Me }) {
           <kbd className="side-kbd">⌘K</kbd>
         </button>
         <nav className="side-nav">
-          <div className="nav-group">
+          <div className="nav-group" {...(gl ? {} : { onContextMenu: barPress.onContextMenu })}>
             {tabs.map((l) => (
               <NavLink
                 key={l.key}
@@ -353,6 +363,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/abstimmung/:id" element={<VotePage />} />
               <Route path="/geld" element={<Money />} />
               <Route path="/mehr" element={<More me={me} />} />
+              <Route path="/leiste" element={<NavBarPage me={me} />} />
               <Route path="/wissen" element={<KnowledgePage me={me} />} />
               <Route path="/merkt-sich" element={<KnowledgePage me={me} />} />
               <Route path="/betrieb" element={<Operator />} />
@@ -394,7 +405,8 @@ function Shell({ me }: { me: Me }) {
         </div>
       </main>
 
-      <nav className="tabbar" aria-label={t('Navigation')} hidden={loc.pathname.startsWith('/willkommen')}>
+      {/* long press on the bar opens "Deine Leiste" (navbar.tsx) – not for guests, they have no own bar */}
+      <nav className="tabbar" aria-label={t('Navigation')} hidden={loc.pathname.startsWith('/willkommen')} {...(gl || !me.actor.userId ? {} : barPress)}>
         {phoneTabs.map((l) => {
           const on = activeTab === l.key;
           const n = badge(l.key);

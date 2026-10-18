@@ -27,6 +27,12 @@ export type Intent =
   /** "Welche Schuhgröße hat Mika?" – a remembered fact */
   | { kind: 'recall'; subject: string; property: string }
   | { kind: 'remember'; text: string }
+  /** "Nimm diese Notiz auf: …" with pasted text – into Haushaltswissen (knowledge-io.ts), cards and note lines */
+  | { kind: 'note_import'; text: string }
+  /** "Was war Miras Schuhgröße vorher?", "Verlauf Rollo Bad" – earlier values of a card */
+  | { kind: 'knowledge_history'; what: string }
+  /** "Mach Miras Schuhgröße für alle sichtbar", "Mach das Rollo-Maß nur für mich" – asks first, then a yes */
+  | { kind: 'knowledge_visibility'; action: 'share' | 'private'; what: string }
   | { kind: 'forget'; text: string }
   /** an answer to the assistant ("Ja", "nein danke", "speicher das Rezept") – never a list item; needs the conversation */
   | { kind: 'reply'; answer: 'yes' | 'no' | 'thanks' | 'command' }
@@ -185,10 +191,45 @@ export function taskWhen(text: string, ref: string): { name: string; day: string
   return { name: name || text.trim(), day, time };
 }
 
+/** "Nimm diese Notiz auf:\n- Mika: Schuhgröße 28 …", "Importier das ins Wissen: …", "Take this note: …" → the pasted text */
+export function noteImportOf(input: string): string | null {
+  const m = input
+    .trim()
+    .match(/^(?:bitte\s+)?(?:nimm|übernimm|uebernimm|importier\w*|import|take|add|speicher\w*|leg\w*)\s+(?:(?:diese|die|das|meine|this|these|my|the)\s+)?(?:notiz(?:en)?|liste|text|note|notes|list)\s*(?:auf|ins\s+(?:haushalts)?wissen|in\s+(?:toHuus|tohuus|haushaltswissen)|an|into\s+(?:tohuus|knowledge)|to\s+(?:tohuus|knowledge))?\s*(?:bitte\s*)?[:\n]\s*([\s\S]{2,})$/i);
+  return m ? m[1].trim() : null;
+}
+
+/** "Was war Miras Schuhgröße vorher?", "Wie war das Rollo-Maß früher?", "Verlauf von Rollo Bad", "What was Mika's shoe size before?" */
+export function knowledgeHistoryOf(text: string): string | null {
+  const s = text.replace(/\?+$/, '').trim();
+  const m =
+    s.match(/^(?:was|wie|welche[rsn]?)\s+(?:war|waren|stand)\s+(?:denn\s+)?(.+?)\s+(?:vorher|früher|frueher|davor|zuletzt|vor der änderung)$/i) ??
+    s.match(/^(?:zeig\s+(?:mir\s+)?(?:den\s+)?)?(?:verlauf|history)\s+(?:von\s+|vom\s+|der\s+|des\s+|for\s+|of\s+)?(.+)$/i) ??
+    s.match(/^what\s+(?:was|were)\s+(.+?)\s+(?:before|earlier)$/i);
+  return m ? m[1].trim() : null;
+}
+
+/** "Mach Miras Schuhgröße für alle sichtbar", "Teil das Rollo-Maß mit allen", "Mach X nur für mich" (explicit wording only) */
+export function knowledgeVisibilityOf(text: string): { action: 'share' | 'private'; what: string } | null {
+  const s = text.replace(/[.!]+$/, '').trim();
+  let m = s.match(/^(?:bitte\s+)?(?:mach\w*|stell\w*)\s+(.+?)\s+(?:für alle|fuer alle|für den (?:ganzen )?haushalt|fuer den (?:ganzen )?haushalt)\s+sichtbar$/i) ?? s.match(/^(?:bitte\s+)?(?:teil\w*)\s+(.+?)\s+mit (?:allen|dem (?:ganzen )?haushalt)$/i) ?? s.match(/^(?:please\s+)?(?:make|share)\s+(.+?)\s+(?:visible to everyone|with everyone)$/i);
+  if (m) return { action: 'share', what: m[1] };
+  m = s.match(/^(?:bitte\s+)?(?:mach\w*|stell\w*)\s+(.+?)\s+(?:nur für mich|nur fuer mich|privat)(?:\s+sichtbar)?$/i) ?? s.match(/^(?:please\s+)?make\s+(.+?)\s+(?:private|only for me)$/i);
+  return m ? { action: 'private', what: m[1] } : null;
+}
+
 export function parseIntent(input: string): Intent {
   const text = clean(input);
   if (!text) return { kind: 'unknown' };
   let m: RegExpMatchArray | null;
+
+  // "Nimm diese Notiz auf:" + pasted lines – the line breaks matter, so this reads the raw input
+  const note = noteImportOf(input);
+  if (note) return { kind: 'note_import', text: note };
+  const hist = knowledgeHistoryOf(text);
+  if (hist) return { kind: 'knowledge_history', what: hist };
+  const vis = knowledgeVisibilityOf(text);
+  if (vis) return { kind: 'knowledge_visibility', ...vis };
 
   // emoji only ("👍", "😂🙈", "❤️") – a reaction, never a list item (TestFlight feedback 15.10.)
   if (!/[\p{L}\p{N}]/u.test(text)) {

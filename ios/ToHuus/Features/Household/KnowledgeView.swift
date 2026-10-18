@@ -22,6 +22,8 @@ struct KnowledgeView: View {
     @State private var askConsent = false
     @State private var error: String?
     @State private var toast: ToastMessage?
+    @State private var importing = false
+    @State private var exporting = false
 
     private var guest: Bool { app.isGuest }
     private var groups: [KnowledgeGroup] {
@@ -97,6 +99,20 @@ struct KnowledgeView: View {
                         .accessibilityLabel(L("Add yourself"))
                 }
             }
+            ToolbarItem(placement: .secondaryAction) {
+                Menu {
+                    if !guest { Button { importing = true } label: { Label(L("Import"), systemImage: "square.and.arrow.down") } }
+                    Button { exporting = true } label: { Label(L("Export"), systemImage: "square.and.arrow.up") }
+                        .disabled((list?.entries.isEmpty ?? true))
+                } label: { Image(systemName: "ellipsis.circle") }
+                .accessibilityLabel(L("Import and export"))
+            }
+        }
+        .sheet(isPresented: $importing) { KnowledgeImportSheet(api: api) { msg, undo in done(msg, undo) } }
+        .sheet(isPresented: $exporting) {
+            KnowledgeExportSheet(api: api, total: list?.entries.count ?? 0,
+                                 shownIds: search.trimmingCharacters(in: .whitespaces).isEmpty && ref == nil ? nil : groups.flatMap { $0.entries.map(\.id) },
+                                 onlyThese: ref != nil)
         }
         .task { await load() }
         .refreshable { await load() }

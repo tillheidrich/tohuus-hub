@@ -5,6 +5,7 @@ import { t } from '../i18n.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { THEMES, appearanceFor, setHouseholdAppearance, setPersonalTheme } from '../lib/appearance.js';
 import { emit } from '../lib/bus.js';
+import { navFor, setNavTabs } from '../lib/nav-prefs.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -28,4 +29,16 @@ r.patch('/appearance/me', (req, res) => {
   if (b.theme && !cur.userChoice) return void res.status(403).json({ error: t('Your household uses one appearance for everyone.') });
   setPersonalTheme(id, b.theme);
   res.json(appearanceFor(id));
+});
+
+// "Deine Leiste": the areas this person keeps in the bar at the bottom (lib/nav-prefs.ts, docs/navigation.md)
+r.get('/nav', (req, res) => res.json(navFor(uid(req))));
+
+r.put('/nav', (req, res) => {
+  // unknown ids are dropped (an older or newer app may know other areas), not rejected
+  const b = z.object({ tabs: z.array(z.string().max(40)).max(20).nullable() }).parse(req.body);
+  const id = uid(req);
+  if (!id) return void res.status(400).json({ error: t('Only members with an account can save their own bar.') });
+  setNavTabs(id, b.tabs);
+  res.json(navFor(id));
 });

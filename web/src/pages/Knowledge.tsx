@@ -5,7 +5,7 @@
  * On top: "Schreib es ToHuus" – one sentence, read without AI (POST /api/knowledge/say). Same screen on the iPhone
  * (KnowledgeView.swift). `KnowledgeFor` shows the cards of one person or place in their sheet.
  */
-import { ArrowCounterClockwise, Brain, Camera, Eye, Lock, MagnifyingGlass, MapPin, Package, PaperPlaneRight, Plus, Tag, Trash, User, X } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, Brain, Camera, DownloadSimple, Eye, Lock, MagnifyingGlass, MapPin, Package, PaperPlaneRight, Plus, Tag, Trash, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
@@ -13,6 +13,7 @@ import { api, ApiError, del, invalidate, patch, post, relTime, useApi } from '..
 import { t } from '../i18n';
 import { useHealthConsent } from '../people/HealthConsent';
 import { Empty, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { KnowledgeExport, KnowledgeImport } from './KnowledgeIO';
 import './knowledge.css';
 
 type Visibility = 'household' | 'me';
@@ -98,6 +99,7 @@ export function KnowledgePage({ me }: { me: Me }) {
   const [edit, setEdit] = useState<Partial<Entry> | null>(null);
   const [answer, setAnswer] = useState<Entry[] | null>(null);
   const [confirmBox, setConfirmBox] = useState<{ action: 'delete' | 'share' | 'private'; entries: Entry[] } | null>(null);
+  const [io, setIo] = useState<'import' | 'export' | null>(null);
   const toast = useToast();
   const { withConsent, sheet } = useHealthConsent();
   const guest = Boolean(me.actor.houseGuest);
@@ -141,19 +143,31 @@ export function KnowledgePage({ me }: { me: Me }) {
   return (
     <div className="kn-page rise">
       {sheet}
+      {!guest && <KnowledgeImport open={io === 'import'} onClose={() => setIo(null)} />}
+      <KnowledgeExport open={io === 'export'} onClose={() => setIo(null)} total={total} shownIds={ref || query.trim() ? groups.flatMap((g) => g.entries.map((e) => e.id)) : null} />
       <header className="page-head">
         <div>
           <div className="eyebrow">{t('Your household memory')}</div>
           <h1>{t('What ToHuus remembers')}</h1>
           <p className="muted">{guest ? t('What the household shares with guests: sizes, numbers, how things work.') : t('Write it to ToHuus, then nobody has to ask you. And you don’t have to remember it yourself.')}</p>
         </div>
-        {!guest && (
-          <div className="actions">
+        <div className="actions">
+          {!guest && (
             <button className="btn" onClick={() => setEdit({ visibility: 'household' })}>
               <Plus size={16} weight="bold" /> {t('Add yourself')}
             </button>
-          </div>
-        )}
+          )}
+          {!guest && (
+            <button className="btn ghost" onClick={() => setIo('import')} aria-label={t('Import notes')}>
+              <UploadSimple size={16} /> {t('Import')}
+            </button>
+          )}
+          {total > 0 && (
+            <button className="btn ghost" onClick={() => setIo('export')} aria-label={t('Export what ToHuus remembers')}>
+              <DownloadSimple size={16} /> {t('Export')}
+            </button>
+          )}
+        </div>
       </header>
 
       {!guest && (

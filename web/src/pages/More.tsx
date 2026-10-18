@@ -37,24 +37,28 @@ import {
   UsersThree,
   Wrench,
   Coins,
+  Basket,
+  ChefHat,
+  Package,
 } from '@phosphor-icons/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { invalidate, post } from '../api';
 import { useInstance } from '../data';
 import { t } from '../i18n';
-import { moneyInMore, moreGroups } from '../nav';
+import { areasInMore, moreGroups } from '../nav';
+import { navPrefOf } from '../navbar';
 import { Avatar } from '../ui';
 
-const ICONS: Record<string, Icon> = { Brain, Coins, Bell, Printer, Sparkle, SquaresFour, UserCircle, Gift, Info, BookOpen, Lightbulb, ListChecks, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
+const ICONS: Record<string, Icon> = { Basket, ChefHat, Package, Brain, Coins, Bell, Printer, Sparkle, SquaresFour, UserCircle, Gift, Info, BookOpen, Lightbulb, ListChecks, ChartBar, ClipboardText, CreditCard, Database, Gear, HandHeart, Heart, House, MapPin, Martini, Notebook, Monitor, QrCode, Question, Receipt, Suitcase, UsersThree, Wrench };
 
 export function More({ me }: { me: Me }) {
   const nav = useNavigate();
   const loc = useLocation();
   const inst = useInstance();
   const gl = me.actor.houseGuest?.level;
-  // Geld without a place in the phone tab bar: first row here (phones only – the desktop sidebar has it)
-  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: me.modules, money: moneyInMore(gl, me.modules) });
+  // areas without a place in the bar (Geld by default, phones only; with "Deine Leiste" every area not in it): first rows
+  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: me.modules, areas: areasInMore(gl, me.modules, navPrefOf(me)) });
   return (
     <div className="more-page">
       <header className="more-me">
@@ -94,6 +98,12 @@ export function More({ me }: { me: Me }) {
             </div>
           </section>
         ))}
+        {/* the shortcut to "Deine Leiste" at the end of Mehr (also: Einstellungen › Mein Konto, long press on the bar) */}
+        {!gl && me.actor.userId ? (
+          <button className="btn ghost block" onClick={() => nav('/leiste')}>
+            <SquaresFour size={16} /> {t('Adjust the bar')}
+          </button>
+        ) : null}
         <button className="btn ghost block" onClick={() => post('/auth/logout').then(() => invalidate('me'))}>
           <SignOut size={16} /> {t('Sign out')}
         </button>

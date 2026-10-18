@@ -492,36 +492,36 @@ private struct AwayHomePlanSection: View {
     let trip: AwayTrip
     @State private var plan: AwayHomePlan?
     @State private var error: String?
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if let p = plan, !p.items.isEmpty || p.relief {
-                Section {
-                    if p.items.isEmpty { Text(L("Nothing falls due in these days.")).font(.subheadline).foregroundStyle(Theme.ink3) }
-                    ForEach(p.items) { x in
-                        VStack(alignment: .leading, spacing: Theme.Space.s2) {
-                            Text(x.name)
-                            Text(sub(x, p)).font(.caption).foregroundStyle(Theme.ink3)
-                            FlowLayout(spacing: 6) {
-                                ForEach(p.takers) { k in
-                                    ChoiceChip(title: LF("%@ takes it", k.label), on: x.choice?.mode == "take" && x.choice?.key == k.key) { set(x, "take", k.key) }
-                                }
-                                ChoiceChip(title: L("May wait"), on: x.choice?.mode == "wait") { set(x, "wait", nil) }
-                                if x.choice != nil { ChoiceChip(title: L("As usual"), on: false) { set(x, "usual", nil) } }
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run(id: trip.id) { await load() }
+        if let p = plan, !p.items.isEmpty || p.relief {
+            Section {
+                if p.items.isEmpty { Text(L("Nothing falls due in these days.")).font(.subheadline).foregroundStyle(Theme.ink3) }
+                ForEach(p.items) { x in
+                    VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                        Text(x.name)
+                        Text(sub(x, p)).font(.caption).foregroundStyle(Theme.ink3)
+                        FlowLayout(spacing: 6) {
+                            ForEach(p.takers) { k in
+                                ChoiceChip(title: LF("%@ takes it", k.label), on: x.choice?.mode == "take" && x.choice?.key == k.key) { set(x, "take", k.key) }
                             }
+                            ChoiceChip(title: L("May wait"), on: x.choice?.mode == "wait") { set(x, "wait", nil) }
+                            if x.choice != nil { ChoiceChip(title: L("As usual"), on: false) { set(x, "usual", nil) } }
                         }
-                        .padding(.vertical, 4)
                     }
-                    if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
-                } header: {
-                    Text(LF("At home while %@ is away", (trip.travellers ?? []).joined(separator: ", ")))
-                } footer: {
-                    Text(p.relief ? L("Hospital and rehab weigh on everyone. More may wait now – the house doesn’t have to be perfect.")
-                                  : L("Who takes what – and what may simply wait until they’re back. Suggestions only, you decide."))
+                    .padding(.vertical, 4)
                 }
+                if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
+            } header: {
+                Text(LF("At home while %@ is away", (trip.travellers ?? []).joined(separator: ", ")))
+            } footer: {
+                Text(p.relief ? L("Hospital and rehab weigh on everyone. More may wait now – the house doesn’t have to be perfect.")
+                              : L("Who takes what – and what may simply wait until they’re back. Suggestions only, you decide."))
             }
         }
-        .task(id: trip.id) { await load() }
     }
 
     private func sub(_ x: AwayHomePlan.Item, _ p: AwayHomePlan) -> String {

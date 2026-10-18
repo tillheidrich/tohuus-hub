@@ -155,33 +155,33 @@ struct SampleDataSettingsSection: View {
     @State private var message: String?
     /// the household is still empty: offer the example household (web: Settings › Data › DemoCard)
     @State private var empty = false
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if app.hasSampleData || message != nil {
-                removeSection
-            } else if empty && app.isHouseholdAdmin {
-                Section {
-                    Button {
-                        Task { await load() }
-                    } label: {
-                        HStack {
-                            Label(L("Load sample data"), systemImage: "sparkles")
-                            Spacer()
-                            if busy { ProgressView() }
-                        }
-                    }
-                    .disabled(busy)
-                } header: {
-                    Text(L("Look around with sample data"))
-                } footer: {
-                    Text(L("Your household is still empty. Load an example household to try things out – everything it adds is marked and can be removed in one go."))
-                }
-            }
-        }
-        .task {
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run {
             if !app.hasSampleData, app.isHouseholdAdmin, let g = try? await app.api?.gettingStarted() {
                 empty = (g.counts?.products ?? 1) == 0
+            }
+        }
+        if app.hasSampleData || message != nil {
+            removeSection
+        } else if empty && app.isHouseholdAdmin {
+            Section {
+                Button {
+                    Task { await load() }
+                } label: {
+                    HStack {
+                        Label(L("Load sample data"), systemImage: "sparkles")
+                        Spacer()
+                        if busy { ProgressView() }
+                    }
+                }
+                .disabled(busy)
+            } header: {
+                Text(L("Look around with sample data"))
+            } footer: {
+                Text(L("Your household is still empty. Load an example household to try things out – everything it adds is marked and can be removed in one go."))
             }
         }
     }

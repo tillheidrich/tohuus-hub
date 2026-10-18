@@ -326,24 +326,24 @@ struct OffersStripSection: View {
     let store: ServerStore
     let openAll: () -> Void
     @State private var offers: [Offer] = []
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if !offers.isEmpty {
-                Section {
-                    ForEach(offers.prefix(6)) { o in
-                        OfferRowView(offer: o, store: store, compact: true) { await load() }
-                    }
-                } header: {
-                    HStack {
-                        Text(L("Offers"))
-                        Spacer()
-                        Button(L("All offers"), action: openAll).font(.footnote)
-                    }
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run(id: store.revision("shopping")) { await load() }
+        if !offers.isEmpty {
+            Section {
+                ForEach(offers.prefix(6)) { o in
+                    OfferRowView(offer: o, store: store, compact: true) { await load() }
+                }
+            } header: {
+                HStack {
+                    Text(L("Offers"))
+                    Spacer()
+                    Button(L("All offers"), action: openAll).font(.footnote)
                 }
             }
         }
-        .task(id: store.revision("shopping")) { await load() }
     }
 
     private func load() async { offers = (try? await store.api.offers()) ?? [] }

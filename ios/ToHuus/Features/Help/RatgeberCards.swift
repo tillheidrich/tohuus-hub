@@ -27,28 +27,28 @@ struct RatgeberSection: View {
     var areas: [String] = []
     var max = 3
     @State private var posts: [RatgeberPost] = []
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if !posts.isEmpty {
-                Section {
-                    ForEach(posts.prefix(max)) { p in
-                        if let url = URL(string: p.url) {
-                            Link(destination: url) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(p.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
-                                    Text(p.teaser).font(.caption).foregroundStyle(Theme.ink3).lineLimit(3)
-                                    Label(L("Read on the website"), systemImage: "arrow.up.right.square").font(.caption).foregroundStyle(Theme.primaryText)
-                                }
-                                .padding(.vertical, 2)
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run { posts = (try? await api.ratgeber(areas: areas)) ?? [] }
+        if !posts.isEmpty {
+            Section {
+                ForEach(posts.prefix(max)) { p in
+                    if let url = URL(string: p.url) {
+                        Link(destination: url) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(p.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
+                                Text(p.teaser).font(.caption).foregroundStyle(Theme.ink3).lineLimit(3)
+                                Label(L("Read on the website"), systemImage: "arrow.up.right.square").font(.caption).foregroundStyle(Theme.primaryText)
                             }
+                            .padding(.vertical, 2)
                         }
                     }
-                } header: {
-                    Label(L("From the guide"), systemImage: "book")
                 }
+            } header: {
+                Label(L("From the guide"), systemImage: "book")
             }
         }
-        .task { posts = (try? await api.ratgeber(areas: areas)) ?? [] }
     }
 }

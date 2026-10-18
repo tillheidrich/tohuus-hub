@@ -147,3 +147,49 @@ button.kn-open {
   flex-direction: column;
   gap: 6px;
 }
+
+/* import and export (KnowledgeIO.tsx) */
+.kn-io {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kn-io-file {
+  align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kn-io-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  min-height: 120px;
+  resize: vertical;
+}
+.kn-io-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.kn-io-item label {
+  gap: 8px;
+  align-items: center;
+  padding: 6px 2px;
+  min-height: 44px;
+}
+.kn-io-item.off {
+  opacity: 0.6;
+}
+.kn-io-main {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kn-io-lock {
+  flex: none;
+}

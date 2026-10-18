@@ -516,15 +516,24 @@ struct CareForHintCard: View {
     @State private var show = false
     @State private var adding = false
     @State private var error: String?
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if show {
-                if inList { Section { content } } else { Card { content } }
-            }
+        // not a Group: .task on an empty Group never runs, the hint would never load (Design/LoadSlot.swift)
+        if inList {
+            // in a List there is no invisible view to hang a .task on: load from the body
+            let _ = loader.run(id: refresh) { await load() }
+            if show { Section { addSheet(content) } }
+        } else {
+            addSheet(LoadSlot { if show { Card { content } } })
+                .task(id: refresh) { await load() }
         }
-        .task(id: refresh) { show = (try? await api.careForHint())?.show ?? false }
-        .sheet(isPresented: $adding) {
+    }
+
+    private func load() async { show = (try? await api.careForHint())?.show ?? false }
+
+    private func addSheet(_ v: some View) -> some View {
+        v.sheet(isPresented: $adding) {
             CareForEditSheet(api: api, person: nil) { msg in
                 show = false
                 if let msg { onAdded(msg) }
@@ -586,35 +595,35 @@ struct CarryingSection: View {
     var onHandOver: (Int) -> Void
     @State private var items: [WhoDoesWhatData.Carrying] = []
     @State private var error: String?
+    @State private var loader = LoadTrigger()
 
     var body: some View {
-        Group {
-            if !items.isEmpty {
-                Section {
-                    ForEach(items) { c in
-                        VStack(alignment: .leading, spacing: Theme.Space.s2) {
-                            HStack(alignment: .top, spacing: Theme.Space.s3) {
-                                Image(systemName: "heart").foregroundStyle(Theme.clay).accessibilityHidden(true)
-                                Text(LF("You’ve been doing “%@” for weeks – thank you! Would you like to hand it over for a while?", c.name))
-                                    .font(.subheadline).foregroundStyle(Theme.ink)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            HStack(spacing: Theme.Space.s3) {
-                                Button { onHandOver(c.taskId) } label: { Text(L("Hand over …")).frame(minHeight: 32) }
-                                    .buttonStyle(.borderedProminent).tint(Theme.primary)
-                                Button { Task { await dismiss(c) } } label: { Text(L("It’s fine")).frame(minHeight: 32) }
-                                    .buttonStyle(.bordered)
-                            }
+        // loads from the body: in a List there is no invisible view to hang a .task on (Design/LoadSlot.swift)
+        let _ = loader.run(id: refresh) { items = (try? await api.whoDoesWhat())?.carrying ?? [] }
+        if !items.isEmpty {
+            Section {
+                ForEach(items) { c in
+                    VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                        HStack(alignment: .top, spacing: Theme.Space.s3) {
+                            Image(systemName: "heart").foregroundStyle(Theme.clay).accessibilityHidden(true)
+                            Text(LF("You’ve been doing “%@” for weeks – thank you! Would you like to hand it over for a while?", c.name))
+                                .font(.subheadline).foregroundStyle(Theme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
-                        .padding(.vertical, 4)
+                        HStack(spacing: Theme.Space.s3) {
+                            Button { onHandOver(c.taskId) } label: { Text(L("Hand over …")).frame(minHeight: 32) }
+                                .buttonStyle(.borderedProminent).tint(Theme.primary)
+                            Button { Task { await dismiss(c) } } label: { Text(L("It’s fine")).frame(minHeight: 32) }
+                                .buttonStyle(.bordered)
+                        }
                     }
-                    if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
-                } footer: {
-                    Text(L("Only you see this."))
+                    .padding(.vertical, 4)
                 }
+                if let error { Text(error).font(.footnote).foregroundStyle(Theme.empty) }
+            } footer: {
+                Text(L("Only you see this."))
             }
         }
-        .task(id: refresh) { items = (try? await api.whoDoesWhat())?.carrying ?? [] }
     }
 
     private func dismiss(_ c: WhoDoesWhatData.Carrying) async {

@@ -630,7 +630,7 @@ struct PlanPickerSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                CardStack(spacing: Theme.Space.s4) {
                     markChips
                     Picker("", selection: $slot) {
                         Text(LC("Dinner")).tag("abend")

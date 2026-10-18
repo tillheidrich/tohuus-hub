@@ -37,6 +37,8 @@ export interface KViewer {
   admin?: boolean;
   /** permanent guest or guest link: reads entries marked for guests, writes nothing */
   guest?: boolean;
+  /** acts for the household, not for one person (an MCP token without a member): household entries only, never private ones */
+  service?: boolean;
 }
 
 export class KnowledgeError extends Error {
@@ -49,9 +51,9 @@ export class KnowledgeError extends Error {
   }
 }
 
-const fold = (s: string) => norm(s).replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/ue/g, 'u');
+export const fold = (s: string) => norm(s).replace(/ae/g, 'a').replace(/oe/g, 'o').replace(/ue/g, 'u');
 const clean = (s: unknown, max: number) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, max) : '');
-const MAX_ROWS = 300;
+export const MAX_ROWS = 300;
 
 // ------------------------------------------------------------------ subjects: people, places, products, free
 
@@ -139,7 +141,7 @@ function rowsFor(v: KViewer): MemoryRow[] {
 function mustSee(id: number, v: KViewer, write = false): MemoryRow {
   const r = Number.isInteger(id) ? getMemory(id) : undefined;
   if (!r || !canSee(r, v)) throw new KnowledgeError(t('Not found'), 404);
-  if (write && (v.guest || v.userId == null)) throw new KnowledgeError(t('Only people who live here can change this.'), 403);
+  if (write && (v.guest || (v.userId == null && !v.service))) throw new KnowledgeError(t('Only people who live here can change this.'), 403);
   return r;
 }
 
@@ -204,7 +206,7 @@ export function view(r: MemoryRow, v: KViewer): Entry {
     updatedBy: r.updated_by ?? null,
     history,
     may: {
-      edit: !v.guest && v.userId != null,
+      edit: !v.guest && (v.userId != null || Boolean(v.service)),
       share: r.private_to != null && r.private_to === v.userId,
       makePrivate: r.private_to == null && !v.guest && v.userId != null && author != null && (author === v.userId || Boolean(v.admin)),
     },
@@ -258,7 +260,7 @@ export const getEntry = (id: number, v: KViewer) => view(mustSee(id, v), v);
 // ------------------------------------------------------------------ write
 
 /** codes and passwords belong in Hausinfo › Codes (encrypted, never to the AI) – never into an entry */
-const SECRET = /\b(pin|passwort|password|kennwort|passcode|zugangscode|türcode|tuercode|alarmcode|garagencode|tresor)\w*/i;
+export const SECRET = /\b(pin|passwort|password|kennwort|passcode|zugangscode|türcode|tuercode|alarmcode|garagencode|tresor)\w*/i;
 function noSecrets(...xs: (string | null | undefined)[]) {
   if (xs.some((x) => x && SECRET.test(x))) throw new KnowledgeError(t('Codes and passwords belong in House info › Codes – they are kept safe there.'), 400, 'secret');
 }
@@ -291,7 +293,8 @@ function consentFor(v: KViewer, consent?: boolean) {
  * its new value (the old one goes into the history). Returns the entry and the row before (for undo).
  */
 export function createEntry(input: CreateInput, v: KViewer): { entry: Entry; updated: boolean; before: MemoryRow | null } {
-  if (v.guest || v.userId == null) throw new KnowledgeError(t('Only people who live here can change this.'), 403);
+  if (v.guest || (v.userId == null && !v.service)) throw new KnowledgeError(t('Only people who live here can change this.'), 403);
+  if (v.userId == null && input.visibility === 'me') throw new KnowledgeError(t('Only people who live here can change this.'), 403);
   const property = clean(input.property, 60);
   const value = clean(input.value, 120);
   const note = clean(input.note, 500) || null;
@@ -303,6 +306,7 @@ export function createEntry(input: CreateInput, v: KViewer): { entry: Entry; upd
     noSecrets(text, note);
     const sens = isSensitive(`${text} ${note ?? ''}`);
     if (sens) consentFor(v, input.consent);
+    if (sens && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.'), 409, 'health_person');
     const priv = input.visibility === 'me' || (input.visibility === undefined && sens);
     const row = remember({ text, source: 'user', createdBy: v.name, privateTo: priv ? v.userId : null, authorId: v.userId, origin, confirmed: true });
     if (note || (input.guests && !priv && !sens)) db.prepare('UPDATE ai_memory SET note = COALESCE(?, note), guests = ? WHERE id = ?').run(note, input.guests && !priv && !sens ? 1 : 0, row.id);
@@ -313,6 +317,8 @@ export function createEntry(input: CreateInput, v: KViewer): { entry: Entry; upd
   noSecrets(property, value, note);
   const sens = isSensitive([s.name, property, value, note].filter(Boolean).join(' '));
   if (sens) consentFor(v, input.consent);
+  // health information stays private to a person – a household token has no person to keep it for
+  if (sens && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.'), 409, 'health_person');
   const priv = input.visibility === 'me' || (input.visibility === undefined && sens);
   const privateTo = priv ? v.userId : null;
   const key = factKey(s.name, property);
@@ -384,6 +390,7 @@ export function updateEntry(id: number, p: PatchInput, v: KViewer): { entry: Ent
   noSecrets(p.subject, p.property, p.value, p.text, p.note);
   const nextText = [p.subject ?? cur.subject, p.property ?? cur.property, p.value ?? cur.value, p.text ?? (cur.structured ? '' : cur.text), p.note !== undefined ? p.note : cur.note].filter(Boolean).join(' ');
   // newly health-related (and visible to the household): the household's consent first
+  if (!r.sensitive && isSensitive(nextText) && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.'), 409, 'health_person');
   if (!r.sensitive && isSensitive(nextText)) consentFor(v, p.consent);
   db.transaction(() => {
     if (p.visibility) setVisibility(getMemory(id)!, p.visibility, v, p.consent);
@@ -647,7 +654,7 @@ export const KNOWLEDGE_TOOL_DEFS: ToolDef[] = [
     function: {
       name: 'knowledge_change',
       description:
-        'Household knowledge cards (subject · property: value). set: new or corrected value. delete, share (private → whole household), private (→ only the author): first call without confirm, ask, then confirm=true after the yes. Find the card by id or subject+property.',
+        'Household knowledge cards (subject · property: value). set: new or corrected value (only_me=true: a new card only the author sees). delete, share (private → whole household), private (→ only the author): first call without confirm, ask, then confirm=true after the yes. Find the card by id or subject+property.',
       parameters: {
         type: 'object',
         properties: {
@@ -657,6 +664,7 @@ export const KNOWLEDGE_TOOL_DEFS: ToolDef[] = [
           property: { type: 'string' },
           value: { type: 'string' },
           confirm: { type: 'boolean' },
+          only_me: { type: 'boolean', description: 'set, new card: only the author sees it' },
         },
         required: ['action'],
         additionalProperties: false,
@@ -698,7 +706,7 @@ function knowledgeChange(ctx: Ctx, a: any, record: Rec) {
         return { ok: true, id: entry.id, now: entry.text, before: before.text };
       }
       if (!subject || !property) return { error: 'Give subject and property for a new card.' };
-      const out = createEntry({ subject, property, value, origin: 'assistant' }, v);
+      const out = createEntry({ subject, property, value, origin: 'assistant', visibility: a.only_me === true ? 'me' : undefined }, v);
       record('remember', t('Remembered: {text}', { text: out.entry.text }), out.before ? { kind: 'restore_memory', rows: [out.before] } : { kind: 'forget', id: out.entry.id });
       return { ok: true, id: out.entry.id, now: out.entry.text, private: out.entry.visibility === 'me' };
     } catch (e) {
@@ -733,6 +741,18 @@ function knowledgeChange(ctx: Ctx, a: any, record: Rec) {
 export function runKnowledgeTool(ctx: Ctx, name: string, a: any, record: Rec): unknown {
   if (name !== 'knowledge_change') return undefined;
   return knowledgeChange(ctx, a ?? {}, record);
+}
+
+/** The newest open question (delete / share / private) of this person – a plain "ja" without a model confirms it. */
+export function lastPending(userId: number | null, withinMs = 10 * 60_000): { id: number; action: 'delete' | 'share' | 'private' } | null {
+  if (!userId) return null;
+  let best: { id: number; action: 'delete' | 'share' | 'private'; at: number } | null = null;
+  for (const [key, at] of pending()) {
+    const [u, id, action] = key.split(':');
+    if (Number(u) !== userId || Date.now() - at > withinMs) continue;
+    if (!best || at > best.at) best = { id: Number(id), action: action as 'delete' | 'share' | 'private', at };
+  }
+  return best ? { id: best.id, action: best.action } : null;
 }
 
 /** test hook */

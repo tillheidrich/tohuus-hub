@@ -92,7 +92,7 @@ struct WeekReviewTeaser: View {
     @State private var error: String?
 
     var body: some View {
-        Group {
+        LoadSlot {
             if let d = data, d.show {
                 VStack(alignment: .leading, spacing: Theme.Space.s3) {
                     NavigationLink {
@@ -158,7 +158,7 @@ struct WeekReviewView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Theme.Space.s4) {
+            CardStack(spacing: Theme.Space.s4) {
                 Picker(L("Period"), selection: Binding(get: { period }, set: { period = $0; day = nil })) {
                     Text(L("Week")).tag("week")
                     Text(L("Month")).tag("month")

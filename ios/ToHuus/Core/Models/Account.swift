@@ -115,6 +115,8 @@ struct MeResponse: Decodable, Sendable {
     var modules: [String: Bool]?
     /// { density: compact|normal|large, fontScale }
     var listPrefs: JSONValue?
+    /// "Deine Leiste": { tabs: [area ids] | null } – the person's own areas next to Heute (NavBarSettings.swift)
+    var nav: JSONValue?
     /// who lives here: { form: single|couple|family|wg|…, form_chosen, ui } (server/lib/places.ts homeSetup)
     var home: JSONValue?
     /// the website for the share footer (docs/sharing.md), e.g. https://tohuus.heidrich-digital.de

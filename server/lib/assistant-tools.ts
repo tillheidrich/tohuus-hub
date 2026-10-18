@@ -21,6 +21,7 @@ import { addToShopping, adjustStock, fmtQty, getProduct, listProducts, markUsedU
 import { cookIdeas } from './cookideas.js';
 import { createImport, linesToImport } from './imports.js';
 import { KNOWLEDGE_TOOL_DEFS, KNOWLEDGE_TOOLS, runKnowledgeTool } from './knowledge.js';
+import { KNOWLEDGE_IO_TOOL_DEFS, KNOWLEDGE_IO_TOOLS, runKnowledgeIoTool } from './knowledge-io.js';
 import { factOf, forget, isSensitive, recallFact, remember, restoreMemory, updateFactValue, valueOnlyOf, type MemoryRow } from './memory.js';
 import { healthShareAllowed } from './people-signals.js';
 import { MORE_TOOL_DEFS, MORE_TOOLS_BY_TOPIC, runMoreTool, undoMore } from './assistant-more.js';
@@ -83,6 +84,7 @@ type Undo =
   | { kind: 'delete_plan'; id: number }
   | { kind: 'forget'; id: number }
   | { kind: 'restore_memory'; rows: MemoryRow[] }
+  | { kind: 'knowledge_import'; created: number[]; rows: MemoryRow[] }
   | { kind: 'purchase'; importId: number; expenseId: number | null; ticked: number[] }
   | { kind: 'unmerge' | 'delete_recipe' | 'delete_house_cards' | 'stock_add'; [k: string]: unknown };
 
@@ -139,6 +141,11 @@ export function runUndo(token: string, userId: number | null, isAdmin = false) {
         break;
       case 'restore_memory':
         restoreMemory(u.rows);
+        break;
+      case 'knowledge_import':
+        // an import (knowledge-io.ts): the new entries go, the changed ones get their value back
+        for (const id of u.created) db.prepare('DELETE FROM ai_memory WHERE id = ?').run(id);
+        if (u.rows.length) restoreMemory(u.rows);
         break;
       case 'purchase':
         db.prepare('DELETE FROM imports WHERE id = ?').run(u.importId);
@@ -550,6 +557,7 @@ export const TOOL_DEFS: ToolDef[] = [
   ...HOME_TOOL_DEFS,
   ...MORE_TOOL_DEFS,
   ...KNOWLEDGE_TOOL_DEFS,
+  ...(KNOWLEDGE_IO_TOOL_DEFS as ToolDef[]),
 ];
 
 const TOOLS_BY_TOPIC: Record<string, string[]> = {
@@ -563,7 +571,7 @@ const TOOLS_BY_TOPIC: Record<string, string[]> = {
   // Kalender lesen, Bons ändern/löschen, „Wie kocht ihr?“ (assistant-more.ts) – only when the message is about them
   ...MORE_TOOLS_BY_TOPIC,
   // Haushaltswissen (knowledge.ts): change, delete, share or make private a card
-  knowledge: KNOWLEDGE_TOOLS,
+  knowledge: [...KNOWLEDGE_TOOLS, ...KNOWLEDGE_IO_TOOLS],
 };
 
 /** Only the tools a message can need (fewer tokens, fewer wrong calls). */
@@ -655,6 +663,8 @@ export function runTool(ctx: ToolCtx, name: string, args: any): unknown {
         if (more !== undefined) return more;
         const kn = runKnowledgeTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
         if (kn !== undefined) return kn;
+        const kio = runKnowledgeIoTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null), healthShareAllowed());
+        if (kio !== undefined) return kio;
         const home = runHomeTool(ctx, name, a, (kind, summary, undo) => record(ctx, kind, summary, undo as Undo | null));
         if (home !== undefined) return home;
         const area = runAreaTool({ actor: ctx.actor, userId: ctx.userId, record: (kind, summary, undo, ref) => record(ctx, kind, summary, undo as Undo | null, ref) }, name, a);

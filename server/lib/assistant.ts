@@ -13,6 +13,9 @@ import crypto from 'node:crypto';
 import { db, lang, migrate } from '../db.js';
 import { fmtDay, t } from '../i18n.js';
 import { findTask } from './assistant-tasks.js';
+import { findEntries, lastPending } from './knowledge.js';
+import { historyAnswer, importNote } from './knowledge-io.js';
+import { healthShareAllowed } from './people-signals.js';
 import { aiOffReason } from './ai-policy.js';
 import { addUsage, aiConfigured, aiEnabled, AiError, chat, zeroUsage, type ChatMessage, type Usage } from './ai.js';
 import { buildContext, topicsOf, type Topic } from './assistant-context.js';
@@ -28,6 +31,7 @@ import {
   moneySummary,
   quickItems,
   recallAnswer,
+  record,
   rememberTool,
   rhythmDueTool,
   runTool,
@@ -253,19 +257,23 @@ export async function chatOnce(input: {
   const intent: Intent = taskLike ? { kind: 'unknown' } : parsed;
   const ctx: ToolCtx = { actor: input.user.name, userId: input.user.userId, actions: [], admin: input.user.admin === true, guest: input.user.guest === true, platform: input.user.platform ?? null, turnStart: Date.now() };
   // "Welche Schuhgröße hat Mika?" – answered from what ToHuus remembers, without a model, when it is there
-  const simple = fullyUnderstood(intent) || (intent.kind === 'recall' && recallAnswer(ctx, intent.subject, intent.property) != null);
+  // a plain "ja" to the reader's own question about a knowledge card (share, make private, delete) – no model needed
+  const knowledgeYes = intent.kind === 'reply' && intent.answer === 'yes' && lastPending(ctx.userId) != null;
+  const simple = fullyUnderstood(intent) || knowledgeYes || (intent.kind === 'recall' && recallAnswer(ctx, intent.subject, intent.property) != null);
   // a bare list of products ("Bananen und Haferflocken") means "put these on the list" – also when it was spoken:
   // the recording already counted (input.allowance), but the answer still comes from the built-in reader
   const allowance = aiEnabled('text') && !simple ? (input.allowance ?? consumeAssistant()) : null;
   const overQuota = Boolean(allowance && !allowance.ok);
-  const needsModel = intent.kind === 'unknown' || (intent.kind === 'reply' && (intent.answer === 'yes' || intent.answer === 'command'));
+  const needsModel = intent.kind === 'unknown' || (intent.kind === 'reply' && !knowledgeYes && (intent.answer === 'yes' || intent.answer === 'command'));
   if (overQuota && needsModel) throw assistantQuotaError();
   const conversationId = openConversation(input.conversationId, input.user, message);
   const prior = history(conversationId);
   store(conversationId, 'user', message);
 
   let out: { reply: string; mode: 'ai' | 'basic'; usage?: Usage; remaining?: number | null; throttled?: boolean };
-  if (allowance && !(simple && overQuota)) {
+  if (knowledgeYes) {
+    out = { reply: basicReply(message, ctx, intent, input.context ?? null), mode: 'basic', ...(input.allowance ? { remaining: input.allowance.remaining } : {}) };
+  } else if (allowance && !(simple && overQuota)) {
     if (overQuota) {
       out = { reply: taskLike ? basicTask(message, ctx) : basicReply(message, ctx, intent, input.context ?? null), mode: 'basic', remaining: 0 };
     } else {
@@ -307,7 +315,7 @@ export function fullyUnderstood(intent: Intent): boolean {
   // "danke", "nein" need no model; "ja" and "speicher das Rezept" do (they refer to the last answer)
   if (intent.kind === 'reply') return intent.answer === 'thanks' || intent.answer === 'no';
   // "Mika hat jetzt 29": a corrected value of something remembered (memory.ts) – no model needed
-  return ['purchase', 'remember', 'forget', 'list', 'fact'].includes(intent.kind);
+  return ['purchase', 'remember', 'forget', 'list', 'fact', 'note_import', 'knowledge_history', 'knowledge_visibility'].includes(intent.kind);
 }
 
 /** The prompt for one message: only the context lines and tools its topics need (plus the screen's). Exported for tests. */
@@ -430,6 +438,40 @@ export function basicTasks(ctx: ToolCtx, day: 'today' | 'tomorrow'): string {
   return parts.join(' ');
 }
 
+/** "Nimm diese Notiz auf: …" without a model: everything that reads as cards or note lines, one undo */
+export function basicNoteImport(ctx: ToolCtx, text: string): string {
+  if (!ctx.userId || ctx.guest) return t('Only people who live here can change this.');
+  try {
+    const r = importNote({ userId: ctx.userId, name: ctx.actor, admin: ctx.admin }, text, { origin: 'assistant' }, (kind, summary, undo) => record(ctx, kind, summary, undo as any));
+    if (!r.ok) return t('I didn’t find anything to take over in it.');
+    const parts = [t('Taken over: {n} new, {m} updated.', { n: r.created, m: r.updated })];
+    if (r.skipped) parts.push(t('{n} were already there.', { n: r.skipped }));
+    if (r.blocked.some((b) => b.why === 'secret')) parts.push(t('Codes and passwords belong in House info › Codes – they are kept safe there.'));
+    return parts.join(' ');
+  } catch (e) {
+    return (e as Error).message;
+  }
+}
+
+/** "Mach Miras Schuhgröße für alle sichtbar" without a model: ask first (knowledge_change), the "ja" comes next */
+export function basicKnowledgeVisibility(ctx: ToolCtx, action: 'share' | 'private', what: string): string {
+  if (!ctx.userId || ctx.guest) return t('Only people who live here can change this.');
+  const v = { userId: ctx.userId, name: ctx.actor, admin: ctx.admin };
+  const hits = findEntries(what, v).filter((e) => (action === 'share' ? e.may.share : e.may.makePrivate));
+  if (!hits.length) return t('I can’t find “{what}” in what ToHuus remembers.', { what });
+  if (hits.length > 1) return t('Which one do you mean: {items}?', { items: joinList(hits.slice(0, 4).map((e) => e.text)) });
+  const r = runTool(ctx, 'knowledge_change', { action, id: hits[0].id }) as { needs_yes?: boolean; error?: string };
+  if (!r?.needs_yes) return r?.error ?? t('Done.');
+  return action === 'share' ? t('Make “{text}” visible to the whole household? Say yes.', { text: hits[0].text }) : t('Make “{text}” visible only to you? Say yes.', { text: hits[0].text });
+}
+
+/** the "ja" to that question */
+export function basicKnowledgeConfirm(ctx: ToolCtx, p: { id: number; action: 'delete' | 'share' | 'private' }): string {
+  const r = runTool(ctx, 'knowledge_change', { action: p.action, id: p.id, confirm: true }) as { ok?: boolean; error?: string; deleted?: string };
+  if (!r?.ok) return r?.error ?? t('Nothing to undo');
+  return ctx.actions[ctx.actions.length - 1]?.summary ?? t('Done.');
+}
+
 export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parseIntent(message), context: ScreenContext | null = null): string {
   switch (intent.kind) {
     case 'tasks':
@@ -443,6 +485,12 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
       if (a) return a;
       break;
     }
+    case 'note_import':
+      return basicNoteImport(ctx, intent.text);
+    case 'knowledge_history':
+      return historyAnswer({ userId: ctx.userId, name: ctx.actor, admin: ctx.admin, guest: ctx.guest }, intent.what, healthShareAllowed());
+    case 'knowledge_visibility':
+      return basicKnowledgeVisibility(ctx, intent.action, intent.what);
     case 'fact': {
       const res = rememberTool(ctx, { text: intent.text }) as { ok: boolean; hint?: string; updated_from?: string; now?: string };
       if (!res.ok) return res.hint ?? '';
@@ -522,6 +570,10 @@ export function basicReply(message: string, ctx: ToolCtx, intent: Intent = parse
     }
     case 'reply': {
       if (intent.answer === 'thanks') return t('Gladly.');
+      if (intent.answer === 'yes') {
+        const p = lastPending(ctx.userId);
+        if (p) return basicKnowledgeConfirm(ctx, p);
+      }
       if (intent.answer === 'no') return t('All right.');
       // "Ja" / "speicher das Rezept" refer to the last answer – only the model can follow up, never the list
       if (aiConfigured('text') && aiOffReason()) return t('AI is off – I understand simple sentences like “milk is out and 2 peppers”.');

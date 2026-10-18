@@ -17,7 +17,7 @@
  */
 import { config } from '../config.js';
 import { accountsDb } from './accounts.js';
-import { APPLE_PRODUCTS, LIFETIME_PRODUCT, PLUS_HARD_MESSAGES, AI_COST_KIND, aiCostCap } from './plans.js';
+import { APPLE_PRODUCTS, LIFETIME_PRODUCT, PLUS_FAIR_MESSAGES, PLUS_HARD_MESSAGES, aiCostCaps, householdsAtCostCap } from './plans.js';
 import { runtimeSetting } from './runtime-settings.js';
 import { flushStats, isoWeek, MIN_CELL, suppress } from './stats.js';
 
@@ -182,12 +182,17 @@ export function revenueView(now = Date.now()) {
   ).map((r) => ({ month: r.month, plan: r.plan, requests: r.requests, cost: Math.round(r.cost_micro / 100) / 10000 }));
   const over = (kind: string, min: number) =>
     suppress((d.prepare(`SELECT COUNT(*) n FROM usage_counters WHERE kind = ? AND period = ? AND n >= ?`).get(kind, month, min) as { n: number }).n);
-  const cap = aiCostCap();
+  // the cost cap is per plan since 18 Oct 2026 (2): counted against each household's own cap
+  const caps = aiCostCaps();
+  const anyCap = caps.haushalt > 0 || caps.plus > 0 || caps.trial > 0;
   const limitsReached = {
-    overFairUse: over('assistant', 1501),
+    overFairUse: over('assistant', PLUS_FAIR_MESSAGES + 1),
     atHardLimit: over('assistant', PLUS_HARD_MESSAGES),
-    atCostCap: cap > 0 ? over(AI_COST_KIND, Math.round(cap * 1e6)) : null,
-    costCap: cap,
+    atCostCap: anyCap ? suppress(householdsAtCostCap(month)) : null,
+    costCap: caps.plus,
+    costCaps: caps,
+    fairUse: PLUS_FAIR_MESSAGES,
+    hardLimit: PLUS_HARD_MESSAGES,
   };
 
   // ---- paywall, purchase and review counters (no household, no person)
