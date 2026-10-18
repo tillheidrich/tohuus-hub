@@ -12,3 +12,7 @@ openrouter-api-key.txt
 *.key
 *.pem
 store-assets/_wiki/
+
+# Apple keys never belong in git
+*.p8
+AuthKey_*
