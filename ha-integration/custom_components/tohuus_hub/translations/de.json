@@ -29,7 +29,7 @@
           "verify_ssl": "SSL-Zertifikat prüfen"
         },
         "data_description": {
-          "url": "Zum Beispiel http://192.168.1.20:8080",
+          "url": "Zum Beispiel {url_example}",
           "code": "Acht Zeichen, gilt 10 Minuten, einmal verwendbar.",
           "token": "Beginnt mit sw_. Nur nötig, wenn du keinen Code nimmst.",
           "verify_ssl": "Nur bei selbst signierten Zertifikaten ausschalten."

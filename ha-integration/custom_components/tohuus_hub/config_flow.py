@@ -100,6 +100,9 @@ async def _token_for(flow: ConfigFlow, url: str, code: str | None, token: str | 
     return None, "code_or_token"
 
 
+
+URL_EXAMPLE = "http://192.168.1.20:8080"
+
 class ToHuusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ToHuus Hub."""
 
@@ -170,6 +173,8 @@ class ToHuusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_VERIFY_SSL, default=defaults.get(CONF_VERIFY_SSL, True)): bool,
                 }
             ),
+            # hassfest: no URLs inside strings.json – the example address comes in as a placeholder
+            description_placeholders={"url_example": URL_EXAMPLE},
             errors=errors,
         )
 
@@ -226,7 +231,7 @@ class ToHuusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_VERIFY_SSL, default=entry.data.get(CONF_VERIFY_SSL, True)): bool,
                 }
             ),
-            description_placeholders={"cloud_url": CLOUD_URL},
+            description_placeholders={"cloud_url": CLOUD_URL, "url_example": URL_EXAMPLE},
             errors=errors,
         )
 

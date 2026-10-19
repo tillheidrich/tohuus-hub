@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2 – 2026-10-19
+
+- Party mode is gone from ToHuus: the party sensor (`sensor.tohuus_hub_party`), `binary_sensor.tohuus_hub_party_running` and the `party.ending` notification kind are removed. Guests now ask through “Bring me something”.
+- Config flow: the example address is passed as a placeholder instead of being written into the translations (new hassfest rule: no URLs in strings).
+
 ## 0.3.1 – 2026-10-13
 
 - **More notification kinds** on the event entity and for the notify services: budget hint, meal vote, cooking rotation, shopping trip started, “bring something too”, probably due, meal plan reminder. Before, the integration dropped these although ToHuus sent them.

@@ -29,7 +29,7 @@
           "verify_ssl": "Verifiera SSL-certifikat"
         },
         "data_description": {
-          "url": "Till exempel http://192.168.1.20:8080",
+          "url": "Till exempel {url_example}",
           "code": "Åtta tecken, giltig i 10 minuter, fungerar en gång.",
           "token": "Börjar med sw_. Behövs bara utan kod.",
           "verify_ssl": "Stäng av bara för självsignerade certifikat."
