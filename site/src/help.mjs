@@ -7,7 +7,7 @@
  * or is being built in this release; anything not live yet carries `soon: true` and says so in the text.
  * Slugs beyond docs/help-slugs.md (site only, can be added to the contract later): gemeinsam-einkaufen,
  * benachrichtigungen, claude-chatgpt, erinnerungen-spiegeln, umzug-in-die-cloud, selbst-hosten, datenschutz-kurz,
- * abo-und-kuendigen, fragen, aufgaben, kopf-voll.
+ * abo-und-kuendigen, fragen, aufgaben, kopf-voll, daten-loeschen.
  *
  * `k` is the toolkit from build.mjs: { code(id, label, text), CLOUD, GH, MAIL, APP_DE, APP_EN }.
  */
@@ -667,7 +667,29 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Ausgaben', p('Auf der Seite Geld als CSV.')],
           ['Haushalt löschen', p('In der Cloud wird beim Löschen zuerst der Schlüssel des Haushalts vernichtet. Ab da ist die Datenbank nicht mehr lesbar. Danach werden Dateien und Sicherungen gelöscht. Dein Konto löschst du unter Einstellungen › Mein Konto.')],
         ],
-        related: ['datenschutz-kurz', 'umzug-in-die-cloud', 'abo-und-kuendigen'],
+        related: ['daten-loeschen', 'datenschutz-kurz', 'umzug-in-die-cloud'],
+      },
+      {
+        slug: 'daten-loeschen', pair: 'deleting-data', group: 'account', title: 'Daten löschen und neu anfangen',
+        desc: 'Beispieldaten weg, einen Bereich leeren oder alles, und wie du es zurückholst.',
+        sections: [
+          ['Wo', p('Einstellungen › Daten & Zurücksetzen, im Browser und auf dem iPhone. Ganze Bereiche löschen nur Admins. Jedes Mitglied kann dort seine eigenen privaten Einträge löschen.')],
+          ['Beispieldaten entfernen', p('Solange Beispieldaten da sind, steht ein Hinweis auf Heute und ganz oben in Daten & Zurücksetzen. Entfernt wird nur, was die Beispiele angelegt haben. Was du selbst eingetragen hast, bleibt. Beispielsachen, die ihr schon benutzt habt, bleiben auch, außer du wählst sie mit aus.')],
+          ['Einen Bereich leeren', ul(
+            'Einkauf: Listen und Einträge, die Läden an den Produkten, Kauf-Rhythmus und Vorschläge.',
+            'Vorrat: Produkte, Bestand und Verlauf. Orte und Kategorien bleiben, wenn du sie nicht mit auswählst.',
+            'Geld: Bons mit Fotos und PDFs, Ausgaben, Budgets und Aufteilungen. Hier tippst du zur Sicherheit LÖSCHEN ein.',
+            'Kochen: Rezepte, Wochenplan und Kochverlauf. Die Rezepte kannst du behalten.',
+            'Aufgaben, Haushaltswissen, Wünsche & Bring mir was, Hausinfo: alles im jeweiligen Bereich.',
+          ), p('Bei jedem Bereich steht, wie viele Einträge es sind. Die anderen Bereiche, Mitglieder, Abo und Einstellungen bleiben.')],
+          ['Alles löschen, Haushalt behalten', p('Leert alle Bereiche auf einmal. Mitglieder, Abo, Einstellungen, Anmeldungen und Verbindungen bleiben. Zur Bestätigung tippst du LÖSCHEN ein. Vorher wird zusätzlich eine komplette Sicherung angelegt.')],
+          ['Private Einträge', p('Private Aufgaben, privates Haushaltswissen, Im Kopf und private Wunschlisten der anderen löscht ein Admin nicht mit. Die löscht jede Person selbst.')],
+          ['Zurückholen', p('Direkt danach kannst du 10 Sekunden lang auf „Rückgängig“ tippen. Danach steht der Eintrag unter „Zuletzt gelöscht“ und lässt sich 7 Tage lang wiederherstellen. Nach 7 Tagen ist alles endgültig weg, auch Fotos und PDFs. Wer was wann gelöscht hat, bleibt sichtbar, ohne Inhalte. Die anderen Admins bekommen eine Mitteilung.')],
+          ['Vorher sichern', p('Willst du eine Kopie für dich, lade vorher den Export herunter (siehe <a href="daten-export.html">Deine Daten mitnehmen</a>).')],
+          ['Ohne Abo und selbst gehostet', p('Ist die Testphase vorbei und ihr habt kein Abo, könnt ihr trotzdem löschen und wiederherstellen. Selbst gehostet funktioniert alles genauso. Ganz von vorn fängst du an, indem du den Server stoppst und die Datenbank im Datenordner wegräumst (siehe <a href="selbst-hosten.html">Selbst hosten</a>).')],
+          ['Nicht über den Assistenten', p('Ganze Bereiche löschen geht nur hier, nie über den Assistenten, Claude, ChatGPT oder andere verbundene Dienste.')],
+        ],
+        related: ['daten-export', 'wer-sieht-was', 'abo-und-kuendigen'],
       },
       {
         slug: 'datenschutz-kurz', pair: 'privacy-in-short', group: 'account', title: 'Datenschutz kurz erklärt',
@@ -1444,7 +1466,29 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Spending', p('On the Money page as CSV.')],
           ['Deleting the household', p('In the cloud, deleting first destroys the household’s key, so the database can no longer be read. Then files and backups are deleted. You delete your account under Settings › My account.')],
         ],
-        related: ['privacy-in-short', 'move-to-the-cloud', 'subscription'],
+        related: ['deleting-data', 'privacy-in-short', 'move-to-the-cloud'],
+      },
+      {
+        slug: 'deleting-data', pair: 'daten-loeschen', group: 'account', title: 'Deleting data and starting over',
+        desc: 'Remove the sample data, clear one area or everything, and how to get it back.',
+        sections: [
+          ['Where', p('Settings › Data & reset, in the browser and on the iPhone. Only admins clear whole areas. Every member can delete their own private entries there.')],
+          ['Remove the sample data', p('As long as there is sample data, Today shows a hint and Data & reset shows it at the top. Only what the samples added goes. What you entered yourself stays. Sample things you have already used stay too, unless you pick them.')],
+          ['Clear one area', ul(
+            'Shopping: lists and entries, the stores on products, purchase rhythm and suggestions.',
+            'Pantry: products, stock and history. Places and categories stay unless you pick them.',
+            'Money: receipts with photos and PDFs, expenses, budgets and splits. Here you type DELETE to be sure.',
+            'Cooking: recipes, week plan and cooking history. You can keep the recipes.',
+            'Tasks, household knowledge, wishes & Bring me something, house info: everything in that area.',
+          ), p('Each area shows how many entries it has. The other areas, members, plan and settings stay.')],
+          ['Delete everything, keep the household', p('Clears all areas at once. Members, plan, settings, sign-ins and connections stay. You type DELETE to confirm. A full backup is made first as well.')],
+          ['Private entries', p('An admin never deletes the private tasks, private household knowledge, On my mind or private wish lists of the others. Everyone deletes their own.')],
+          ['Getting it back', p('Right after, you can tap “Undo” for 10 seconds. Then it is listed under “Deleted lately” and can be restored for 7 days. After 7 days it is gone for good, photos and PDFs included. Who deleted what and when stays visible, without the content. The other admins get a notification.')],
+          ['Keep a copy', p('If you want a copy for yourself, download the export first (see <a href="your-data.html">Taking your data with you</a>).')],
+          ['Without a plan and self-hosted', p('When the trial is over and you have no plan, you can still delete and restore. Self-hosted, everything works the same. To start from scratch, stop the server and move the database in the data folder away (see <a href="self-hosting.html">Self-hosting</a>).')],
+          ['Not through the assistant', p('Whole areas can only be deleted here, never through the assistant, Claude, ChatGPT or other connected services.')],
+        ],
+        related: ['your-data', 'who-sees-what', 'subscription'],
       },
       {
         slug: 'faq', pair: 'fragen', group: 'start', title: 'Frequently asked questions',

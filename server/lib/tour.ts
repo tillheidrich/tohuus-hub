@@ -7,7 +7,10 @@
  * by their foreign keys (a new table that references products belongs to "stock") or fall into
  * "everything". New tables from other modules are therefore always covered without touching this file.
  */
+import path from 'node:path';
+import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
+import { householdId } from './tenancy.js';
 import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { createBackup } from './backup.js';
@@ -79,6 +82,8 @@ export const KEEP = new Set([
   'off_cache',
   'spend_budgets',
   'demo_rows',
+  // audit + 7-day restore of deletions (wipe.ts) – a reset must never delete its own undo
+  'data_wipes',
 ]);
 
 /** Unknown tables with names like these are treated as identity/config and kept (safe side). */
@@ -214,7 +219,7 @@ export function resetPlan(scopes: Scope[], places = false): { table: string; whe
 }
 
 /** Children before parents, so NO ACTION foreign keys never block a delete. */
-function orderChildrenFirst<T extends { table: string }>(items: T[]): T[] {
+export function orderChildrenFirst<T extends { table: string }>(items: T[]): T[] {
   const set = new Set(items.map((i) => i.table));
   const parents = new Map(items.map((i) => [i.table, fks(i.table).map((f) => f.table).filter((p) => set.has(p) && p !== i.table)]));
   const done = new Set<string>();
@@ -363,7 +368,7 @@ export function demoStatus() {
  * Delete exactly the demo rows. Demo products/recipes the household has used since stay unless
  * `includeUsed` – together with their stock, history and ingredients – and become the household's own.
  */
-export function removeDemo(opts: { includeUsed?: boolean } = {}) {
+export function removeDemo(opts: { includeUsed?: boolean; keepFiles?: boolean } = {}) {
   backfillLegacyDemo();
   const live = liveDemoRows();
   const used = opts.includeUsed ? { products: new Set<number>(), recipes: new Set<number>() } : touched(live);
@@ -398,7 +403,8 @@ export function removeDemo(opts: { includeUsed?: boolean } = {}) {
     const hints = db.prepare(`UPDATE locations SET hint = NULL WHERE hint IN (${sig.hints.map(() => '?').join(', ')})`).run(...sig.hints).changes;
     if (hints) deleted.location_hints = hints;
   })();
-  images.forEach((p) => deleteImage(p));
+  // with keepFiles the photos stay for the restore window (wipe.ts removes them when it expires)
+  if (!opts.keepFiles) images.forEach((p) => deleteImage(p));
   // what stays was used – it is the household's own now, so it no longer counts as demo
   const left = liveDemoRows();
   const kept = { products: left.get('products')?.length ?? 0, recipes: left.get('recipes')?.length ?? 0 };
@@ -416,13 +422,24 @@ export class ResetError extends Error {
 }
 
 /** Back up, then clear the chosen scopes. Members, logins, settings and integrations always stay. */
-export async function resetData(opts: { scopes: Scope[]; places?: boolean }) {
+export async function resetData(opts: { scopes: Scope[]; places?: boolean; actor?: { userId: number | null; name: string } }) {
   const scopes = [...new Set(opts.scopes)].filter((s) => (SCOPES as readonly string[]).includes(s)) as Scope[];
   if (!scopes.length) throw new ResetError(400, t('Pick at least one area.'));
-  const backup = await createBackup('manual');
+  // cloud: the household's own backup folder (backups/<uuid>/) – never the shared self-host folder
+  const backup = config.multiTenant
+    ? path.basename((await import('./cloud-backup.js')).backupHousehold(householdId(), 'manual', true) ?? '') || null
+    : (await createBackup('manual')).name;
   const plan = resetPlan(scopes, Boolean(opts.places));
   const deleted: Record<string, number> = {};
-  db.transaction(() => {
+  // the same 7-day restore as Settings › Data & reset (wipe.ts): the rows are copied first, then deleted below
+  const candidates = [...plan];
+  if (scopes.includes('everything'))
+    for (const tb of ['kid_profiles', 'guest_links']) {
+      const ids = liveDemoRows().get(tb) ?? [];
+      if (ids.length) candidates.push({ table: tb, where: `rowid IN (${ids.map(Number).join(', ')})` });
+    }
+  const { captureReset } = await import('./wipe.js');
+  const rec = captureReset(scopes, candidates, opts.actor ?? { userId: null, name: '' }, () => {
     // demo kid profile & demo guest link live in kept tables – "everything" takes the demo with it
     if (scopes.includes('everything')) {
       for (const t of ['kid_profiles', 'guest_links']) {
@@ -437,11 +454,11 @@ export async function resetData(opts: { scopes: Scope[]; places?: boolean }) {
     // marks of rows that are gone
     const cleared = plan.filter((p) => p.where === '1').map((p) => p.table);
     if (cleared.length) db.prepare(`DELETE FROM demo_rows WHERE tbl IN (${cleared.map(() => '?').join(', ')})`).run(...cleared);
-    if (opts.places) ensureBaseData({ places: false }); // fresh base categories; places are picked again, none are invented (area: home)
-  })();
+  });
+  if (opts.places) ensureBaseData({ places: false }); // fresh base categories; places are picked again, none are invented (area: home)
   liveDemoRows(); // drop stale marks (cascaded rows)
   emit('stock', 'products', 'shopping', 'recipes', 'imports', 'orders', 'notifications', 'settings', 'care', 'tour');
-  return { backup: backup.name, deleted, tables: plan.map((p) => p.table) };
+  return { backup, deleted, tables: plan.map((p) => p.table), wipeId: rec.id };
 }
 
 // ---------------------------------------------------------------- first start: empty or demo

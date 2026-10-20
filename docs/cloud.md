@@ -324,6 +324,10 @@ sample rows for 3 days or more, not dismissed) – Today offers removing them on
 rows the household used since stay unless `include_used`. Test: `test/demo-flow.test.ts`, isolation in
 `test/cloud-isolation.test.ts`.
 
+Settings › Data & reset (`/api/data/wipe`, docs/data-and-reset.md) clears areas or everything with a 7-day restore. The
+snapshot lives in the household's own encrypted database, the extra full backup before "everything" in
+`backups/<uuid>/`; deleting and restoring work in the read-only state. Test: `test/data-wipe-cloud.test.ts`.
+
 ## E-mail language
 
 Account mails – address confirmation, sign-in link, password reset, account deleted, "new assistant connected" (OAuth) – are built and sent inside `inAccountLang(account.lang, …)` (`server/lib/account-mail.ts`, `withLang()` in `server/i18n.ts`), so subject, title, text, button, footer and the `<html lang>` all use **the account's language** (`accounts.lang`, stored at signup from `lang`; accounts created through an invitation get the household's language). Without a stored language the household's (or the instance's) language is used. Invitation mails go out in the inviting household's language (the invitee has no account yet). The footer says "ToHuus Cloud" in the cloud and "euer Haushalt, selbst gehostet" self-hosted. Layout (`server/lib/mail.ts`): green header with the house of the app icon and the title, ticket card, then a footer with the app icon, one line about ToHuus, the reason for the mail and links – notification settings (`BASE_URL/einstellungen?tab=notify`) and help (`SITE_URL/hilfe/`), in the cloud also privacy and imprint; the plain-text part lists the same links. The brand fonts are `@font-face` from `SITE_URL/assets/fonts` (our own site, no font CDN); clients that block remote fonts fall back to Georgia/Arial. Test: a `lang: 'de'` signup gets no English template text (`test/cloud-isolation.test.ts`).

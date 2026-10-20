@@ -294,7 +294,7 @@ export function buildMcpServer(actorName: string, opts: { readOnly?: boolean } =
       const loc = a.location ? (db.prepare(`SELECT id FROM locations WHERE lower(name) LIKE lower(?) ESCAPE '\\'`).get(`%${likeEsc(a.location)}%`) as { id: number } | undefined)?.id : undefined;
       const imp = linesToImport(a.kind === 'shelf' ? 'shelf' : 'mcp', a.title, a.items, { shop: a.shop ?? null });
       if (loc) imp.lines.forEach((l) => ((l as any).locationId = loc));
-      const out = createImport(imp, { actor: actorName });
+      const out = createImport(imp, { actor: actorName, origin: { via: 'mcp', platform: 'api' } });
       if (out.duplicate || out.merged) return text({ import_id: out.id, note: out.merged ? 'Matched with an open order.' : 'This receipt has already been imported.' });
       const lines = db.prepare(`SELECT name, qty, action, product_id, confidence FROM import_lines WHERE import_id = ?`).all(out.id) as any[];
       if (a.apply) {

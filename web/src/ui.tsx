@@ -288,7 +288,8 @@ export function Sheet({ open, onClose, title, children, wide = false, footer, la
 
 // ------------------------------------------------------------------ toast
 
-type ToastT = { id: number; text: string; error?: boolean; action?: { label: string; run: () => void } };
+/** `ms`: how long it stays (e.g. 10 s for the undo after deleting data) */
+type ToastT = { id: number; text: string; error?: boolean; action?: { label: string; run: () => void }; ms?: number };
 const ToastCtx = createContext<(t: Omit<ToastT, 'id'>) => void>(() => {});
 export const useToast = () => useContext(ToastCtx);
 
@@ -299,7 +300,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     if (t.error && shownAsPlanHint(t.text)) return;
     const id = Date.now() + Math.random();
     setList((l) => [...l.slice(-2), { ...t, id }]);
-    setTimeout(() => setList((l) => l.filter((x) => x.id !== id)), t.action ? 5500 : 3200);
+    setTimeout(() => setList((l) => l.filter((x) => x.id !== id)), t.ms ?? (t.action ? 5500 : 3200));
   }, []);
   return (
     <ToastCtx.Provider value={push}>

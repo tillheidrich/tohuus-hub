@@ -265,7 +265,7 @@ export function importPurchaseHistory(rows: string[][], iName: number, productFo
         res.skippedDuplicates++;
         continue;
       }
-      const id = Number(insImp.run(t('Purchase history · {shop}', { shop: g.shop }), ref, g.shop, total || null, JSON.stringify({ date: g.day, source: 'csv' }), opts.actor ?? null).lastInsertRowid);
+      const id = Number(insImp.run(t('Purchase history · {shop}', { shop: g.shop }), ref, g.shop, total || null, JSON.stringify({ date: g.day, source: 'csv', origin: 'history_csv' }), opts.actor ?? null).lastInsertRowid);
       g.lines.forEach((l, i) => insLine.run(id, i, l.name, l.name, l.qty, l.price, l.productId, l.productId ? 'add' : 'skip', l.productId ? 0.9 : 0, l.name));
       res.receipts++;
       res.lines += g.lines.length;

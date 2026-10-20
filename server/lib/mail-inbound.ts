@@ -177,7 +177,7 @@ export async function handleInbound(raw: Buffer, recipient: string, deps: { pdfT
   }
   if (isCodeMail(msg)) return ignore('code');
   return runInHousehold({ id: hid, via: 'mail' }, async () => {
-    const r = await processMessage(msg, { pdfToText: deps.pdfToText ?? pdfToText, allowVision: knownSender(msg.from), dropUnrecognised: true });
+    const r = await processMessage(msg, { pdfToText: deps.pdfToText ?? pdfToText, allowVision: knownSender(msg.from), dropUnrecognised: true, origin: 'mail_address' });
     if (!r.imports.length) return ignore('no_receipt');
     count(hid, 'imported', r.imports.length);
     emit('imports');

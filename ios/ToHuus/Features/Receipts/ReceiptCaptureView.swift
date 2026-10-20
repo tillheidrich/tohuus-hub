@@ -118,7 +118,7 @@ struct ReceiptCaptureView: View {
             .fullScreenCover(isPresented: $showScanner) {
                 DocumentScanner { images in
                     showScanner = false
-                    Task { await handle(images) }
+                    Task { await handle(images, origin: "app_scan") }
                 } onCancel: {
                     showScanner = false
                 }
@@ -133,7 +133,7 @@ struct ReceiptCaptureView: View {
                     let type = UTType(filenameExtension: url.pathExtension)
                     return (url.lastPathComponent, type?.preferredMIMEType ?? "application/octet-stream", data)
                 }
-                Task { await upload(Array(files)) }
+                Task { await upload(Array(files), origin: "file") }
             }
             .onChange(of: photoItems) { _, items in
                 guard !items.isEmpty else { return }
@@ -143,7 +143,7 @@ struct ReceiptCaptureView: View {
                         if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) { images.append(img) }
                     }
                     photoItems = []
-                    await handle(images)
+                    await handle(images, origin: "app_photo")
                 }
             }
         }
@@ -209,7 +209,8 @@ struct ReceiptCaptureView: View {
     }
 
     /// Photos: read on the device and send the text (POST /api/imports/text), or upload the pictures.
-    private func handle(_ images: [UIImage]) async {
+    /// origin: app_scan (document camera) or app_photo (chosen photos) – shown on the receipt as where it came from
+    private func handle(_ images: [UIImage], origin: String) async {
         guard !images.isEmpty else { return }
         if readOnDevice || !app.receiptAIOn {
             uploading = true
@@ -234,7 +235,7 @@ struct ReceiptCaptureView: View {
             do {
                 uploading = true
                 defer { uploading = false }
-                let r = try await store.api.importLines(lines, mode: "receipt", alt: alt)
+                let r = try await store.api.importLines(lines, mode: "receipt", alt: alt, origin: origin)
                 // the photo stays on this iPhone for this session – "Read again with AI" can use it without asking again
                 if let id = r.id { ReceiptPhotoCache.put(id, images) }
                 let note = r.sumMatches == false ? L("The total doesn't add up – please check the lines.") : nil
@@ -252,23 +253,23 @@ struct ReceiptCaptureView: View {
         let files = images.enumerated().compactMap { i, img -> UploadFile? in
             img.jpegData(compressionQuality: 0.8).map { ("receipt-\(i + 1).jpg", "image/jpeg", $0) }
         }
-        await upload(files)
+        await upload(files, origin: origin)
     }
 
-    private func upload(_ files: [UploadFile]) async {
+    private func upload(_ files: [UploadFile], origin: String) async {
         guard !files.isEmpty else { return }
         uploading = true
         defer { uploading = false }
         error = nil
         do {
-            let r = try await store.api.uploadReceipt(files: files)
+            let r = try await store.api.uploadReceipt(files: files, origin: origin)
             results = r.results + results
             store.touch("imports")
             Haptics.success()
         } catch APIError.offline {
             // keep it for later: the app sends the queue when it is back online
             let queued = files.map { PendingUpload.QueuedFile(storedName: UUID().uuidString, originalName: $0.name, mimeType: $0.mime) }
-            UploadQueue.enqueue(PendingUpload(kind: .receiptFiles, files: queued), fileData: files.map(\.data))
+            UploadQueue.enqueue(PendingUpload(kind: .receiptFiles, files: queued, origin: origin), fileData: files.map(\.data))
             error = L("No connection – the receipt is saved and will be sent later.")
         } catch {
             self.error = APIError.from(error).localizedDescription

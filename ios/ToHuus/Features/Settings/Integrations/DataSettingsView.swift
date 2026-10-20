@@ -2,11 +2,11 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// Settings › Data & backups (web: Settings.tsx `Data`, MoveSettings.tsx, Tour.tsx StartOver, Billing.tsx "Your data"):
+/// Settings › Data & backups (web: Settings.tsx `Data`, MoveSettings.tsx, DataWipe.tsx, Billing.tsx "Your data"):
 /// full export into Files, purchase history CSV, "import without asking", moving a household between your own server
-/// and ToHuus Cloud, backups (own server, BackupsView) and "start over" with a backup first.
+/// and ToHuus Cloud, backups (own server, BackupsView) and Data & reset (DataWipeView, 7-day restore).
 /// API: GET /api/export.json | /api/cloud/export, POST /api/imports/catalog-csv, PATCH /api/settings {importAutoApply},
-/// GET /api/move/info, GET /api/move/file, GET/POST /api/cloud/import, GET /api/tour/data, POST /api/tour/reset.
+/// GET /api/move/info, GET /api/move/file, GET/POST /api/cloud/import, GET/POST /api/data/wipe (DataWipeView).
 struct DataSettingsView: View {
     let api: APIClient
     @Environment(AppModel.self) private var app
@@ -85,7 +85,13 @@ struct DataSettingsView: View {
                 Text(L("For example from the REWE data export (GDPR request): items you’ve bought at least three times are created as products – including the receipt abbreviations, so future e-receipts are recognised right away. No stock is booked."))
             }
 
-            if admin { StartOverSection(api: api) { toast = $0 } }
+            Section {
+                NavigationLink { DataWipeView(api: api) } label: { Label(L("Data & reset"), systemImage: "arrow.counterclockwise") }
+            } footer: {
+                Text(admin
+                     ? L("Remove the sample data, clear single areas or everything – restorable for 7 days.")
+                     : L("Delete your own private entries."))
+            }
 
             Section {
                 Text(L("ToHuus Hub is open source (AGPL-3.0). Some product data and images from Open Food Facts (ODbL / CC BY-SA). Not affiliated with REWE, Thermomix/Vorwerk or HelloFresh."))
@@ -255,178 +261,6 @@ struct MoveInSection: View {
                 if j["state"]?.string == "done" { Haptics.success() }
                 return
             }
-        }
-    }
-}
-
-/// "Start over": pick what to clear; a backup is made first (web: Tour.tsx StartOver).
-struct StartOverSection: View {
-    let api: APIClient
-    let onToast: (ToastMessage) -> Void
-    @State private var overview: JSONValue?
-    @State private var sel: Set<String> = []
-    @State private var places = false
-    @State private var sheet = false
-
-    static let scopes = ["stock", "recipes", "shopping", "receipts", "everything"]
-
-    static func title(_ s: String) -> String {
-        switch s {
-        case "stock": return L("Stock & products")
-        case "recipes": return L("Recipes & plan")
-        case "shopping": return L("Shopping & orders")
-        case "receipts": return L("Receipts & spending")
-        default: return L("Everything household data")
-        }
-    }
-
-    static func sub(_ s: String) -> String {
-        switch s {
-        case "stock": return L("Products, stock, history, barcodes")
-        case "recipes": return L("Recipes, cooking history, week plan, swap rules")
-        case "shopping": return L("Shopping list, orders, wishes")
-        case "receipts": return L("Imported receipts, expenses, tags")
-        default: return L("All of the above plus care tasks, notifications and other household entries")
-        }
-    }
-
-    private func rows(_ s: String) -> Int {
-        let scopes = overview?["scopes"]?.object ?? [:]
-        if s == "everything" { return scopes.filter { $0.key != "places" }.values.compactMap { $0["rows"]?.int }.reduce(0, +) }
-        return scopes[s]?["rows"]?.int ?? 0
-    }
-
-    private var everything: Bool { sel.contains("everything") }
-
-    var body: some View {
-        Section {
-            ForEach(Self.scopes, id: \.self) { s in
-                Toggle(isOn: Binding(get: { everything || sel.contains(s) }, set: { on in toggle(s, on) })) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(Self.title(s)).font(s == "everything" ? .body.weight(.semibold) : .body)
-                        Text(Self.sub(s) + " · " + (rows(s) == 1 ? L("1 entry") : LF("%d entries", rows(s))))
-                            .font(.caption).foregroundStyle(Theme.ink3)
-                    }
-                }
-                .tint(Theme.empty)
-                .disabled(s != "everything" && everything)
-            }
-            Toggle(isOn: Binding(get: { places }, set: { on in
-                places = on
-                if on && !sel.contains("stock") && !everything { sel.insert("stock") }
-            })) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L("Places & categories too"))
-                    Text(L("Back to the default places and categories. Only together with stock – your printed place labels stop working."))
-                        .font(.caption).foregroundStyle(Theme.ink3)
-                }
-            }
-            .tint(Theme.empty)
-            Button(role: .destructive) { sheet = true } label: { Label(L("Start over …"), systemImage: "trash") }
-                .disabled(sel.isEmpty)
-        } header: {
-            Text(L("Start over"))
-        } footer: {
-            Text(L("Pick what to clear. A backup is made first, so you can go back.") + " " + L("Always kept:") + " "
-                 + L("members and their logins, passkeys and sessions, settings, integrations and access tokens, guest links, displays and printers – and your places unless you pick them above."))
-        }
-        .task { if overview == nil { overview = try? await api.ixRaw("api/tour/data") } }
-        .sheet(isPresented: $sheet) {
-            StartOverSheet(api: api, scopes: Array(sel), places: places, total: everything ? rows("everything") : sel.map(rows).reduce(0, +)) { msg in
-                sheet = false
-                if let msg {
-                    onToast(msg)
-                    sel = []
-                    places = false
-                    Task { overview = try? await api.ixRaw("api/tour/data") }
-                }
-            }
-        }
-    }
-
-    private func toggle(_ s: String, _ on: Bool) {
-        if on { sel.insert(s) } else { sel.remove(s) }
-        if s == "stock" && !on { places = false }
-    }
-}
-
-/// Strong confirmation: what goes, type DELETE/LÖSCHEN when everything or the places go, backup first.
-struct StartOverSheet: View {
-    let api: APIClient
-    let scopes: [String]
-    let places: Bool
-    let total: Int
-    /// nil = cancelled
-    let onDone: (ToastMessage?) -> Void
-    @State private var word = ""
-    @State private var busy = false
-    @State private var done: String?
-    @State private var error: String?
-
-    private var needsWord: Bool { scopes.contains("everything") || places }
-    private var confirmWord: String { L("DELETE") }
-    private var wordOk: Bool { [confirmWord, "DELETE"].map { $0.uppercased() }.contains(word.trimmingCharacters(in: .whitespaces).uppercased()) }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                if let done {
-                    Section {
-                        Label(L("Done – off you go."), systemImage: "checkmark.circle.fill").foregroundStyle(Theme.primaryText)
-                        Text(LF("A backup was saved first: %@. To undo, restore it under Settings › Data & backups › Backups.", done))
-                            .font(.footnote).foregroundStyle(Theme.ink2)
-                    }
-                } else {
-                    Section {
-                        Text(scopes.contains("everything")
-                             ? LF("This clears all household data (%d entries). Members, logins, settings and integrations stay.", total)
-                             : LF("This clears %@ (%d entries).", scopes.map(StartOverSection.title).joined(separator: ", "), total))
-                        if places { Text(L("Places and categories go back to the defaults.")) }
-                        Text(L("A backup is made automatically before anything is deleted.")).font(.footnote).foregroundStyle(Theme.ink3)
-                    }
-                    if needsWord {
-                        Section {
-                            TextField(confirmWord, text: $word).textInputAutocapitalization(.characters).autocorrectionDisabled()
-                        } header: {
-                            Text(LF("Type %@ to confirm.", confirmWord))
-                        }
-                    }
-                    if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
-                    Section {
-                        Button(role: .destructive) { Task { await run() } } label: {
-                            HStack { Text(busy ? L("Backing up and clearing …") : L("Clear now")).bold(); if busy { Spacer(); ProgressView() } }
-                        }
-                        .disabled(busy || (needsWord && !wordOk))
-                    }
-                }
-            }
-            .themedList()
-            .navigationTitle(done != nil ? L("All clear") : L("Start over"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    if done == nil { Button(L("Cancel")) { onDone(nil) }.disabled(busy) }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    if done != nil { Button(L("Close")) { onDone(ToastMessage(text: L("All clear"))) } }
-                }
-            }
-            .interactiveDismissDisabled(busy)
-        }
-        .presentationDetents([.medium, .large])
-    }
-
-    private func run() async {
-        busy = true
-        defer { busy = false }
-        var body: [String: Any] = ["scopes": scopes, "places": places]
-        if needsWord { body["confirm"] = word.trimmingCharacters(in: .whitespaces) }
-        do {
-            let r = try await api.ixRawSend("POST", "api/tour/reset", json: body, timeout: 120)
-            done = r["backup"]?.string ?? "–"
-            Haptics.success()
-        } catch {
-            self.error = APIError.from(error).localizedDescription
         }
     }
 }

@@ -1,0 +1,29 @@
+/* Settings › Data & reset (DataWipe.tsx) */
+.wipe-areas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wipe-areas .tour-scope {
+  align-items: flex-start;
+}
+.wipe-all {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 12px;
+  background: var(--surface-2);
+}
+.wipe-sample {
+  border-color: var(--primary);
+}
+.wipe-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wipe-history li {
+  padding: 8px 0;
+}
+.wipe-history li + li {
+  border-top: 1px solid var(--line);
+}

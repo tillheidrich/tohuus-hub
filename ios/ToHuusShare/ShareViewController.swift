@@ -96,6 +96,8 @@ final class ShareModel: ObservableObject {
         guard let session, let token else { return }
         state = .sending
         var item = PendingUpload(kind: kind)
+        // the receipt shows "Auf dem iPhone geteilt" (server/lib/import-origin.ts)
+        item.origin = "share"
         var payload: [Data] = []
         switch kind {
         case .receiptFiles:

@@ -18,6 +18,8 @@ struct ImportSummary: Decodable, Sendable, Identifiable, Hashable {
     var appliedAt: String?
     /// number of lines
     var lines: Int?
+    /// where it came from (server/lib/import-origin.ts) – nil on older servers
+    var origin: ImportOrigin?
 
     /// what was paid: the reconciled final total first (pickup matched with the eBon), else the receipt total
     var paid: Double? { meta?["finalTotal"]?.double ?? total }
@@ -38,6 +40,7 @@ struct ImportDetail: Decodable, Sendable, Identifiable {
     var createdAt: String?
     var appliedAt: String?
     @Lossy var lines: [ImportLine]
+    var origin: ImportOrigin?
 
     var readonly: Bool { status != "review" }
     var day: String? { meta?["date"]?.string ?? createdAt }
@@ -110,6 +113,22 @@ struct ApplyResult: Decodable, Sendable {
 }
 
 /// DELETE /api/imports/:id → stock bookings taken back, products only this receipt created removed
+/// "Woher kommt dieser Bon?" – GET /api/imports(/:id) → origin. The label is ready in the household language
+/// ("Von Lea · Foto mit dem iPhone · Mo. 21:18"); originals open via GET /api/imports/:id/original/:n.
+struct ImportOrigin: Decodable, Sendable, Hashable {
+    var via: String
+    var inferred: Bool?
+    var label: String
+    var mailSubject: String?
+    @Lossy var originals: [Original]
+
+    struct Original: Decodable, Sendable, Hashable {
+        var n: Int
+        /// photo | pdf
+        var type: String
+    }
+}
+
 struct ImportDeleteResult: Decodable, Sendable {
     var reverted: Int?
     var removedProducts: Int?

@@ -466,7 +466,7 @@ export function logPurchase(ctx: ToolCtx, input: { shop?: string | null; total?:
       total,
     });
     imp.meta = { ...imp.meta, source: 'assistant' };
-    importId = createImport(imp, { actor: ctx.actor, silent: true, autoApply: false }).id;
+    importId = createImport(imp, { actor: ctx.actor, silent: true, autoApply: false, origin: { via: 'assistant' } }).id;
   }
   let expenseId: number | null = null;
   if (total) {

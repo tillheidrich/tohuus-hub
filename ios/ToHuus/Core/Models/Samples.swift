@@ -30,10 +30,12 @@ struct DemoMarks: Decodable, Sendable, Equatable {
     var shopping: [Int] = []
 }
 
-/// POST /api/tour/demo/remove
+/// POST /api/tour/demo/remove – `wipe.id` undoes it (POST /api/data/wipe/:id/restore, 7 days)
 struct DemoRemoveResult: Decodable, Sendable {
     struct Kept: Decodable, Sendable { var products: Int?; var recipes: Int? }
+    struct Wipe: Decodable, Sendable { var id: Int? }
     var kept: Kept?
+    var wipe: Wipe?
 }
 
 /// POST /api/auth/passkey/options { client: "ios" }

@@ -8,6 +8,7 @@ import { emit } from '../lib/bus.js';
 import { seedKidsDemo } from '../lib/kids.js';
 import { onboardState, updateOnboardState } from '../lib/onboard.js';
 import { ResetError, SCOPES, dataOverview, demoMarks, demoNudge, demoStatus, dismissDemoNudge, removeDemo, resetData, setTourState, startChoice, tourState } from '../lib/tour.js';
+import { wipeDemo } from '../lib/wipe.js';
 import { seedDemo } from '../seed.js';
 
 export const r = Router();
@@ -96,9 +97,11 @@ r.post('/tour/demo/nudge', requireAdmin, (_req, res) => {
 /** Remove exactly the demo rows; demo things the household has used since stay unless include_used. */
 r.post('/tour/demo/remove', requireAdmin, (req, res) => {
   const b = z.object({ include_used: z.boolean().default(false) }).parse(req.body ?? {});
-  const out = removeDemo({ includeUsed: b.include_used });
+  // with a 7-day restore (lib/wipe.ts) – `wipe.id` is what the apps' "Undo" sends to /data/wipe/:id/restore
+  const out = wipeDemo(b.include_used, { userId: uid(req), name: req.actor?.name ?? '' });
   if (startChoice().choice === null) setSetting('tour.start', 'empty');
-  res.json({ ok: true, ...out });
+  const { deleted, kept, ...wipe } = out;
+  res.json({ ok: true, deleted, kept, wipe });
 });
 
 const resetBody = z.object({
@@ -113,8 +116,13 @@ async function runReset(req: any, res: any, body: z.infer<typeof resetBody>) {
     res.status(400).json({ error: t('Type {word} to confirm.', { word: t('DELETE') }) });
     return;
   }
+  // deleting whole areas only by a person signed in as themselves – never an API/MCP token
+  if (req.actor?.kind !== 'user') {
+    res.status(403).json({ error: 'forbidden' });
+    return;
+  }
   try {
-    const out = await resetData({ scopes: body.scopes, places: body.places });
+    const out = await resetData({ scopes: body.scopes, places: body.places, actor: { userId: uid(req), name: req.actor?.name ?? '' } });
     res.json({ ok: true, ...out, by: req.actor?.name ?? null });
   } catch (e) {
     res.status(e instanceof ResetError ? e.status : 500).json({ error: (e as Error).message });

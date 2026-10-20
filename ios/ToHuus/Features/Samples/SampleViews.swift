@@ -98,17 +98,46 @@ struct SampleTag: View {
     }
 }
 
-/// Heute, once, after a few days with sample data (admins): remove them now, or keep them.
+/// Heute (admins): a small line as long as there is sample data; once, after a few days, the card to remove them now
+/// or keep them. Removing offers "Undo" for 10 seconds.
 struct SampleNudgeCard: View {
     @Environment(AppModel.self) private var app
     @State private var busy = false
     @State private var done: String?
+    @State private var undoId: Int?
 
     var body: some View {
-        if app.tour?.demo?.nudge == true || done != nil {
+        if app.tour?.demo?.nudge != true && done == nil {
+            if app.hasSampleData && app.isHouseholdAdmin {
+                HStack(spacing: Theme.Space.s3) {
+                    Image(systemName: "flask").foregroundStyle(Theme.ink3).accessibilityHidden(true)
+                    Text(L("You are looking at sample data.")).font(.subheadline).foregroundStyle(Theme.ink2)
+                    Spacer(minLength: 0)
+                    Button(L("Remove sample data")) { Task { await remove() } }
+                        .font(.subheadline.weight(.semibold))
+                        .disabled(busy)
+                }
+                .padding(Theme.Space.s3)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+            }
+        } else {
             Card(title: done == nil ? L("Ready for your own things?") : L("Sample data removed"), systemImage: done == nil ? "flask" : "checkmark") {
                 if let done {
                     Text(done).font(.subheadline).foregroundStyle(Theme.ink2)
+                    if let id = undoId {
+                        Button(L("Undo")) {
+                            Task {
+                                try? await app.restoreWipe(id)
+                                undoId = nil
+                                self.done = nil
+                            }
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+                        .task(id: id) {
+                            try? await Task.sleep(nanoseconds: 10_000_000_000)
+                            if undoId == id { undoId = nil }
+                        }
+                    }
                 } else {
                     Text(L("The sample data has done its job. Remove it now – everything you added yourself stays."))
                         .font(.subheadline).foregroundStyle(Theme.ink2)
@@ -141,8 +170,9 @@ struct SampleNudgeCard: View {
     private func remove() async {
         busy = true
         defer { busy = false }
-        if let kept = try? await app.removeSampleData() {
-            done = kept > 0 ? LF("Sample data removed – %d things you used stay", kept) : L("Everything you added yourself stays.")
+        if let r = try? await app.removeSampleDataUndoable() {
+            done = r.kept > 0 ? LF("Sample data removed – %d things you used stay", r.kept) : L("Everything you added yourself stays.")
+            undoId = r.wipeId
         }
     }
 }

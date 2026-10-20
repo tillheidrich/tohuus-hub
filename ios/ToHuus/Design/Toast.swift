@@ -8,6 +8,8 @@ struct ToastMessage: Equatable, Identifiable {
     var actionTitle: String?
     var isError = false
     var action: (@MainActor () -> Void)?
+    /// how long it stays (e.g. 10 s for the undo after deleting data, DataWipeView); default 3 s, 6 s with an action
+    var seconds: Double? = nil
 
     static func == (a: ToastMessage, b: ToastMessage) -> Bool { a.id == b.id }
 }
@@ -38,7 +40,7 @@ private struct ToastModifier: ViewModifier {
                 .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                 .task(id: m.id) {
                     A11yTiming.announce(m.text)
-                    await A11yTiming.hold(m.action == nil ? 3 : 6)
+                    await A11yTiming.hold(m.seconds ?? (m.action == nil ? 3 : 6))
                     if !Task.isCancelled, message?.id == m.id { Motion.perform { message = nil } }
                 }
             }

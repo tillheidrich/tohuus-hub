@@ -137,6 +137,8 @@ export interface MailDeps {
   allowVision: boolean;
   /** delete a saved PDF again when it did not become an import (cloud receipt address: nothing else is kept) */
   dropUnrecognised?: boolean;
+  /** how the mail arrived: the household's receipt address (mail-inbound.ts) or the own IMAP mailbox (default) */
+  origin?: 'mail_address' | 'mail_inbox';
 }
 
 /** Receipt HTML → text that keeps table columns apart (2+ spaces), so the receipt grammar still applies. */
@@ -176,6 +178,8 @@ export async function processMessage(msg: MailMessage, deps: MailDeps): Promise<
   const out: MailResult = { imports: [] };
   const pdfs = msg.attachments.filter(isPdf);
   let unreadable = 0;
+  // only the sender's domain and a shortened subject are kept (import-origin.ts), never the address
+  const origin = { via: deps.origin ?? 'mail_inbox', mailFrom: msg.from, subject: msg.subject } as const;
   for (const a of pdfs) {
     const file = saveUpload(a.content, '.pdf');
     const before = out.imports.length;
@@ -190,7 +194,7 @@ export async function processMessage(msg: MailMessage, deps: MailDeps): Promise<
       drop();
       continue;
     }
-    const opts = { actor: MAIL_ACTOR, sourceFile: path.basename(file), rawText: text };
+    const opts = { actor: MAIL_ACTOR, sourceFile: path.basename(file), rawText: text, origin };
     const parsed = parseDocumentText(text, a.filename ?? undefined);
     if (parsed) {
       // the total does not add up: the model reads it once (text first, then the pages), if the household uses AI
@@ -215,7 +219,7 @@ export async function processMessage(msg: MailMessage, deps: MailDeps): Promise<
       const parsed = parseDocumentText(body);
       if (parsed) {
         const better = deps.allowVision ? await aiSecondLook(parsed, { text: body }) : null;
-        out.imports.push(createImport(better ?? parsed, { actor: MAIL_ACTOR, rawText: body }));
+        out.imports.push(createImport(better ?? parsed, { actor: MAIL_ACTOR, rawText: body, origin }));
         break;
       }
     }
@@ -325,7 +329,7 @@ async function runCheck(opts: CheckOptions): Promise<InboxStatus> {
           html: typeof mail.html === 'string' ? mail.html : null,
           attachments: mail.attachments.map((a) => ({ filename: a.filename ?? null, contentType: a.contentType, content: a.content })),
         },
-        { pdfToText: opts.pdfToText ?? pdfToText, allowVision: cfg.allowFrom.length > 0 },
+        { pdfToText: opts.pdfToText ?? pdfToText, allowVision: cfg.allowFrom.length > 0, origin: 'mail_inbox' },
       );
       remember.run(messageId, uid, (mail.subject ?? env.subject ?? '').slice(0, 300), from.slice(0, 200), JSON.stringify(result));
       for (const i of result.imports) {

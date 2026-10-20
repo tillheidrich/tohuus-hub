@@ -12,6 +12,9 @@ struct PendingUpload: Codable, Identifiable, Sendable, Equatable {
     var createdAt: Date = Date()
     /// a Cookidoo link in ToHuus Cloud: the app shows the confirm sheet (ingredients only) instead of sending it
     var confirm: Bool?
+    /// where it came from (server/lib/import-origin.ts): "share" from the share sheet, "app_photo"/"app_scan"/"file"
+    /// from the receipt screen when it was queued offline – nil in queues written by older builds
+    var origin: String?
 
     struct QueuedFile: Codable, Sendable, Equatable {
         var storedName: String
@@ -67,6 +70,22 @@ enum UploadQueue {
     }
 }
 
+/// The kind of device for "Foto mit dem iPhone" (header X-ToHuus-Device; the server only keeps iPhone, iPad, Mac).
+enum ClientDevice {
+    static let kind: String? = {
+        #if os(iOS)
+        if ProcessInfo.processInfo.isiOSAppOnMac { return "Mac" }
+        var u = utsname()
+        uname(&u)
+        let machine = withUnsafeBytes(of: &u.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        let model = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? machine
+        return model.hasPrefix("iPad") ? "iPad" : "iPhone"
+        #else
+        return nil
+        #endif
+    }()
+}
+
 /// Sends shared things to the server. Used by the extension directly and by the app when draining the queue.
 struct ShareUploader: Sendable {
     let session: SessionInfo
@@ -81,6 +100,8 @@ struct ShareUploader: Sendable {
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         if let h = session.householdId { req.setValue(h, forHTTPHeaderField: "X-Household") }
+        req.setValue("ios", forHTTPHeaderField: "X-ToHuus-Client")
+        if let d = ClientDevice.kind { req.setValue(d, forHTTPHeaderField: "X-ToHuus-Device") }
         return req
     }
 
@@ -109,12 +130,14 @@ struct ShareUploader: Sendable {
             for (i, f) in item.files.enumerated() where i < files.count {
                 mp.addFile("files", filename: f.originalName, mimeType: f.mimeType, data: files[i])
             }
+            if let o = item.origin { mp.addField("origin", o) }
             var req = request("api/imports/upload")
             req.setValue(mp.contentType, forHTTPHeaderField: "Content-Type")
             try await send(req, body: mp.finished())
         case .text:
             var mp = Multipart()
             mp.addField("text", item.text ?? "")
+            if let o = item.origin { mp.addField("origin", o) }
             var req = request("api/imports/upload")
             req.setValue(mp.contentType, forHTTPHeaderField: "Content-Type")
             try await send(req, body: mp.finished())
@@ -122,6 +145,7 @@ struct ShareUploader: Sendable {
             var req = request(item.kind == .receiptURL ? "api/imports/url" : "api/recipes/import/url")
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")
             var json: [String: Any] = ["url": item.url ?? ""]
+            if item.kind == .receiptURL, let o = item.origin { json["origin"] = o }
             // social links: the share-sheet caption often is the recipe
             if item.kind == .recipeURL, let t = item.text, !t.isEmpty { json["text"] = t }
             let body = try JSONSerialization.data(withJSONObject: json)

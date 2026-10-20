@@ -7,7 +7,7 @@ import { db } from '../db.js';
 import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { createProduct, learnAlias, matchProduct } from '../lib/catalog.js';
-import { toVisionJpeg } from '../lib/images.js';
+import { importsDir, readStoredFile, toVisionJpeg } from '../lib/images.js';
 import {
   addAdjustment,
   addImportLine,
@@ -40,6 +40,7 @@ import { OcrError, ocrAvailable, ocrImage } from '../lib/ocr.js';
 import { importPurchaseHistory, parseCsv, productForArticle } from '../lib/list-import.js';
 import { receiptVisible, VISIBLE_TO } from '../lib/spending.js';
 import { detectStore } from '../importers/generic.js';
+import { describeImportOrigin, requestOrigin, type Origin, type OriginInput } from '../lib/import-origin.js';
 
 const lineSchema = z.object({ name: z.string().min(1).max(200), qty: z.coerce.number().min(0).max(999).optional().catch(1), price: z.coerce.number().nullable().optional().catch(null), deposit: z.boolean().optional().catch(false), brand: z.string().nullable().optional().catch(null) });
 /** model output → validated lines (drops anything malformed) */
@@ -64,12 +65,16 @@ r.get('/imports', (req, res) => {
   res.json(
     db
       .prepare(
-        `SELECT i.id, i.kind, i.status, i.title, i.shop, i.total, i.ref, i.meta, i.actor, i.created_at, i.applied_at, i.private_for,
+        `SELECT i.id, i.kind, i.status, i.title, i.shop, i.total, i.ref, i.meta, i.actor, i.created_at, i.applied_at, i.private_for, i.source_file,
           (SELECT COUNT(*) FROM import_lines l WHERE l.import_id = i.id) AS lines
          FROM imports i WHERE ${VISIBLE_TO} ORDER BY i.id DESC LIMIT 80`,
       )
       .all(uid, uid)
-      .map((i: any) => ({ ...i, meta: JSON.parse(i.meta) })),
+      .map((i: any) => {
+        const meta = JSON.parse(i.meta);
+        const { source_file, ...rest } = i;
+        return { ...rest, meta, origin: describeImportOrigin({ ...i, meta, source_file }) };
+      }),
   );
 });
 
@@ -85,7 +90,25 @@ r.get('/imports/:id', (req, res) => {
        FROM import_lines l LEFT JOIN products p ON p.id = l.product_id WHERE import_id = ? ORDER BY sort`,
     )
     .all(imp.id);
-  res.json({ ...imp, raw_text: undefined, has_raw: Boolean(imp.raw_text), meta: JSON.parse(imp.meta), lines });
+  const meta = JSON.parse(imp.meta);
+  res.json({ ...imp, raw_text: undefined, has_raw: Boolean(imp.raw_text), meta, origin: describeImportOrigin({ ...imp, meta }), lines });
+});
+
+/**
+ * The stored original of a receipt (photo while it is checked, PDF): GET /api/imports/:id/original/:n – n is the
+ * position in imports.source_file (origin.originals). Decrypted here; personal receipts stay hidden (r.param above).
+ */
+r.get('/imports/:id/original/:n', (req, res) => {
+  const imp = db.prepare('SELECT source_file FROM imports WHERE id = ?').get(Number(req.params.id)) as { source_file: string | null } | undefined;
+  const names = (imp?.source_file ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  const name = names[Number(req.params.n)];
+  if (!name) return void res.status(404).json({ error: t('The original of this receipt is not stored (photos go once it is booked).') });
+  const file = path.join(importsDir(), path.basename(name));
+  if (!fs.existsSync(file)) return void res.status(404).json({ error: t('The original of this receipt is not stored (photos go once it is booked).') });
+  const isPdf = /\.pdf$/i.test(name);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Content-Disposition', `inline; filename="${isPdf ? 'bon.pdf' : 'bon.jpg'}"`);
+  res.type(isPdf ? 'application/pdf' : /\.png$/i.test(name) ? 'image/png' : /\.webp$/i.test(name) ? 'image/webp' : 'image/jpeg').send(readStoredFile(file));
 });
 
 r.get('/imports/:id/raw', (req, res) => {
@@ -261,12 +284,16 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
   const files = (req.files as Express.Multer.File[]) ?? [];
   const mode = String(req.body?.mode ?? 'auto');
   const results: any[] = [];
+  // where it came from: the app names the way (scan, share …), else web upload / file / photo by platform
+  const origin = (fb: (p: string) => Origin) => requestOrigin(req, fb);
+  const fileOrigin = origin((p) => (p === 'web' ? 'web_upload' : 'file'));
+  const photoOrigin = origin((p) => (p === 'web' ? 'web_upload' : 'app_photo'));
   const images: Express.Multer.File[] = [];
   for (const f of files) {
     const isPdf = f.mimetype === 'application/pdf' || f.originalname.toLowerCase().endsWith('.pdf');
     if (isPdf && !looksLikePdf(f.buffer)) {
       // named .pdf but not a PDF – often a saved web page of a digital receipt (TestFlight 13.10., a2bd3b25)
-      results.push({ file: f.originalname, ...(await importNotPdf(f.buffer, f.originalname, actorName(req))) });
+      results.push({ file: f.originalname, ...(await importNotPdf(f.buffer, f.originalname, actorName(req), fileOrigin)) });
     } else if (isPdf) {
       const file = saveUpload(f.buffer, '.pdf');
       let text: string;
@@ -281,21 +308,21 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
       if (parsed) {
         // the total does not add up: the model reads it once (text first, then the rendered pages), if the household uses AI
         const better = await aiSecondLook(parsed, { pdfFile: file, text });
-        results.push({ file: f.originalname, ...createImport(better ?? parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
+        results.push({ file: f.originalname, ...createImport(better ?? parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text, origin: fileOrigin }) });
       } else if (isPrintedEbonMail(text)) {
         // the eBon mail printed as a PDF: the receipt is its attachment, not in the printout
         results.push({ file: f.originalname, error: t('This is the eBon e-mail itself, the receipt is attached to it as a PDF. Upload the attachment, or forward the e-mail to your household’s ToHuus address.') });
       } else if (visionAvailable() && text.trim().length > 30) {
         const j = await runVision('text-items', { text: text.slice(0, 12000) });
         const imp = linesToImport('receipt', t('Receipt {file}', { file: f.originalname }), cleanLines(j.lines));
-        results.push({ file: f.originalname, ...createImport(imp, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }) });
+        results.push({ file: f.originalname, ...createImport(imp, { actor: actorName(req), sourceFile: path.basename(file), rawText: text, origin: fileOrigin }) });
       } else {
         results.push({ file: f.originalname, error: t('PDF format not recognised (supported: REWE notices and eBons, receipts from most German supermarkets and drugstores).') });
       }
     } else if (f.mimetype.startsWith('image/')) {
       images.push(f);
     } else if (f.mimetype.startsWith('text/')) {
-      results.push({ file: f.originalname, ...(await importText(f.buffer.toString('utf8'), actorName(req))) });
+      results.push({ file: f.originalname, ...(await importText(f.buffer.toString('utf8'), actorName(req), fileOrigin)) });
     }
   }
   if (images.length && mode !== 'shelf') {
@@ -304,7 +331,7 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
       const read = await readReceiptPhotos(images.map((i) => i.buffer));
       // the photo stays with the receipt while it is checked ("Read again with AI"); removed when booked or deleted
       const kept = await keepReceiptPhotos(images.map((i) => i.buffer));
-      const out = createImport(read.parsed, { actor: actorName(req), rawText: null, sourceFile: kept });
+      const out = createImport(read.parsed, { actor: actorName(req), rawText: null, sourceFile: kept, origin: photoOrigin });
       results.push({ file: images.map((i) => i.originalname).join(', '), ...out, via: read.via, confidence: read.confidence, sumMatches: read.sumMatches });
     } catch (e) {
       const x = e as { status?: number; message?: string };
@@ -321,13 +348,13 @@ r.post('/imports/upload', upload.array('files', 8), uploadQuota, async (req, res
       const title = task === 'shelf' ? t('Photo stocktake {date}', { date: fmtDay(new Date()) }) : t('Receipt {shop}', { shop: j.shop ?? '' }).trim();
       const imp = linesToImport(task === 'shelf' ? 'shelf' : 'receipt', title, cleanLines(j.lines), { shop: typeof j.shop === 'string' ? j.shop : null, total: typeof j.total === 'number' ? j.total : null, date: typeof j.date === 'string' ? j.date : null });
       if (task === 'shelf' && req.body.location_id) imp.meta.location_id = Number(req.body.location_id);
-      const out = createImport(imp, { actor: actorName(req) });
+      const out = createImport(imp, { actor: actorName(req), origin: photoOrigin });
       if (task === 'shelf' && req.body.location_id)
         db.prepare('UPDATE import_lines SET location_id = ? WHERE import_id = ?').run(Number(req.body.location_id), out.id);
       results.push({ file: images.map((i) => i.originalname).join(', '), ...out });
     }
   }
-  if (typeof req.body.text === 'string' && req.body.text.trim()) results.push(await importText(req.body.text, actorName(req)));
+  if (typeof req.body.text === 'string' && req.body.text.trim()) results.push(await importText(req.body.text, actorName(req), origin(() => 'text')));
   res.json({ results });
 });
 
@@ -350,17 +377,17 @@ export function htmlText(html: string): string {
 }
 
 /** A file named .pdf that is not one: a web page or text is read as such, anything else gets a plain answer. */
-async function importNotPdf(buf: Buffer, name: string, actor: string): Promise<Record<string, unknown>> {
+async function importNotPdf(buf: Buffer, name: string, actor: string, origin?: OriginInput): Promise<Record<string, unknown>> {
   const head = buf.subarray(0, 2048).toString('utf8');
   const printable = head.replace(/[\x20-\x7e\s\u00a0-\uffff]/g, '').length < head.length * 0.05;
   if (!printable) return { error: t('This file is not a PDF. Save the receipt as a PDF again or take a photo of it.') };
   const raw = buf.toString('utf8');
   const text = /<(?:!doctype|html|body|table|div)\b/i.test(raw) ? htmlText(raw) : raw;
   const parsed = parseDocumentText(text, name);
-  if (parsed) return createImport(parsed, { actor, rawText: text });
+  if (parsed) return createImport(parsed, { actor, rawText: text, origin });
   if (visionAvailable() && text.trim().length > 30) {
     const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
-    if (lines.length) return createImport(linesToImport('receipt', t('Receipt {file}', { file: name }), lines), { actor, rawText: text });
+    if (lines.length) return createImport(linesToImport('receipt', t('Receipt {file}', { file: name }), lines), { actor, rawText: text, origin });
   }
   return { error: t('This file is a saved web page, not a PDF, and no receipt was found in it. Open the receipt in the browser and save or share it as a PDF.') };
 }
@@ -380,21 +407,21 @@ export function looksLikeReceiptText(text: string): boolean {
   return /^\s*(?:summe|zu\s+zahlen|gesamtbetrag|gesamtsumme|total|endbetrag)\b/im.test(text) || Boolean(detectStore(text)) || priced >= rows.length * 0.3;
 }
 
-async function importText(text: string, actor: string): Promise<Record<string, unknown>> {
+async function importText(text: string, actor: string, origin?: OriginInput): Promise<Record<string, unknown>> {
   const parsed = parseDocumentText(text);
-  if (parsed) return createImport((await aiSecondLook(parsed, { text })) ?? parsed, { actor, rawText: text });
+  if (parsed) return createImport((await aiSecondLook(parsed, { text })) ?? parsed, { actor, rawText: text, origin });
   if (looksLikeReceiptText(text)) {
     // a receipt the parsers could not read as it is: the repairs of photo text (repeated blocks, slashed zeros) …
     const read = receiptFromLines(text.split('\n'), null, 'ocr-device', null);
     if (read && !read.parsed.meta.guessed) {
       read.parsed.meta.source = 'text';
-      return createImport(read.parsed, { actor, rawText: text });
+      return createImport(read.parsed, { actor, rawText: text, origin });
     }
     // … then the model, if the household uses AI …
     if (visionAvailable()) {
       try {
         const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
-        if (lines.length) return createImport(linesToImport('receipt', t('Receipt {shop}', { shop: detectStore(text)?.name ?? '' }).trim(), lines, { shop: detectStore(text)?.name ?? null }), { actor, rawText: text });
+        if (lines.length) return createImport(linesToImport('receipt', t('Receipt {shop}', { shop: detectStore(text)?.name ?? '' }).trim(), lines, { shop: detectStore(text)?.name ?? null }), { actor, rawText: text, origin });
       } catch (e) {
         if (!(e instanceof AiError) && !(e instanceof UsageLimitError)) throw e;
       }
@@ -402,7 +429,7 @@ async function importText(text: string, actor: string): Promise<Record<string, u
     // … else every "name … price" row as a guess, to be checked – never a shopping list with hundreds of rows
     if (read) {
       read.parsed.meta.source = 'text';
-      return createImport(read.parsed, { actor, rawText: text });
+      return createImport(read.parsed, { actor, rawText: text, origin });
     }
     return { error: t('This looks like a receipt, but ToHuus could not read it. Share or upload the receipt as a PDF or a photo instead.') };
   }
@@ -417,12 +444,13 @@ async function importText(text: string, actor: string): Promise<Record<string, u
     });
   if (!lines.length) return { error: t('Nothing found to match.') };
   if (lines.length > MAX_LIST_LINES) return { error: t('That is {n} lines – too many for one list. Paste up to {max} things, one per line. A receipt is best shared as a PDF or a photo.', { n: lines.length, max: MAX_LIST_LINES }) };
-  return createImport(linesToImport('text', t('List from {date}', { date: fmtDay(new Date()) }), lines), { actor, rawText: text });
+  return createImport(linesToImport('text', t('List from {date}', { date: fmtDay(new Date()) }), lines), { actor, rawText: text, origin });
 }
 
 /** Digital receipt via QR code / link: fetch the document and import it. */
 r.post('/imports/url', async (req, res) => {
   const { url } = z.object({ url: z.string().url() }).parse(req.body);
+  const origin = requestOrigin(req, () => 'qr_link');
   let resp;
   try {
     resp = await safeFetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 ToHuus Hub' }, timeoutMs: 20000 });
@@ -442,12 +470,12 @@ r.post('/imports/url', async (req, res) => {
     }
     const parsed = parseDocumentText(text);
     if (parsed) {
-      res.json(createImport((await aiSecondLook(parsed, { pdfFile: file, text })) ?? parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text }));
+      res.json(createImport((await aiSecondLook(parsed, { pdfFile: file, text })) ?? parsed, { actor: actorName(req), sourceFile: path.basename(file), rawText: text, origin }));
       return;
     }
     if (visionAvailable()) {
       const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
-      res.json(createImport(linesToImport('url', t('Digital receipt'), lines), { actor: actorName(req), rawText: text }));
+      res.json(createImport(linesToImport('url', t('Digital receipt'), lines), { actor: actorName(req), rawText: text, origin }));
       return;
     }
     res.status(422).json({ error: t('PDF recognised, but the format is unknown and no model is set up.') });
@@ -458,12 +486,12 @@ r.post('/imports/url', async (req, res) => {
     const parsed = parseDocumentText(text);
     if (parsed) {
       // the fetched text stays with the receipt (for "Read again with AI": only this text goes to the model)
-      res.json(createImport((await aiSecondLook(parsed, { text })) ?? parsed, { actor: actorName(req), rawText: text }));
+      res.json(createImport((await aiSecondLook(parsed, { text })) ?? parsed, { actor: actorName(req), rawText: text, origin }));
       return;
     }
     if (visionAvailable()) {
       const lines = cleanLines((await runVision('text-items', { text: text.slice(0, 12000) })).lines);
-      res.json(createImport(linesToImport('url', t('Digital receipt'), lines), { actor: actorName(req) }));
+      res.json(createImport(linesToImport('url', t('Digital receipt'), lines), { actor: actorName(req), origin }));
       return;
     }
   }
@@ -499,6 +527,7 @@ r.post('/imports/lines', (req, res) => {
       confidence: z.number().min(0).max(1).nullable().optional(),
       // the same receipt tidied by the on-device model (Apple Intelligence) – only used when it reads better
       alt: z.array(z.string().max(300)).max(400).optional(),
+      origin: z.string().max(20).optional(),
     })
     .parse(req.body);
   const mode = b.mode ?? 'auto';
@@ -507,7 +536,7 @@ r.post('/imports/lines', (req, res) => {
     const read = pick?.read ?? null;
     if (read && (mode === 'receipt' || !read.parsed.meta.guessed)) {
       if (pick?.tidied) read.parsed.meta.tidiedOnDevice = true;
-      const out = createImport(read.parsed, { actor: actorName(req), rawText: pick!.lines.join('\n') });
+      const out = createImport(read.parsed, { actor: actorName(req), rawText: pick!.lines.join('\n'), origin: requestOrigin(req, () => 'app_photo') });
       res.json({ kind: 'receipt', ...out, via: read.via, sumMatches: read.sumMatches, confidence: read.confidence });
       return;
     }

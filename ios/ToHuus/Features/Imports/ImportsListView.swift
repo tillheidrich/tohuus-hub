@@ -14,6 +14,10 @@ struct ImportsListView: View {
     @State private var showText = false
     @State private var openId: Int?
     @State private var toast: ToastMessage?
+    @State private var removals = PendingRemovals()
+    @Environment(AppModel.self) private var app
+    /// guests and children only look (no swipe to delete)
+    private var canRemove: Bool { !app.isGuest && !app.isChild }
 
     var body: some View {
         List {
@@ -43,11 +47,12 @@ struct ImportsListView: View {
                 }
                 .listRowBackground(Color.clear)
             } else if !items.isEmpty {
-                let toCheck = items.filter { $0.status == "review" }
+                let visible = items.filter { !removals.isHidden("import:\($0.id)") }
+                let toCheck = visible.filter { $0.status == "review" }
                 if !toCheck.isEmpty {
                     Section(L("To check")) { ForEach(toCheck) { row($0) } }
                 }
-                let rest = items.filter { $0.status != "review" }
+                let rest = visible.filter { $0.status != "review" }
                 if !rest.isEmpty {
                     Section(L("History")) { ForEach(rest) { row($0) } }
                 }
@@ -75,6 +80,24 @@ struct ImportsListView: View {
             }
         }
         .toast($toast)
+        .onChange(of: toast) { old, _ in removals.toastChanged(from: old) }
+        .onDisappear { removals.flush() }
+    }
+
+    /// Swipe left: a receipt to check is discarded, a booked or discarded one deleted (its bookings taken back) –
+    /// with "Undo" instead of asking first.
+    private func remove(_ i: ImportSummary) {
+        let review = i.status == "review"
+        let text = review ? L("Receipt discarded.") : i.status == "applied" ? L("Receipt deleted, its bookings are taken back.") : L("Receipt deleted.")
+        toast = removals.remove("import:\(i.id)", text: text) { [store] in
+            do {
+                if review { try await store.api.discardImport(i.id) } else { _ = try await store.api.deleteImport(i.id) }
+                store.touch("imports", "stock", "shopping", "products", "money")
+            } catch {
+                removals.restore("import:\(i.id)")
+                toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+            }
+        }
     }
 
     private func row(_ i: ImportSummary) -> some View {
@@ -89,6 +112,10 @@ struct ImportsListView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(i.title).font(.body).foregroundStyle(Theme.ink).lineLimit(2)
                     Text(subtitle(i)).font(.caption).foregroundStyle(Theme.ink3).lineLimit(2)
+                    // where it came from – most helpful while it waits to be checked
+                    if i.status == "review", let o = i.origin {
+                        Text(o.label).font(.caption).foregroundStyle(Theme.ink3).lineLimit(2)
+                    }
                 }
                 Spacer(minLength: 4)
                 statusPill(i.status)
@@ -97,6 +124,13 @@ struct ImportsListView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            if canRemove {
+                Button(role: .destructive) { remove(i) } label: {
+                    if i.status == "review" { Label(L("Discard"), systemImage: "xmark.bin") } else { Label(L("Delete"), systemImage: "trash") }
+                }
+            }
+        }
     }
 
     private func subtitle(_ i: ImportSummary) -> String {

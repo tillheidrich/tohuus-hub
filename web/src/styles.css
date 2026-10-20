@@ -9368,6 +9368,25 @@ button.rcard {
 .money-purchases .purchase.off {
   opacity: 0.6;
 }
+/* delete right in the list (with "Undo", deferred-removal.ts): shown on hover/focus, always on touch screens */
+.money-purchases .purchases li {
+  display: flex;
+  align-items: center;
+}
+.money-purchases .purchase-remove {
+  flex: none;
+  color: var(--ink-3);
+  opacity: 0;
+}
+.money-purchases li:hover .purchase-remove,
+.money-purchases .purchase-remove:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .money-purchases .purchase-remove {
+    opacity: 1;
+  }
+}
 .money-purchases .purchase:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;

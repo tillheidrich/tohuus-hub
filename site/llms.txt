@@ -48,6 +48,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Sharing codes safely](https://tohuus.heidrich-digital.de/help/sharing-codes.html): Door code, Wi-Fi, alarm: how ToHuus treats codes.
 - [Notifications](https://tohuus.heidrich-digital.de/help/notifications.html): When ToHuus gets in touch, how to set it up and how it stays quiet.
 - [Taking your data with you](https://tohuus.heidrich-digital.de/help/your-data.html): Export, recipe pack, home knowledge as a file and what happens when you delete.
+- [Deleting data and starting over](https://tohuus.heidrich-digital.de/help/deleting-data.html): Remove the sample data, clear one area or everything, and how to get it back.
 - [Frequently asked questions](https://tohuus.heidrich-digital.de/help/faq.html): Short answers to what people often ask.
 
 ## Hilfe (Deutsch)
@@ -81,6 +82,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Vom eigenen Server in die Cloud](https://tohuus.heidrich-digital.de/hilfe/umzug-in-die-cloud.html): Einen selbst gehosteten Haushalt in die ToHuus Cloud mitnehmen.
 - [Selbst hosten mit Docker](https://tohuus.heidrich-digital.de/hilfe/selbst-hosten.html): ToHuus auf deinem eigenen Server, kostenlos unter AGPL-3.0.
 - [Deine Daten mitnehmen](https://tohuus.heidrich-digital.de/hilfe/daten-export.html): Export, Rezeptpaket und was beim Löschen passiert.
+- [Daten löschen und neu anfangen](https://tohuus.heidrich-digital.de/hilfe/daten-loeschen.html): Beispieldaten weg, einen Bereich leeren oder alles, und wie du es zurückholst.
 - [Datenschutz kurz erklärt](https://tohuus.heidrich-digital.de/hilfe/datenschutz-kurz.html): Wo eure Daten liegen, wer sie sieht und was nie passiert.
 - [Abo und Kündigen](https://tohuus.heidrich-digital.de/hilfe/abo-und-kuendigen.html): Testphase, Haushalt und Plus, wie bezahlt wird und was beim Kündigen passiert.
 - [Haushaltswissen](https://tohuus.heidrich-digital.de/hilfe/haushaltswissen.html): Größen, Maße, Zählerstände und was ihr sonst übers Zuhause wisst: eintragen, finden, übernehmen und als Datei sichern.

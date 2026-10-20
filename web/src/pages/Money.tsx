@@ -7,11 +7,13 @@
  * Chart rules (dataviz skill): one series → no legend, values as text labels in ink (never in the bar colour),
  * bars anchored at zero, no grid, every chart also readable as a list/table for screen readers.
  */
-import { ArrowDown, ArrowRight, ArrowUp, CaretLeft, CaretRight, Coins, GearSix, Lightbulb, LockSimple, Plus, Receipt } from '@phosphor-icons/react';
+import { ArrowDown, ArrowRight, ArrowUp, CaretLeft, CaretRight, Coins, GearSix, Lightbulb, LockSimple, Plus, Receipt, Trash } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { get } from '../api';
+import { del, get, invalidate, useApi } from '../api';
+import type { Me } from '../App';
+import { canRemove, useDeferredRemoval } from '../deferred-removal';
 import { getOr } from '../data';
 import { locale, t } from '../i18n';
 import { money } from '../region';
@@ -144,6 +146,16 @@ export function Money() {
   const [newList, setNewList] = useState(false);
   const [listId, setListId] = useState<number | null>(null);
   const [purchase, setPurchase] = useState<{ kind: 'receipt' | 'expense'; id: number } | null>(null);
+  const me = useApi<Me>('me', '/me');
+  const removal = useDeferredRemoval();
+  // delete a purchase right in the list, with "Undo" (Till, 20.10.2026): a receipt like in its view (bookings taken back)
+  const removePurchase = canRemove(me.data)
+    ? (p: Purchase) =>
+        removal.remove(p.key, p.kind === 'receipt' ? t('Purchase deleted, its bookings are taken back.') : t('Expense deleted.'), async () => {
+          await del(p.kind === 'receipt' ? `/imports/${p.id}` : `/spend/expenses/${p.id}`);
+          invalidate('money', 'imports', 'import', 'overview', 'products', 'shopping', 'spending');
+        })
+    : undefined;
   const q = useQuery<Overview>({
     queryKey: ['money', month, view],
     queryFn: () => getOr<any>(`/money/overview?month=${month}${mine ? '&view=mine' : ''}`, () => null).then((d) => (d ? normalise(d, month) : legacy(month))),
@@ -220,7 +232,7 @@ export function Money() {
       ) : (
         <div className={`money-grid ${q.isFetching ? 'refreshing' : ''}`}>
           <TotalCard d={d} fmt={fmt} ongoing={month === current} />
-          {d.purchases.length > 0 && <Purchases list={d.purchases} fmt={fmt} onOpen={setPurchase} onAll={() => nav('/ausgaben')} />}
+          {d.purchases.some((p) => !removal.isHidden(p.key)) && <Purchases list={d.purchases.filter((p) => !removal.isHidden(p.key))} fmt={fmt} onOpen={setPurchase} onAll={() => nav('/ausgaben')} onRemove={removePurchase} />}
           {d.byWeek.length > 1 && <WeekTrend weeks={d.byWeek} fmt={fmt} />}
           {d.byCategory.length > 0 && <Bars title={t('By category')} parts={d.byCategory} fmt={fmt} />}
           {d.byShop.length > 0 && <Bars title={t('By shop')} parts={d.byShop} fmt={fmt} unit={(n) => (n === 1 ? t('1 visit') : t('{n} visits', { n }))} />}
@@ -277,7 +289,7 @@ export function Money() {
 const SHOWN = 6;
 
 /** The month's purchases, newest first – tap one for its items. */
-function Purchases({ list, fmt, onOpen, onAll }: { list: Purchase[]; fmt: (n: number, digits?: number) => string; onOpen: (p: { kind: 'receipt' | 'expense'; id: number }) => void; onAll: () => void }) {
+function Purchases({ list, fmt, onOpen, onAll, onRemove }: { list: Purchase[]; fmt: (n: number, digits?: number) => string; onOpen: (p: { kind: 'receipt' | 'expense'; id: number }) => void; onAll: () => void; onRemove?: (p: Purchase) => void }) {
   const [all, setAll] = useState(false);
   const shown = all ? list : list.slice(0, SHOWN);
   return (
@@ -312,6 +324,11 @@ function Purchases({ list, fmt, onOpen, onAll }: { list: Purchase[]; fmt: (n: nu
               <b className="num">{p.excluded ? t('Doesn’t count') : fmt(p.total, 2)}</b>
               <CaretRight size={16} aria-hidden="true" />
             </button>
+            {onRemove && (
+              <button className="icon-btn plain purchase-remove" aria-label={t('Delete “{title}”', { title: p.title ?? '' })} title={t('Delete')} onClick={() => onRemove(p)}>
+                <Trash size={16} />
+              </button>
+            )}
           </li>
         ))}
       </ul>

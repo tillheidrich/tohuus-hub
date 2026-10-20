@@ -16,6 +16,11 @@ struct MoneyView: View {
     @State private var lists: [MoneyListSummary] = []
     @State private var showExpense = false
     @State private var allPurchases = false
+    @State private var toast: ToastMessage?
+    @State private var removals = PendingRemovals()
+    @Environment(AppModel.self) private var app
+    /// guests and children only look (no swipe to delete)
+    private var canRemove: Bool { !app.isGuest && !app.isChild }
 
     private var monthKey: String {
         let f = DateFormatter()
@@ -87,6 +92,9 @@ struct MoneyView: View {
             .refreshable { await load() }
             .task(id: "\(monthKey)-\(view)-\(store.revision("imports"))") { await load() }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
+            .toast($toast)
+            .onChange(of: toast) { old, _ in removals.toastChanged(from: old) }
+            .onDisappear { removals.flush() }
             .sheet(isPresented: $showExpense) {
                 NavigationStack {
                     ExpenseEditView(store: store, entry: nil, meta: meta, startPersonal: view == "mine")
@@ -325,7 +333,8 @@ struct MoneyView: View {
 
     /// The month's purchases, newest first – tap one for its items (receipt) or the expense form (own expense).
     private func purchasesCard(_ o: MoneyOverview) -> some View {
-        let shown = allPurchases ? o.purchases : Array(o.purchases.prefix(6))
+        let visible = o.purchases.filter { !removals.isHidden($0.key) }
+        let shown = allPurchases ? visible : Array(visible.prefix(6))
         return Card(title: L("Purchases"), systemImage: "bag") {
             ForEach(shown) { p in
                 NavigationLink(value: p.kind == "expense" ? (p.entry.map { MoneyRoute.expense($0) } ?? .detail) : .spendReceipt(p.id)) {
@@ -351,14 +360,33 @@ struct MoneyView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                // swipe left: delete the purchase right here, with "Undo" (Till, 20.10.2026)
+                .swipeToDelete(enabled: canRemove, label: L("Delete")) { removePurchase(p) }
             }
-            if o.purchases.count > 6 {
+            if visible.count > 6 {
                 Button { allPurchases.toggle() } label: {
-                    Text(allPurchases ? L("Show less") : LF("Show all %d", o.purchases.count)).frame(minHeight: 44).contentShape(Rectangle())
+                    Text(allPurchases ? L("Show less") : LF("Show all %d", visible.count)).frame(minHeight: 44).contentShape(Rectangle())
                 }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Theme.primaryText)
                     .frame(minHeight: 44)
+            }
+        }
+    }
+
+    /// A receipt is deleted like in its view (bookings taken back), an own expense removed – both only once the
+    /// "Undo" toast is gone.
+    private func removePurchase(_ p: MoneyOverview.Purchase) {
+        let receipt = p.kind == "receipt"
+        let text = receipt ? L("Purchase deleted, its bookings are taken back.") : L("Expense deleted.")
+        let key = p.key
+        toast = removals.remove(key, text: text) { [store] in
+            do {
+                if receipt { _ = try await store.api.deleteImport(p.id) } else { try await store.api.deleteExpense(p.entry?.id ?? p.id) }
+                store.touch("imports", "stock", "shopping", "products", "money")
+            } catch {
+                removals.restore(key)
+                toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
             }
         }
     }

@@ -48,6 +48,7 @@ import { r as recipes2Routes } from './routes/recipes2.js';
 import { r as qualityRoutes } from './routes/quality.js';
 import { r as peopleRoutes, pub as peoplePublic } from './routes/people.js';
 import { r as tourRoutes } from './routes/tour.js';
+import { r as wipeRoutes } from './routes/wipe.js';
 import { r as ha2Routes, ha2Guest } from './routes/ha2.js';
 import { pub as haPairPublic } from './routes/ha-pair.js';
 import { r as menuRoutes } from './routes/menu.js';
@@ -258,6 +259,8 @@ app.use('/api', recipes2Routes);
 app.use('/api', qualityRoutes);
 app.use('/api', peopleRoutes);
 app.use('/api', tourRoutes);
+// Settings › Data & reset: clear areas / everything / sample data, 7-day restore (lib/wipe.ts)
+app.use('/api', wipeRoutes);
 app.use('/api', ha2Routes);
 app.use('/api', menuRoutes);
 app.use('/api', designRoutes);

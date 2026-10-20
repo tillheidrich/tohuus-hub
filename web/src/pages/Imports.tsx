@@ -1,8 +1,9 @@
-import { Camera, CheckCircle, FileArrowUp, Link as LinkIcon, Receipt, Robot, TextAa } from '@phosphor-icons/react';
+import { Camera, CheckCircle, FileArrowUp, Link as LinkIcon, Receipt, Robot, TextAa, Trash, XCircle } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
-import { type Location, api, fmtDate, invalidate, post, useApi } from '../api';
+import { type Location, api, del, fmtDate, invalidate, post, useApi } from '../api';
+import { canRemove, useDeferredRemoval } from '../deferred-removal';
 import { Empty, Seg, Skeleton, useToast } from '../ui';
 import { Ic } from '../placeicons';
 import { num, t } from '../i18n';
@@ -24,6 +25,18 @@ export function Imports({ me }: { me: Me }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const nav = useNavigate();
   const toast = useToast();
+  const removal = useDeferredRemoval();
+  const mayRemove = canRemove(me);
+  // a receipt to check is discarded, a booked or discarded one deleted (bookings taken back) – with "Undo", no question
+  const removeImport = (i: any) => {
+    const review = i.status === 'review';
+    const text = review ? t('Receipt discarded.') : i.status === 'applied' ? t('Receipt deleted, its bookings are taken back.') : t('Receipt deleted.');
+    removal.remove(`import:${i.id}`, text, async () => {
+      if (review) await post(`/imports/${i.id}/discard`);
+      else await del(`/imports/${i.id}`);
+      invalidate('imports', 'import', 'overview', 'products', 'shopping', 'spending', 'money');
+    });
+  };
   useEffect(() => {
     const m = params.get('mode');
     if (m) setMode(m as any);
@@ -200,7 +213,7 @@ export function Imports({ me }: { me: Me }) {
           </div>
         ) : (
           <div className="list">
-            {(list.data ?? []).map((i) => (
+            {(list.data ?? []).filter((i) => !removal.isHidden(`import:${i.id}`)).map((i) => (
               <div key={i.id} className="li clickable" onClick={() => nav(`/import/${i.id}`)}>
                 <div className="thumb" style={{ width: 44, height: 44 }}>
                   {i.status === 'applied' ? <CheckCircle size={22} color="var(--accent)" weight="fill" /> : <Receipt size={22} />}
@@ -210,10 +223,25 @@ export function Imports({ me }: { me: Me }) {
                   <div className="sub">
                     {[i.lines === 1 ? t('1 line') : t('{n} lines', { n: i.lines }), i.meta?.finalTotal ? money(Number(i.meta.finalTotal)) : i.total ? money(Number(i.total)) : null, i.meta?.reconciledWith ? t('matched with receipt') : null, fmtDate(i.created_at)].filter(Boolean).join(' · ')}
                   </div>
+                  {/* where it came from – most helpful while it waits to be checked */}
+                  {i.status === 'review' && i.origin?.label && <div className="sub">{i.origin.label}</div>}
                 </div>
                 <span className={`badge ${i.status === 'review' ? 'expiring' : i.status === 'applied' ? 'good' : ''}`}>
                   {{ review: t('to check'), applied: t('booked'), discarded: t('discarded') }[i.status as string]}
                 </span>
+                {mayRemove && (
+                  <button
+                    className="icon-btn plain"
+                    aria-label={i.status === 'review' ? t('Discard “{title}”', { title: i.title }) : t('Delete “{title}”', { title: i.title })}
+                    title={i.status === 'review' ? t('Discard') : t('Delete')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImport(i);
+                    }}
+                  >
+                    {i.status === 'review' ? <XCircle size={18} /> : <Trash size={18} />}
+                  </button>
+                )}
               </div>
             ))}
           </div>

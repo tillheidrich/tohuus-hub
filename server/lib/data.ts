@@ -47,7 +47,7 @@ export const EXPORT_FORMAT = 'tohuus-export';
 export const EXPORT_VERSION = 2;
 
 /** Tables that never leave the server (credentials, sessions, one-time links, caches). */
-const SKIP_TABLE = /^(sqlite_|_migrations|oauth_)|^(sessions|api_tokens|invites|off_cache)$|(^|_)(tokens?|secrets?|push_subscriptions?)$/i;
+const SKIP_TABLE = /^(sqlite_|_migrations|oauth_)|^(sessions|api_tokens|invites|off_cache|data_wipes)$|(^|_)(tokens?|secrets?|push_subscriptions?)$/i;
 /** Columns that are credentials, wherever they appear. */
 const SECRET_COLUMN = /(^|_)(token|token_hash|password|password_hash|secret|api_key|apikey|p256dh|auth_key)$/i;
 /** Keys inside settings values (and settings keys themselves) that hold credentials or secret URLs. */

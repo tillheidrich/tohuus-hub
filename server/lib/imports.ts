@@ -26,6 +26,7 @@ import { splitProductName, titleCaseReceipt } from './text.js';
 import { t, userError } from '../i18n.js';
 import { applyRulesAfterReconcile, applyRulesToImport, applyStoreRule } from './quality.js';
 import { takeTickBooking } from './shopping-trust.js';
+import { originMeta, type OriginInput } from './import-origin.js';
 
 const pexec = promisify(execFile);
 
@@ -123,6 +124,8 @@ export interface CreateImportOptions {
   autoApply?: boolean;
   /** no "please check" notification (the person just told the assistant about this purchase) */
   silent?: boolean;
+  /** where it came from (import-origin.ts) – stored as meta.origin, meta.originPlatform, meta.mailDomain … */
+  origin?: OriginInput;
 }
 
 /**
@@ -152,7 +155,7 @@ export function createImport(parsed: ParsedImport, opts: CreateImportOptions = {
       parsed.total ?? null,
       opts.sourceFile ?? null,
       opts.rawText ?? null,
-      JSON.stringify({ ...parsed.meta, date: parsed.date ?? null }),
+      JSON.stringify({ ...parsed.meta, date: parsed.date ?? null, ...originMeta(opts.origin) }),
       opts.actor ?? null,
     );
   const id = Number(info.lastInsertRowid);
@@ -240,7 +243,7 @@ function tryReconcileWithOrder(ebon: ParsedImport, opts: CreateImportOptions): {
         // order already booked: create a correction import
         const corr = db
           .prepare(`INSERT INTO imports (kind, title, ref, shop, total, meta, actor) VALUES ('rewe-ebon', ?, ?, ?, ?, ?, ?)`)
-          .run(t('Receipt reconciliation · {title}', { title: c.title }), ebon.ref ?? null, ebon.shop ?? null, ebon.total ?? null, JSON.stringify({ ...ebon.meta, correctionOf: c.id }), opts.actor ?? null);
+          .run(t('Receipt reconciliation · {title}', { title: c.title }), ebon.ref ?? null, ebon.shop ?? null, ebon.total ?? null, JSON.stringify({ ...ebon.meta, correctionOf: c.id, ...originMeta(opts.origin ? { ...opts.origin, via: 'correction' } : { via: 'correction' }) }), opts.actor ?? null);
         const corrId = Number(corr.lastInsertRowid);
         const corrLines: (ParsedLine & { receiptName?: string | null; productId?: number | null })[] = [];
         lines.forEach((l, i) => {

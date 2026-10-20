@@ -90,6 +90,38 @@ Each import shows its lines with the matched product, quantity, unit, price and 
 
 A recognition card per import grades each line: recognised, from a rule you taught, corrected, new or not recognised.
 
+### Where a receipt came from
+
+Above the lines (and under each receipt "to check" in the list) a quiet line says who sent it, which way and when, e.g. "Von Lea · Foto mit dem iPhone · Mo. 21:18", "Aus dem Mail-Eingang (rewe.de) · heute 06:02", "Über Claude (MCP) · gestern 18:40". If the photo or PDF is still stored, "Foto ansehen" / "PDF ansehen" opens it (`GET /api/imports/:id/original/:n`; photos are removed once the receipt is booked, PDFs stay).
+
+Every way that creates an import stores this in `imports.meta` (`server/lib/import-origin.ts`):
+
+| Way | `meta.origin` | also stored |
+| --- | --- | --- |
+| iPhone: chosen photos (read on the phone or uploaded) | `app_photo` | `originPlatform: ios`, `originDevice: iPhone/iPad/Mac` |
+| iPhone: document camera | `app_scan` | same |
+| iPhone: "Choose PDF or file" | `file` | same |
+| Share sheet (share extension, also when sent later from the queue) | `share` | same |
+| Pasted / typed text | `text` | platform |
+| Digital receipt via QR code or link | `qr_link` | platform |
+| Upload in the browser | `web_upload` | `originPlatform: web` |
+| Receipt address of the household (ToHuus Cloud) | `mail_address` | `mailDomain`, `mailSubject` (≤ 60 characters) |
+| Own mailbox (IMAP) | `mail_inbox` | `mailDomain`, `mailSubject` |
+| Assistant ("hab bei Aldi … gekauft") | `assistant` | – |
+| MCP `record_purchase` (Claude, ChatGPT …) | `mcp` | `originPlatform: api` |
+| Telegram bot | `telegram` | – |
+| API token / Home Assistant token | `api` / `ha` | `originPlatform: api` |
+| Purchase history CSV | `history_csv` | – |
+| eBon correction of a booked order | `correction` | – |
+
+The person is `imports.actor` (the member's name; "E-Mail" for mail; the token name for MCP/API). How the receipt was *read* stays separate in `meta.source` (`ocr-device` = text recognition on the iPhone, `ocr` = on the server, `ai`, `text`). The app sends `origin` (multipart field or JSON) and the headers `X-ToHuus-Client` and `X-ToHuus-Device`; the server only accepts the ways an app can know (`app_photo`, `app_scan`, `share`, `file`, `text`, `qr_link`, `web_upload`) and only the device kinds iPhone, iPad, Mac – never a device name. Mail: only the sender's **domain** and a shortened subject with any address taken out are kept, never an address.
+
+Receipts from before 20.10.2026 have no `meta.origin`; the line is then derived (`inferred: true`): actor "E-Mail" → mail, kind `mcp` → MCP, `meta.source: 'ocr-device'` → photo with the iPhone (only the iPhone app sends device text), `ocr` → photo uploaded, a stored PDF → PDF uploaded; without any clue "Herkunft unbekannt · <date>".
+
+### Delete or discard right in the list
+
+In the receipt list (iPhone: Geld › Bons, web: Imports) and in the purchases on the Geld start page a receipt or purchase can be removed without opening it: swipe left on the iPhone (a full swipe does it at once), the bin button in the row on the web. A receipt "to check" is discarded, a booked one deleted with its bookings taken back (as "Delete receipt" in the review), an own expense deleted. There is no question first; instead a toast offers "Rückgängig". The server is only called once the toast is gone (or the screen is left), so "Undo" simply means nothing happened (`ios/ToHuus/Design/SwipeToDelete.swift`, `web/src/deferred-removal.ts`). Guests, children and kid tablets get no swipe and no button.
+
 ## Learning from corrections
 
 When you correct a line (product, quantity, unit, price, or "ignore this line") or the store, ToHuus Hub saves a rule for that receipt text and store. Next time the same line is filled in by the rule. A corrected store is recognised from then on by its VAT id or its first header line. There is no built-in list of chain VAT ids on purpose: they differ by company and region and change.

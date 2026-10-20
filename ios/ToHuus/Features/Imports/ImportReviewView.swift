@@ -1,3 +1,4 @@
+import QuickLook
 import SwiftUI
 
 /// Check a receipt and book it in (web: ImportReview.tsx). Lines that need a look come first; each line can be linked
@@ -22,6 +23,9 @@ struct ImportReviewView: View {
     @State private var showHead = false
     @State private var showAddLine = false
     @State private var toast: ToastMessage?
+    /// the stored photo or PDF, opened in Quick Look (GET /api/imports/:id/original/:n)
+    @State private var originalURL: URL?
+    @State private var loadingOriginal = false
     /// GET /api/quality/imports/:id – how the receipt was read (web: RecognitionCard, GradeBadge)
     @State private var report: RecognitionReport?
 
@@ -142,9 +146,69 @@ struct ImportReviewView: View {
             Text(L("Nothing is booked in. The receipt stays in the history as discarded."))
         }
         .toast($toast)
+        .quickLookPreview($originalURL)
+        // the decrypted copy only lives while it is shown
+        .onChange(of: originalURL) { old, new in if new == nil, let old { try? FileManager.default.removeItem(at: old) } }
     }
 
     // MARK: parts
+
+    /// "Von Lea · Foto mit dem iPhone · Mo. 21:18" – where the receipt came from, plus the stored original if there is one
+    @ViewBuilder
+    private func originLine(_ imp: ImportDetail) -> some View {
+        if let o = imp.origin {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s2) {
+                Label(o.label, systemImage: originIcon(o.via))
+                    .font(.footnote).foregroundStyle(Theme.ink3)
+                    .accessibilityLabel(LF("Origin: %@", o.label))
+                if let first = o.originals.first {
+                    Button {
+                        Task { await openOriginal(first) }
+                    } label: {
+                        HStack(spacing: 4) {
+                            if loadingOriginal { ProgressView().controlSize(.mini) }
+                            Text(first.type == "pdf" ? L("View PDF") : L("View photo"))
+                        }
+                        .font(.footnote.weight(.semibold))
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.primaryText)
+                    .disabled(loadingOriginal)
+                }
+            }
+        }
+    }
+
+    private func originIcon(_ via: String) -> String {
+        switch via {
+        case "app_photo", "photo": return "camera"
+        case "app_scan": return "doc.viewfinder"
+        case "share": return "square.and.arrow.up"
+        case "file", "pdf", "web_upload": return "doc"
+        case "qr_link": return "qrcode"
+        case "mail_address", "mail_inbox": return "envelope"
+        case "assistant", "mcp": return "sparkles"
+        case "telegram": return "paperplane"
+        case "ha", "api": return "house"
+        case "text": return "text.alignleft"
+        default: return "questionmark.circle"
+        }
+    }
+
+    private func openOriginal(_ o: ImportOrigin.Original) async {
+        loadingOriginal = true
+        defer { loadingOriginal = false }
+        do {
+            let data = try await store.api.getData("api/imports/\(importId)/original/\(o.n)")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("bon-\(importId)-\(o.n).\(o.type == "pdf" ? "pdf" : "jpg")")
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
+            originalURL = url
+        } catch {
+            toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+        }
+    }
 
     private func header(_ imp: ImportDetail) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -155,6 +219,7 @@ struct ImportReviewView: View {
             }
             Text(imp.title).font(Theme.title(Theme.FontSize.h1)).foregroundStyle(Theme.ink)
                 .accessibilityAddTraits(.isHeader)
+            originLine(imp)
             if let t = imp.finalTotal ?? imp.total {
                 Text(Money.format(t)).font(.headline.monospacedDigit()).foregroundStyle(Theme.ink2)
             }

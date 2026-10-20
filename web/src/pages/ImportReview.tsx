@@ -180,6 +180,20 @@ export function ImportReview() {
         <div>
           <div className="eyebrow">{[imp.shop, fmtDate(meta.date ?? imp.created_at, { weekday: 'short', day: 'numeric', month: 'long' })].filter(Boolean).join(' · ')}</div>
           <h1 style={{ fontSize: 'clamp(24px,6vw,34px)' }}>{imp.title}</h1>
+          {/* "Woher kommt dieser Bon?" – who, which way, when (server/lib/import-origin.ts), plus the stored original */}
+          {imp.origin?.label && (
+            <div className="small muted" style={{ marginTop: 4 }}>
+              <span aria-label={t('Origin: {label}', { label: imp.origin.label })}>{imp.origin.label}</span>
+              {imp.origin.originals?.[0] && (
+                <>
+                  {' · '}
+                  <a href={`/api/imports/${imp.id}/original/${imp.origin.originals[0].n}`} target="_blank" rel="noreferrer">
+                    {imp.origin.originals[0].type === 'pdf' ? t('View PDF') : t('View photo')}
+                  </a>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div className="actions">
           <button className="btn" onClick={() => setHeadOpen(true)}>

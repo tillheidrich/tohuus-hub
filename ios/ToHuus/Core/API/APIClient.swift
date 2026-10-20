@@ -60,6 +60,8 @@ final class APIClient: Sendable {
         req.setValue("watch", forHTTPHeaderField: "X-ToHuus-Client")
         #else
         req.setValue("ios", forHTTPHeaderField: "X-ToHuus-Client")
+        // "Foto mit dem iPhone" on a receipt (server/lib/import-origin.ts): only the kind of device, never its name
+        if let d = ClientDevice.kind { req.setValue(d, forHTTPHeaderField: "X-ToHuus-Device") }
         #endif
         return req
     }

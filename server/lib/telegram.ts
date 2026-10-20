@@ -495,7 +495,7 @@ async function importPhoto(chat: ChatRow, fileId: string, actor: string) {
     total: typeof j.total === 'number' ? j.total : null,
     date: typeof j.date === 'string' ? j.date : null,
   } as any);
-  return importReply(chat, createImport(imp, { actor }));
+  return importReply(chat, createImport(imp, { actor, origin: { via: 'telegram' } }));
 }
 
 async function importDocument(chat: ChatRow, doc: NonNullable<TgMessage['document']>, actor: string) {
@@ -506,10 +506,10 @@ async function importDocument(chat: ChatRow, doc: NonNullable<TgMessage['documen
   const file = saveUpload(await downloadFile(doc.file_id), '.pdf');
   const text = await pdfToText(file);
   const parsed = parseDocumentText(text, name);
-  if (parsed) return importReply(chat, createImport(parsed, { actor, sourceFile: path.basename(file), rawText: text }));
+  if (parsed) return importReply(chat, createImport(parsed, { actor, sourceFile: path.basename(file), rawText: text, origin: { via: 'telegram' } }));
   if (visionAvailable() && text.trim().length > 30) {
     const lines = visionLines((await runVision('text-items', { text: text.slice(0, 12000) }))?.lines);
-    if (lines.length) return importReply(chat, createImport(linesToImport('receipt', t('Receipt {file}', { file: name }), lines), { actor, sourceFile: path.basename(file), rawText: text }));
+    if (lines.length) return importReply(chat, createImport(linesToImport('receipt', t('Receipt {file}', { file: name }), lines), { actor, sourceFile: path.basename(file), rawText: text, origin: { via: 'telegram' } }));
   }
   return importReply(chat, null, t('PDF format not recognised (supported: REWE notices and eBons, receipts from most German supermarkets and drugstores).'));
 }

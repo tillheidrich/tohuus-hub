@@ -79,6 +79,7 @@ struct SettingsView: View {
                         NavigationLink { StartModeView(api: api, isAdmin: app.isAdmin) } label: { Label(L("What should be tracked?"), systemImage: "checklist") }
                         LunchboxSettingsLink(api: api)
                         NavigationLink { DataSettingsView(api: api) } label: { Label(L("Data & backups"), systemImage: "externaldrive") }
+                        NavigationLink { DataWipeView(api: api) } label: { Label(L("Data & reset"), systemImage: "arrow.counterclockwise") }
                     }
                     AppearancePicker()
                 }

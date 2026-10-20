@@ -190,6 +190,10 @@ export const READONLY_ALLOW: RegExp[] = [
   /^\/ai\/settings$/,
   /^\/invites\/[^/]+\/accept$/,
   /^\/users\/\d+$/,
+  // deleting your own data (and undoing it) always works, also without a plan (Settings › Data & reset)
+  /^\/data\/wipe(\/\d+\/(restore|final))?$/,
+  /^\/tour\/(reset|demo\/remove)$/,
+  /^\/demo\/reset$/,
 ];
 /** what still works in the grace period after the end: ticking off and finishing a shop (web, iPhone, Watch) */
 export function graceWrite(req: Pick<Request, 'method' | 'path' | 'body'>): boolean {

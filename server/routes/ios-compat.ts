@@ -14,6 +14,7 @@ import { setPersonAi } from '../lib/ai-policy.js';
 import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { createImport } from '../lib/imports.js';
+import { requestOrigin } from '../lib/import-origin.js';
 import { createList, listLists } from '../lib/lists.js';
 import { setPersonPrefs } from '../lib/notify-prefs.js';
 import { parseListLines, receiptFromLines } from '../lib/receipt-read.js';
@@ -37,7 +38,7 @@ r.post('/imports/text', requireAuth, (req, res) => {
   if (mode !== 'list') {
     const read = receiptFromLines(lines, null, 'ocr-device', b.confidence ?? null);
     if (read && (mode === 'receipt' || !read.parsed.meta.guessed)) {
-      const out = createImport(read.parsed, { actor: req.actor?.name ?? '?', rawText: lines.join('\n') });
+      const out = createImport(read.parsed, { actor: req.actor?.name ?? '?', rawText: lines.join('\n'), origin: requestOrigin(req as any, () => 'app_photo') });
       return void res.json({ kind: 'receipt', ...out, via: read.via, sumMatches: read.sumMatches, confidence: read.confidence, results: [{ ...out }] });
     }
     if (mode === 'receipt') return void res.status(422).json({ error: t('No receipt lines were recognised in the photo. A sharper photo in good light, flat and straight, helps.') });

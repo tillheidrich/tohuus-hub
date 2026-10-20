@@ -285,17 +285,20 @@ extension APIClient {
 
     // MARK: receipts
 
-    func uploadReceipt(files: [(name: String, mime: String, data: Data)]) async throws -> ImportUploadResponse {
+    /// origin: app_photo | app_scan | file (server/lib/import-origin.ts)
+    func uploadReceipt(files: [(name: String, mime: String, data: Data)], origin: String? = nil) async throws -> ImportUploadResponse {
         var mp = Multipart()
         for f in files { mp.addFile("files", filename: f.name, mimeType: f.mime, data: f.data) }
         mp.addField("mode", "auto")
+        if let origin { mp.addField("origin", origin) }
         return try await upload("api/imports/upload", multipart: mp, timeout: 180)
     }
 
     /// POST /api/imports/lines { lines, source: 'ocr-device', mode } – text Apple Vision read on the iPhone.
     /// receipt → an import in review; list → suggested items.
-    func importLines(_ lines: [String], mode: String, alt: [String]? = nil) async throws -> LinesImport {
+    func importLines(_ lines: [String], mode: String, alt: [String]? = nil, origin: String? = nil) async throws -> LinesImport {
         var body: [String: Any] = ["lines": lines, "source": "ocr-device", "mode": mode]
+        if let origin { body["origin"] = origin }
         // the same receipt tidied by Apple Intelligence: the server uses it only when it reads better
         if let alt, !alt.isEmpty { body["alt"] = alt }
         return try await send("POST", "api/imports/lines", json: body)

@@ -84031,6 +84031,1077 @@
           }
         }
       }
+    },
+    "Origin: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Origin: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herkunft: %@"
+          }
+        }
+      }
+    },
+    "View PDF": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View PDF"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF ansehen"
+          }
+        }
+      }
+    },
+    "View photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View photo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto ansehen"
+          }
+        }
+      }
+    },
+    "Receipt discarded.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt discarded."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon verworfen."
+          }
+        }
+      }
+    },
+    "Receipt deleted, its bookings are taken back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt deleted, its bookings are taken back."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon gelöscht, die Buchungen sind zurückgenommen."
+          }
+        }
+      }
+    },
+    "Receipt deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipt deleted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bon gelöscht."
+          }
+        }
+      }
+    },
+    "Purchase deleted, its bookings are taken back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purchase deleted, its bookings are taken back."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einkauf gelöscht, die Buchungen sind zurückgenommen."
+          }
+        }
+      }
+    },
+    "Expense deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expense deleted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgabe gelöscht."
+          }
+        }
+      }
+    },
+    "%@ of photos and files kept until then": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ of photos and files kept until then"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Fotos und Dateien bleiben bis dahin"
+          }
+        }
+      }
+    },
+    "%d entries deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d entries deleted"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Einträge gelöscht"
+          }
+        }
+      }
+    },
+    "%d sample products and %d sample recipes, with their stock, history and list entries. Removing them only deletes what the samples added – nothing you entered yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d sample products and %d sample recipes, with their stock, history and list entries. Removing them only deletes what the samples added – nothing you entered yourself."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Beispielprodukte und %d Beispielrezepte, mit Bestand, Verlauf und Listeneinträgen. Entfernen löscht nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast."
+          }
+        }
+      }
+    },
+    "%d sample products or recipes were used since (stock changed, cooked or planned). By default they stay, because they are probably yours now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d sample products or recipes were used since (stock changed, cooked or planned). By default they stay, because they are probably yours now."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Beispielprodukte oder -rezepte habt ihr inzwischen benutzt (Bestand geändert, gekocht oder geplant). Die bleiben erst mal, weil sie wohl eure sind."
+          }
+        }
+      }
+    },
+    "All areas above plus notifications, trips, assistant chats and the rest": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All areas above plus notifications, trips, assistant chats and the rest"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Bereiche oben, dazu Mitteilungen, Reisen, Chats mit dem Assistenten und der Rest"
+          }
+        }
+      }
+    },
+    "Also remove sample things you have used": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also remove sample things you have used"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auch benutzte Beispielsachen entfernen"
+          }
+        }
+      }
+    },
+    "Clear %@?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear %@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ leeren?"
+          }
+        }
+      }
+    },
+    "Clear an area": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear an area"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen Bereich leeren"
+          }
+        }
+      }
+    },
+    "Clear single areas or everything and start again. What you delete can be restored for %d days – after that it is gone for good, photos and PDFs included.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear single areas or everything and start again. What you delete can be restored for %d days – after that it is gone for good, photos and PDFs included."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer einzelne Bereiche oder alles und fang neu an. Was du löschst, kannst du %d Tage lang wiederherstellen – danach ist es endgültig weg, auch Fotos und PDFs."
+          }
+        }
+      }
+    },
+    "Clear …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leeren …"
+          }
+        }
+      }
+    },
+    "Data & reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data & reset"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daten & Zurücksetzen"
+          }
+        }
+      }
+    },
+    "Delete everything …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete everything …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles löschen …"
+          }
+        }
+      }
+    },
+    "Delete everything, keep the household": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete everything, keep the household"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles löschen, Haushalt behalten"
+          }
+        }
+      }
+    },
+    "Delete everything?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete everything?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles löschen?"
+          }
+        }
+      }
+    },
+    "Delete for good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete for good"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endgültig löschen"
+          }
+        }
+      }
+    },
+    "Delete my private entries …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete my private entries …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meine privaten Einträge löschen …"
+          }
+        }
+      }
+    },
+    "Delete my private entries?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete my private entries?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine privaten Einträge löschen?"
+          }
+        }
+      }
+    },
+    "Delete now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt löschen"
+          }
+        }
+      }
+    },
+    "Delete your own private entries.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete your own private entries."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lösch deine eigenen privaten Einträge."
+          }
+        }
+      }
+    },
+    "Deleted for good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted for good"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endgültig gelöscht"
+          }
+        }
+      }
+    },
+    "Deleted lately": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted lately"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt gelöscht"
+          }
+        }
+      }
+    },
+    "Deleting …": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting …"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird gelöscht …"
+          }
+        }
+      }
+    },
+    "Download an export first": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download an export first"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorher einen Export herunterladen"
+          }
+        }
+      }
+    },
+    "Everything in household knowledge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything in household knowledge"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles im Haushaltswissen"
+          }
+        }
+      }
+    },
+    "House info cards, codes, photos and videos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House info cards, codes, photos and videos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hausinfo-Karten, Codes, Fotos und Videos"
+          }
+        }
+      }
+    },
+    "Keep places and categories": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep places and categories"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orte und Kategorien behalten"
+          }
+        }
+      }
+    },
+    "Keep recipes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep recipes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rezepte behalten"
+          }
+        }
+      }
+    },
+    "Members, plan, settings, sign-ins and connections stay. So do the private entries of the others.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Members, plan, settings, sign-ins and connections stay. So do the private entries of the others."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitglieder, Abo, Einstellungen, Anmeldungen und Verbindungen bleiben. Die privaten Einträge der anderen auch."
+          }
+        }
+      }
+    },
+    "My private entries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My private entries"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meine privaten Einträge"
+          }
+        }
+      }
+    },
+    "Off: back to the default categories, your places go and printed place labels stop working.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off: back to the default categories, your places go and printed place labels stop working."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus: zurück zu den Standard-Kategorien, eure Orte gehen und gedruckte Ort-Etiketten funktionieren nicht mehr."
+          }
+        }
+      }
+    },
+    "Only the week plan and the cooking history go.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the week plan and the cooking history go."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dann gehen nur Wochenplan und Kochverlauf."
+          }
+        }
+      }
+    },
+    "Only yours – nobody else sees them, and nothing of the household goes. You can restore them here for %d days.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only yours – nobody else sees them, and nothing of the household goes. You can restore them here for %d days."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur deine – die sieht sonst niemand, und vom Haushalt geht nichts weg. Du kannst sie hier %d Tage lang wiederherstellen."
+          }
+        }
+      }
+    },
+    "Other areas, members, plan and settings stay.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other areas, members, plan and settings stay."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere Bereiche, Mitglieder, Abo und Einstellungen bleiben."
+          }
+        }
+      }
+    },
+    "Places stay unless you pick them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Places stay unless you pick them."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orte bleiben, wenn du sie nicht mit auswählst."
+          }
+        }
+      }
+    },
+    "Private entries of the others stay theirs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private entries of the others stay theirs."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Einträge der anderen bleiben ihre."
+          }
+        }
+      }
+    },
+    "Private tasks of the others stay theirs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private tasks of the others stay theirs."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Aufgaben der anderen bleiben ihre."
+          }
+        }
+      }
+    },
+    "Products, stock and its history, barcodes, receipt names, leftover boxes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Products, stock and its history, barcodes, receipt names, leftover boxes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Produkte, Bestand und Verlauf, Barcodes, Bon-Namen, Reste-Boxen"
+          }
+        }
+      }
+    },
+    "Ratings go with the recipes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ratings go with the recipes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewertungen gehen mit den Rezepten."
+          }
+        }
+      }
+    },
+    "Receipts with their photos and PDFs, expenses, budgets, splits": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receipts with their photos and PDFs, expenses, budgets, splits"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bons mit Fotos und PDFs, Ausgaben, Budgets, Aufteilungen"
+          }
+        }
+      }
+    },
+    "Recipes (or keep them), week plan, cooking history, votes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipes (or keep them), week plan, cooking history, votes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rezepte (oder du behältst sie), Wochenplan, Kochverlauf, Abstimmungen"
+          }
+        }
+      }
+    },
+    "Remove the sample data, clear single areas or everything – restorable for 7 days.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the sample data, clear single areas or everything – restorable for 7 days."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispieldaten entfernen, einzelne Bereiche oder alles leeren – 7 Tage wiederherstellbar."
+          }
+        }
+      }
+    },
+    "Restored": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restored"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederhergestellt"
+          }
+        }
+      }
+    },
+    "Sample data is still here": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample data is still here"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Beispieldaten sind noch da"
+          }
+        }
+      }
+    },
+    "Shopping lists and their entries, where-to-buy notes on products, purchase rhythm and suggestions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping lists and their entries, where-to-buy notes on products, purchase rhythm and suggestions"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einkaufslisten und Einträge, Läden an den Produkten („Wo kaufen?“), Kauf-Rhythmus und Vorschläge"
+          }
+        }
+      }
+    },
+    "Tasks and what was done": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tasks and what was done"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgaben und was erledigt wurde"
+          }
+        }
+      }
+    },
+    "What goes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What goes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das wird gelöscht"
+          }
+        }
+      }
+    },
+    "Wish lists and wishes, Bring me something and orders": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wish lists and wishes, Bring me something and orders"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wunschlisten und Wünsche, Bring mir was und Bestellungen"
+          }
+        }
+      }
+    },
+    "Wishes & Bring me something": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wishes & Bring me something"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wünsche & Bring mir was"
+          }
+        }
+      }
+    },
+    "You are looking at sample data.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are looking at sample data."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du siehst gerade Beispieldaten."
+          }
+        }
+      }
+    },
+    "You can delete your own private entries here. Clearing whole areas is up to the admins.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can delete your own private entries here. Clearing whole areas is up to the admins."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier kannst du deine eigenen privaten Einträge löschen. Ganze Bereiche leeren nur die Admins."
+          }
+        }
+      }
+    },
+    "You can undo it for 10 seconds, and restore it here for %d days. Want a copy for yourself?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can undo it for 10 seconds, and restore it here for %d days. Want a copy for yourself?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du kannst es 10 Sekunden lang rückgängig machen und hier %d Tage lang wiederherstellen. Lieber eine Kopie für dich?"
+          }
+        }
+      }
+    },
+    "Your tasks “only for me”, private household knowledge, On my mind and private wish lists.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your tasks “only for me”, private household knowledge, On my mind and private wish lists."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Aufgaben „nur für mich“, privates Haushaltswissen, Im Kopf und private Wunschlisten."
+          }
+        }
+      }
+    },
+    "deleted for good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "deleted for good"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "endgültig gelöscht"
+          }
+        }
+      }
+    },
+    "restorable until %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "restorable until %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wiederherstellbar bis %@"
+          }
+        }
+      }
+    },
+    "restored by %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "restored by %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wiederhergestellt von %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
