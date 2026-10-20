@@ -221,9 +221,40 @@ const DEEP: [RegExp, string][] = [
   [/^\/aufgaben|^\/pflege|^\/fokus/, 'tohuus://tasks'],
   [/^\/kochen/, 'tohuus://cooking'],
   [/^\/geld/, 'tohuus://money'],
-  [/^\/mehr|^\/einstellungen/, 'tohuus://more'],
+  [/^\/mehr/, 'tohuus://more'],
   [/^\/$/, 'tohuus://today'],
 ];
+
+/**
+ * Old settings tabs → the six pages (web/src/settings/registry.ts OLD_TABS, kept equal by test/settings-registry.test.ts).
+ * Only page and row: the app opens Mehr › Einstellungen › page (› row).
+ */
+export const SETTINGS_OLD_TABS: Record<string, string> = {
+  plan: 'daten/abo',
+  home: 'haushalt',
+  account: 'ich',
+  members: 'haushalt/leute',
+  places: 'bereiche/orte',
+  notify: 'mitteilungen',
+  access: 'verbindungen',
+  ha: 'verbindungen/home-assistant',
+  displays: 'verbindungen/displays',
+  print: 'verbindungen/drucker',
+  recipes: 'bereiche/rezepte',
+  data: 'daten',
+};
+
+/**
+ * `/einstellungen/<page>/<row>` (or an old `?tab=`) → tohuus://more/settings/<page>/<row>. An app older than the six
+ * pages only reads the host "more" and opens Mehr, so the link still lands next to the settings.
+ */
+export function settingsDeepLink(path: string): string | null {
+  const [p, query = ''] = path.split('#')[0].split('?');
+  if (!/^\/einstellungen(\/|$)/.test(p)) return null;
+  const tab = new URLSearchParams(query).get('tab');
+  const rest = tab !== null ? SETTINGS_OLD_TABS[tab] ?? '' : p.replace(/^\/einstellungen\/?/, '').replace(/\/$/, '');
+  return rest ? `tohuus://more/settings/${rest}` : 'tohuus://more/settings';
+}
 
 export function apnsPayload(m: ApnsMessage) {
   const path = m.path ?? '/';
@@ -233,7 +264,7 @@ export function apnsPayload(m: ApnsMessage) {
     aps: { alert: { title: m.title.slice(0, 120), body: m.body.slice(0, 400) }, sound: 'default', 'thread-id': m.event, ...(category ? { category } : {}) },
     event: m.event,
     path,
-    url: DEEP.find(([re]) => re.test(path))?.[1] ?? 'tohuus://today',
+    url: settingsDeepLink(path) ?? DEEP.find(([re]) => re.test(path))?.[1] ?? 'tohuus://today',
     ...(data && Object.keys(data).length ? { data } : {}),
   };
 }

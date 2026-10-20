@@ -820,6 +820,25 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         related: ['kopf-voll', 'deine-leiste', 'haushalt-teilen'],
       },
       {
+        slug: 'wunschlisten', pair: 'wish-lists', group: 'shop', title: 'Wunschlisten',
+        desc: 'Wunschlisten für Geburtstage, Weihnachten und dich selbst, mit Link für Gäste und ohne dass jemand die Überraschung verrät.',
+        sections: [
+          ['Wo du sie findest', p('Unter „Mehr“ ganz oben im Haushalt („Wunschlisten & Geschenke“), über die Suche mit „Wunsch“, „Geschenk“ oder „Geburtstag“ und oben in Einkauf. Wenn du sie oft brauchst, holst du dir „Wünsche“ in deine Leiste (siehe <a href="deine-leiste.html">Deine Leiste</a>).')],
+          ['Eine Liste anlegen', ol(
+            'Auf „Neue Liste“ tippen und einen Anlass wählen, etwa Geburtstag oder Weihnachten. Das Datum ist freiwillig.',
+            'Festlegen, für wen sie ist: für dich, für jemanden im Haushalt oder für einen Namen wie „Lina“ oder „Oma“.',
+            'Wer mitbearbeiten soll, wählst du unter „Bearbeitet mit“. Die Liste steht bei denen dann unter „Ich bearbeite mit“.',
+          ), p('Die Übersicht sortiert sich von allein: Meine Listen, Ich bearbeite mit, Für andere und Zum Schenken, also die Listen der anderen.')],
+          ['Wünsche eintragen', p('Mit „Wunsch hinzufügen“ trägst du Titel, Foto, Preis, Menge, Priorität, Shop-Link und eine Notiz ein. Fügst du einen Link ein, schlägt ToHuus einen Titel aus der Adresse vor, auf dem iPhone liest es Titel und Bild der Seite. Ohne Foto bekommt der Wunsch ein passendes Symbol.', 'Ist eine KI eingerichtet und für dich erlaubt, füllt „Foto → KI füllt aus“ Titel, Details und einen sichtbaren Preis aus einem Foto. Das zählt auf euer KI-Guthaben. Ohne KI fehlt der Knopf einfach.', 'Die Reihenfolge änderst du per Ziehen, auf dem iPhone über „Reihenfolge ändern“.')],
+          ['Reservieren und Überraschung', p('Wer schenken will, öffnet einen Wunsch und tippt auf „Wunsch reservieren“. Die anderen sehen dann „Reserviert – Sam“, mit „Noch frei“ blendest du alles Vergebene aus.', 'Steht „Reservierungen bleiben eine Überraschung“ an, sehen du und alle, die mitbearbeiten, nie, ob oder von wem etwas reserviert ist. Das gilt überall: in der App, in der Suche, im Export, über MCP und in Mitteilungen. Bei einer Kinderliste schaltest du es aus, dann siehst du, wer was besorgt. Die Person, für die die Liste ist, sieht Reservierungen nie.')],
+          ['Du schenkst', p('Unter „Du schenkst“ steht alles, was du reserviert hast, über alle Listen, mit Summe, getrennt nach „Noch zu besorgen“ und „Gekauft“. Das ist dein Geschenke-Einkauf und bleibt getrennt von der gemeinsamen Einkaufsliste, damit nichts die Überraschung verrät.')],
+          ['Erinnerungen', p('Bei einem reservierten Wunsch tippst du auf „Erinnern“ und wählst „2 Wochen vorher“, „1 Woche vorher“, „3 Tage vorher“ oder einen eigenen Tag. Hat die Liste ein Datum, schlägt ToHuus 10 Tage vorher vor. Auch eigene Wünsche, die du dir selbst kaufen willst, bekommen so eine Erinnerung.', 'Eine Woche vor dem Anlass bekommst du einmal einen Hinweis, wenn du dort etwas reserviert, aber noch nicht gekauft hast. Beides geht nur an dich, nie an den Haushalt. Abschalten kannst du es unter Einstellungen › Mitteilungen.')],
+          ['Teilen mit Gästen', p('Über „Teilen“ erstellst du einen Link für Gäste. Oma, Freunde oder Kollegen öffnen die Liste im Browser und reservieren mit ihrem Namen, ganz ohne Konto. Sie sehen „vergeben“, aber nie, von wem. Einen neuen Link machst oder den alten beendest du an derselben Stelle.', 'Die Liste geht auch als Text, Markdown, Tabelle (CSV) oder zum Drucken raus. Geteilter Text verrät nie, wer etwas reserviert hat, und nennt aus eurem Haushalt nur die Person, der die Liste gehört.')],
+          ['Abgrenzung', p('<a href="bring-mir-was.html">Bring mir was</a> ist etwas anderes: Dort wünschst du dir eine Kleinigkeit zu Hause, und jemand bringt sie gleich. Kinder-Tablets und Gäste mit festem Zugang sehen Wunschlisten nicht.')],
+        ],
+        related: ['bring-mir-was', 'deine-leiste', 'haushalt-teilen'],
+      },
+      {
         slug: 'ki-grenzen', pair: 'ai-limits', group: 'ai', title: 'Faire KI-Grenzen',
         desc: 'Wie viele Nachrichten der Assistent im Monat hat, was danach passiert und was ohne KI weiterläuft.',
         sections: [
@@ -1316,6 +1335,25 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Who it is for', p('Your bar is yours, the same on iPhone, iPad and in the browser. The others keep theirs. Regular guests always get the standard bar.')],
         ],
         related: ['getting-started', 'how-tohuus-works'],
+      },
+      {
+        slug: 'wish-lists', pair: 'wunschlisten', group: 'shop', title: 'Wish lists',
+        desc: 'Wish lists for birthdays, Christmas and yourself, with a link for guests and without anyone spoiling the surprise.',
+        sections: [
+          ['Where to find them', p('Under “More”, first row of Household (“Wish lists & gifts”), in the search with “wish”, “gift” or “birthday”, and on top of Shopping. If you use them a lot, put “Wishes” in your bar (see <a href="your-bar.html">Your bar</a>).')],
+          ['Make a list', ol(
+            'Tap “New list” and pick an occasion such as Birthday or Christmas. The date is optional.',
+            'Say who it is for: you, someone in the household or a name like “Lina” or “Grandma”.',
+            'Pick who helps with the list. They find it under “I help with”.',
+          ), p('The overview sorts itself: My lists, I help with, For others and To give, the lists of the others.')],
+          ['Add wishes', p('“Add a wish” takes a title, photo, price, quantity, priority, shop link and a note. Paste a link and ToHuus suggests a title from the address; on the iPhone it reads title and picture of the page. Without a photo the wish gets a fitting symbol.', 'When AI is set up and allowed for you, “Photo → fill in by AI” reads title, details and a visible price from a photo. It counts towards your AI uses. Without AI the button is simply not there.', 'Drag to change the order; on the iPhone use “Change the order”.')],
+          ['Reserve and surprise', p('Open a wish and tap “Reserve wish”. The others then see “Reserved – Sam”; “Still free” hides what is taken.', 'With “Keep reservations a surprise” on, you and everyone who helps with the list never see whether or by whom something was reserved – in the app, the search, the export, over MCP and in notifications. Switch it off for a child’s list to see who gets what. The person a list is for never sees reservations.')],
+          ['You give', p('“You give” lists everything you reserved, over all lists, with the total, split into “Still to get” and “Bought”. It is your gift shopping and stays apart from the shared shopping list, so nothing gives the surprise away.')],
+          ['Reminders', p('On a wish you reserved, tap “Remind me” and pick 2 weeks, 1 week or 3 days before, or a day of your own. With a date on the list, ToHuus suggests 10 days before. Wishes you want to buy yourself can get a reminder too.', 'A week before the occasion you get one hint if you reserved something there that is not bought yet. Both go only to you, never to the household. Switch them off under Settings › Notifications.')],
+          ['Share with guests', p('“Share” creates a link for guests. Grandma, friends or colleagues open the list in the browser and reserve with their name, no account needed. They see “taken”, never who. Make a new link or stop the old one in the same place.', 'The list also goes out as text, Markdown, a table (CSV) or for printing. Shared text never says who reserved something and names nobody from your household except the list’s owner.')],
+          ['Not the same as', p('<a href="bring-me-something.html">Bring me something</a> is different: there you ask for a small thing at home and someone brings it right away. Kid tablets and permanent guests never see wish lists.')],
+        ],
+        related: ['bring-me-something', 'your-bar', 'sharing-the-household'],
       },
       {
         slug: 'bring-me-something', pair: 'bring-mir-was', group: 'home', title: 'Bring me something',

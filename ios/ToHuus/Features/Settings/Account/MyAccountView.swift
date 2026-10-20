@@ -62,7 +62,7 @@ struct MyAccountView: View {
                 if !app.isCloud { totpSection(a) }
                 if !app.isCloud, let sso = a.sso { ssoSection(sso) }
                 if !app.isCloud, a.policy?.pinSwitch == true { pinSection(a) }
-                if !app.isGuest { FocusSettingsSection(api: api) }
+                // Ruhe & Fokus: Einstellungen › Ich, ganz oben (Paket C)
                 Section {
                     NavigationLink { SignedInDevicesView(api: api) } label: {
                         Label(L("Signed-in devices"), systemImage: "laptopcomputer.and.iphone")
@@ -237,7 +237,7 @@ struct MyAccountView: View {
                     }
                 }
                 .disabled(passkeyBusy)
-            } else if let web = try? api.url("einstellungen", query: [URLQueryItem(name: "tab", value: "account")]) {
+            } else if let web = try? api.url("einstellungen/ich/anmeldung") {
                 Link(destination: web) {
                     HStack {
                         Label(L("Add a passkey in Safari"), systemImage: "safari")

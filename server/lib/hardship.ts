@@ -116,7 +116,7 @@ export async function grantHardship(id: number, plan: GiftPlan, days: number | n
       { label: g ? 'Plan' : 'Plan', value: plan === 'plus' ? 'Plus' : 'Haushalt' },
       { label: g ? 'Gültig' : 'Valid', value: days ? (g ? `${days} Tage` : `${days} days`) : g ? 'unbefristet' : 'for good' },
     ],
-    button: { label: g ? 'ToHuus öffnen' : 'Open ToHuus', url: `${config.baseUrl}/einstellungen?tab=plan` },
+    button: { label: g ? 'ToHuus öffnen' : 'Open ToHuus', url: `${config.baseUrl}/einstellungen/daten/abo` },
   }).catch((e) => {
     mailed = false;
     console.warn('[hardship mail]', (e as Error).message);

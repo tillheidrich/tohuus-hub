@@ -113,7 +113,7 @@ struct NotificationSettingsView: View {
                 }
             }
             if let api = app.api, !app.isGuest {
-                CheckinSettingSection(api: api)
+                // the evening question moved to Einstellungen › Ich › Ruhe & Fokus (like the web, Paket C)
                 Section {
                     NavigationLink { HouseholdNotifyView(api: api) } label: {
                         Label(L("For the whole household"), systemImage: "house")

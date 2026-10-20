@@ -58,7 +58,7 @@ export function DemoNudge() {
         <span className="row" style={{ gap: 8 }}>
           <Flask size={18} aria-hidden /> {t('You are looking at sample data.')}
         </span>
-        <button className="linkish small" onClick={() => nav('/einstellungen?tab=data#demo')}>
+        <button className="linkish small" onClick={() => nav('/einstellungen/daten/zuruecksetzen#demo')}>
           {t('Remove sample data')}
         </button>
       </div>
@@ -92,7 +92,7 @@ export function DemoNudge() {
           <button className="btn sm ghost" disabled={busy} onClick={keep}>
             {t('Keep for now')}
           </button>
-          <button className="linkish small" onClick={() => nav('/einstellungen?tab=data#demo')}>
+          <button className="linkish small" onClick={() => nav('/einstellungen/daten/zuruecksetzen#demo')}>
             {t('Details')}
           </button>
         </div>

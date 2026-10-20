@@ -67,8 +67,8 @@ export function More({ me }: { me: Me }) {
           <h1>{me.actor.name}</h1>
           <span className="meta">{me.household}</span>
         </div>
-        <button className="btn sm ghost" onClick={() => nav('/einstellungen?tab=account')}>
-          {t('My account')}
+        <button className="btn sm ghost" onClick={() => nav('/einstellungen/ich')}>
+          {t('Me')}
         </button>
       </header>
       <button className="more-search" onClick={() => window.dispatchEvent(new Event('tohuus:search'))}>

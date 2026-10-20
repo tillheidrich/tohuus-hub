@@ -43,6 +43,7 @@ export const HELP_SLUGS = [
   'haushaltswissen',
   'deine-leiste',
   'bring-mir-was',
+  'wunschlisten',
   'ki-grenzen',
   'aufgaben',
   'eine-sache',
@@ -64,6 +65,7 @@ export function HowTo({ slug, label, className = '' }: { slug: HelpSlug; label?:
 /** Which help article belongs to a screen (the shell shows it under the page). */
 const ROUTE_HELP: [RegExp, HelpSlug][] = [
   [/^\/$/, 'merkt-sich'],
+  [/^\/einkauf\/wuensche/, 'wunschlisten'],
   [/^\/einkauf/, 'einkaufsliste'],
   [/^\/bestand$/, 'vorrat'],
   [/^\/wo$/, 'babysitter'],

@@ -181,7 +181,7 @@ export function WhatToEatPanel({ onAddRecipe }: { onAddRecipe: () => void }) {
       {(d.hidden_machine ?? 0) > 0 && (
         <div className="small muted">
           {d.hidden_machine === 1 ? t('1 recipe for a kitchen machine is not suggested.') : t('{n} recipes for a kitchen machine are not suggested.', { n: d.hidden_machine })}{' '}
-          <Link to="/einstellungen?tab=home">{t('Change how you cook')}</Link>
+          <Link to="/einstellungen/haushalt/kochstil">{t('Change how you cook')}</Link>
         </div>
       )}
       <div className="chips wte-filters" role="group" aria-label={t('Filters')}>
@@ -438,7 +438,7 @@ function EmptyHelp({ onAddRecipe }: { onAddRecipe: () => void }) {
         </div>
         <ArrowRight size={16} />
       </button>
-      <button className="li clickable" onClick={() => nav('/einstellungen?tab=access')}>
+      <button className="li clickable" onClick={() => nav('/einstellungen/verbindungen/home-assistant')}>
         <span className="wte-ic"><CalendarCheck size={20} /></span>
         <div className="grow">
           <div className="title">{t('Bring in the Cookidoo week')}</div>

@@ -157,7 +157,15 @@ beforeAll(async () => {
   // wish lists (13 Oct 2026): a list and a wish with markers
   const wl = await A.post('/api/wishes/lists', { name: 'MARKERA-wish Liste', for_name: 'Oma' });
   expect(wl.status).toBe(200);
-  expect((await A.post(`/api/wishes/lists/${wl.json.id}/items`, { title: 'MARKERA-wish Buch', price: 12 })).status).toBe(200);
+  const wi = await A.post(`/api/wishes/lists/${wl.json.id}/items`, { title: 'MARKERA-wish Buch', price: 12 });
+  expect(wi.status).toBe(200);
+  // wish-list app features (20 Oct 2026): an occasion soon, A reserves it ("Du schenkst"), a reminder, a guest link
+  expect((await A.req('PATCH', `/api/wishes/lists/${wl.json.id}`, { occasion: 'birthday', event_date: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10) })).status).toBe(200);
+  expect((await A.post(`/api/wishes/items/${wi.json.id}/status`, { status: 'reserved' })).status).toBe(200);
+  expect((await A.req('PUT', `/api/wishes/items/${wi.json.id}/reminder`, { remind_on: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10) })).status).toBe(200);
+  const wlink = await A.post(`/api/wishes/lists/${wl.json.id}/link`, {});
+  expect(wlink.status).toBe(200);
+  wishTokenA = String(wlink.json.link.url).split('/w/')[1];
   // Aufgaben (14 Oct 2026): a household chore with a sub-item, due today
   const task = await A.post('/api/care', { name: 'MARKERA-task', category: 'house', next_due: new Date().toISOString().slice(0, 10), checklist: [{ text: 'MARKERA-sub' }] });
   expect(task.status, task.text).toBe(200);
@@ -180,6 +188,7 @@ beforeAll(async () => {
 }, 60_000);
 
 let houseCodeA = 0;
+let wishTokenA = '';
 
 afterAll(() => {
   app?.server?.close?.();
@@ -255,7 +264,7 @@ describe('cloud isolation', () => {
     for (const r of ['/api/list/lists', '/api/offers', '/api/list/lunchbox', '/api/caldav/passwords', '/api/push/apns', '/api/shop/trips', '/api/shop/list']) expect(seen, r).toContain(r);
     // q-money: money lists and the expense attachment
     for (const r of ['/api/money/lists', '/api/money/lists/1', '/api/spend/expenses/1', '/api/spend/expenses/1/attachment']) expect(seen, r).toContain(r);
-    for (const r of ['/api/wishes/lists', '/api/wishes/lists/1', '/api/wishes/items/1']) expect(seen, r).toContain(r);
+    for (const r of ['/api/wishes/lists', '/api/wishes/lists/1', '/api/wishes/items/1', '/api/wishes/giving']) expect(seen, r).toContain(r);
     for (const r of ['/api/care', '/api/care/due', '/api/care/1', '/api/care/1/ics', '/api/blick', '/api/list/extras', '/api/review', '/api/tasks/next']) expect(seen, r).toContain(r);
     // Hausinfo GET routes are part of the walk; A sees its cards, nobody ever gets a code value from a GET
     for (const r of ['/api/house-guide', '/api/house-guide/templates', '/api/house-guide/links/:id', '/api/house-guide/codes/:id/views', '/api/house-guide/log', '/api/guest/:token/house', '/api/facts'])
@@ -495,6 +504,25 @@ describe('cloud isolation', () => {
     const viaB = await B.get(`/api/guest/${guestTokenA}`);
     expect(viaB.json?.name).toBe('MARKERA-guest');
     expect((await B.get('/api/shopping')).text).not.toContain('MARKERA');
+  });
+
+  it('a wish-list guest link opens only its own household; forged prefixes fail; guests see “taken”, never who', async () => {
+    expect(wishTokenA).toMatch(/^h[a-z2-7]{10}_/);
+    const g = await new Client().get(`/api/guest/wishlist/${wishTokenA}`);
+    expect(g.status, g.text).toBe(200);
+    expect(g.text).toContain('MARKERA-wish Buch');
+    // the guest sees "taken", never who
+    expect(g.json.items[0].taken).toBe(true);
+    expect(g.text).not.toMatch(/status_by|user_id|status_name|claim/);
+    const slugB = accounts.getHousehold(hB)!.slug;
+    const f = await new Client().get(`/api/guest/wishlist/${slugB}_${wishTokenA.slice(12)}`);
+    expect(f.status).toBe(404);
+    expect(f.text).not.toContain('MARKERA');
+    // B signed in opening A's link: the public view, nothing of B, and B is not a member of A
+    const viaB = await B.get(`/api/guest/wishlist/${wishTokenA}`);
+    expect(viaB.status).toBe(200);
+    expect(viaB.json.blind).toBe(false);
+    expect((await B.get('/api/wishes/giving')).text).not.toContain('MARKERA');
   });
 });
 

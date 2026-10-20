@@ -137,7 +137,7 @@ struct TodayView: View {
     @State private var showFirstRun = false
     @State private var path = NavigationPath()
 
-    private enum Push: Hashable { case imports, invites, notifications, treats, recipe(Int, Int?) }
+    private enum Push: Hashable { case imports, invites, notifications, treats, recipe(Int, Int?), wishes, wishList(Int), giving }
 
     private var refreshKey: Int {
         store.revision("shopping") + store.revision("stock") + store.revision("recipes") + store.revision("imports")
@@ -206,6 +206,10 @@ struct TodayView: View {
                 case .notifications: NotificationSettingsView()
                 case .treats: TreatsView(api: store.api)
                 case .recipe(let id, let plan): RecipeDetailView(recipeId: id, store: store, planEntryId: plan)
+                // wish lists: "Linas Geburtstag in 12 Tagen · 3 Wünsche noch frei", "2 Geschenke noch besorgen"
+                case .wishes: WishesView(api: store.api)
+                case .wishList(let id): WishListDetailView(api: store.api, listId: id)
+                case .giving: GivingView(api: store.api)
                 }
             }
             .sheet(isPresented: $arranging) {
@@ -397,6 +401,9 @@ struct TodayView: View {
         let p = target.split(separator: "?").first.map(String.init) ?? target
         if p.hasPrefix("/import") { path.append(Push.imports) }
         else if p.hasPrefix("/geld") || p.hasPrefix("/ausgaben") { openTab(.money) }
+        else if p == "/einkauf/wuensche/schenken" { path.append(Push.giving) }
+        else if p.hasPrefix("/einkauf/wuensche/"), let id = Int(p.dropFirst("/einkauf/wuensche/".count)) { path.append(Push.wishList(id)) }
+        else if p.hasPrefix("/einkauf/wuensche") { path.append(Push.wishes) }
         else if p.hasPrefix("/einkauf") { openTab(.shopping) }
         else if p.hasPrefix("/bestand") { openTab(.stock) }
         else if p.hasPrefix("/aufgaben") { openTab(.tasks) }

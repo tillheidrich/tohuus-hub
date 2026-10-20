@@ -69,7 +69,7 @@ The link works once.&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&
 </tr></table>
 <div class="muted" style="margin:0 0 10px;font-family:'Familjen Grotesk', Arial, Helvetica, sans-serif;font-size:13px;line-height:1.5;color:#4A524C">Shopping, cooking and money for your household.</div>
 <div style="margin:0 0 10px">You get this because …</div>
-<div style="margin:0 0 8px"><a class="link" href="BASE_URL/einstellungen?tab=notify" target="_blank" style="color:#176B50;text-decoration:underline">Notification settings</a> &nbsp;·&nbsp; <a class="link" href="https://tohuus.heidrich-digital.de/help/" target="_blank" style="color:#176B50;text-decoration:underline">Help</a></div>
+<div style="margin:0 0 8px"><a class="link" href="BASE_URL/einstellungen/mitteilungen" target="_blank" style="color:#176B50;text-decoration:underline">Notification settings</a> &nbsp;·&nbsp; <a class="link" href="https://tohuus.heidrich-digital.de/help/" target="_blank" style="color:#176B50;text-decoration:underline">Help</a></div>
 <div>Testhaus · ToHuus Hub · your household, self-hosted</div>
 </td></tr>
 </table>
@@ -103,7 +103,7 @@ Requested from Safari · iPhone.
 
 --
 You get this because …
-Notification settings: BASE_URL/einstellungen?tab=notify
+Notification settings: BASE_URL/einstellungen/mitteilungen
 Help: https://tohuus.heidrich-digital.de/help/
 Testhaus · ToHuus Hub · your household, self-hosted
 "

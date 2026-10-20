@@ -213,8 +213,8 @@ export function BonSheet({ spec, onClose }: { spec: BonSpec; onClose: () => void
               <p className="small muted bon-hint">
                 <Printer size={16} />
                 <span>
-                  {t('Got a receipt printer? Add it under Settings › Printers & tickets – until then, share or print from the browser.')}{' '}
-                  <Link to="/einstellungen?tab=print" onClick={onClose}>{t('Set up a printer')}</Link>
+                  {t('Got a receipt printer? Add it under Settings › Connections & devices › Printers – until then, share or print from the browser.')}{' '}
+                  <Link to="/einstellungen/verbindungen/drucker" onClick={onClose}>{t('Set up a printer')}</Link>
                 </span>
               </p>
             )}

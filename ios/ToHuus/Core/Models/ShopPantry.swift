@@ -73,7 +73,10 @@ struct Member: Decodable, Sendable, Identifiable, Hashable {
 struct MeLite: Decodable, Sendable {
     var actor: JSONValue?
     var home: JSONValue?
+    /// { vision, email } – vision: a model is set up and AI is allowed for this person (wishes: photo → AI)
+    var features: JSONValue?
     var userId: Int? { actor?["userId"]?.int }
+    var vision: Bool { features?["vision"]?.bool ?? false }
     var isMember: Bool { actor?["kind"]?.string == "user" }
     /// living alone hides "who takes care of it" (web household.ts); default on
     var claimsOn: Bool { home?["ui"]?["claims"]?.bool ?? true }

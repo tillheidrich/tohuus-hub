@@ -195,7 +195,8 @@ export async function targets(ctx, inst, fresh) {
     '/uebergabe',
     '/teilen',
     '/willkommen',
-    ...['home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'displays', 'print', 'recipes', 'data', ...(inst.mode === 'cloud' ? ['plan'] : [])].map((t) => `/einstellungen?tab=${t}`),
+    // Einstellungen in six pages (docs/settings.md): the list, each page and the longer sub pages
+    ...['', '/ich', '/haushalt', '/bereiche', '/mitteilungen', '/verbindungen', '/daten', '/ich/anmeldung', '/haushalt/leute', '/bereiche/orte', '/mitteilungen/haushalt-kanaele', '/verbindungen/home-assistant', '/daten/sicherung', '/daten/zuruecksetzen', ...(inst.mode === 'cloud' ? ['/daten/abo'] : [])].map((p) => `/einstellungen${p}`),
   ].filter(Boolean);
   const extra = [
     // Geld › "Nur meins" and a private shopping list (remembered per device in localStorage)

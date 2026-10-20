@@ -91,7 +91,7 @@ export async function alertNewDevice(userId: number, ua: string | null, method: 
     method: methodLabel(method),
     time: when,
   });
-  const url = `${config.baseUrl}/einstellungen?tab=account`;
+  const url = `${config.baseUrl}/einstellungen/ich/anmeldung`;
   const channels: { channel: string; ok: boolean }[] = [];
   if (route.push && pushDeviceCount() > 0) {
     const ok = await sendPush({ title, body: message, url, event: 'auth.new_device', tag: `auth-${userId}` }, { userId }).catch(() => false);

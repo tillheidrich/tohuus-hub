@@ -1,12 +1,18 @@
-import { Bell, Copy, Key, Plug, Question, SignOut, Trash, UploadSimple } from '@phosphor-icons/react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+/**
+ * Einstellungen (UX audit 2026-10, Paket C): six pages instead of twelve tabs – Ich · Haushalt · Bereiche & Orte ·
+ * Mitteilungen & Kalender · Verbindungen & Geräte · Daten, Abo & Konto. Phone: list → page → sub page.
+ * Desktop: the list stays on the left, the page on the right. The search on top filters every row of every page.
+ * Which row lives where: settings/registry.ts (the same ids on iOS, SettingsHome.swift). Old `?tab=` links redirect.
+ */
+import { Bell, Copy, Key, Trash, UploadSimple } from '@phosphor-icons/react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Me } from '../App';
 import { api, del, invalidate, patch, post, relTime, useApi } from '../api';
 import { Seg, Skeleton, Toggle, useToast } from '../ui';
 import { LANGUAGE_OPTIONS, lang, setLang, t } from '../i18n';
 import { Backups, Members } from './DataSettings';
-import { DataReset, TourButton } from './Tour';
+import { DataReset } from './Tour';
 import { MyAccount, SignInAdmin } from './AuthSettings';
 import { HaTodoCard, PushCard } from '../shop/ShopSettings';
 import { ExtrasSettingsCard } from '../shop/extras';
@@ -23,7 +29,6 @@ import { Ha2Settings } from './Ha2';
 import { CookidooWays } from './CookidooStatus';
 import { PrintSettings } from './Bons';
 import { RecipeImportCenter } from './RecipeImports';
-import { AwayEntryCard } from './Away';
 import { CheckinSettingsCard } from './Checkin';
 import { ShareFooterCard } from '../share/share';
 import { ShareSetupCard, StartModeCard } from './Share';
@@ -46,161 +51,158 @@ import { PulseSettingsCard } from '../pulse';
 import { ModulesCard } from './Modules';
 import { CookStyleCard } from './CookStyle';
 import { NavBarCard } from '../navbar';
+import { legacySettingsTarget, resolveSettingsPath, visiblePages, visibleRows, type SettingsCtx } from '../settings/registry';
+import { SettingsShell, type RowView } from '../settings/SettingsShell';
 
-type Tab = 'plan' | 'home' | 'account' | 'members' | 'places' | 'notify' | 'access' | 'ha' | 'displays' | 'print' | 'recipes' | 'data';
+/** What each row shows (ids from settings/registry.ts – the type makes a missing one a compile error). */
+type RowId =
+  | 'fokus' | 'profil' | 'leiste' | 'darstellung' | 'anmeldung'
+  | 'name' | 'leute' | 'anmeldewege' | 'region' | 'kochstil' | 'extras' | 'brotdose' | 'wochenfrage' | 'sterne' | 'teilen-zeile'
+  | 'module' | 'orte' | 'vorrat' | 'rezepte' | 'karte'
+  | 'meine' | 'haushalt-kanaele' | 'kalender-lesen' | 'caldav' | 'kalender-abo'
+  | 'ki' | 'assistent' | 'home-assistant' | 'displays' | 'drucker' | 'teilen' | 'mail'
+  | 'abo' | 'sicherung' | 'zuruecksetzen' | 'konto';
+
+function rowViews(me: Me, admin: boolean, cloud: boolean): Record<RowId, RowView> {
+  const guest = Boolean(me.actor.houseGuest);
+  return {
+    // Ich – the switches for days without strength first
+    fokus: { titled: true, body: <><FocusSettingsCard /><CheckinSettingsCard /></> },
+    profil: { body: <MyPerson me={me} /> },
+    leiste: { body: <NavBarCard me={me} /> },
+    darstellung: {
+      body: (
+        <>
+          {!guest && <MyAppearanceCard />}
+          {me.actor.userId ? <MyListViewCard /> : null}
+          {admin && (
+            <section className="stack" style={{ gap: 10 }}>
+              <h2 style={{ margin: 0 }}>{t('For everyone in the household')}</h2>
+              <div className="card pad stack"><HouseholdAppearanceCard admin={admin} /></div>
+            </section>
+          )}
+        </>
+      ),
+    },
+    anmeldung: { body: <MyAccount me={me} /> },
+    // Haushalt
+    name: { body: <Household admin={admin} /> },
+    leute: {
+      body: (
+        <>
+          <HouseholdFormCard admin={admin} />
+          <PeopleSection me={me} admin={admin} />
+          <Members me={me} admin={admin} />
+          <KidsSection admin={admin} />
+        </>
+      ),
+    },
+    anmeldewege: { body: <SignInAdmin me={me} /> },
+    region: { body: <RegionCard admin={admin} /> },
+    kochstil: { body: <CookStyleCard admin={admin} /> },
+    extras: { body: <ExtrasSettingsCard admin={admin} /> },
+    brotdose: { body: <LunchboxCard /> },
+    wochenfrage: { body: <PulseSettingsCard admin={admin} /> },
+    sterne: { body: <StarsSettingsCard admin={admin} /> },
+    'teilen-zeile': { body: <ShareFooterCard admin={admin} /> },
+    // Bereiche & Orte – "Was nutzt ihr?" first
+    module: { titled: true, body: <ModulesCard admin={admin} /> },
+    orte: { body: <><PlacesSettings admin={admin} /><CategorySettings admin={admin} /></> },
+    vorrat: { body: <StartModeCard admin={admin} /> },
+    rezepte: { body: <RecipeImportCenter /> },
+    karte: { body: <MenuSettingsCard /> },
+    // Mitteilungen & Kalender
+    meine: { body: <NotifyMine /> },
+    'haushalt-kanaele': { body: <Notify admin={admin} /> },
+    'kalender-lesen': { body: <CalendarReadCard /> },
+    caldav: { body: <CalDavCard /> },
+    'kalender-abo': { body: <CalendarFeedCard /> },
+    // Verbindungen & Geräte
+    ki: { body: <><AiSwitchesCard /><AssistantPrivacyCard admin={admin} /></> },
+    assistent: { body: <><ConnectAssistantCard /><AccessTokens admin={admin} /></> },
+    'home-assistant': { body: <HomeAssistant admin={admin} /> },
+    displays: { body: <Displays admin={admin} /> },
+    drucker: { body: <PrintSettings admin={admin} /> },
+    teilen: { body: <ShareSetupCard me={me} /> },
+    mail: { body: <InboxSettingsCard /> },
+    // Daten, Abo & Konto
+    abo: { body: cloud ? <BillingCard /> : <OwnServerPlan /> },
+    sicherung: { body: <Data admin={admin} /> },
+    zuruecksetzen: { body: <DataReset admin={admin} /> },
+    konto: { body: <CloudAccountCard /> },
+  };
+}
 
 export function Settings({ me }: { me: Me }) {
-  const cloud = useInstance().data?.mode === 'cloud';
-  const TABS: Tab[] = ['plan', 'home', 'account', 'members', 'places', 'notify', 'access', 'ha', 'displays', 'print', 'recipes', 'data'];
-  const tabFrom = (search: string): Tab => {
-    const q = new URLSearchParams(search).get('tab') as Tab | null;
-    if (me.actor.houseGuest) return 'account';
-    return q && TABS.includes(q) && (q !== 'plan' || cloud) ? q : 'home';
-  };
+  const inst = useInstance();
+  const cloud = inst.data?.mode === 'cloud';
   const loc = useLocation();
-  const [tab, setTab] = useState<Tab>(() => tabFrom(loc.search));
-  // links to another tab while Settings is already open (demo banner, share card …) only change the URL
-  useEffect(() => {
-    if (new URLSearchParams(loc.search).get('tab')) setTab(tabFrom(loc.search));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loc.search, cloud]);
-  const nav = useNavigate();
   const admin = me.actor.role === 'admin';
-  // phones: the tab row scrolls sideways – bring the open tab into view (a deep link to "Daten" lands off-screen)
-  const tabsRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const row = tabsRef.current;
-    const on = row?.querySelector<HTMLElement>('button.on');
-    if (row && on && row.scrollWidth > row.clientWidth) row.scrollLeft += on.getBoundingClientRect().left - row.getBoundingClientRect().left - 16;
-  }, [tab]);
+  const ctx: SettingsCtx = { guest: Boolean(me.actor.houseGuest), user: Boolean(me.actor.userId), admin, cloud, modules: me.modules };
+  // old links (/einstellungen?tab=…) from mails, pushes, help pages, the changelog and bookmarks
+  const legacy = legacySettingsTarget(loc.search, loc.hash);
+  if (legacy) return <Navigate to={legacy} replace />;
+  const at = resolveSettingsPath(loc.pathname);
+  if (!at) return <Navigate to="/einstellungen" replace />;
+  // a page or sub page this person can't use (guest, switched-off area, cloud-only) → the nearest page that exists
+  if (at.page && !visiblePages(ctx).some((p) => p.id === at.page)) return <Navigate to="/einstellungen" replace />;
+  if (at.page && at.sub && at.sub !== 'mehr' && !visibleRows(ctx, at.page).some((r) => r.id === at.sub)) return <Navigate to={`/einstellungen/${at.page}`} replace />;
+  if (inst.isLoading) return <Skeleton n={4} />;
+  return <SettingsShell me={me} ctx={ctx} page={at.page} sub={at.sub} views={rowViews(me, admin, cloud) as Record<string, RowView>} />;
+}
+
+/** Haushalt › Name & Sprache (admins change, everyone sees). Darstellung moved to Ich, the password to Ich › Anmeldung. */
+function Household({ admin }: { admin: boolean }) {
+  const s = useApi<any>('settings', '/settings');
+  const [name, setName] = useState('');
+  const toast = useToast();
+  useEffect(() => setName(s.data?.household ?? ''), [s.data]);
   return (
-    <div>
-      <header className="page-head">
-        <div>
-          <div className="eyebrow">{me.household}</div>
-          <h1>{t('Settings')}</h1>
+    <div className="card pad stack">
+      <div className="field">
+        <label htmlFor="hh-name">{t('Household name')}</label>
+        <div className="row">
+          <input id="hh-name" className="input" value={name} onChange={(e) => setName(e.target.value)} disabled={!admin} />
+          {admin && <button className="btn" onClick={() => patch('/settings', { household: name }).then(() => { invalidate('me', 'settings', 'overview'); toast({ text: t('Saved') }); })}>{t('Save')}</button>}
         </div>
-        <div className="actions">
-          <button className="btn ghost" onClick={() => nav('/hilfe')}>
-            <Question size={16} /> {t('Help')}
-          </button>
-          {!me.actor.houseGuest && <TourButton />}
-          <button className="btn ghost" onClick={() => post('/auth/logout').then(() => invalidate('me'))}>
-            <SignOut size={16} /> {t('Sign out')}
-          </button>
-        </div>
-      </header>
-      <div className="tabs-inline" ref={tabsRef}>
-        {(
-          [
-            ...(cloud ? ([['plan', t('Plan & storage')]] as [Tab, string][]) : []),
-            ['home', t('Household')],
-            ['account', t('My account')],
-            ['members', t('Members')],
-            ['places', t('Places & categories')],
-            ['notify', t('Notifications')],
-            ['access', t('Access & AI')],
-            ['ha', 'Home Assistant'],
-            ['displays', t('Displays')],
-            ['print', t('Printers & tickets')],
-            ['recipes', t('Recipes')],
-            ['data', t('Data & backups')],
-          ] as [Tab, string][]
-        )
-          // permanent guests: only their own account (area: people)
-          .filter(([k]) => !me.actor.houseGuest || k === 'account')
-          .map(([k, l]) => (
-          <button key={k} className={tab === k ? 'on' : ''} onClick={() => { setTab(k); nav({ search: `?tab=${k}` }, { replace: true }); }}>
-            {l}
-          </button>
-        ))}
       </div>
-      {tab === 'plan' && cloud && <BillingCard />}
-      {tab === 'plan' && cloud && <CloudAccountCard />}
-      {tab === 'home' && <Household me={me} admin={admin} />}
-      {tab === 'home' && <ModulesCard admin={admin} />}
-      {tab === 'home' && <CookStyleCard admin={admin} />}
-      {tab === 'home' && <ExtrasSettingsCard admin={admin} />}
-      {tab === 'home' && <StarsSettingsCard admin={admin} />}
-      {tab === 'home' && <LunchboxCard />}
-      {tab === 'home' && <PulseSettingsCard admin={admin} />}
-      {tab === 'home' && <AwayEntryCard />}
-      {tab === 'home' && <ShareFooterCard admin={admin} />}
-      {tab === 'home' && <MenuSettingsCard />}
-      {tab === 'account' && <MyPerson me={me} />}
-      {tab === 'account' && !me.actor.houseGuest && <MyAppearanceCard />}
-      {tab === 'account' && me.actor.userId && <MyListViewCard />}
-      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <NavBarCard me={me} />}
-      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <FocusSettingsCard />}
-      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CheckinSettingsCard />}
-      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarReadCard />}
-      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalDavCard />}
-      {tab === 'account' && me.actor.userId && !me.actor.houseGuest && <CalendarFeedCard />}
-      {tab === 'account' && <MyAccount me={me} />}
-      {tab === 'account' && !me.actor.houseGuest && <ShareSetupCard me={me} />}
-      {tab === 'members' && <PeopleSection me={me} admin={admin} />}
-      {tab === 'members' && <Members me={me} admin={admin} />}
-      {tab === 'members' && admin && <SignInAdmin me={me} />}
-      {tab === 'members' && <KidsSection admin={admin} />}
-      {tab === 'places' && <PlacesSettings admin={admin} />}
-      {tab === 'places' && <CategorySettings admin={admin} />}
-      {tab === 'notify' && me.actor.userId && <NotifyMine />}
-      {tab === 'notify' && <Notify admin={admin} />}
-      {tab === 'access' && <AiSwitchesCard />}
-      {tab === 'access' && <AssistantPrivacyCard admin={admin} />}
-      {tab === 'access' && <Access admin={admin} />}
-      {tab === 'ha' && <Ha2Settings admin={admin} />}
-      {tab === 'displays' && <Displays admin={admin} />}
-      {tab === 'print' && <PrintSettings admin={admin} />}
-      {tab === 'recipes' && <RecipeImportCenter />}
-      {tab === 'data' && <Data admin={admin} />}
+      <div className="field">
+        <label>{t('Language')}</label>
+        <Seg
+          value={(s.data?.language ?? lang()) as string}
+          onChange={(v) => {
+            if (!admin) return;
+            patch('/settings', { language: v }).then(() => {
+              setLang(v);
+              location.reload();
+            });
+          }}
+          options={LANGUAGE_OPTIONS}
+        />
+      </div>
+      {!admin && <div className="small muted">{t('Only admins can change this.')}</div>}
     </div>
   );
 }
 
-function Household({ me, admin }: { me: Me; admin: boolean }) {
-  const s = useApi<any>('settings', '/settings');
-  const [name, setName] = useState('');
-  const [pw, setPw] = useState('');
-  const toast = useToast();
-  useEffect(() => setName(s.data?.household ?? ''), [s.data]);
+/** Daten, Abo & Konto › Abo on a self-hosted server: nothing to buy, everything is there (like iOS). */
+function OwnServerPlan() {
   return (
-    <div className="stack" style={{ gap: 22 }}>
-      <div className="card pad stack">
-        <div className="field">
-          <label>{t('Household name')}</label>
-          <div className="row">
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} disabled={!admin} />
-            {admin && <button className="btn" onClick={() => patch('/settings', { household: name }).then(() => { invalidate('me', 'settings', 'overview'); toast({ text: t('Saved') }); })}>{t('Save')}</button>}
-          </div>
-        </div>
-        <HouseholdAppearanceCard admin={admin} />
-        <div className="field">
-          <label>{t('Language')}</label>
-          <Seg
-            value={(s.data?.language ?? lang()) as string}
-            onChange={(v) => {
-              if (!admin) return;
-              patch('/settings', { language: v }).then(() => {
-                setLang(v);
-                location.reload();
-              });
-            }}
-            options={LANGUAGE_OPTIONS}
-          />
-        </div>
-        <div className="field">
-          <label>{t('Change my password')}</label>
-          <div className="row">
-            <input className="input" type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder={t('New password (at least 8 characters)')} autoComplete="new-password" minLength={8} />
-            <button className="btn" disabled={pw.length < 8} onClick={() => patch(`/users/${me.actor.userId}`, { password: pw }).then(() => { setPw(''); toast({ text: t('Password changed') }); }).catch((e) => toast({ text: e.message, error: true }))}>{t('Change')}</button>
-          </div>
-        </div>
-      </div>
-      <HouseholdFormCard admin={admin} />
-      <RegionCard admin={admin} />
-      <StartModeCard admin={admin} />
+    <div className="card pad stack">
+      <b>{t('Own server – everything included')}</b>
+      <div className="small muted">{t('Your household runs on your own server. Every function is there, nothing to pay.')}</div>
     </div>
+  );
+}
+
+/** Verbindungen › Home Assistant: the integration, the to-do sync and Cookidoo via HA (was split over two tabs). */
+function HomeAssistant({ admin }: { admin: boolean }) {
+  const s = useApi<any>('settings', '/settings');
+  const base = s.data?.baseUrl ?? location.origin;
+  return (
+    <>
+      <Ha2Settings admin={admin} />
+    </>
   );
 }
 
@@ -363,7 +365,8 @@ function Notify({ admin }: { admin: boolean }) {
   );
 }
 
-function Access({ admin }: { admin: boolean }) {
+/** Verbindungen › KI-Assistenten & Zugänge: new access tokens (MCP, HA, full API) and the active ones. */
+function AccessTokens({ admin }: { admin: boolean }) {
   const s = useApi<any>('settings', '/settings');
   const tokens = useApi<any[]>('tokens', admin ? '/tokens' : null);
   const [created, setCreated] = useState<{ name: string; token: string; scope: string } | null>(null);
@@ -382,11 +385,9 @@ function Access({ admin }: { admin: boolean }) {
   const copy = (v: string) => navigator.clipboard.writeText(v).then(() => toast({ text: t('Copied') }));
   return (
     <div className="stack" style={{ gap: 22 }}>
-      <ConnectAssistantCard />
       <HaIntegrationCard base={base} />
       {admin && s.data && <HaConnection initial={s.data.ha} />}
       {admin && s.data && <HaTodoCard />}
-      {admin && <InboxSettingsCard />}
       {admin && (
         <div className="card pad stack">
           <b>{t('New access')}</b>
@@ -482,7 +483,7 @@ function Data({ admin }: { admin: boolean }) {
         </details>
       )}
       {cloud ? (
-        <div className="card pad small muted">{t('Backups: ToHuus Cloud saves your household every night, encrypted, also outside the data centre. You can download everything at any time under Plan & storage › Your data.')}</div>
+        <div className="card pad small muted">{t('Backups: ToHuus Cloud saves your household every night, encrypted, also outside the data centre. You can download everything at any time under Data, plan & account › Your data & account.')}</div>
       ) : (
         <Backups admin={admin} />
       )}
@@ -510,7 +511,6 @@ function Data({ admin }: { admin: boolean }) {
         <div className="small muted">{t('Everything as JSON – your data belongs to you. Passwords and access keys are never included.')}</div>
         <a className="btn" style={{ alignSelf: 'flex-start' }} href="/api/export.json">{t('Download export')}</a>
       </div>
-      <DataReset admin={admin} />
       <p className="small muted">
         {t('ToHuus Hub is open source (AGPL-3.0). Some product data and images from Open Food Facts (ODbL / CC BY-SA). Not affiliated with REWE, Thermomix/Vorwerk or HelloFresh.')}
       </p>

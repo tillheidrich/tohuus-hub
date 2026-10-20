@@ -31,7 +31,7 @@ export function MailAddressCard({ admin }: { admin: boolean }) {
           <b>{t('Receipts by e-mail')}</b>
           <div className="small muted">{t('With Plus your household gets its own address: forward receipts, order and pickup confirmations, and ToHuus books them.')}</div>
         </div>
-        <Link className="btn sm" to="/einstellungen?tab=plan">{t('See plans')}</Link>
+        <Link className="btn sm" to="/einstellungen/daten/abo">{t('See plans')}</Link>
       </div>
     );
   const copy = () => navigator.clipboard?.writeText(d.address!).then(() => toast({ text: t('Copied') }));

@@ -1,0 +1,122 @@
+/* Einstellungen (settings/SettingsShell.tsx): phone = list → page, desktop = sidebar + page. Rows reuse .more-list/.more-row. */
+.settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+/* grid items would grow to their widest content (long URLs, tables) and push the page sideways */
+.settings > *,
+.settings-page {
+  min-width: 0;
+}
+.settings-head h1 {
+  margin: 2px 0 0;
+}
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.settings-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 8px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.settings-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.settings-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-m, 1rem);
+  outline: none;
+}
+.settings-search input::-webkit-search-cancel-button {
+  display: none;
+}
+a.more-row {
+  text-decoration: none;
+}
+.settings-none {
+  padding: 14px;
+}
+.settings-foot {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.settings-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin: -8px 0 0 -4px;
+  padding: 0 4px;
+  color: var(--primary-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.settings-title {
+  margin: 0 0 18px;
+}
+.settings-sub-hint {
+  margin: -10px 0 18px;
+}
+.settings-page {
+  display: flex;
+  flex-direction: column;
+}
+.settings-inline {
+  margin-bottom: 26px;
+  scroll-margin-top: 16px;
+}
+.settings-inline > h2 {
+  margin: 0 0 10px;
+}
+/* a sub page whose card brings its own heading (Was nutzt ihr?): the page title says it already */
+.settings-page.titled #mod-h {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.settings-block {
+  margin-bottom: 22px;
+}
+/* phone: a page replaces the list */
+@media (max-width: 959px) {
+  .settings.has-page .settings-nav {
+    display: none;
+  }
+}
+@media (min-width: 960px) {
+  .settings {
+    grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  .settings-nav {
+    position: sticky;
+    top: 24px;
+  }
+  .settings-body {
+    max-width: 760px;
+  }
+  .settings-back {
+    margin-top: 0;
+  }
+}

@@ -253,7 +253,7 @@ export function AssistantSheet({ open, onClose, seed, voice }: { open: boolean; 
           <div className="assist-quota" role="status">
             <b>{t('The assistant with AI comes with Haushalt and Plus.')}</b>
             <p>{t('Simple things like “milk and bread” or “coffee is out” work without it. With the 14-day trial you can try everything – no payment details.')}</p>
-            <a className="btn sm primary" href="/einstellungen?tab=plan">
+            <a className="btn sm primary" href="/einstellungen/daten/abo">
               {t('See plans')}
             </a>
           </div>

@@ -152,7 +152,7 @@ function CatalogSheet({ id, card, saved, onClose, onSave, busy }: { id: number |
         onClose={onClose}
         title={card.title}
         footer={
-          <button className="btn primary block" onClick={() => nav('/einstellungen?tab=plan')}>
+          <button className="btn primary block" onClick={() => nav('/einstellungen/daten/abo')}>
             {t('See Plus')}
           </button>
         }

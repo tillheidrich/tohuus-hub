@@ -47,7 +47,7 @@ export async function notifyNewConnection(userId: number, client: string, scopes
       eyebrow: t('Your account'),
       paragraphs: [t('{client} can now use your household on your behalf.', { client }), t('If this was not you, end the connection in Settings › Access & AI and change your password.')],
       rows: [{ label: t('Allowed'), value: scopes.filter((s) => s !== 'mcp:read' || !scopes.includes('mcp:write')).map((s) => t(SCOPE_LABEL[s] ?? s)).join(', ') }],
-      button: { url: `${config.baseUrl}/einstellungen?tab=access`, label: t('Open settings') },
+      button: { url: `${config.baseUrl}/einstellungen/verbindungen/assistent`, label: t('Open settings') },
     }),
   ).catch((e: Error) => console.warn('[oauth mail]', e.message, currentLang()));
 }

@@ -76,7 +76,11 @@ struct ToHuusApp: App {
         switch url.host() {
         case "assistant": app.showAssistant = true
         // tasks (also tohuus://tasks/<id> from a calendar entry) and stock; pantry/home/care for old links (AppArea.from)
-        case "shopping", "today", "pantry", "stock", "tasks", "care", "home", "cooking", "money", "more": app.requestedTab = url.host()
+        case "more":
+            // tohuus://more/settings/<page>/<row>: straight to that place in Einstellungen (Paket C)
+            if url.path.hasPrefix("/settings") { app.requestedSettings = String(url.path.dropFirst("/settings".count)) }
+            app.requestedTab = "more"
+        case "shopping", "today", "pantry", "stock", "tasks", "care", "home", "cooking", "money": app.requestedTab = url.host()
         case "kitchen": app.showKitchen = true
         default: break
         }

@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { get, post, invalidate } from '../api';
 import { t } from '../i18n';
 import { moreGroups, TABS } from '../nav';
+import { PAGES, rowPath, visibleRows } from '../settings/registry';
 import { guestAllows } from '../people/access';
 import { useToast } from '../ui';
 
@@ -28,32 +29,20 @@ interface ServerGroups {
   tasks?: { id: number; name: string; next_due: string | null; private: boolean }[];
   house?: { id: number; title: string }[];
   people?: { key: string; name: string }[];
+  wishes?: { key: string; id: number; title: string; list_id: number; sub: string | null }[];
 }
 
 /** functions and settings – label, where, and the words people search for */
 function registry(): { label: string; to: string; words: string }[] {
-  const s = (tab: string) => `/einstellungen?tab=${tab}`;
+  // the settings rows come from settings/registry.ts (every row of the six pages, with their words) – see `functions`
   return [
-    { label: t('My account'), to: s('account'), words: 'konto passwort e-mail name passkey zwei-schritt anmelden abmelden geräte sitzungen' },
-    { label: t('Household'), to: s('home'), words: 'haushalt name sprache region was nutzt ihr module brotdose' },
-    { label: t('Members'), to: s('members'), words: 'personen mitglieder kinder gäste einladen rolle admin' },
-    { label: t('Places & categories'), to: s('places'), words: 'orte räume kategorien regal schrank' },
-    { label: t('Notifications'), to: s('notify'), words: 'benachrichtigungen push mitteilungen e-mail ruhezeiten' },
-    { label: t('Access & AI'), to: s('access'), words: 'ki assistent datenschutz mcp claude chatgpt token zugriff' },
-    { label: t('Displays'), to: s('displays'), words: 'display bildschirm tablet kiosk' },
-    { label: t('Printers & tickets'), to: s('print'), words: 'drucker bon zettel ticket' },
-    { label: t('Data & backups'), to: s('data'), words: 'daten export sicherung backup import umzug löschen' },
-    { label: 'Home Assistant', to: s('ha'), words: 'home assistant smart home hacs' },
-    { label: t('Reminders & Calendar'), to: '/aufgaben', words: 'apple erinnerungen kalender caldav google outlook abo termine' },
     { label: t('QR labels'), to: '/etiketten', words: 'etiketten qr drucken aufkleber' },
     { label: t('Mental load check'), to: '/denkarbeit', words: 'mental load denkarbeit unsichtbare arbeit karten wer denkt an was fair verteilen' },
     { label: t('People I look after'), to: '/fuer-wen', words: 'pflege angehörige pflegen eltern oma opa mutter vater heim pflegeheim arzttermin kümmern für wen ich da bin' },
     { label: t('On my mind'), to: '/kopf', words: 'im kopf gedanken nebenbei erledigt dran gedacht gesehen mental load denke an privat' },
     { label: t('Week in review'), to: '/woche', words: 'woche wochenrückblick rückblick geschafft letzte woche week review' },
     { label: t('One thing at a time'), to: '/fokus', words: 'fokus konzentration adhs ads timer eins nach dem anderen anfangen' },
-    { label: t('Calm & focus'), to: s('account'), words: 'sanfter modus ruhig adhs ads autismus weniger überfordert erinnerungen bündeln' },
-    { label: t('Extras in the weekly shop'), to: s('home'), words: 'extras kontingent luxus naschen süßes spaß budget woche' },
-    { label: t('Plan & storage'), to: s('plan'), words: 'abo plan speicher bezahlen preis' },
+    { label: t('Settings'), to: '/einstellungen', words: 'einstellungen optionen konfiguration settings' },
     { label: t('Help'), to: '/hilfe', words: 'hilfe frage support' },
   ];
 }
@@ -88,6 +77,14 @@ export function GlobalSearch({ guest, admin, cloud, modules, onClose }: { guest?
       ...TABS.map((x) => ({ label: x.label(), to: x.to, words: '' })),
       ...moreGroups({ guest, admin, cloud, modules }).flatMap((g) => g.items.map((i) => ({ label: i.label, to: i.to, words: g.title }))),
       ...registry().filter((x) => guestAllows(guest as never, x.to.split('?')[0])),
+      // every row of Einstellungen (Ich, Haushalt, Bereiche & Orte, Mitteilungen & Kalender, Verbindungen & Geräte, Daten, Abo & Konto)
+      ...(guestAllows(guest as never, '/einstellungen')
+        ? visibleRows({ guest: Boolean(guest), user: !guest, admin, cloud, modules }).map((r) => ({
+            label: t(r.title),
+            to: rowPath(r),
+            words: `${r.words} ${r.hint ? t(r.hint) : ''} ${t(PAGES.find((p) => p.id === r.page)!.title)}`,
+          }))
+        : []),
     ];
     const seen = new Set<string>();
     return all.filter((x) => (seen.has(x.label) ? false : (seen.add(x.label), true)));
@@ -106,7 +103,8 @@ export function GlobalSearch({ guest, admin, cloud, modules, onClose }: { guest?
     if (server.recipes?.length)
       out.push({ title: t('Recipes'), hits: server.recipes.map((x) => ({ key: `r${x.id}`, title: x.title, sub: x.with ? t('with {what}', { what: x.with }) : undefined, to: `/rezepte/${x.id}` })) });
     if (server.house?.length) out.push({ title: t('House info'), hits: server.house.map((x) => ({ key: `h${x.id}`, title: x.title, to: '/hausinfo' })) });
-    if (server.people?.length) out.push({ title: t('People'), hits: server.people.map((x) => ({ key: `u${x.key}`, title: x.name, to: '/einstellungen?tab=members' })) });
+    if (server.wishes?.length) out.push({ title: t('Wishes'), hits: server.wishes.map((x) => ({ key: `w${x.key}`, title: x.title, sub: x.sub ?? undefined, to: `/einkauf/wuensche/${x.list_id}` })) });
+    if (server.people?.length) out.push({ title: t('People'), hits: server.people.map((x) => ({ key: `u${x.key}`, title: x.name, to: '/einstellungen/haushalt/leute' })) });
     // nothing to open? offer to add it
     const text = q.trim();
     out.push({

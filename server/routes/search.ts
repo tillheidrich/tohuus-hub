@@ -17,6 +17,7 @@ import { directory } from '../lib/people.js';
 import { listProducts } from '../lib/catalog.js';
 import { notPrivate } from '../lib/share-core.js';
 import { nameScore, norm } from '../lib/text.js';
+import { searchWishes, wishLists } from '../lib/wishes.js';
 
 export const r = Router();
 r.use(requireAuth);
@@ -114,6 +115,15 @@ r.get('/search', (req, res) => {
 
   if (may(req, '/api/people/directory')) {
     groups.people = top(directory().map((p) => ({ key: p.key, name: p.name, kind: p.kind, score: score(n, p.name) })));
+  }
+
+  // wish lists and wishes (members only – permanent guests never see wishes): only what this person may see, never
+  // reservation states
+  if (uid && !req.actor?.houseGuest && may(req, '/api/wishes/lists')) {
+    const v = { userId: uid, name: req.actor?.name ?? '?' };
+    const lists = wishLists(v).map((l) => ({ id: l.id, title: l.name, list_id: l.id, sub: l.for_name, event_date: l.event_date, score: score(n, l.name, l.for_name) }));
+    const items = searchWishes(q, v, 20).map((w) => ({ id: w.id, title: w.title, list_id: w.list_id, sub: w.list_name, event_date: null, score: Math.max(1, score(n, w.title)) }));
+    groups.wishes = top([...lists, ...items].map((x, i) => ({ ...x, key: `${i < lists.length ? 'l' : 'w'}${x.id}` })));
   }
 
   for (const k of Object.keys(groups)) if (!groups[k].length) delete groups[k];

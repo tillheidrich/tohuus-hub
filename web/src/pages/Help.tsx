@@ -91,9 +91,9 @@ export function Help() {
         t('iPhone: open {url} in Safari, tap Share, then “Add to Home Screen”.', { url: base.replace(/^https?:\/\//, '') }),
         t('Android: open it in Chrome, menu, “Install app”.'),
         t('Open the app from the new icon and sign in once.'),
-        t('Settings › Notifications › “Push on this device”. On iPhone this only works from the home-screen icon.'),
+        t('Settings › Notifications & calendar › “Push on this device”. On iPhone this only works from the home-screen icon.'),
       ],
-      link: { label: t('Open notification settings'), to: '/einstellungen?tab=notify' },
+      link: { label: t('Open notification settings'), to: '/einstellungen/mitteilungen' },
     },
     {
       id: 'appearance',
@@ -101,11 +101,11 @@ export function Help() {
       title: t('Light or dark'),
       lead: t('One appearance for the whole household, or everyone picks their own.'),
       steps: [
-        t('Settings › Household › Appearance: Light, Dark or “Like the device” (follows each phone’s setting).'),
-        t('Switch on “Let everyone choose for themselves” and each member picks their own under My account.'),
+        t('Settings › Me › Appearance & readability: Light, Dark or “Like the device” (follows each phone’s setting). Admins set it for everyone further down.'),
+        t('Switch on “Let everyone choose for themselves” and each member picks their own there.'),
         t('Kitchen displays follow the household setting.'),
       ],
-      link: { label: t('Open household settings'), to: '/einstellungen?tab=home' },
+      link: { label: t('Open appearance'), to: '/einstellungen/ich/darstellung' },
     },
     {
       id: 'mcp',
@@ -115,10 +115,10 @@ export function Help() {
       steps: [
         t('Claude: Settings › Connectors › “Add custom connector”. ChatGPT: Settings › Connectors (developer mode on some plans).'),
         t('Paste the address {url}/mcp and sign in with your ToHuus account. Pick the household and whether the assistant may only read or also change things.', { url: base.replace(/\/$/, '') }),
-        t('It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once.'),
+        t('It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Connections & devices › AI assistants & access lists every connection; end one there and it stops at once.'),
         t('Your own assistant uses its own AI – it doesn’t use up the messages of the ToHuus assistant.'),
       ],
-      link: { label: t('Open access settings'), to: '/einstellungen?tab=access' },
+      link: { label: t('Open access settings'), to: '/einstellungen/verbindungen/assistent' },
     },
     {
       id: 'ha',
@@ -127,12 +127,12 @@ export function Help() {
       lead: t('A real integration: shopping list as a to-do list for Assist, meal plan and care tasks as calendars, sensors for dashboards, actions and events for automations.'),
       steps: [
         t('Install “ToHuus Hub” from HACS (custom repository github.com/tillheidrich/tohuus-hub-ha) and restart Home Assistant.'),
-        t('Settings › Access & AI › New access › “Home Assistant” – copy the token.'),
+        t('Settings › Connections & devices › AI assistants & access › “Home Assistant” – copy the token.'),
         t('In Home Assistant add the ToHuus Hub integration and paste this address and the token.'),
         t('Without HACS: the same access also gives you a YAML package as a fallback.'),
-        t('Already using another list app, Mealie or the HA app for some of this? Settings › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.'),
+        t('Already using another list app, Mealie or the HA app for some of this? Settings › Connections & devices › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.'),
       ],
-      link: { label: t('Open access settings'), to: '/einstellungen?tab=access' },
+      link: { label: t('Open Home Assistant settings'), to: '/einstellungen/verbindungen/home-assistant' },
     },
     {
       id: 'treats',
@@ -157,7 +157,7 @@ export function Help() {
         t('Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note.'),
         t('Share the link or show the QR code. Give it an end date or revoke it at any time.'),
         t('Wishes from guests are answered in Treats – the link for that is shared there under “Invite guests”.'),
-        t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
+        t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Connections & devices › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
       ],
       link: { label: t('Open guests'), to: '/bar' },
     },
@@ -167,7 +167,7 @@ export function Help() {
       title: t('The menu: tea, ice cream, snacks'),
       lead: t('Everything people can ask for lives in one menu – things from your stock and things that are simply there, like tap water or tea.'),
       steps: [
-        t('Treats › “Edit menu” (also in Settings › Household).'),
+        t('Treats › “Edit menu” (also in Settings › Areas & places).'),
         t('“Add from stock”: crisps, cola, ice cream – they show “all gone” (or disappear) when they run out, and serving books them out.'),
         t('“Menu-only item”: tap water, coffee, cappuccino – never counted. Link up to three ingredients from stock (milk, coffee): when one runs low it says “maybe not”.'),
         t('Choices like size, milk or sugar: single or several, required or optional, with a preselected default.'),
@@ -181,13 +181,13 @@ export function Help() {
       title: t('People: pictures, children, permanent guests, favourites'),
       lead: t('Everyone in the household with a picture – children without a login, regular guests with just the access they need.'),
       steps: [
-        t('Settings › Members › “Our household”: tap a person for a photo (crop it square, or take one), an animal or initials, and what they like, don’t like and are allergic to.'),
+        t('Settings › Household › Who lives here?: tap a person for a photo (crop it square, or take one), an animal or initials, and what they like, don’t like and are allergic to.'),
         t('“Add a child”: name, optional year of birth, allergies. Children never sign in; parents rate dishes for them, and kid mode uses the same profile.'),
         t('“Add a permanent guest” (grandma, a regular babysitter) and choose what they see: ordering & shopping list, + stock, + recipes & plan, or like family. Settings, spending, receipts, backups and care notes stay hidden.'),
         t('“For a while” changes it for a weekend or pauses it – it switches back by itself. “Send login link” mails a one-time link, or shows a link and QR code when e-mail is not set up.'),
         t('After cooking, one tap per person: not for me, okay, loved it. Allergies warn on dishes and are never planned automatically; ratings and dislikes nudge suggestions. Cook › Favourites shows the family favourites and each person’s.'),
       ],
-      link: { label: t('Open members'), to: '/einstellungen?tab=members' },
+      link: { label: t('Open members'), to: '/einstellungen/haushalt/leute' },
     },
     {
       id: 'plan',
@@ -238,10 +238,10 @@ export function Help() {
       steps: [
         t('Android and computer: install the app once. Then pick it in any app’s share menu – a list goes to the shopping list in one tap, a recipe link to the recipes, a photo or PDF to the imports.'),
         t('Chat messages are cleaned up by themselves: times, names, bullets and check boxes disappear, “2 milk, bread and tape” becomes three items.'),
-        t('iPhone: iOS doesn’t offer the share menu to web apps. Settings › My account › “Create a key for the iPhone shortcut” – the steps are shown right there.'),
+        t('iPhone: iOS doesn’t offer the share menu to web apps. Settings › Connections & devices › Share from other apps › “Create a key for the iPhone shortcut” – the steps are shown right there.'),
         t('Copied a list? The paste button next to the input field on the shopping list takes it in one tap.'),
       ],
-      link: { label: t('Set up sharing'), to: '/einstellungen?tab=account' },
+      link: { label: t('Set up sharing'), to: '/einstellungen/verbindungen/teilen' },
     },
     {
       id: 'diskret',
@@ -262,12 +262,12 @@ export function Help() {
       title: t('Only track what runs out'),
       lead: t('The calmest way to start: only the things that regularly run out are tracked.'),
       steps: [
-        t('Settings › Household › “What should be tracked?” › “Only what runs out”, then tap your staples.'),
+        t('Settings › Areas & places › Pantry: what to track? › “Only what runs out”, then tap your staples.'),
         t('Everything else is simply not counted – no warnings, no reminders. Receipts still come in as before.'),
         t('Bought something on two different days? Today suggests tracking it too.'),
         t('Switch to “Everything” at any time – nothing is deleted.'),
       ],
-      link: { label: t('Open household settings'), to: '/einstellungen?tab=home' },
+      link: { label: t('Open pantry settings'), to: '/einstellungen/bereiche/vorrat' },
     },
     {
       id: 'bons',
@@ -289,12 +289,12 @@ export function Help() {
       lead: t('Everything lives in one file on your server. No cloud, no tracking.'),
       steps: [
         t('A snapshot is made every night automatically; the last ones are kept.'),
-        t('Settings › Data & backups: download a backup, or restore one with a tap.'),
+        t('Settings › Data, plan & account › Data & backups: download a backup, or restore one with a tap.'),
         t('Off-site copy: add a WebDAV folder (e.g. Nextcloud) – use an app password.'),
         t('Export as JSON whenever you like. Passwords and access keys are never included.'),
         t('“Remove demo data” deletes only what the demo added. “Start over” clears the areas you pick – after an automatic backup.'),
       ],
-      link: { label: t('Open data & backups'), to: '/einstellungen?tab=data' },
+      link: { label: t('Open data & backups'), to: '/einstellungen/daten' },
     },
     {
       id: 'recipes-import',
@@ -302,13 +302,13 @@ export function Help() {
       title: t('Bring your recipes along'),
       lead: t('From Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, a CSV list, any recipe website – or via any AI.'),
       steps: [
-        t('Settings › Recipes › “Import from another app”: choose the export file, check the preview, import.'),
+        t('Settings › Areas & places › Recipes & imports › “Import from another app”: choose the export file, check the preview, import.'),
         t('Importing the same file again updates the recipes – your own way of cooking, favourites and ratings stay.'),
         t('No idea what to cook? Search the open recipe database; ingredients come over in your language and units.'),
         t('Without MCP: “Import with any AI” gives you a prompt for ChatGPT, Claude or Le Chat – paste the answer back.'),
         t('Cookidoo recipes keep their steps in Cookidoo – the recipe shows a link there.'),
       ],
-      link: { label: t('Open recipe import'), to: '/einstellungen?tab=recipes' },
+      link: { label: t('Open recipe import'), to: '/einstellungen/bereiche/rezepte' },
     },
     {
       id: 'neu',

@@ -556,7 +556,7 @@ async function tellAdmins(actor: WipeActor, what: string, total: number) {
         event: 'auth.new_device',
         title: t('Data deleted: {what}', { what }),
         message: t('{name} deleted {n} entries ({what}). It can be restored for {days} days under Settings › Data & reset.', { name: actor.name || '?', n: total, what, days: RESTORE_DAYS }),
-        path: '/einstellungen?tab=data',
+        path: '/einstellungen/daten/zuruecksetzen',
         toUserId: a.id,
         personalOnly: true,
         data: { kind: 'data.wipe' },

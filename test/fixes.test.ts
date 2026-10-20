@@ -210,7 +210,7 @@ describe('mail layout', () => {
     // brand fonts come from our own website, never from a font CDN
     expect(r.html).toMatch(/@font-face\{font-family:'Hedvig Letters Serif'[^}]*url\(https:\/\/[^)]*\/assets\/fonts\//);
     expect(r.html).not.toMatch(/fonts\.googleapis|fonts\.gstatic/);
-    expect(r.text).toMatch(/\/einstellungen\?tab=notify/);
+    expect(r.text).toMatch(/\/einstellungen\/mitteilungen/);
     expect(r.html).toContain('prefers-color-scheme:dark');
     expect(r.html).toContain('Milk &lt;fresh&gt;');
     expect(r.text).toContain('https://hub.example.org/anmelden/link#TOKEN');

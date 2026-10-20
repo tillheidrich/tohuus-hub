@@ -17,6 +17,7 @@ import { today as todayDay } from './spend2.js';
 import { awayToday } from './away-state.js';
 import { listCareTasks } from './care.js';
 import { contextNow, pickSaying, plattHello } from './platt.js';
+import { wishTodayHints } from './wishes.js';
 
 export interface TodayViewer {
   userId?: number | null;
@@ -138,6 +139,13 @@ export function todayAggregate(viewer?: TodayViewer | null) {
       text: money.budget.state === 'over' ? t('Budget for this month is used up') : t('{left} left in this month’s budget', { left: fmtMoney(money.budget.left) }),
       path: '/geld',
     });
+
+  // wish lists: an occasion coming up (only what this person may see – never the free count for a surprise list's owner)
+  try {
+    notices.push(...wishTodayHints(viewer?.userId ?? null));
+  } catch {
+    /* wishes are optional on Heute */
+  }
 
   return {
     date: day,

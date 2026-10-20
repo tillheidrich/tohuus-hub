@@ -85,6 +85,8 @@ const ExplainPage = page(() => import('./pages/Explain'), 'ExplainPage');
 const FactsPage = page(() => import('./pages/Explain'), 'FactsPage');
 const WishesPage = page(() => import('./pages/Wishes'), 'WishesPage');
 const WishListPage = page(() => import('./pages/Wishes'), 'WishListPage');
+const GivingPage = page(() => import('./pages/Wishes'), 'GivingPage');
+const WishGuest = page(() => import('./pages/WishGuest'), 'WishGuest');
 const Bar = page(() => import('./pages/Bar'), 'Bar');
 const Order = page(() => import('./pages/Order'), 'Order');
 const MenuEditor = page(() => import('./pages/Menu'), 'MenuEditor');
@@ -129,6 +131,8 @@ export function App() {
   const kidTablet = kidLock();
   if (kidTablet) return <Navigate to={`/kids/${kidTablet}`} replace />;
   if (loc.pathname.startsWith('/g/')) return wrap(<Routes><Route path="/g/:token" element={<Guest />} /></Routes>);
+  // a wish list shared with guests: no account, no app shell (docs/wishes.md › Gast-Link)
+  if (loc.pathname.startsWith('/w/')) return wrap(<Routes><Route path="/w/:token" element={<WishGuest />} /></Routes>);
   if (loc.pathname.startsWith('/einladung/')) return wrap(<Routes><Route path="/einladung/:token" element={<Invite />} /></Routes>);
   // e-mail links: sign-in link, confirm address, new password (area: auth)
   if (loc.pathname.startsWith('/anmelden/')) return wrap(<Routes><Route path="/anmelden/:kind" element={<AuthLanding />} /></Routes>);
@@ -215,7 +219,11 @@ function Shell({ me }: { me: Me }) {
   useEffect(() => applyAppearance(me.appearance), [me.appearance?.theme, me.brand]);
   // list2: the member's own text size and list density, on every device
   useEffect(() => applyListPrefs((me as Me & { listPrefs?: ListPrefs }).listPrefs ?? readLocalPrefs()), [me]);
-  useEffect(() => window.scrollTo(0, 0), [loc.pathname]);
+  // braces: newer Chrome returns a Promise from scrollTo, and React would call it as the effect's clean-up (every
+  // page change then crashed into "Diese Seite hat nicht geladen")
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [loc.pathname]);
   // "+" from anywhere (Heute header, Vorrat, assistant): window event, so pages don't need a prop
   useEffect(() => {
     const on = () => setAdd(true);
@@ -303,7 +311,7 @@ function Shell({ me }: { me: Me }) {
           <div className="nav-group nav-more">
             <div className="nav-group-title">{t('More')}</div>
             {groups.flatMap((g) => g.items).map((l) => (
-              <NavLink key={l.to} to={l.to} className={() => `navlink sm ${loc.pathname + loc.search === l.to || (loc.pathname === l.to && !l.to.includes('?')) ? 'active' : ''}`}>
+              <NavLink key={l.to} to={l.to} className={() => `navlink sm ${loc.pathname + loc.search === l.to || ((loc.pathname === l.to || loc.pathname.startsWith(`${l.to}/`)) && !l.to.includes('?')) ? 'active' : ''}`}>
                 {l.label}
               </NavLink>
             ))}
@@ -354,6 +362,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/abgleich/:id" element={<Check />} />
               <Route path="/einkauf" element={<Shopping />} />
               <Route path="/einkauf/wuensche" element={<WishesPage />} />
+              <Route path="/einkauf/wuensche/schenken" element={<GivingPage />} />
               <Route path="/einkauf/wuensche/:id" element={<WishListPage />} />
               <Route path="/kochen" element={<Kitchen me={me} />} />
               <Route path="/rezepte/:id" element={<RecipeDetail />} />
@@ -372,7 +381,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/bar" element={<Bar />} />
               <Route path="/bestellen" element={<Order me={me} />} />
               <Route path="/bestellen/karte" element={<MenuEditor me={me} />} />
-              <Route path="/einstellungen" element={<Settings me={me} />} />
+              <Route path="/einstellungen/*" element={<Settings me={me} />} />
               <Route path="/aufgaben" element={<Care />} />
               <Route path="/fokus" element={<FocusPage />} />
               <Route path="/denkarbeit" element={<LoadCardsPage />} />

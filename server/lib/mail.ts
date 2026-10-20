@@ -178,7 +178,7 @@ function fontFaces() {
 export function footerLinks(): { label: string; url: string }[] {
   const de = currentLang() === 'de';
   const links = [
-    { label: t('Notification settings'), url: `${config.baseUrl}/einstellungen?tab=notify` },
+    { label: t('Notification settings'), url: `${config.baseUrl}/einstellungen/mitteilungen` },
     { label: t('Help'), url: `${config.siteUrl}/${de ? 'hilfe' : 'help'}/` },
   ];
   if (config.multiTenant)

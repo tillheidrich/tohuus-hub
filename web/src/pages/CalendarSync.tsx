@@ -229,7 +229,7 @@ export function TasksToCalendarHelp() {
         <li>{t('Your private tasks into a calendar of your own (e.g. your personal iCloud calendar): in the iPhone app under Aufgaben › Euren Kalender lesen › “Your private tasks”. Only yours, never anyone else’s.')}</li>
         <li>{t('Just one task: open it and tap “Add to calendar”.')}</li>
       </ul>
-      <p className="small muted" style={{ margin: '8px 0 0' }}>{t('Private tasks only appear when you choose so, and only your own: in Apple Calendar in “ToHuus · Mein Kalender”, which only you see; in a subscription link only if you switch on “Include my private tasks” when you create it; on the iPhone in the calendar you pick for them. Both links are under Settings › Account.')}</p>
+      <p className="small muted" style={{ margin: '8px 0 0' }}>{t('Private tasks only appear when you choose so, and only your own: in Apple Calendar in “ToHuus · Mein Kalender”, which only you see; in a subscription link only if you switch on “Include my private tasks” when you create it; on the iPhone in the calendar you pick for them. Both links are under Settings › Notifications & calendar.')}</p>
     </details>
   );
 }

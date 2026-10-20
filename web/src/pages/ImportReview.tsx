@@ -641,7 +641,7 @@ function RereadSheet({ open, imp, rec, onClose }: { open: boolean; imp: any; rec
               : t('AI is off for you or this household. If you want it, switch it on in Settings › With or without AI.')}
           </div>
           {!rec.ai.paused && rec.ai.left !== 0 && (
-            <button className="btn" onClick={() => nav('/einstellungen')}>
+            <button className="btn" onClick={() => nav('/einstellungen/verbindungen/ki')}>
               {t('Open settings')}
             </button>
           )}

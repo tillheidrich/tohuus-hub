@@ -137,7 +137,7 @@ export function Labels() {
             <Empty
               icon={<QrCode size={26} />}
               title={q ? t('Nothing for “{q}”', { q }) : t('Nothing to label yet')}
-              action={q ? undefined : kind === 'care' ? { label: t('Add home care tasks'), onClick: () => nav('/pflege') } : kind === 'location' ? { label: t('Set up places'), onClick: () => nav('/einstellungen?tab=places') } : { label: t('Open stock'), onClick: () => nav('/bestand') }}
+              action={q ? undefined : kind === 'care' ? { label: t('Add home care tasks'), onClick: () => nav('/pflege') } : kind === 'location' ? { label: t('Set up places'), onClick: () => nav('/einstellungen/bereiche/orte') } : { label: t('Open stock'), onClick: () => nav('/bestand') }}
             >
               {q ? null : kind === 'care' ? t('Labels for care tasks appear once you have a task.') : t('Labels appear here for everything you keep at home.')}
             </Empty>

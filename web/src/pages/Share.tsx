@@ -948,7 +948,7 @@ export function StartModeHint() {
           <b>{t('Only what runs out')}</b>
           <div className="muted">{info.data.staples === 1 ? t('1 thing is tracked.') : t('{n} things are tracked.', { n: info.data.staples })}</div>
         </div>
-        <button className="btn sm ghost" onClick={() => nav('/einstellungen?tab=home')}>
+        <button className="btn sm ghost" onClick={() => nav('/einstellungen/bereiche/vorrat')}>
           {t('Change')} <ArrowRight size={14} />
         </button>
       </div>

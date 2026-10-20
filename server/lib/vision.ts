@@ -15,7 +15,7 @@ import { lang } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { visionRegionHint as regionHint } from './region-hints.js';
 
-export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items' | 'offer' | 'ingredients';
+export type VisionTask = 'receipt' | 'shelf' | 'recipe' | 'product' | 'text-recipe' | 'text-items' | 'offer' | 'ingredients' | 'wish';
 
 const PROMPTS: Record<VisionTask, string> = {
   receipt: `You are reading a till receipt or an order confirmation from a grocery store or drugstore: a photo of the paper
@@ -51,6 +51,11 @@ pantry=true for basics like salt, pepper, oil, sugar, water. Appliance settings 
 "Airfryer"), time ("10 Sek."), temp ("100 °C", "Varoma"), speed ("5"), mode ("Linkslauf", "Umluft"). A display photo shows
 settings only: one step with those settings and a short text. Copy what you see, invent nothing.
 If several photos belong to one recipe, merge them.`,
+  wish: `You see a photo or screenshot of something a person wishes for (a toy, a book, clothes, a gadget, a shop page).
+Return ONLY JSON: {"title": string, "brand": string|null, "description": string|null, "price": number|null}.
+title = a short, plain name of the thing as a person would write it on a wish list (max 8 words, no shop name).
+description = one short sentence with useful details you can see (size, colour, edition), else null.
+price = only if a price is clearly visible, as a number; never guess. Invent nothing.`,
   product: `You see a product photo. Return ONLY JSON: {"name": string, "brand": string|null, "size": string|null,
 "category": string|null, "barcode": string|null}. Name without brand and without size.`,
   'text-recipe': `Convert the following recipe text (a recipe page, a social media caption, notes) to JSON: {"title": string, "description": string|null, "servings": number|null,

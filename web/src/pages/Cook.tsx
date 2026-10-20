@@ -381,7 +381,7 @@ export function RecipeImport({ open, onClose, vision }: { open: boolean; onClose
             {t('Create blank recipe')}
           </button>
         )}
-        <button className="linkish small" style={{ alignSelf: 'center' }} onClick={() => { onClose(); nav('/einstellungen?tab=recipes'); }}>
+        <button className="linkish small" style={{ alignSelf: 'center' }} onClick={() => { onClose(); nav('/einstellungen/bereiche/rezepte'); }}>
           {t('More ways: open recipe database, other apps, any AI, file')}
         </button>
         <HowTo slug="rezepte-importieren" className="small" />

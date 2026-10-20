@@ -546,7 +546,7 @@ export function Care() {
 
       {data?.me ? (
         <div className="stack" style={{ marginTop: 24 }}>
-          <button className="li clickable card nav-row" onClick={() => nav('/einstellungen?tab=account')}>
+          <button className="li clickable card nav-row" onClick={() => nav('/einstellungen/mitteilungen')}>
             <CalendarBlank size={20} aria-hidden="true" />
             <span className="grow">
               <span className="title">{t('Calendar & reminders')}</span>

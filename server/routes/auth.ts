@@ -255,7 +255,7 @@ pub.get('/auth/oidc/callback', async (req, res) => {
       if (a?.userId !== linkUserId) throw new OidcError('sso_state', 'session changed');
       resolveOidcMember(claims, issuer, linkUserId);
       emit('settings');
-      return res.redirect(302, '/einstellungen?tab=account&sso=linked');
+      return res.redirect(302, '/einstellungen/ich/anmeldung?sso=linked');
     }
     const m = resolveOidcMember(claims, issuer, null);
     if (m.created) emit('settings');
@@ -265,7 +265,7 @@ pub.get('/auth/oidc/callback', async (req, res) => {
     const code = e instanceof OidcError ? e.code : 'sso_failed';
     console.warn('[oidc callback]', code, (e as Error).message);
     const linking = code === 'sso_taken';
-    res.redirect(302, linking ? '/einstellungen?tab=account&sso=taken' : `/?auth_error=${code}`);
+    res.redirect(302, linking ? '/einstellungen/ich/anmeldung?sso=taken' : `/?auth_error=${code}`);
   }
 });
 

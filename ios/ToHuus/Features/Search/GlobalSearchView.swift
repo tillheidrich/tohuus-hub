@@ -64,6 +64,13 @@ struct GlobalSearchView: View {
                             ForEach(h) { x in NavigationLink { HouseGuideView() } label: { row(x.title, nil, "info.circle") } }
                         }
                     }
+                    if let w = groups.wishes, !w.isEmpty {
+                        Section(L("Wishes")) {
+                            ForEach(w) { x in
+                                NavigationLink { WishListDetailView(api: store.api, listId: x.listId) } label: { row(x.title, x.sub, "gift") }
+                            }
+                        }
+                    }
                     if let p = groups.people, !p.isEmpty {
                         Section(L("People")) {
                             ForEach(p) { x in
@@ -86,6 +93,7 @@ struct GlobalSearchView: View {
             }
             .themedList()
             .navigationTitle(L("Search"))
+            .settingsRoutes(store: store)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: L("Milk, bathroom, password …"))
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { dismiss() } } }
@@ -114,6 +122,8 @@ struct GlobalSearchView: View {
     private func functionRow(_ f: SearchRegistry.Entry) -> some View {
         if let tab = f.tab {
             Button { openTab(tab) } label: { row(f.title, nil, f.icon) }
+        } else if let r = f.settingsRow {
+            NavigationLink { SettingsRegistry.destination(r, store: store) } label: { row(f.title, f.sub, f.icon) }
         } else {
             NavigationLink { SearchRegistry.destination(f.target, store: store) } label: { row(f.title, nil, f.icon) }
         }
@@ -154,6 +164,9 @@ struct SearchGroups: Decodable, Sendable {
     var tasks: [TaskHit]?
     var house: [House]?
     var people: [PersonHit]?
+    /// wish lists and wishes this person may see (never reservation states)
+    struct WishHit: Decodable, Sendable, Identifiable { var key: String; var title: String; var listId: Int; var sub: String?; var id: String { key } }
+    var wishes: [WishHit]?
 }
 
 private struct SearchAnswer: Decodable, Sendable { var groups: SearchGroups }
@@ -169,7 +182,7 @@ extension APIClient {
 enum SearchRegistry {
     enum Target: String {
         case account, household, people, invite, places, notifications, connections, data, ai, calendar, labels, help
-        case servers, devices, guests, treats, memory, wishes, receipts, spending, favourites, houseInfo, away, listLook, focus, loadCards
+        case servers, devices, guests, treats, memory, wishes, giving, receipts, spending, favourites, houseInfo, away, listLook, focus, loadCards
     }
 
     struct Entry: Identifiable {
@@ -180,7 +193,11 @@ enum SearchRegistry {
         /// a tab instead of a screen
         var tab: String?
         var adminOrMember = true
-        var id: String { title + (tab ?? target.rawValue) }
+        /// a row of Einstellungen (SettingsHome.swift) – opens that screen
+        var settingsRow: String?
+        /// the settings page it sits on
+        var sub: String?
+        var id: String { title + (settingsRow ?? tab ?? target.rawValue) }
     }
 
     @MainActor static func all(app: AppModel) -> [Entry] {
@@ -191,45 +208,37 @@ enum SearchRegistry {
             Entry(title: L("Pantry"), words: "vorrat bestand zu hause kühlschrank", icon: "cabinet", tab: "stock"),
             Entry(title: L("Cooking"), words: "kochen rezepte wochenplan essen", icon: "fork.knife", tab: "cooking"),
             Entry(title: L("Money"), words: "geld ausgaben budget bons", icon: "eurosign.circle", tab: "money"),
-            Entry(title: L("My account"), words: "konto passwort e-mail name passkey zwei-schritt sicherheit", icon: "person.crop.circle", target: .account),
             Entry(title: L("Help"), words: "hilfe frage support anleitung tour", icon: "questionmark.circle", target: .help),
-            Entry(title: L("Servers & households"), words: "server haushalt wechseln eigener server verbinden", icon: "server.rack", target: .servers),
-            Entry(title: L("Notifications"), words: "benachrichtigungen push mitteilungen ruhezeiten", icon: "bell", target: .notifications),
-            Entry(title: L("With or without AI"), words: "ki assistent datenschutz claude chatgpt", icon: "sparkles", target: .ai),
-            Entry(title: L("How the list looks"), words: "liste schrift größe ansicht", icon: "textformat.size", target: .listLook),
         ]
         if !app.isGuest {
             out += [
-                Entry(title: L("Household settings"), words: "haushalt name sprache region darstellung was nutzt ihr module", icon: "house", target: .household),
                 Entry(title: L("People"), words: "personen mitglieder kinder gäste rolle", icon: "person.2", target: .people),
                 Entry(title: L("Invite someone"), words: "einladen mitglied link", icon: "person.badge.plus", target: .invite),
-                Entry(title: L("Places & categories"), words: "orte räume kategorien regal schrank", icon: "square.grid.2x2", target: .places),
-                Entry(title: L("Connections"), words: "home assistant display bildschirm drucker telegram matrix cookidoo mail", icon: "point.3.connected.trianglepath.dotted", target: .connections),
-                Entry(title: L("Data & backups"), words: "daten export sicherung backup import umzug", icon: "externaldrive", target: .data),
-                Entry(title: L("Reminders & Calendar"), words: "apple erinnerungen kalender caldav google outlook abo termine", icon: "checklist.checked", target: .calendar),
-                Entry(title: L("QR labels"), words: "etiketten qr drucken aufkleber", icon: "qrcode", target: .labels),
-                Entry(title: L("Signed-in devices"), words: "geräte abmelden sitzungen", icon: "laptopcomputer.and.iphone", target: .devices),
                 Entry(title: L("Guests"), words: "gäste besuch babysitter gastlink", icon: "wineglass", target: .guests),
                 Entry(title: L("What ToHuus remembers"), words: "gedächtnis merkt sich wissen schuhgröße größe maß nummer", icon: "brain", target: .memory),
-                Entry(title: L("Wishes & Merkliste"), words: "wünsche geschenke merkliste", icon: "gift", target: .wishes),
+                Entry(title: L("Wish lists & gifts"), words: "wunsch wünsche wunschliste wunschzettel geschenk geschenke geburtstag weihnachten hochzeit anlass reservieren schenken merkliste", icon: "gift", target: .wishes),
+                Entry(title: L("You give"), words: "du schenkst geschenke besorgen gekauft reserviert geschenk einkauf", icon: "gift.fill", target: .giving),
                 Entry(title: L("Receipts & imports"), words: "bons kassenbon rechnung import", icon: "doc.text", target: .receipts),
                 Entry(title: L("Spending in detail"), words: "ausgaben diagramm export", icon: "chart.bar", target: .spending),
                 Entry(title: L("Favourites"), words: "lieblinge lieblingsessen", icon: "heart", target: .favourites),
                 Entry(title: L("Trip / away"), words: "urlaub verreist übergabe packen", icon: "suitcase", target: .away),
                 Entry(title: L("Mental load check"), words: "mental load denkarbeit unsichtbare arbeit karten wer denkt an was fair verteilen", icon: "brain.head.profile", target: .loadCards),
                 Entry(title: L("One thing at a time"), words: "fokus konzentration adhs ads timer eins nach dem anderen anfangen", icon: "scope", target: .focus),
-                Entry(title: L("Calm & focus"), words: "sanfter modus ruhig adhs ads autismus weniger überfordert erinnerungen bündeln", icon: "leaf", target: .account),
-                Entry(title: L("Extras in the weekly shop"), words: "extras kontingent luxus naschen süßes spaß budget woche", icon: "sparkles", target: .household),
             ]
             if !app.singleHousehold { out.append(Entry(title: L("Treats"), words: "bring mir was bestellen karte", icon: "hand.raised", target: .treats)) }
         }
         out.append(Entry(title: L("House info"), words: "hausinfo wlan sicherung heizung codes", icon: "info.circle", target: .houseInfo))
+        // every row of Einstellungen, with its page (Paket C – the same rows and words as the web)
+        out.append(Entry(title: L("Settings"), words: "einstellungen optionen settings", icon: "gearshape", settingsRow: "home"))
+        out += SettingsRegistry.visible(app).map { r in
+            Entry(title: r.title, words: "\(r.titleKey) \(r.words) \(r.hint ?? "") \(L(r.page.titleKey))", icon: r.icon, settingsRow: r.id, sub: L(r.page.titleKey))
+        }
         return out
     }
 
     @MainActor static func matches(_ q: String, app: AppModel) -> [Entry] {
         let n = q.lowercased()
-        return Array(all(app: app).filter { "\($0.title) \($0.words)".lowercased().contains(n) }.prefix(6))
+        return Array(all(app: app).filter { "\($0.title) \($0.words)".lowercased().contains(n) }.prefix(8))
     }
 
     @MainActor @ViewBuilder
@@ -254,6 +263,7 @@ enum SearchRegistry {
         case .treats: TreatsView(api: api)
         case .memory: KnowledgeView(api: api)
         case .wishes: WishesView(api: api)
+        case .giving: GivingView(api: api)
         case .receipts: ImportsListView(store: store)
         case .spending: SpendView(store: store)
         case .favourites: FavouritesView(store: store)

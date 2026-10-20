@@ -224,9 +224,12 @@ export function moreGroups(opts: {
       key: 'household',
       title: t('Household'),
       items: [
+        // Wunschlisten (20 Oct 2026): first row of Haushalt – they were hard to find behind the door on top of Einkauf.
+        // Permanent guests never see wish lists.
+        ...(opts.guest ? [] : [{ to: '/einkauf/wuensche', label: t('Wish lists & gifts'), icon: 'Gift' }]),
         // Haushaltswissen (18 Oct 2026): first row of Haushalt, its own symbol; guests see what is shared with them
         { to: '/wissen', label: t('What ToHuus remembers'), icon: 'Brain' },
-        { to: '/einstellungen?tab=members', label: t('People'), icon: 'UsersThree' },
+        { to: '/einstellungen/haushalt/leute', label: t('People'), icon: 'UsersThree' },
         { to: '/bar', label: t('Guests'), icon: 'Martini' },
         { to: '/bestellen', label: t('Treats'), icon: 'HandHeart' },
         // permanent guests: what members find on top of Aufgaben and Vorrat, and their handover
@@ -239,36 +242,13 @@ export function moreGroups(opts: {
           : []),
       ],
     },
-    {
-      key: 'settings',
-      title: t('Settings'),
-      items: [
-        { to: '/einstellungen?tab=account', label: t('My account'), icon: 'UserCircle' },
-        // "Deine Leiste": which areas sit in the bar at the bottom (per person – not for guests, they have no own bar)
-        ...(opts.guest ? [] : [{ to: '/leiste', label: t('Your bar'), icon: 'SquaresFour' }]),
-        { to: '/einstellungen?tab=home', label: t('Household settings'), icon: 'House' },
-        { to: '/einstellungen?tab=places', label: t('Places & categories'), icon: 'SquaresFour' },
-        { to: '/einstellungen?tab=notify', label: t('Notifications'), icon: 'Bell' },
-        { to: '/einstellungen?tab=access', label: t('Access & AI'), icon: 'Sparkle' },
-        { to: '/einstellungen?tab=recipes', label: t('Recipes'), icon: 'BookOpen' },
-        { to: '/einstellungen?tab=plan', label: t('Plan & storage'), icon: 'CreditCard', cloud: true },
-        { to: '/einstellungen?tab=data', label: t('Data & backups'), icon: 'Database' },
-      ],
-    },
-    {
-      key: 'devices',
-      title: t('Devices & connections'),
-      items: [
-        { to: '/einstellungen?tab=ha', label: 'Home Assistant', icon: 'House' },
-        { to: '/einstellungen?tab=displays', label: t('Displays'), icon: 'Monitor' },
-        { to: '/einstellungen?tab=print', label: t('Printers & tickets'), icon: 'Printer' },
-        { to: '/etiketten', label: t('QR labels'), icon: 'QrCode' },
-      ],
-    },
+    // Einstellungen (Paket C, 20 Oct 2026): one row – the six pages, their search and every old tab live behind it
+    // (settings/registry.ts); Geräte & Verbindungen moved there too (Verbindungen & Geräte)
     {
       key: 'help',
-      title: t('Help'),
+      title: t('Settings & help'),
       items: [
+        { to: '/einstellungen', label: t('Settings'), icon: 'Gear' },
         { to: '/hilfe', label: t('Help'), icon: 'Question' },
         { to: '/so-funktioniert-tohuus', label: t('How ToHuus works'), icon: 'BookOpen' },
         { to: '/gut-zu-wissen', label: t('Good to know'), icon: 'Lightbulb' },
@@ -291,7 +271,7 @@ export function moduleOfPath(path: string): string | null {
   if (p.startsWith('/pflege')) return 'homeinfo';
   if (p.startsWith('/wissen') || p.startsWith('/merkt-sich')) return 'knowledge';
   // Aufgaben (14 Oct 2026) are always there – only the old /pflege link belongs to the switchable area
-  if (path.includes('tab=ha')) return 'ha';
+  if (path.includes('tab=ha') || p.startsWith('/einstellungen/verbindungen/home-assistant')) return 'ha';
   return null;
 }
 export const moduleAllows = (mods: Record<string, boolean> | undefined, path: string) => {

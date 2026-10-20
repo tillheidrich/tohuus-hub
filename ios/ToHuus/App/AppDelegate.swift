@@ -138,6 +138,8 @@ final class PushManager {
         }
         // a plain tap opens the place the notification is about
         if actionId == UNNotificationDefaultActionIdentifier, let url, url.scheme == "tohuus" {
+            // tohuus://more/settings/<page>/<row>: that place in Einstellungen (server/lib/apns.ts settingsDeepLink)
+            if url.host() == "more", url.path.hasPrefix("/settings") { WatchHost.app?.requestedSettings = String(url.path.dropFirst("/settings".count)) }
             WatchHost.app?.requestedTab = url.host()
             if let store = data["store_id"].flatMap(Int.init) { WatchHost.app?.requestedStore = store }
         }

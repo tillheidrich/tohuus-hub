@@ -50,6 +50,9 @@ final class AppModel {
     var openFileNotice: String?
     /// set by deep links (tohuus://shopping from the widget; tasks, stock and the old pantry/home – AppArea.from)
     var requestedTab: String?
+    /// tohuus://more/settings/<page>/<row> (pushes for /einstellungen/…): Mehr opens and goes to that settings page
+    /// ("" = the list of pages). SettingsView takes it and sets it back to nil.
+    var requestedSettings: String?
     /// iPad kitchen mode (big week plan, recipe step by step, list to tick)
     var showKitchen = false
     /// a notification or the store-arrival hint asks for the list of one shop (shop mode)

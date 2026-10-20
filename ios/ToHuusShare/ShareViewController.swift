@@ -1,9 +1,12 @@
+import LinkPresentation
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
 /// Share extension: receipts (PDF, screenshot, photo), recipe or e-receipt links and text. Sends straight to the
 /// server with the app's token (App Group keychain); when offline it queues the payload for the app.
+/// Since 20 Oct 2026 also "Als Wunsch speichern": a link from Safari or a shop app, a photo or a text becomes a wish
+/// on a chosen wish list – title and picture of a link are read here with LinkPresentation, never by the server.
 final class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +29,12 @@ final class ShareModel: ObservableObject {
     @Published var files: [(name: String, mime: String, data: Data)] = []
     @Published var url: URL?
     @Published var text: String?
+    /// "Als Wunsch speichern": the person's wish lists, the chosen one, a title read from the link
+    @Published var wishLists: [ShareWishList] = []
+    @Published var wishListId: Int?
+    @Published var wishTitle = ""
+    @Published var wishImage: Data?
+    @Published var wishMode = false
     private weak var context: NSExtensionContext?
 
     let session = SessionInfo.load()
@@ -43,6 +52,7 @@ final class ShareModel: ObservableObject {
             }
         }
         state = .ready
+        if signedIn { await loadWishLists() }
     }
 
     private func read(_ p: NSItemProvider) async {
@@ -133,6 +143,109 @@ final class ShareModel: ObservableObject {
     func close() {
         context?.completeRequest(returningItems: nil)
     }
+
+    // MARK: wish
+
+    private func request(_ path: String, method: String = "GET") -> URLRequest? {
+        guard let session, let token else { return nil }
+        var req = URLRequest(url: session.serverURL.appendingPathComponent(path))
+        req.httpMethod = method
+        req.timeoutInterval = 30
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let h = session.householdId { req.setValue(h, forHTTPHeaderField: "X-Household") }
+        req.setValue("ios", forHTTPHeaderField: "X-ToHuus-Client")
+        return req
+    }
+
+    func loadWishLists() async {
+        guard let req = request("api/wishes/lists") else { return }
+        guard let r = try? await URLSession.shared.data(for: req), (r.1 as? HTTPURLResponse)?.statusCode == 200 else { return }
+        let data = r.0
+        let dec = JSONDecoder()
+        dec.keyDecodingStrategy = .convertFromSnakeCase
+        // lists the person runs (own or "Ich bearbeite mit") first
+        let all = (try? dec.decode([ShareWishList].self, from: data)) ?? []
+        wishLists = all.filter { $0.role != "member" } + all.filter { $0.role == "member" }
+        wishListId = wishLists.first?.id
+        if let url {
+            wishTitle = Self.titleFromURL(url)
+            let md = await Self.readLink(url)
+            if let t = md.title, !t.isEmpty { wishTitle = String(t.prefix(160)) }
+            wishImage = md.image
+        } else if let t = text {
+            wishTitle = String(t.trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))
+        }
+    }
+
+    /// LinkPresentation on the device: page title and picture
+    static func readLink(_ url: URL) async -> (title: String?, image: Data?) {
+        await withCheckedContinuation { (c: CheckedContinuation<(title: String?, image: Data?), Never>) in
+            DispatchQueue.main.async {
+                let p = LPMetadataProvider()
+                p.timeout = 8
+                p.startFetchingMetadata(for: url) { md, _ in
+                    let title = md?.title
+                    guard let ip = md?.imageProvider else { return c.resume(returning: (title, nil)) }
+                    _ = ip.loadDataRepresentation(for: .image) { data, _ in c.resume(returning: (title, data)) }
+                }
+            }
+        }
+    }
+
+    /// "…/lego-city-feuerwehrstation-60320.html" → "Lego city feuerwehrstation" (the web does the same)
+    static func titleFromURL(_ url: URL) -> String {
+        let parts = url.pathComponents.map { ($0 as NSString).deletingPathExtension }
+            .filter { $0.count > 3 && $0.range(of: "[a-zA-ZäöüÄÖÜ]{3}", options: .regularExpression) != nil }
+        guard let best = parts.max(by: { $0.filter { "-_".contains($0) }.count < $1.filter { "-_".contains($0) }.count }) else { return url.host() ?? "" }
+        let words = best.split(whereSeparator: { "-_+ ".contains($0) }).map(String.init).filter { $0.range(of: "^[a-zA-Z]*[0-9]{4,}[a-zA-Z]*$", options: .regularExpression) == nil }
+        let s = words.prefix(10).joined(separator: " ")
+        return s.prefix(1).uppercased() + s.dropFirst()
+    }
+
+    func saveWish() async {
+        guard let listId = wishListId, !wishTitle.trimmingCharacters(in: .whitespaces).isEmpty, var req = request("api/wishes/lists/\(listId)/items", method: "POST") else { return }
+        state = .sending
+        var body: [String: Any] = ["title": wishTitle.trimmingCharacters(in: .whitespacesAndNewlines)]
+        if let url, !url.isFileURL {
+            body["links"] = [["url": url.absoluteString, "label": url.host()?.replacingOccurrences(of: "www.", with: "") ?? NSNull(), "title": wishTitle, "site": url.host() ?? NSNull()] as [String: Any]]
+        } else if let t = text, t != wishTitle {
+            body["note"] = String(t.prefix(2000))
+        }
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: req)
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            guard (200..<300).contains(code), let id = obj?["id"] as? Int else {
+                state = .failed((obj?["error"] as? String) ?? "HTTP \(code)")
+                return
+            }
+            // the shared photo, else the page picture, becomes the wish's photo
+            let photo = files.first(where: { $0.mime == "image/jpeg" })?.data ?? wishImage.flatMap { UIImage(data: $0)?.jpegData(compressionQuality: 0.8) }
+            if let photo, var up = request("api/wishes/items/\(id)/photo", method: "POST") {
+                var mp = Multipart()
+                mp.addFile("image", filename: "wish.jpg", mimeType: "image/jpeg", data: photo)
+                up.setValue(mp.contentType, forHTTPHeaderField: "Content-Type")
+                _ = try? await URLSession.shared.upload(for: up, from: mp.finished())
+            }
+            let name = wishLists.first { $0.id == listId }?.name ?? ""
+            state = .done(LF("Saved as a wish on “%@”.", name))
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            close()
+        } catch {
+            state = .failed(L("No connection. Try again when you are online."))
+        }
+    }
+}
+
+/// GET /api/wishes/lists (only what the share sheet needs)
+struct ShareWishList: Decodable, Identifiable, Hashable {
+    var id: Int
+    var name: String
+    var role: String?
+    var forName: String?
 }
 
 struct ShareView: View {
@@ -167,6 +280,36 @@ struct ShareView: View {
     }
 
     @ViewBuilder private var content: some View {
+        if model.wishMode {
+            wishForm
+        } else {
+            mainContent
+            if !model.wishLists.isEmpty && (model.url != nil || model.text != nil || model.files.contains { $0.mime == "image/jpeg" }) {
+                Button { model.wishMode = true } label: { Label(L("Save as a wish"), systemImage: "gift") }
+                    .buttonStyle(.bordered)
+            }
+        }
+    }
+
+    @ViewBuilder private var wishForm: some View {
+        Text(L("Save as a wish")).font(.headline)
+        HStack(spacing: 12) {
+            if let d = model.wishImage ?? model.files.first(where: { $0.mime == "image/jpeg" })?.data, let img = UIImage(data: d) {
+                Image(uiImage: img).resizable().scaledToFill().frame(width: 64, height: 64)
+                    .clipShape(UnevenRoundedRectangle(topLeadingRadius: 32, bottomLeadingRadius: 6, bottomTrailingRadius: 6, topTrailingRadius: 32))
+            }
+            TextField(L("What is it?"), text: $model.wishTitle, axis: .vertical).textFieldStyle(.roundedBorder)
+        }
+        Picker(L("On which list?"), selection: $model.wishListId) {
+            ForEach(model.wishLists) { l in Text(l.forName.map { "\(l.name) · \($0)" } ?? l.name).tag(Int?.some(l.id)) }
+        }
+        Button(L("Save wish")) { Task { await model.saveWish() } }
+            .buttonStyle(.borderedProminent)
+            .disabled(model.wishTitle.trimmingCharacters(in: .whitespaces).isEmpty || model.wishListId == nil)
+        Button(L("Back")) { model.wishMode = false }.buttonStyle(.borderless)
+    }
+
+    @ViewBuilder private var mainContent: some View {
         if !model.files.isEmpty {
             Label(LF("%d files", model.files.count), systemImage: "doc.on.doc")
             Button(L("Add as receipt")) { Task { await model.send(.receiptFiles) } }

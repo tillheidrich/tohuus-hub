@@ -217,7 +217,9 @@ describe('lists and wishes', () => {
     expect(all.json.text).toContain('Lego Feuerwehr');
     expect(all.json.text).toContain('https://www.idealo.de/x');
     expect(all.json.text).toContain('ab 34,50');
-    expect(all.json.subject).toBe('Wunschliste für Mika');
+    // Mika is a household member: no member names in shared text except the owner's ("von Mira")
+    expect(all.json.subject).toBe('Wunschliste: Wünsche von Mika');
+    expect(all.json.text).toContain('von Mira');
     expect(all.json.mailto.startsWith('mailto:?subject=')).toBe(true);
     expect(all.json.text).not.toContain('Sam');
     const w2 = await mira.req('POST', `/api/wishes/lists/${mikaList}/items`, { title: 'Buch über Vulkane', price: 14.95 });
@@ -268,24 +270,33 @@ describe('lists and wishes', () => {
   });
 });
 
-describe('link preview', () => {
-  it('reads title, site, picture and price from a page', async () => {
-    const { parsePreviewHtml } = await import('../server/lib/wishes');
-    const p = parsePreviewHtml(
-      `<html><head><title>Fallback</title><meta property="og:title" content="Dinkel &amp; Hafer Kekse"><meta property="og:site_name" content="Food News"><meta property="og:image" content="/img/k.jpg"><meta property="product:price:amount" content="2,49"></head></html>`,
-      'https://news.example.org/artikel',
-    );
-    expect(p).toEqual({ title: 'Dinkel & Hafer Kekse', site: 'Food News', image: 'https://news.example.org/img/k.jpg', price: 2.49 });
-    expect(parsePreviewHtml('<meta property="og:image" content="javascript:alert(1)">', 'https://x.example.org/').image).toBeNull();
-  });
-
-  it('never fetches internal addresses', async () => {
-    const { fetchPreview } = await import('../server/lib/wishes');
-    for (const url of ['http://127.0.0.1/', 'http://localhost:3000/', 'http://10.0.0.1/', 'http://[::1]/', 'http://169.254.169.254/latest/meta-data', 'http://192.168.1.1:8080/']) {
-      await expect(fetchPreview(url), url).rejects.toThrow();
+describe('links: the server never opens them (SSRF)', () => {
+  it('no preview endpoint, no fetch when a link is saved; title and shop come from the client', async () => {
+    expect((await mira.req('POST', '/api/wishes/preview', { url: 'http://127.0.0.1:1/' })).status).toBe(404);
+    const seen: string[] = [];
+    const orig = globalThis.fetch;
+    globalThis.fetch = (async (u: any, init?: any) => {
+      const url = String(u?.url ?? u);
+      if (!url.startsWith(base)) seen.push(url);
+      return orig(u, init);
+    }) as typeof fetch;
+    try {
+      const l = await mira.req('POST', '/api/wishes/lists', { name: 'Linktest', visibility: 'private' });
+      const w = await mira.req('POST', `/api/wishes/lists/${l.json.id}/items`, {
+        title: 'Kekse',
+        links: [
+          { url: 'http://169.254.169.254/latest/meta-data', title: 'Dinkel-Kekse', site: 'Food News' },
+          { url: 'http://127.0.0.1:3000/' },
+        ],
+      });
+      expect(w.status).toBe(200);
+      expect(w.json.links[0]).toMatchObject({ title: 'Dinkel-Kekse', site: 'Food News', preview: 'ok' });
+      expect(w.json.links[1]).toMatchObject({ title: null, site: '127.0.0.1', preview: 'failed' });
+      await new Promise((r) => setTimeout(r, 50));
+      expect(seen).toEqual([]);
+    } finally {
+      globalThis.fetch = orig;
     }
-    const r = await mira.req('POST', '/api/wishes/preview', { url: 'http://127.0.0.1:1/' });
-    expect(r.status).toBe(422);
   });
 });
 

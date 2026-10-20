@@ -99,7 +99,7 @@ export function MyAccount({ me }: { me: Me }) {
     const s = new URLSearchParams(location.search).get('sso');
     if (!s) return;
     toast({ text: s === 'linked' ? t('Single sign-on is linked.') : t('This account is already linked to another member.') });
-    history.replaceState(null, '', '/einstellungen?tab=account');
+    history.replaceState(null, '', '/einstellungen/ich/anmeldung');
   }, [toast]);
   if (me.actor.kind !== 'user') return <div className="card pad small muted">{t('Only household members can do this.')}</div>;
   if (q.isLoading) return <Skeleton n={4} h={96} />;

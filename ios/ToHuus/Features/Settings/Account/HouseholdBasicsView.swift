@@ -50,32 +50,12 @@ struct HouseholdBasicsView: View {
             } footer: {
                 Text(L("The household language is used for mails, notifications and new categories. The app itself follows the language of your iPhone."))
             }
-            Section {
-                NavigationLink { AppearanceSettingsView(api: api) } label: {
-                    Label(L("Appearance"), systemImage: "circle.lefthalf.filled")
-                }
-                NavigationLink { RegionSettingsView(api: api) } label: {
-                    LabeledContent {
-                        if let r = region { Text("\(L(r.name ?? r.code)) · \(r.currency)") }
-                    } label: {
-                        Label(L("Region"), systemImage: "globe.europe.africa")
-                    }
-                }
-                NavigationLink { ModulesView(api: api) } label: {
-                    Label(L("What do you use?"), systemImage: "square.grid.2x2")
-                }
-                NavigationLink { CookStyleSettingsView(api: api) } label: {
-                    Label(LC("How do you cook?"), systemImage: "frying.pan")
-                }
-            } footer: {
-                if !app.isAdmin { Text(L("Only admins can change this.")) }
-            }
-            PulseSettingsSection(api: api, admin: app.isAdmin)
-            ExtrasSettingsSection(api: api, admin: app.isAdmin)
-            StarsSettingsSection(api: api, admin: app.isAdmin)
+            // Darstellung, Region, Was nutzt ihr?, Kochstil, Wochenfrage, Extras, Sterne: own rows in Einstellungen
+            // (Ich, Haushalt, Bereiche & Orte – SettingsHome.swift), so this screen is only name and language
+            if !app.isAdmin { Section { Text(L("Only admins can change this.")).font(.footnote).foregroundStyle(Theme.ink3) } }
         }
         .themedList()
-        .navigationTitle(L("Household"))
+        .navigationTitle(L("Name & language"))
         .task { await load() }
         .refreshable { await load() }
         .toast($toast)

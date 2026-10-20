@@ -32,7 +32,7 @@ export function PlanHintHost() {
         {readonly && <p className="small muted" style={{ margin: 0 }}>{t('Nothing is deleted. You can look at everything and export your data at any time.')}</p>}
         <p className="small muted" style={{ margin: 0 }}>{t('You subscribe in the ToHuus app on the iPhone. One plan covers the whole household, members and guests never pay.')}</p>
         <div className="row wrap" style={{ gap: 8 }}>
-          <Link className="btn primary" to="/einstellungen?tab=plan" onClick={() => setHint(null)}>
+          <Link className="btn primary" to="/einstellungen/daten/abo" onClick={() => setHint(null)}>
             {t('Plan & data')}
           </Link>
           <button className="btn ghost" onClick={() => setHint(null)}>
@@ -54,7 +54,7 @@ export function ReadonlyNote() {
       <b>{t('Your trial is over')}</b>
       <span className="small">{t('With Haushalt or Plus you can carry on, or you run ToHuus on your own server. Until then you can look at everything and export it.')}</span>
       {s.graceUntil && <span className="small muted">{t('Ticking off the shopping list still works until {date}.', { date: fmtDay(s.graceUntil) })}</span>}
-      <Link className="small" to="/einstellungen?tab=plan">
+      <Link className="small" to="/einstellungen/daten/abo">
         {t('Plan & data')}
       </Link>
     </div>

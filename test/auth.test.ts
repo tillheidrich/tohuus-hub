@@ -620,14 +620,14 @@ describe('SSO (OpenID Connect)', () => {
     const b = new Browser();
     await b.login('Ole', 'ole-new-123');
     next = { sub: 'u-ole' };
-    expect((await flow(b, { link: true })).cb.location).toBe('/einstellungen?tab=account&sso=linked');
+    expect((await flow(b, { link: true })).cb.location).toBe('/einstellungen/ich/anmeldung?sso=linked');
     const c = new Browser();
     expect((await flow(c)).cb.location).toBe('/');
     expect((await c.get('/api/whoami')).json.name).toBe('Ole');
     // somebody else cannot take over the same provider account
     const d = new Browser();
     await d.login('Mia', 'mia12345');
-    expect((await flow(d, { link: true })).cb.location).toBe('/einstellungen?tab=account&sso=taken');
+    expect((await flow(d, { link: true })).cb.location).toBe('/einstellungen/ich/anmeldung?sso=taken');
   });
 
   it('password policy: SSO-only keeps the admin break-glass password', async () => {

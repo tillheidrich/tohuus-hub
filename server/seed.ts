@@ -215,6 +215,13 @@ const EN: Record<string, string> = {
   Wärmflasche: 'Hot-water bottle',
   'Slipeinlagen Daily Protect': 'Panty liners Daily Protect',
   Geschenkpapier: 'Wrapping paper',
+  'Sams Geburtstag': 'Sam’s birthday',
+  'Sam wird 7.': 'Sam turns 7.',
+  'Lego Feuerwehrstation': 'Lego fire station',
+  'Die mit dem Drehleiter-Auto': 'The one with the ladder truck',
+  'Kinderbuch „Die kleine Hexe“': 'Children’s book “The Little Witch”',
+  'Malstifte, 24 Farben': 'Crayons, 24 colours',
+  'Gern die dicken für kleine Hände': 'The thick ones for small hands, please',
   // units
   Stk: 'pc',
   Tasse: 'cup',
@@ -371,11 +378,29 @@ function seedDemoRows() {
   shop.run(ids.get('Erdbeer-Eis'), tr('Erdbeer-Eis'), 'auto', 'ToHuus Hub');
   shop.run(ids.get('Mini Pizza Pomodori vegan'), tr('Mini Pizza Pomodori vegan'), 'auto', 'ToHuus Hub');
   shop.run(null, tr('Geschenkpapier'), 'manual', 'Mira');
+  seedDemoWishes();
   seedRecipes();
   db.prepare(`INSERT INTO guest_links (token, name, scopes, expires_at) VALUES (?, ?, '["bar"]', datetime('now', '+30 days'))`).run(
     randomToken(12),
     tr('Grillabend'),
   );
+}
+
+/**
+ * A demo wish list (20 Oct 2026): "Sams Geburtstag" in 12 days, three wishes, one reserved – so Wünsche, "Du
+ * schenkst" and the Heute hint have something to show. Marked as demo like every row of the seed (captureDemo).
+ */
+function seedDemoWishes() {
+  const list = Number(
+    db
+      .prepare(`INSERT INTO wish_lists (name, for_name, visibility, occasion, event_date, surprise, note, sort) VALUES (?, ?, 'household', 'birthday', ?, 0, ?, 1)`)
+      .run(tr('Sams Geburtstag'), 'Sam', addDays(12), tr('Sam wird 7.'))
+      .lastInsertRowid,
+  );
+  const item = db.prepare('INSERT INTO wish_items (list_id, title, note, price, quantity, priority, status, status_name, status_at, sort, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  item.run(list, tr('Lego Feuerwehrstation'), tr('Die mit dem Drehleiter-Auto'), 49.99, 1, 3, 'open', null, null, 1, 'Mira');
+  item.run(list, tr('Kinderbuch „Die kleine Hexe“'), null, 14, 1, 2, 'reserved', 'Oma', new Date().toISOString().slice(0, 19).replace('T', ' '), 2, 'Mira');
+  item.run(list, tr('Malstifte, 24 Farben'), tr('Gern die dicken für kleine Hände'), 12.5, 2, 1, 'open', null, null, 3, 'Ben');
 }
 
 /** `image`: a photo slug in server/assets/demo-recipes (credits in CREDITS.md there). */

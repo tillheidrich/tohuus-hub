@@ -37,11 +37,16 @@ struct MoreSections: View {
             }
             // Haushalt: the people and the guests (UX benchmark 2.3 – one list, every function at most two taps away)
             Section(L("Household")) {
+                // Wunschlisten (20 Oct 2026): first row – hard to find behind the door on top of Einkauf before.
+                // Permanent guests never see wish lists.
+                if !app.isGuest {
+                    NavigationLink { WishesView(api: api) } label: { Label(L("Wish lists & gifts"), systemImage: "gift") }
+                }
                 // Haushaltswissen (18 Oct 2026): first row, its own symbol; guests see what is shared with them
                 if allows("/wissen") {
                     NavigationLink { KnowledgeView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "brain") }
                 }
-                if allows("/einstellungen?tab=members") {
+                if allows("/einstellungen/haushalt/leute") {
                     NavigationLink { HouseholdView(api: api) } label: { Label(L("People"), systemImage: "person.2") }
                     // GET/POST /api/invites are for admins (server/routes/invites.ts) – a member would only see "forbidden"
                     if !app.isGuest && app.isAdmin {
@@ -70,17 +75,8 @@ struct MoreSections: View {
                     }
                 }
             }
-            // Geräte: everything that connects ToHuus to other things
-            if !app.isGuest {
-                Section(L("Devices & connections")) {
-                    NavigationLink { IntegrationsHubView(api: api) } label: { Label(L("Connections"), systemImage: "point.3.connected.trianglepath.dotted") }
-                    NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
-                    if allows("/etiketten") {
-                        NavigationLink { LabelsView(api: api) } label: { Label(L("QR labels"), systemImage: "qrcode") }
-                    }
-                    NavigationLink { SignedInDevicesView(api: api) } label: { Label(L("Signed-in devices"), systemImage: "laptopcomputer.and.iphone") }
-                }
-            }
+            // Geräte & Verbindungen moved into Einstellungen › Verbindungen & Geräte, Kalender into Mitteilungen & Kalender,
+            // angemeldete Geräte into Ich › Anmeldung & Sicherheit (Paket C, SettingsHome.swift)
         }
         .sheet(isPresented: $showFind) { FindView(store: store) { id in
                 showFind = false

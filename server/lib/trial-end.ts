@@ -142,7 +142,7 @@ export async function sendTrialNotices(now = Date.now()): Promise<number> {
                   title: tx.title,
                   eyebrow: t('Trial'),
                   paragraphs: tx.paragraphs,
-                  button: { url: `${config.baseUrl}/einstellungen?tab=plan`, label: t('See the plans') },
+                  button: { url: `${config.baseUrl}/einstellungen/daten/abo`, label: t('See the plans') },
                   reason: t('You get this because you are an admin of this household. Switch it off in Settings › Plan & storage.'),
                   unsubscribeUrl: unsubscribeUrl(a.user_id),
                 });
@@ -151,7 +151,7 @@ export async function sendTrialNotices(now = Date.now()): Promise<number> {
                 console.warn('[trial-end] mail', (e as Error).message);
               }
             }
-            const msg = { title: tx.title, body: tx.push, path: '/einstellungen?tab=plan', event: 'billing.trial', collapseId: `trial-${kind}` };
+            const msg = { title: tx.title, body: tx.push, path: '/einstellungen/daten/abo', event: 'billing.trial', collapseId: `trial-${kind}` };
             if (recipients('billing.trial', 'apns', { toUserId: a.user_id }).length) got = (await sendApns([a.user_id], msg).catch(() => 0)) > 0 || got;
             if (recipients('billing.trial', 'push', { toUserId: a.user_id }).length)
               got = (await sendPush({ title: msg.title, body: msg.body, url: msg.path, tag: msg.collapseId, event: msg.event }, { userId: a.user_id }).catch(() => false)) || got;

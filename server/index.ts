@@ -75,7 +75,8 @@ import { caldav } from './lib/caldav.js';
 import { r as houseGuideRoutes, houseGuest } from './routes/house-guide.js';
 import { r as handoverRoutes, guestHandover } from './routes/handover.js';
 import { r as diagRoutes } from './routes/diag.js';
-import { r as wishRoutes } from './routes/wishes.js';
+import { r as wishRoutes, wishGuest } from './routes/wishes.js';
+import './lib/wish-jobs.js';
 import { r as factsRoutes } from './routes/facts.js';
 import { r as knowledgeRoutes } from './routes/knowledge.js';
 import { householdAppearance } from './lib/appearance.js';
@@ -215,6 +216,8 @@ if (config.multiTenant) {
 
 // iPhone shortcut (personal list token) and the share-target fallback – before the routers that require a session
 app.use(sharePublic);
+// a wish list shared with guests (no account): before the token router of guest links
+app.use('/api/guest/wishlist', wishGuest);
 app.use('/api/guest', guest);
 app.use('/api/guest', ha2Guest);
 app.use('/api/guest', houseGuest);

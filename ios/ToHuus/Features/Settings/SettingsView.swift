@@ -12,20 +12,19 @@ struct SettingsView: View {
     @State private var devices: [AppDevice] = []
     @State private var email: String?
     @State private var confirmSignOut = false
-    @State private var confirmDelete = false
-    @State private var deleting = false
     @State private var error: String?
     @State private var showWeb = false
-    @State private var manageSubscriptions = false
     /// how deleting the account is confirmed (GET /api/cloud/me): password, Apple or a mail code
     @State private var hasPassword = true
     @State private var appleLinked = false
     @State private var showTour = false
     @State private var renaming = false
     @State private var newName = ""
+    /// pushes inside Mehr: Einstellungen and its pages (value links, SettingsRoute)
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Form {
                 // profile row: my account, security, devices (UX benchmark 2.3)
                 Section {
@@ -52,38 +51,11 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.ink2)
                 }
                 if let api = app.api { MoreSections(store: store, api: api) }
-                Section(L("Settings")) {
-                    if let api = app.api, !app.isGuest {
-                        NavigationLink { HouseholdBasicsView(api: api) } label: { Label(L("Household settings"), systemImage: "house") }
-                        NavigationLink { PlacesSettingsView(api: api) } label: { Label(L("Places & categories"), systemImage: "square.grid.2x2") }
+                // Einstellungen (Paket C, 20 Oct 2026): one row – six pages with their own search (SettingsHome.swift)
+                Section(L("Settings & help")) {
+                    NavigationLink(value: SettingsRoute.home) {
+                        Label(L("Settings"), systemImage: "gearshape")
                     }
-                    NavigationLink { ConnectionsView() } label: {
-                        LabeledContent {
-                            Text(app.isCloud ? L("ToHuus Cloud") : (app.session?.serverURL.host() ?? ""))
-                        } label: { Label(L("Servers & households"), systemImage: "server.rack") }
-                    }
-                    NavigationLink { NotificationSettingsView() } label: { Label(L("Notifications"), systemImage: "bell") }
-                    NavigationLink { StoreArrivalView(store: store) } label: { Label(L("Hint in the shop"), systemImage: "location") }
-                    NavigationLink { AISettingsView() } label: {
-                        LabeledContent {
-                            if app.aiLocked { Image(systemName: "lock.fill").foregroundStyle(Theme.ink3) }
-                            else { Text(app.aiOn ? L("on") : L("off")) }
-                        } label: { Label(L("With or without AI"), systemImage: "sparkles") }
-                    }
-                    NavigationLink { ListDisplaySettingsView() } label: { Label(L("How the list looks"), systemImage: "textformat.size") }
-                    // "Deine Leiste": which areas sit in the tab bar next to Heute (per person, NavBarSettings.swift)
-                    if !app.isGuest {
-                        NavigationLink { NavBarSettingsView() } label: { Label(L("Your bar"), systemImage: "dock.rectangle") }
-                    }
-                    if let api = app.api, !app.isGuest {
-                        NavigationLink { StartModeView(api: api, isAdmin: app.isAdmin) } label: { Label(L("What should be tracked?"), systemImage: "checklist") }
-                        LunchboxSettingsLink(api: api)
-                        NavigationLink { DataSettingsView(api: api) } label: { Label(L("Data & backups"), systemImage: "externaldrive") }
-                        NavigationLink { DataWipeView(api: api) } label: { Label(L("Data & reset"), systemImage: "arrow.counterclockwise") }
-                    }
-                    AppearancePicker()
-                }
-                Section(L("Help")) {
                     NavigationLink { HelpCenterView(store: store) } label: { Label(L("Help"), systemImage: "questionmark.circle") }
                     Button { showTour = true } label: { Label(L("Take the tour"), systemImage: "map") }
                     NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
@@ -91,41 +63,7 @@ struct SettingsView: View {
                     NavigationLink { ErrorLogView() } label: { Label(L("Error log"), systemImage: "ladybug") }
                 }
                 SampleDataSettingsSection()
-                Section(L("Plan & storage")) {
-                    LabeledContent(L("Current plan"), value: app.billing?.planLabel ?? (app.isCloud ? L("Free – without AI") : L("Own server – everything included")))
-                    if let b = app.billing, b.isPaid {
-                        if let r = ServerDate.parse(b.renewsAt) {
-                            LabeledContent(L("Renews on"), value: r.formatted(date: .abbreviated, time: .omitted))
-                        } else if let e = ServerDate.parse(b.expiresAt) {
-                            LabeledContent(L("Ends on"), value: e.formatted(date: .abbreviated, time: .omitted))
-                        }
-                        if b.period == "yearly" {
-                            Toggle(L("E-mail me 3 days before it renews"), isOn: Binding(
-                                get: { b.reminder?.bool ?? b.reminder?["enabled"]?.bool ?? false },
-                                set: { on in Task { _ = try? await app.api?.send("PATCH", "api/billing/reminder", json: ["enabled": on], as: Ignored.self); await app.refreshBilling() } }))
-                        }
-                    }
-                    if let used = app.billing?.assistantUsed {
-                        LabeledContent(L("Assistant this month"), value: app.billing?.assistantLimit.map { "\(used) / \($0)" } ?? "\(used)")
-                    }
-                    if let used = app.billing?.storageUsedBytes {
-                        let limit = app.billing?.storageLimitBytes
-                        VStack(alignment: .leading) {
-                            LabeledContent(L("Storage"), value: limit.map { "\(bytes(used)) / \(bytes($0))" } ?? bytes(used))
-                            if let limit, limit > 0 { ProgressView(value: min(used / limit, 1)).tint(used > limit * 0.9 ? Theme.low : Theme.primary) }
-                        }
-                    }
-                    if app.purchasesAvailable {
-                        Button(app.billing?.isPaid == true ? L("Manage plan") : L("See plans")) { app.openPaywall("settings") }
-                        if app.billing?.source == "apple" || app.billing?.isPaid == true {
-                            Button(L("Manage subscription")) {
-                                // Apple's sheet; the plain link when it can't be shown (e.g. the subscription is on another Apple account)
-                                if UIApplication.shared.connectedScenes.first is UIWindowScene { manageSubscriptions = true }
-                                else if let u = URL(string: app.billing?.manageUrl ?? "https://apps.apple.com/account/subscriptions") { UIApplication.shared.open(u) }
-                            }
-                        }
-                    }
-                }
+                // Abo & Speicher: Einstellungen › Daten, Abo & Konto (PlanStorageView)
                 Section(L("Legal")) {
                     Link(L("Privacy"), destination: Legal.privacy(app.instance))
                     if let i = app.instance?.legal?.imprint, let url = URL(string: i) { Link(L("Imprint"), destination: url) }
@@ -138,13 +76,7 @@ struct SettingsView: View {
                 if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
                 Section {
                     Button(L("Sign out"), role: .destructive) { confirmSignOut = true }
-                    if app.isCloud {
-                        Button(role: .destructive) {
-                            confirmDelete = true
-                        } label: {
-                            HStack { Text(L("Delete account")); if deleting { Spacer(); ProgressView() } }
-                        }
-                    }
+                    // Konto löschen: Einstellungen › Daten, Abo & Konto › Deine Daten & Konto (AccountDataView)
                 }
             }
             .themedList()
@@ -153,15 +85,21 @@ struct SettingsView: View {
             .toolbar {
                 if !embedded { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { dismiss() } } }
             }
+            .settingsRoutes(store: store)
             .task { await load() }
+            .onAppear {
+                #if DEBUG
+                // simulator screenshots: -debugSettings YES -debugSettingsPath ich (or haushalt/leute …)
+                if let d = UserDefaults.standard.string(forKey: "debugSettingsPath") { app.requestedSettings = d }
+                #endif
+                openRequestedSettings()
+            }
+            .onChange(of: app.requestedSettings) { _, _ in openRequestedSettings() }
             .confirmationDialog(L("Sign out on this iPhone?"), isPresented: $confirmSignOut, titleVisibility: .visible) {
                 Button(L("Sign out"), role: .destructive) { dismiss(); app.signOut() }
             } message: {
                 Text(L("Changes that haven't been sent yet are lost."))
             }
-            .accountDeletion(isPresented: $confirmDelete, hasPassword: hasPassword, appleLinked: appleLinked,
-                             onError: { error = $0 }, onDeleted: { dismiss() })
-            .manageSubscriptionsSheet(isPresented: $manageSubscriptions)
             .sheet(isPresented: $showWeb) {
                 if let api = app.api { WebSettingsView(api: api) }
             }
@@ -185,6 +123,15 @@ struct SettingsView: View {
                 Text(L("This is how the others in your household see you."))
             }
         }
+    }
+
+    /// a deep link or a push for /einstellungen/<page>/<row> (AppModel.requestedSettings): straight there
+    private func openRequestedSettings() {
+        guard let target = app.requestedSettings else { return }
+        app.requestedSettings = nil
+        var p = NavigationPath()
+        for r in SettingsRegistry.routes(for: target) { p.append(r) }
+        path = p
     }
 
     private func bytes(_ b: Double) -> String {
