@@ -182,7 +182,7 @@ struct OfferAsks: View {
             VStack(alignment: .leading, spacing: Theme.Space.s3) {
                 ForEach(mine) { t in
                     VStack(alignment: .leading, spacing: Theme.Space.s2) {
-                        Label(LF("%@ asks: will you take over “%@”?", t.offer?.by?.name ?? "", t.name), systemImage: "hand.raised")
+                        Label(LF("%@ asks: will you take over “%@”?", t.offer?.by?.name ?? "", t.name), systemImage: "arrow.left.arrow.right")
                             .font(.subheadline)
                         AdaptiveButtonRow { _ in
                             Button(L("Yes, I’ll take it")) { Task { await answer(t, true) } }
@@ -217,7 +217,7 @@ struct TodayOfferAsks: View {
     var body: some View {
         LoadSlot {
             if let d = data, d.tasks.contains(where: { $0.offer?.to.id == d.me && d.me != nil }) {
-                Card(title: L("Hand over"), systemImage: "hand.raised") {
+                Card(title: L("Hand over"), systemImage: "arrow.left.arrow.right") {
                     OfferAsks(api: api, tasks: d.tasks, me: d.me) { Task { data = try? await api.care() } }
                 }
             }

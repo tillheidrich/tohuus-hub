@@ -502,7 +502,7 @@ struct MealSheet: View {
         if model.members.count > 1 {
             let claim = model.claims[e.id]
             VStack(alignment: .leading, spacing: 8) {
-                Label(claim.map { LCF("%@ cooks", $0.name) } ?? LC("Who cooks?"), systemImage: "hand.raised")
+                Label(claim.map { LCF("%@ cooks", $0.name) } ?? LC("Who cooks?"), systemImage: "frying.pan")
                     .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink2)
                 if claim == nil, let s = model.suggested[e.id] {
                     Text(s.why == "weekday" ? LF("%@ usually cooks on this weekday.", s.name) : LF("%@ has cooked most of the time lately.", s.name))

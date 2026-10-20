@@ -41,7 +41,7 @@ import { de_money } from './locales/de-money.js';
 import { de_money2 } from './locales/de-money2.js';
 import { de_core } from './locales/de-core.js';
 
-const de = { ...deBase, ...de_data, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money, ...de_core, ...de_list2, ...de_recipepack, ...de_houseguide, ...de_cloudops, ...de_account, ...de_admin, ...de_money2, ...de_wish, ...de_knowledge, ...de_billing, ...de_origin };
+const de = { ...deBase, ...de_data, ...de_fresh, ...de_shop, ...de_home, ...de_kiosk, ...de_kids, ...de_onboard, ...de_retail, ...de_ha, ...de_channels, ...de_intl, ...de_cook2, ...de_auth, ...de_spend2, ...de_print, ...de_share, ...de_labels, ...de_away, ...de_plan2, ...de_recipes2, ...de_quality, ...de_people, ...de_tour, ...de_ha2, ...de_menu, ...de_design, ...de_places, ...de_fixes, ...de_order, ...de_assistant, ...de_rhythm, ...de_money, ...de_core, ...de_list2, ...de_recipepack, ...de_houseguide, ...de_cloudops, ...de_account, ...de_admin, ...de_money2, ...de_wish, ...de_knowledge, ...de_billing, ...de_origin, ...de_today };
 import { de_list2 } from './locales/de-list2.js';
 import { de_admin } from './locales/de-admin.js';
 
@@ -53,6 +53,7 @@ import { de_wish } from './locales/de-wish.js';
 import { de_knowledge } from './locales/de-knowledge.js';
 import { de_billing } from './locales/de-billing.js';
 import { de_origin } from './locales/de-origin.js';
+import { de_today } from './locales/de-today.js';
 
 
 const DICTS: Record<Lang, Record<string, string>> = { en: {}, de };

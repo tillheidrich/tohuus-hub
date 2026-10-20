@@ -57,7 +57,7 @@ export function helpCopy(k) {
             'Beim Start fragt ToHuus nur das: allein, zu zweit, Familie, WG oder ein Haushalt, den du mitversorgst. Danach richtet sich, was du siehst. Ändern kannst du es später in den Einstellungen.',
           )],
           ['Die Bereiche', ul(
-            '<b>Heute</b>: was fällig ist, was demnächst kommt, was bald weg muss und was ihr heute kochen könnt.',
+            '<b>Heute</b>: höchstens fünf ruhige Karten. Was jetzt dran ist, die Liste, was bald verbraucht werden sollte, was ihr heute kochen könnt und ein Hinweis, etwa dass die Tonne heute Abend raus muss.',
             '<b>Einkauf</b>: die gemeinsame Liste, der Modus für den Laden und eure Wünsche.',
             '<b>Kochen</b>: Ideen aus dem, was da ist, Rezepte, Lieblinge und der Wochenplan.',
             '<b>Aufgaben</b>: was zu Hause zu tun ist, auch mit Termin.',
@@ -99,8 +99,9 @@ export function helpCopy(k) {
             'Größen, Maße, Zählerstände und was sonst nur einer im Kopf hat, stehen im <a href="haushaltswissen.html">Haushaltswissen</a> als Karten. Ab dann fragt ihr ToHuus statt dieser einen Person, und zu pflegen gibt es nichts. Notizen und Listen holt ihr per Einfügen oder als Datei herein, sichern geht genauso.',
             'Das hilft auch der KI: Ein Assistent kann nur mit dem arbeiten, was er über euch weiß. Mit dem Haushaltswissen antwortet er, ohne zu raten, der Assistent in ToHuus genauso wie Claude oder ChatGPT über <a href="claude-chatgpt.html">MCP</a>.',
           )],
-          ['Demnächst', p(
-            'Auf Heute zeigt „Demnächst“, was morgen und in den nächsten Tagen kommt, mit Termin und wer es sich vorgenommen hat. Die Tonne steht dort schon am Vorabend mit „heute Abend rausstellen“, ab 17 Uhr ganz oben. Freitags und samstags schaut „Demnächst“ zwei Tage voraus.',
+          ['Heute: fünf Karten, ein Hinweis', p(
+            'Heute zeigt höchstens fünf Karten, immer in derselben Reihenfolge: <b>Jetzt dran</b> (deine Aufgaben für heute), die <b>Liste</b> mit „Bald wieder nötig“, <b>Bald verbrauchen</b>, <b>Heute kochen</b> und ganz unten <b>einen</b> Hinweis, etwa „Heute Abend: Restmüll rausstellen“, ein Bon zum Prüfen oder ein Geburtstag mit freien Wünschen. Ist nichts davon da, steht dort nur „Für heute ist alles Wichtige erledigt“.',
+            'Wie viele Aufgaben Heute zeigt und ob die Geld-Karte dabei ist, stellst du unter Einstellungen › Ich › Ruhe & Fokus ein. Was in den nächsten Tagen kommt, steht unter Aufgaben.',
           )],
           ['Alles lässt sich zurücknehmen', p(
             'Aus Versehen abgehakt, gelöscht oder etwas Falsches importiert? „Rückgängig“ holt es zurück, auch bei dem, was der Assistent eingetragen hat.',
@@ -305,7 +306,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         sections: [
           ['Was dazugehört', p(
             'Unter Aufgaben steht, was bei euch zu tun ist. <b>Haushalt</b> sind Sachen wie Bad putzen, Müll rausbringen oder Bettwäsche wechseln. <b>Pflege & Fristen</b> sind Wasserfilter, Rauchmelder, TÜV oder Ausweise. Oben filterst du nach Alle, Haushalt, Pflege & Fristen und Meine.',
-            'Für den Anfang gibt es Vorlagen für die üblichen Hausarbeiten. Auf „Heute“ zeigt eine Karte, was heute ansteht, und ein Tipp hakt es ab.',
+            'Oben steht, was jetzt dran ist und was demnächst kommt, der Rest darunter. Vorlagen für die üblichen Hausarbeiten und Artikel aus dem Ratgeber findest du unter Aufgaben › Ideen & Vorlagen. Auf „Heute“ zeigt eine Karte, was heute ansteht, und ein Tipp hakt es ab.',
           )],
           ['Einmal, immer wieder oder bei Bedarf', ul(
             '<b>Einmal</b>: mit festem Datum. Ist sie erledigt, verschwindet sie aus der Übersicht.',
@@ -320,16 +321,16 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Bei „Wer macht es“ wählst du ein Mitglied oder ein Kind aus euren Kinderprofilen, oder du lässt es bei „Wer gerade Zeit hat“. Unabhängig davon kann jemand sagen „Ich hab’s im Blick“: Diese Person denkt dran, auch wenn jemand anders es erledigt.',
             'Wechselt ihr euch ab, stellst du „Abwechselnd“ ein und wählst, wer mitmacht, etwa „Bad jeden Samstag, Mira und Sam abwechselnd“. „Erledigt“ gibt die Aufgabe an die nächste Person weiter, „Rückgängig“ gibt sie zurück.',
           )],
-          ['Demnächst und die Tonne', p('Auf Heute zeigt „Demnächst“, was morgen und in den nächsten Tagen fällig ist und wer es sich vorgenommen hat. Aufgaben rund um die Tonne stehen dort schon am Abend vor dem Fälligkeitstag mit „heute Abend rausstellen“, ab 17 Uhr ganz oben. Die Abfuhrtermine liest ToHuus auf dem iPhone auf Wunsch aus eurem Kalender, unter Aufgaben › Euren Kalender lesen (siehe <a href="../ratgeber/tonne-am-vorabend-erinnerung.html">Tonne am Vorabend</a>).')],
+          ['Die Tonne am Vorabend', p('Muss die Tonne heute Abend raus, steht das auf Heute als Hinweis: „Heute Abend: Restmüll rausstellen“. Was in den nächsten Tagen kommt, seht ihr unter Aufgaben. Die Abfuhrtermine liest ToHuus auf dem iPhone auf Wunsch aus eurem Kalender, unter Aufgaben › Werkzeuge › Euren Kalender lesen (siehe <a href="../ratgeber/tonne-am-vorabend-erinnerung.html">Tonne am Vorabend</a>).')],
           ['Aus Versehen erledigt', p('Ein Tipp auf „Rückgängig“ nimmt das Erledigen zurück. Bei abwechselnden Aufgaben ist danach wieder die Person dran, die vorher dran war.')],
           ['Zuletzt erledigt und euer Rhythmus', p('Unter „Zuletzt erledigt“ seht ihr, was in den letzten Tagen geschafft wurde. Bei jeder Aufgabe zeigt ToHuus nach ein paar Malen, wie oft ihr sie wirklich macht, etwa „Ihr macht das etwa alle 9 Tage“. So merkt ihr, ob der geplante Rhythmus zu eurem Alltag passt.')],
           ['Wer hat was im Blick', p(
-            'Dran denken und planen ist auch Arbeit. „Wer hat was im Blick“ zeigt für die letzten 28 Tage, wer sich um Einkauf, Kochen, Geld und Aufgaben gekümmert hat: wer etwas auf die Liste gesetzt oder eingekauft, das Essen geplant, Bons erfasst oder Aufgaben erledigt hat.',
+            'Dran denken und planen ist auch Arbeit. „Wer hat was im Blick“ (unter Aufgaben › Kopf & Fairness und in Mehr) zeigt für die letzten 28 Tage, wer sich um Einkauf, Kochen, Geld und Aufgaben gekümmert hat: wer etwas auf die Liste gesetzt oder eingekauft, das Essen geplant, Bons erfasst oder Aufgaben erledigt hat.',
             'Dort stehen nur Namen, alphabetisch, ohne Zahlen. Deine eigene Zahl siehst nur du. Anteile in Prozent erscheinen erst, wenn alle im Haushalt „Anteile vergleichen“ eingeschaltet haben. Darunter steht, welche fälligen Aufgaben noch niemand im Blick hat.',
           ), tip('Private Einträge, persönliche Bons und Aufgaben „Nur für mich“ zählen hier nie mit. Gäste sehen diesen Teil nicht.')],
           ['Termine', p(
             'Gibst du einer Aufgabe mit Datum eine Uhrzeit, wird daraus ein Termin, auf Wunsch mit Dauer und Ort, etwa „Zahnarzt, Dienstag 15 Uhr, 30 Min.“. Über „In den Kalender“ legst du eine einzelne Aufgabe in deinen Kalender.',
-            'Alle Aufgaben und Termine gleichzeitig in Apple Kalender, Apple Erinnerungen, Google Kalender oder Outlook: siehe <a href="erinnerungen-spiegeln.html">Erinnerungen und Kalender</a>. Deine privaten Aufgaben landen dabei in deinem eigenen Kalender, getrennt von denen des Haushalts. Auf dem iPhone geht das auch direkt: Aufgaben › Euren Kalender lesen › „Deine privaten Aufgaben“.',
+            'Alle Aufgaben und Termine gleichzeitig in Apple Kalender, Apple Erinnerungen, Google Kalender oder Outlook: siehe <a href="erinnerungen-spiegeln.html">Erinnerungen und Kalender</a>. Deine privaten Aufgaben landen dabei in deinem eigenen Kalender, getrennt von denen des Haushalts. Auf dem iPhone geht das auch direkt: Aufgaben › Werkzeuge › Euren Kalender lesen › „Deine privaten Aufgaben“.',
           )],
           ['Mit dem Assistenten', p('Sag dem <a href="sprechen.html">Assistenten</a> zum Beispiel „Bettwäsche wechseln alle zwei Wochen“, „Schornsteinfeger Dienstag um halb neun“ oder „Was steht heute an?“. Er legt Aufgaben und Termine an, hakt sie ab und verteilt sie. Alles, was er einträgt, lässt sich zurücknehmen.')],
         ],
@@ -376,7 +377,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Dann, was bald dran ist und bei dir liegt, auch wenn du an der Reihe bist.',
             'Zuletzt, was bald dran ist und noch niemand übernommen hat.',
           ), p('Was jemand anderes macht oder sich vorgenommen hat, bleibt bei dieser Person. Private Aufgaben anderer siehst du nie.')],
-          ['Nur eins auf Heute', p('Tippe in „Aufgaben heute“ auf <b>Nur eins</b>. Dann zeigt Heute nur noch die nächste Aufgabe:'), ul(
+          ['Nur eins auf Heute', p('Tippe auf Heute in „Jetzt dran“ auf <b>Nur eins</b>. Dann zeigt Heute nur noch die nächste Aufgabe:'), ul(
             '<b>Fertig</b> hakt sie ab, für 10 Sekunden kannst du es rückgängig machen.',
             '<b>Später</b> schiebt sie ans Ende, nur für diesen Besuch. Am Termin ändert sich nichts.',
             '<b>+4 weitere</b> zeigt wieder alle Aufgaben.',
@@ -931,7 +932,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           )],
           ['Who belongs to it?', p('On first start ToHuus only asks this: just you, the two of you, a family, a flat share, or a household you look after. What you see follows from that, and you can change it later.')],
           ['The areas', ul(
-            '<b>Today</b>: what is due, what is coming up, what should be used soon and what you can cook.',
+            '<b>Today</b>: at most five calm cards. What is up now, the list, what should be used soon, what you can cook today and one hint, such as the bin going out tonight.',
             '<b>Shopping</b>: the shared list, shop mode and your wishes.',
             '<b>Cooking</b>: ideas from what is at home, recipes, favourites and the week plan.',
             '<b>Tasks</b>: what needs doing at home, appointments included.',
@@ -974,7 +975,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['What belongs here', p(
             'Tasks holds what needs doing in your home. <b>Household</b> is things like cleaning the bathroom, taking out the bins or changing the bed linen. <b>Care & deadlines</b> is water filters, smoke detectors, the car inspection or passports. At the top you filter by All, Household, Care & deadlines and Mine.',
-            'To get going there are templates for the usual chores. On Today a card shows what is on today, and one tap ticks it off.',
+            'At the top is what is due now and what comes up next, the rest below. Templates for the usual chores and guide articles are under Tasks › Ideas & templates. On Today a card shows what is on today, and one tap ticks it off.',
           )],
           ['Once, again and again, or when needed', ul(
             '<b>Once</b>: on a fixed date. When it is done, it leaves the overview.',
@@ -987,7 +988,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Under “Who does it” you choose a member or a child from your kid profiles, or leave it at “Whoever has time”. Separately, someone can say “I keep it in mind”: that person remembers it, even when someone else does it.',
             'If you take turns, switch on “Take turns” and choose who joins in, for example “Bathroom every Saturday, Mira and Sam take turns”. “Done” passes the task to the next person, “Undo” gives it back.',
           )],
-          ['Coming up and the bins', p('On Today, “Coming up” shows what is due tomorrow and over the next days, and who has taken it on. Bin tasks show up the evening before they are due with “tonight: put out”, and from 5 pm at the very top. On the iPhone ToHuus can read collection dates from your calendar, under Tasks › Read your existing calendar.')],
+          ['The bins the evening before', p('When the bins go out tonight, Today shows it as its hint: “Tonight: put out the bins”. What comes in the next days is under Tasks. On the iPhone ToHuus can read collection dates from your calendar, under Tasks › Tools › Read your existing calendar.')],
           ['Done by mistake', p('One tap on “Undo” takes it back. With tasks you take turns on, it goes back to whoever was up before.')],
           ['Recently done and your rhythm', p('“Recently done” shows what got done in the last few days. After a few times each task shows how often you really do it, for example “You do it about every 9 days”. That tells you whether the planned rhythm fits your life.')],
           ['Who keeps what in mind', p(
@@ -1043,7 +1044,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Then what is coming up and is yours, also when it is your turn.',
             'Last, what is coming up and nobody has taken on yet.',
           ), p('What someone else does or said they’d do stays with them. You never see other people’s private tasks.')],
-          ['Just one on Today', p('Tap <b>Just one</b> in “Tasks today”. Today then only shows the next task:'), ul(
+          ['Just one on Today', p('Tap <b>Just one</b> in “Up now” on Today. Today then only shows the next task:'), ul(
             '<b>Done</b> ticks it off, you can undo it for 10 seconds.',
             '<b>Later</b> moves it to the end, only for this visit. Nothing about its date changes.',
             '<b>+4 more</b> shows all tasks again.',
@@ -1300,7 +1301,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Write it in, ToHuus sorts it', p('Type it, say it or take a photo of a receipt: “Out of milk”, “Yellow bin every two weeks”, “Mika is shoe size 12 now”. The milk goes on the list, the bin to the tasks and the shoe size into <a href="household-knowledge.html">home knowledge</a>. Whatever ToHuus is not sure about, it asks you to confirm instead of guessing.')],
           ['Suggestions, not automation', p('From receipts and ticks on the list ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. Nothing lands on your list without a tap.')],
           ['Your household’s memory', p('Sizes, measurements, meter readings and whatever else only one person keeps in mind live as cards in home knowledge. From then on you ask ToHuus instead of that one person, and there is nothing to maintain.', 'It helps AI too: an assistant can only work with what it knows about you. With home knowledge it answers without guessing, the assistant in ToHuus as well as Claude or ChatGPT over <a href="connect-claude-chatgpt.html">MCP</a>.')],
-          ['Coming up', p('On Today, “Coming up” shows what is next tomorrow and over the next days. The bin is there the evening before, from 5 pm at the very top.')],
+          ['Today: five cards, one hint', p('Today shows at most five cards, always in the same order: <b>Up now</b> (your tasks for today), the <b>list</b> with “Needed again soon”, <b>Use soon</b>, <b>Cook today</b> and at the bottom <b>one</b> hint, such as “Tonight: put out the bins”, a receipt to check or a birthday with wishes still free. When there is none of that, it only says that everything important is done for today.', 'How many tasks Today shows and whether the money card is there, you set in Settings › Me › Calm & focus. What comes in the next days is under Tasks.')],
           ['Everything can be undone', p('Ticked off, deleted or imported by mistake? “Undo” brings it back, also for what the assistant added.')],
           ['Your bar', p('The bar at the bottom starts with Today, Shopping, Cooking, Tasks and Stock. Money, home knowledge, Bring me something and more can go in, per person (see <a href="your-bar.html">Your bar</a>).')],
           ['AI if you want it', p('Most things work without AI. With AI, ToHuus reads tricky receipts and understands open questions, in the cloud through Mistral and only with your consent. There is an open monthly limit, see <a href="ai-limits.html">Fair AI limits</a>.')],

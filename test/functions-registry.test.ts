@@ -14,8 +14,7 @@ const read = (...p: string[]) => fs.readFileSync(path.join(ROOT, ...p), 'utf8');
 
 /** functions that exist on one platform only, on purpose (docs/glossary.md › Register) */
 const ONE_PLATFORM: Record<string, 'web' | 'ios'> = {
-  // Küchenmodus: iPad at the counter; the web decides in Paket E (UX audit P1-10)
-  kitchen: 'ios',
+  // Küchenmodus is on both since Paket E (web: /kochen/kueche, full screen + Wake Lock); nothing is one-platform now
 };
 
 /** functions only a permanent guest sees (members find the same under Urlaub & Übergabe) */

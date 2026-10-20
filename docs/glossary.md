@@ -15,7 +15,10 @@ Web, iPhone, Cloud und eigenem Server. Routen, Ids und Modul-Schlüssel bleiben 
 | Wiederkehrendes zu Hause | Aufgaben | Tasks | Pflege (als Bereich) | `tasks` / `/aufgaben` |
 | Tab „was bei uns ist“ (Vorrat + Türen) | Zuhause | Home | – | `stock` / `/bestand`, Alias `/zuhause` (Paket A: Vorrat + Türen Hausinfo, Haushaltswissen, Wo ist was?) |
 | Lebensmittel und Sachen im Haus | Vorrat | Pantry | Bestand, Produkte im Haus | – |
-| Was wieder gekauft werden müsste (Kaufrhythmus) | Bald wieder nötig | Needed again soon | Fällig (für Käufe) | Heute-Karte `rhythm` |
+| Was wieder gekauft werden müsste (Kaufrhythmus) | Bald wieder nötig | Needed again soon | Fällig (für Käufe) | Zeile in der Heute-Karte Liste (Paket B) |
+| Heute-Karte: meine Aufgaben jetzt | Jetzt dran | Up now | Aufgaben heute | Heute-Karte `now` (`docs/today.md`) |
+| Heute-Karte: was weg muss | Bald verbrauchen | Use soon | Das habt ihr noch | Heute-Karte `still` |
+| Der eine Hinweis auf Heute | Hinweis | Hint | – | Heute-Karte `context` |
 | Aufgabe ist dran | fällig | due | – | – |
 | Codes, Müllplan, Geräte | Hausinfo | House info | Pflege & Hausinfo | `houseinfo` / `/hausinfo` |
 | Größen, Maße, Nummern | Haushaltswissen (in der Leiste kurz: Wissen) | Household knowledge (bar: Knowledge) | Was ToHuus sich merkt, Haushaltsgedächtnis, Gedächtnis | `knowledge` / `/wissen` |
@@ -28,7 +31,7 @@ Web, iPhone, Cloud und eigenem Server. Routen, Ids und Modul-Schlüssel bleiben 
 | Gäste-Links, Party | Gäste | Guests | – | `/bar` |
 | Geschenk- und Merklisten | Wünsche | Wishes | – | `wishes` / `/einkauf/wuensche` |
 | Menschen im Haushalt | Leute | People | Mitglieder (als Bereich) | `/einstellungen/haushalt/leute` |
-| Eine Aufgabe nach der anderen | Nur eins (Modus, Seite, Live Activity, Hilfe) | Just one | Jetzt, Eins nach dem anderen, Eine Sache nach der anderen | `/fokus` |
+| Eine Aufgabe nach der anderen | Nur eins (Modus, Seite, Live Activity, Hilfe) | Just one | Jetzt, Eins nach dem anderen, Eine Sache nach der anderen, Was schaffst du heute? | `/fokus` |
 | Aufgaben-Tab auf dem Kinder-Tablet | Zu tun | To do | – | – |
 | Schonender Ton | Sanfter Modus | Gentle mode | – | – |
 | Einstellungen dazu | Ruhe & Fokus | Calm & focus | – | `/einstellungen/ich#fokus` |
@@ -42,6 +45,9 @@ Web, iPhone, Cloud und eigenem Server. Routen, Ids und Modul-Schlüssel bleiben 
 | Untere Leiste | Deine Leiste | Your bar | – | `/leiste` |
 | Avatar-Menü | Mehr | More | – | `/mehr` |
 | Zählbares | Sache, Sachen | item, items | Ding, Dinge | – |
+| Beschriftetes Menü für seltene Werkzeuge einer Bereichsseite | Werkzeuge | Tools | „…“ ohne Text, „Mehr für die Liste“ | Web `area/AreaTools.tsx`, iPhone `Design/AreaTools.swift` |
+| Vorschläge und Ratgeber zu Aufgaben | Ideen & Vorlagen | Ideas & templates | Mit einem Tipp hinzufügen (als Ort) | `taskideas` / `/aufgaben/ideen` |
+| Kochen an der Arbeitsfläche (Vollbild, Schritt für Schritt) | Küchenmodus | Kitchen mode | Kochmodus (für den Küchenmodus) | `kitchen` / `/kochen/kueche`; „Kochmodus“ bleibt der Schritt-für-Schritt-Modus eines Rezepts |
 
 ## Regeln
 
@@ -65,6 +71,8 @@ Web, iPhone, Cloud und eigenem Server. Routen, Ids und Modul-Schlüssel bleiben 
 ## Entscheidungen in Paket D (wo das Audit offen war)
 
 - „Nur eins“ für Modus und Seite (Till). Die Seite `/fokus` heißt „Nur eins“; „Nur eins reicht.“ im sanften Modus.
+- „Was schaffst du heute?“ (Wisch-Stapel in Aufgaben) ist seit 20.10.2026 in „Nur eins“ aufgegangen: ein Einstieg,
+  Untertitel „3 Aufgaben, eine nach der anderen“.
 - „Haushaltswissen“ als Name, „Wissen“ nur in der Leiste (Till). Die alte Eyebrow „Euer Haushaltsgedächtnis“ heißt
   „Euer Haushaltswissen“.
 - Geteilte Kosten: „Abrechnung“ / EN „Split“ (Audit), Knöpfe „Neue Abrechnung“ / „New split“.
@@ -91,7 +99,7 @@ Eine Liste aller Funktionen außerhalb der Einstellungen (die stehen in `web/src
 - Web: `web/src/search/functions.ts` (`functionsFor`, `matchFunctions`), genutzt von `GlobalSearch.tsx`.
 - iPhone: `ios/project.yml` kopiert die Datei ins App-Bundle; `FunctionRegister` in `GlobalSearchView.swift` liest sie
   und filtert mit denselben Regeln.
-- Nur auf einer Plattform (bewusst): `kitchen` (Küchenmodus, iPad; Web entscheidet Paket E).
+- Nur auf einer Plattform: nichts mehr. Der Küchenmodus ist seit Paket E auch im Web (`/kochen/kueche`, Vollbild, Wake Lock, Timer).
 - Mehr (Paket A) liest `more` aus derselben Datei: Gruppen, Zeilen, höchstens fünf je Gruppe (`docs/navigation.md`). Optional `more` an einer Funktion = längerer Zeilentitel in Mehr (Wünsche: „Wunschlisten & Geschenke“).
 - `test/functions-registry.test.ts`: jede Route existiert, jedes iOS-Ziel ist bekannt, jeder Hilfe-Slug existiert,
   Web und iPhone liefern dieselben Ids.

@@ -3,7 +3,7 @@
  * Learned from what happens anyway: "macht meistens Sam". Names, no numbers, alphabetical. A judgement about the
  * balance only when everyone agreed to compare – weighed by what each person carries, not by how often.
  */
-import { ArrowsLeftRight, Check, HandHeart } from '@phosphor-icons/react';
+import { ArrowsLeftRight, Check } from '@phosphor-icons/react';
 import { invalidate, post, useApi } from '../api';
 import { t } from '../i18n';
 import { Avatar, useToast } from '../ui';
@@ -122,7 +122,7 @@ export function Carrying({ onOpenTask }: { onOpenTask?: (id: number) => void }) 
   return (
     <div className="card stack carrying-card" role="group" aria-label={c.name}>
       <span>
-        <HandHeart size={18} aria-hidden="true" style={{ verticalAlign: '-3px', marginRight: 6 }} />
+        <ArrowsLeftRight size={18} aria-hidden="true" style={{ verticalAlign: '-3px', marginRight: 6 }} />
         {t('You’ve been doing “{task}” for weeks – thank you! Would you like to hand it over for a while?', { task: c.name })}
       </span>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -149,7 +149,7 @@ export function OfferAsks({ tasks, me }: { tasks: CareTask[]; me: number | null 
       {mine.map((x) => (
         <div key={x.id} className="card stack who-ask" role="group" aria-label={x.name}>
           <span>
-            <HandHeart size={18} aria-hidden="true" style={{ verticalAlign: '-3px', marginRight: 6 }} />
+            <ArrowsLeftRight size={18} aria-hidden="true" style={{ verticalAlign: '-3px', marginRight: 6 }} />
             {t('{name} asks: will you take over “{task}”?', { name: x.offer!.by?.name ?? '', task: x.name })}
           </span>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>

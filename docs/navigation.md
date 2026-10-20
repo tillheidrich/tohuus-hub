@@ -54,7 +54,7 @@ Eine Liste, auf iPhone und Web gleich, gebaut aus `shared/functions.json › mor
 | **Alltag** | Wunschlisten & Geschenke · Geld · Bring mir was · Urlaub & Übergabe · Bons & Importe (Gäste: Übergabe) |
 | **Zuhause** (nur wenn der Tab Zuhause nicht in der Leiste ist) | Hausinfo · Haushaltswissen · Wo ist was? |
 | **Familie & Gäste** | Leute · Gäste · Für wen ich da bin |
-| **Kopf & Fairness** | Im Kopf · Nur eins · Denkarbeit-Check · Wochenrückblick |
+| **Kopf & Fairness** | Im Kopf · Nur eins · Wer hat was im Blick · Denkarbeit-Check · Wochenrückblick |
 | **Einstellungen & Hilfe** | Einstellungen · Hilfe · So funktioniert ToHuus · Gut zu wissen · Alle Funktionen |
 
 Regeln (beide Plattformen identisch, `test/functions-registry.test.ts` und `test/nav-bar-web.test.ts` prüfen das):
@@ -104,3 +104,35 @@ Regeln (beide Plattformen identisch, `test/functions-registry.test.ts` und `test
 - UX-Audit 20.10.2026: Mehr war im Handy-Web nur von Heute aus erreichbar, Hausinfo hing an Aufgaben, Wünsche waren ein
   Geschenk-Symbol ohne Text, und Mehr war auf iPhone und Web verschieden gebaut. Jetzt gilt: jede Funktion hat einen
   Namen (`docs/glossary.md`) und einen Hauptort, und beide Clients lesen Mehr aus derselben Datei.
+
+## Bereichsseiten (Paket E, 20.10.2026)
+
+Gilt für Einkauf, Kochen, Aufgaben, Zuhause und Geld, auf iPhone und Web, Cloud und eigener Server gleich.
+
+- **Kopfzeile:** Titel, *eine* sichtbare Hauptaktion (Plus, Neu, Rezept, Produkt, Ausgabe; im Einkauf das Eingabefeld
+  und der Schalter Liste/Im Laden), alles Seltene in **einem beschrifteten Menü „Werkzeuge“** (Web
+  `web/src/area/AreaTools.tsx` als Sheet, iPhone `AreaToolsMenu` in `Design/AreaTools.swift`). Kein „…“ ohne Text.
+- **Leere Zustände:** Symbol, ein Satz, ein Knopf (Web `AreaEmpty`, iPhone `EmptyStateView` ohne `message`).
+- **Aufgaben:** zuerst „Jetzt dran“ (überfällig, heute), „Demnächst“, „Später“ (fünf, dann „Alle n zeigen“),
+  „Zuletzt erledigt“ (drei). Darunter die Kacheln **Kopf & Fairness**: Wer hat was im Blick (`/aufgaben/blick`,
+  iPhone `BlickView`), Denkarbeit-Check, Für wen ich da bin, Im Kopf, Wochenrückblick, Ideen & Vorlagen
+  (`/aufgaben/ideen`, iPhone `TaskIdeasView`: die Vorschläge und Ratgeber-Artikel). „Nur eins“ bleibt oben.
+  Werkzeuge: fällige teilen, Kalender, Etiketten. **Ein** Einstieg „Nur eins“ oben (Untertitel „3 Aufgaben, eine nach
+  der anderen“, öffnet `/fokus`); „Was schaffst du heute?“ (Wisch-Stapel) ist seit 20.10.2026 darin aufgegangen.
+- **Kochen:** Woche · Was kochen wir? · Rezepte (in dieser Reihenfolge). Start: „Woche“, wenn die laufende Woche
+  (heute und die sechs Tage danach) mindestens einen Eintrag hat, sonst „Was kochen wir?“; eine von Hand gewählte
+  Ansicht bleibt für die Sitzung (Web `area/cookStart.ts`, iPhone `CookStart`, Test `test/cook-start.test.ts`). Was kochen wir? zeigt jedes
+  Rezept nur einmal (kein Streifen „Daraus könnt ihr heute kochen“, kein Abschnitt „Schnell“ – das ist ein Filter);
+  „Ideen durchblättern“ ist ein eigener Einstieg (Sheet). Werkzeuge: Küchenmodus, Lieblinge, Rezept-Werkzeuge.
+- **Küchenmodus im Web** (`/kochen/kueche`, `pages/KitchenMode.tsx`): Woche groß, Rezept Schritt für Schritt mit
+  großer Schrift und Timern aus dem Schritt-Text (`area/durations.ts` = `CookTimers.durations` auf dem iPhone),
+  Liste zum Abhaken; „Bildschirm bleibt an“ über die Screen Wake Lock API (pro Gerät gemerkt, an), „Vollbild“ auf
+  Knopfdruck. Die Timer gibt es auch im Kochmodus eines Rezepts.
+- **Zuhause:** Werkzeuge = Abgleich, Strichcode scannen, (iPhone: Reste einräumen, Box-Etikett scannen,) Gruppierung,
+  Etiketten, Orte & Kategorien. Ab dem dritten Ort sind die Orte eingeklappt (Web), Status als Auswahl statt
+  zweiter Chip-Reihe.
+- **Einkauf:** Werkzeuge = So sieht die Liste aus, Beim Abhaken einräumen (Schalter, nicht mehr auf der Liste),
+  Angebot, Neue Liste (iPhone zusätzlich Bon, Zettel-Foto, Übliche, Einfügen, Teilen, Läden).
+  „Ich hol’s“ ist ein Wort, kein Hand-Symbol: die Hand bedeutet nur „Bring mir was“ (Befund P1-14).
+- **Geld:** „+ Ausgabe“ sichtbar; Werkzeuge = Im Detail, Bons, Bon teilen, Neue Abrechnung, Kategorien & Teilen.
+

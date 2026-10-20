@@ -29,7 +29,7 @@ const AREA: Record<BlickArea, { icon: Icon; title: string; what: string }> = {
   tasks: { icon: ListChecks, title: 'Tasks', what: 'did household tasks' },
 };
 
-export function BlickSection({ onOpenTask }: { onOpenTask?: (id: number) => void }) {
+export function BlickSection({ onOpenTask, bare = false }: { onOpenTask?: (id: number) => void; /** on its own page (/aufgaben/blick): the page title already says it */ bare?: boolean }) {
   const q = useApi<Blick>(['care', 'blick'], '/blick');
   const toast = useToast();
   const b = q.data;
@@ -52,10 +52,12 @@ export function BlickSection({ onOpenTask }: { onOpenTask?: (id: number) => void
     }
   };
   return (
-    <section className="section">
-      <div className="section-head">
-        <h2>{t('Who keeps what in mind')}</h2>
-      </div>
+    <section className="section" style={bare ? { marginTop: 0 } : undefined}>
+      {!bare && (
+        <div className="section-head">
+          <h2>{t('Who keeps what in mind')}</h2>
+        </div>
+      )}
       <p className="muted small" style={{ margin: '0 0 8px' }}>{t('The last {n} days. Noticing and planning is work too.', { n: b.days })}</p>
       <div className="list">
         {b.areas.filter((a) => a.active).map((a) => {

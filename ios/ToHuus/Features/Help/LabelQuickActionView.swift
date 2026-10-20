@@ -70,7 +70,7 @@ struct LabelQuickActionView: View {
                 }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Theme.Space.s2) {
                     if mode == "count" {
-                        actionTile("hand.raised", L("Took one"), key: "take", disabled: total <= 0)
+                        actionTile("minus.circle", L("Took one"), key: "take", disabled: total <= 0)
                     }
                     if mode != "none" {
                         actionTile("drop", L("Opened"), key: "opened", disabled: total <= 0)

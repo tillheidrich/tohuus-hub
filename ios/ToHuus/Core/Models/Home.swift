@@ -16,8 +16,59 @@ struct TodayPayload: Decodable, Sendable {
     @Lossy var notices: [Notice]
     /// "Fertig für heute": nothing due or overdue for me and nothing waiting for a look (docs/checkin.md)
     var calm: Bool?
+    // Paket B (docs/today.md): the server's selection – which cards, in which order, at most five
+    var cards: [String]?
+    /// "Jetzt dran": my due tasks from the same queue as "Nur eins" (lib/next-task.ts)
+    var now: TodayNow?
+    /// "Bald wieder nötig" on the list card
+    @Lossy var soonAgain: [RhythmItem]
+    /// "Bald verbrauchen": expiring and leftovers only
+    @Lossy var useSoon: [StillHaveItem]
+    /// the one context place (lib/today-select.ts CONTEXT_PRIORITY)
+    var context: TodayContext?
+    /// small ways in below the cards – never a form on Heute
+    var entries: Entries?
+    var moneyOnToday: Bool?
 
     var householdName: String? { household?.string ?? household?["name"]?.string }
+
+    struct TodayNow: Decodable, Sendable {
+        @Lossy var items: [NowItem]
+        var more: Int?
+        var oneThing: Bool?
+        var gentle: Bool?
+        var max: Int?
+        var guest: Bool?
+    }
+
+    /// one task on "Jetzt dran" (server lib/next-task.ts NowCard; own type, Core/Models is shared with the extensions)
+    struct NowItem: Decodable, Sendable, Identifiable, Hashable {
+        struct Person: Decodable, Sendable, Hashable { var name: String? }
+        struct Step: Decodable, Sendable, Hashable { var text: String?; var done: Bool? }
+        var id: Int
+        var name: String
+        var emoji: String?
+        var dueTime: String?
+        /// overdue | today | promised
+        var level: String?
+        var place: String?
+        var doer: Person?
+        var checklist: [Step]?
+        var `private`: Bool?
+    }
+
+    struct TodayContext: Decodable, Sendable, Hashable {
+        /// occasion | orders | bins | imports | budget | demo | trial | week | pulse | start
+        var kind: String
+        var text: String
+        var path: String?
+        var detail: String?
+    }
+
+    struct Entries: Decodable, Sendable {
+        var checkin: Bool?
+        var mind: Bool?
+    }
 
     struct TodayAway: Decodable, Sendable, Hashable {
         struct Me: Decodable, Sendable, Hashable { var until: String }

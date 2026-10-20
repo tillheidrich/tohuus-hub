@@ -333,7 +333,6 @@ struct CareView: View {
     @Environment(AppModel.self) private var app
     @State private var data: CareData?
     @State private var error: String?
-    @State private var showTemplates = false
     @State private var form: CareFormTarget?
     @State private var detail: CareTask?
     @State private var askDate: CareTask?
@@ -342,6 +341,9 @@ struct CareView: View {
     @State private var filter: TaskFilter?
     @State private var recent: [CareRecent] = []
     @State private var allRecent = false
+    @State private var allLater = false
+    /// Paket E: the Kopf-&-Fairness tools and the rare tools open as pages (tiles / Werkzeuge menu)
+    @State private var tool: CareTool?
     /// the initials circle grows with Dynamic Type
     @ScaledMetric(relativeTo: .caption) private var initial: CGFloat = 24
     @State private var reloads = 0
@@ -374,20 +376,23 @@ struct CareView: View {
     var body: some View {
         List {
             Section {
-                Text(L("Bathroom, bed linen, water filter, smoke detectors, passports: what has to be done at home, once or again and again – for everyone or only for you. One tap when done – the next date is set automatically."))
-                    .font(.subheadline).foregroundStyle(Theme.ink2)
                 Picker(L("Show"), selection: Binding(get: { current }, set: { filter = $0 })) {
                     ForEach(TaskFilter.allCases) { f in Text(f.title).tag(f) }
                 }
                 .pickerStyle(.segmented)
                 if let data {
                     let overdue = data.tasks.filter { $0.state == "overdue" }.count
-                    // "Was schaffst du heute?" – from three due or overdue tasks on, one card at a time
-                    let dueNow = TaskTodayView.candidates(data.tasks)
-                    if dueNow.count >= 3 && data.me != nil {
-                        TaskTodayLink(api: api, tasks: dueNow) { Task { await load() } }
+                    // „Nur eins“: the one way to take the due tasks one after the other (was also „Was schaffst du heute?“)
+                    let dueNow = data.tasks.filter { $0.state == "overdue" || $0.state == "today" }.count
+                    NavigationLink { FocusView(api: api) } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L("Just one")).foregroundStyle(Theme.ink)
+                                Text(dueNow > 1 ? LF("%d tasks, one after the other", dueNow) : dueNow == 1 ? L("One task, nice and calm") : L("Only ever the next task"))
+                                    .font(.caption).foregroundStyle(Theme.ink3)
+                            }
+                        } icon: { Image(systemName: "scope") }
                     }
-                    NavigationLink { FocusView(api: api) } label: { Label(L("Just one"), systemImage: "scope") }
                     FreshStartButton(api: api, overdue: overdue) { text in
                         toast = ToastMessage(text: text)
                         Task { await load() }
@@ -395,8 +400,8 @@ struct CareView: View {
                     // household tasks nobody has in mind yet – counted kindly, never as blame
                     let loose = data.tasks.filter { !$0.isPrivate && $0.assigneeUserId == nil && $0.doerKey == nil && ($0.state == "today" || $0.state == "overdue" || $0.state == "soon") }.count
                     if loose > 0 && (me?.claimsOn ?? true) {
-                        Text(loose == 1 ? L("1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.")
-                                        : LF("%d due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.", loose))
+                        Text(loose == 1 ? L("1 due task has nobody keeping it in mind yet. Tap it and say “I keep it in mind”.")
+                                        : LF("%d due tasks have nobody keeping them in mind yet. Tap one and say “I keep it in mind”.", loose))
                             .font(.footnote).foregroundStyle(Theme.ink3)
                     }
                 }
@@ -419,42 +424,42 @@ struct CareView: View {
             if let note = OfflineNote.for(["api/care", "api/care/recent"]) { Section { note }.listRowBackground(Color.clear) }
             if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
             if let data {
-                if data.me != nil {
-                    CareForHintCard(api: api, refresh: reloads, inList: true) { msg in toast = ToastMessage(text: msg) }
-                    CarryingSection(api: api, refresh: reloads) { id in detail = data.tasks.first { $0.id == id } }
-                }
                 if data.tasks.contains(where: { $0.offer?.to.id == data.me && data.me != nil }) {
                     Section { OfferAsks(api: api, tasks: data.tasks, me: data.me) { Task { await load() } } }
                 }
                 let shown = data.tasks.filter { current.matches($0, me: data.me) }
-                let due = shown.filter(\.isDueNow)
+                // first what is up: overdue and today, then coming up, then the rest (shortened) – Paket E
+                let now = shown.filter { $0.state == "overdue" || $0.state == "today" }
+                let soon = shown.filter { $0.isDueNow && $0.state != "overdue" && $0.state != "today" }
                 let later = shown.filter { !$0.isDueNow }
                 if shown.isEmpty {
-                    EmptyStateView(systemImage: "checklist", title: L("No tasks yet"),
-                                   message: L("Pick a few from the suggestions below – one tap each. You can adjust the interval later."), art: .calendar)
-                        .listRowBackground(Color.clear)
-                }
-                if !due.isEmpty {
-                    Section {
-                        ForEach(due) { row($0) }
-                    } header: {
-                        HStack {
-                            Text(L("Due"))
-                            Spacer()
-                            // to Notes, Mail or a message – what's due, as plain text
-                            ShareLink(item: ShareText.make(title: L("Due tasks"), lines: due.map { "☐ " + $0.name + " – " + CareLabels.due($0) }, medium: "tasks"),
-                                      subject: Text(L("Due tasks"))) {
-                                Image(systemName: "square.and.arrow.up").frame(minWidth: 44, minHeight: 44)
-                            }
-                            .accessibilityLabel(L("Share due tasks"))
+                    Group {
+                        if current == .all {
+                            EmptyStateView(systemImage: "checklist", title: L("No tasks yet. Type one above or take an idea."), art: .calendar,
+                                           actionTitle: L("Ideas & templates")) { tool = .ideas }
+                        } else {
+                            EmptyStateView(systemImage: "checklist", title: L("Nothing here in this view."), actionTitle: L("Show all")) { filter = .all }
                         }
                     }
+                    .listRowBackground(Color.clear)
                 }
-                if !later.isEmpty { Section(L("Later")) { ForEach(later) { row($0) } } }
-                WhoDoesWhatSection(api: api, refresh: data.tasks.count + recent.count, onChanged: { Task { await load() } })
+                if !now.isEmpty {
+                    Section(L("Due now")) { ForEach(now) { row($0) } }
+                }
+                if !soon.isEmpty {
+                    Section(L("Coming up")) { ForEach(soon) { row($0) } }
+                }
+                if !later.isEmpty {
+                    Section {
+                        ForEach(allLater ? later : Array(later.prefix(5))) { row($0) }
+                        if later.count > 5 {
+                            Button(allLater ? L("Show less") : LF("Show all %d", later.count)) { withAnimation { allLater.toggle() } }
+                        }
+                    } header: { Text(L("Later")) }
+                }
                 if !recent.isEmpty {
                     Section {
-                        ForEach(allRecent ? recent : Array(recent.prefix(5))) { r in
+                        ForEach(allRecent ? recent : Array(recent.prefix(3))) { r in
                             HStack(spacing: Theme.Space.s3) {
                                 Image(systemName: "checkmark").foregroundStyle(Theme.primaryText).accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 2) {
@@ -473,38 +478,20 @@ struct CareView: View {
                                 }
                             }
                         }
-                        if recent.count > 5 {
+                        if recent.count > 3 {
                             Button(allRecent ? L("Show less") : LF("Show all %d", recent.count)) { withAnimation { allRecent.toggle() } }
                         }
                     } header: { Text(L("Recently done")) }
                 }
-                BlickSection(api: api, refresh: reloads) { id in detail = data.tasks.first { $0.id == id } }
                 if data.me != nil {
                     Section {
-                        NavigationLink { MindView(api: api) } label: {
-                            Label {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(L("On my mind"))
-                                    Text(L("Too small for a list, still work: what you carry around and did on the side.")).font(.caption).foregroundStyle(Theme.ink3)
-                                }
-                            } icon: { Image(systemName: "brain").foregroundStyle(Theme.primaryText) }
-                        }
-                        CareForLink(api: api)
+                        AreaTiles(title: L("Mind & fairness"), tiles: CareTool.tiles.map { t in AreaTile(id: t.rawValue, title: t.title, systemImage: t.icon) { tool = t } })
                     }
-                    WeekReviewLink(api: api)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 }
-                RatgeberSection(api: api, areas: ["aufgaben", "kopf"])
-                templates(data)
             } else if error == nil {
                 HStack { Spacer(); ProgressView(); Spacer() }.listRowBackground(Color.clear)
-            }
-            Section {
-                NavigationLink { CalendarSyncView(api: api, household: app.store?.householdKey ?? "default") } label: { Label(L("Read your existing calendar"), systemImage: "calendar.badge.checkmark") }
-                NavigationLink { CalDavView(api: api) } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
-                NavigationLink { TasksToCalendarHelpView(api: api) } label: { Label(L("How your tasks get into your calendar"), systemImage: "calendar.badge.plus") }
-                NavigationLink { LabelsView(api: api, kind: .care) } label: { Label(L("Labels"), systemImage: "qrcode") }
-            } footer: {
-                Text(L("Your tasks in Apple Reminders, your appointments in your calendar."))
             }
         }
         .themedList()
@@ -512,6 +499,22 @@ struct CareView: View {
         .onAppear { app.screenContext = "tasks" }
         .onDisappear { if app.screenContext == "tasks" { app.screenContext = nil } }
         .toolbar {
+            // rare things in one labelled menu (Paket E): share, calendar, labels – „+“ stays the one main action
+            ToolbarItem(placement: .topBarTrailing) {
+                AreaToolsMenu {
+                    if let data {
+                        let due = data.tasks.filter { current.matches($0, me: data.me) && $0.isDueNow }
+                        if !due.isEmpty {
+                            ShareLink(item: ShareText.make(title: L("Due tasks"), lines: due.map { "☐ " + $0.name + " – " + CareLabels.due($0) }, medium: "tasks"),
+                                      subject: Text(L("Due tasks"))) { Label(L("Share the due tasks"), systemImage: "square.and.arrow.up") }
+                        }
+                    }
+                    Button { tool = .calendarRead } label: { Label(L("Read your existing calendar"), systemImage: "calendar.badge.checkmark") }
+                    Button { tool = .reminders } label: { Label(L("Reminders & Calendar"), systemImage: "checklist.checked") }
+                    Button { tool = .calendarHelp } label: { Label(L("How your tasks get into your calendar"), systemImage: "calendar.badge.plus") }
+                    Button { tool = .labels } label: { Label(L("Print labels"), systemImage: "qrcode") }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     form = CareFormTarget(task: nil, template: nil, name: nil, category: current == .care ? "care" : "house", privateTask: current == .mine)
@@ -519,6 +522,7 @@ struct CareView: View {
                     .accessibilityLabel(L("New task"))
             }
         }
+        .navigationDestination(item: $tool) { t in toolView(t) }
         .task { await load() }
         .refreshable { await load() }
         .sheet(item: $form) { f in CareTaskForm(api: api, target: f) { Task { await load() } } }
@@ -598,38 +602,18 @@ struct CareView: View {
     }
 
     @ViewBuilder
-    private func templates(_ data: CareData) -> some View {
-        let free = data.templates.filter { x in
-            x.added != true && (current == .all || current == .mine || (x.category ?? "care") == (current == .house ? "house" : "care"))
-        }
-        if !free.isEmpty {
-            Section {
-                if data.tasks.isEmpty || showTemplates {
-                    ForEach(CareLabels.groups.indices, id: \.self) { gi in
-                        let g = CareLabels.groups[gi]
-                        let list = free.filter { $0.group == g.0 }
-                        if !list.isEmpty {
-                            Text(g.1).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3).textCase(.uppercase)
-                            ForEach(list) { x in
-                                Button { Task { await add(x) } } label: {
-                                    HStack {
-                                        Image(systemName: CareLabels.icon(x.key, category: x.category)).frame(width: 28).accessibilityHidden(true)
-                                        VStack(alignment: .leading) {
-                                            Text(CareLabels.templateName(x.name)).foregroundStyle(Theme.ink)
-                                            Text(CareLabels.interval(x.n, x.unit, asNeeded: x.asNeeded == true)).font(.caption).foregroundStyle(Theme.ink3)
-                                        }
-                                        Spacer()
-                                        Image(systemName: "plus").foregroundStyle(Theme.primaryText)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if !data.tasks.isEmpty {
-                    Button(showTemplates ? L("Hide") : L("Show suggestions")) { withAnimation { showTemplates.toggle() } }
-                }
-            } header: { Text(L("Add in one tap")) }
+    private func toolView(_ t: CareTool) -> some View {
+        switch t {
+        case .blick: BlickView(api: api)
+        case .loadCards: LoadCardsView(api: api)
+        case .careFor: CareForView(api: api)
+        case .mind: MindView(api: api)
+        case .week: WeekReviewView(api: api)
+        case .ideas: TaskIdeasView(api: api)
+        case .calendarRead: CalendarSyncView(api: api, household: app.store?.householdKey ?? "default")
+        case .reminders: CalDavView(api: api)
+        case .calendarHelp: TasksToCalendarHelpView(api: api)
+        case .labels: LabelsView(api: api, kind: .care)
         }
     }
 
@@ -1254,3 +1238,160 @@ private struct CareNewDateSheet: View {
 
 /// a JSON value or null
 private func nul(_ v: Any?) -> Any { v ?? NSNull() }
+
+// MARK: - Paket E: Kopf & Fairness tiles, „Wer hat was im Blick“, „Ideen & Vorlagen“
+
+/// the pages Aufgaben opens from its tiles and its Werkzeuge menu (web: Care.tsx careTools / tools)
+enum CareTool: String, Identifiable, Hashable {
+    case blick, loadCards, careFor, mind, week, ideas
+    case calendarRead, reminders, calendarHelp, labels
+    var id: String { rawValue }
+
+    /// the tiles under the list, in this order (web: careTools())
+    static let tiles: [CareTool] = [.blick, .loadCards, .careFor, .mind, .week, .ideas]
+
+    var title: String {
+        switch self {
+        case .blick: L("Who keeps what in mind")
+        case .loadCards: L("Mental load check")
+        case .careFor: L("People I look after")
+        case .mind: L("On my mind")
+        case .week: L("Week in review")
+        case .ideas: L("Ideas & templates")
+        case .calendarRead: L("Read your existing calendar")
+        case .reminders: L("Reminders & Calendar")
+        case .calendarHelp: L("How your tasks get into your calendar")
+        case .labels: L("Print labels")
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .blick: "eye"
+        case .loadCards: "scalemass"
+        case .careFor: "heart.text.square"
+        case .mind: "brain.head.profile"
+        case .week: "sparkles"
+        case .ideas: "lightbulb"
+        case .calendarRead: "calendar.badge.checkmark"
+        case .reminders: "checklist.checked"
+        case .calendarHelp: "calendar.badge.plus"
+        case .labels: "qrcode"
+        }
+    }
+}
+
+/// „Wer hat was im Blick“ (web: /aufgaben/blick): who noticed and did what, the mental load check, who usually does what.
+struct BlickView: View {
+    let api: APIClient
+    @State private var data: CareData?
+    @State private var me: MeLite?
+    @State private var open: CareTask?
+    @State private var form: CareFormTarget?
+    @State private var reloads = 0
+    @State private var toast: ToastMessage?
+
+    var body: some View {
+        List {
+            CarryingSection(api: api, refresh: reloads) { id in open = data?.tasks.first { $0.id == id } }
+            BlickSection(api: api, refresh: reloads) { id in open = data?.tasks.first { $0.id == id } }
+            WhoDoesWhatSection(api: api, refresh: reloads, onChanged: { Task { await load() } })
+            CareForHintCard(api: api, refresh: reloads, inList: true) { msg in toast = ToastMessage(text: msg) }
+        }
+        .themedList()
+        .navigationTitle(L("Who keeps what in mind"))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await load() }
+        .refreshable { await load() }
+        .sheet(item: $open) { t in
+            CareDetailSheet(api: api, task: t, me: me,
+                            onEdit: { x in open = nil; Task { try? await Task.sleep(nanoseconds: 450_000_000); form = CareFormTarget(task: x, template: nil, name: nil) } },
+                            onDone: { x in open = nil; Task { _ = try? await api.careDone(x.id, nextDue: nil); await load() } },
+                            onChanged: { Task { await load() } })
+        }
+        .sheet(item: $form) { f in CareTaskForm(api: api, target: f) { Task { await load() } } }
+        .toast($toast)
+    }
+
+    private func load() async {
+        data = try? await api.care()
+        if me == nil { me = try? await api.meLite() }
+        reloads += 1
+    }
+}
+
+/// „Ideen & Vorlagen“ (web: /aufgaben/ideen): the one-tap suggestions and the guide articles, out of the task list.
+struct TaskIdeasView: View {
+    let api: APIClient
+    @State private var data: CareData?
+    @State private var error: String?
+    @State private var form: CareFormTarget?
+    @State private var toast: ToastMessage?
+
+    var body: some View {
+        List {
+            Section {
+                Text(L("One tap adds a task with a sensible interval. You can change it later."))
+                    .font(.subheadline).foregroundStyle(Theme.ink2)
+            }
+            if let error { Section { ErrorBanner(message: error) { Task { await load() } } }.listRowBackground(Color.clear) }
+            if let data {
+                let free = data.templates.filter { $0.added != true }
+                if free.isEmpty {
+                    EmptyStateView(systemImage: "checkmark.circle", title: L("You already added every suggestion."))
+                        .listRowBackground(Color.clear)
+                }
+                ForEach(CareLabels.groups.indices, id: \.self) { gi in
+                    let g = CareLabels.groups[gi]
+                    let list = free.filter { $0.group == g.0 }
+                    if !list.isEmpty {
+                        Section(g.1) {
+                            ForEach(list) { x in
+                                Button { Task { await add(x) } } label: {
+                                    HStack {
+                                        Image(systemName: CareLabels.icon(x.key, category: x.category)).frame(width: 28).accessibilityHidden(true)
+                                        VStack(alignment: .leading) {
+                                            Text(CareLabels.templateName(x.name)).foregroundStyle(Theme.ink)
+                                            Text(CareLabels.interval(x.n, x.unit, asNeeded: x.asNeeded == true)).font(.caption).foregroundStyle(Theme.ink3)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "plus").foregroundStyle(Theme.primaryText)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                RatgeberSection(api: api, areas: ["aufgaben", "kopf"])
+            } else if error == nil {
+                HStack { Spacer(); ProgressView(); Spacer() }.listRowBackground(Color.clear)
+            }
+        }
+        .themedList()
+        .navigationTitle(L("Ideas & templates"))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await load() }
+        .sheet(item: $form) { f in CareTaskForm(api: api, target: f) { Task { await load() } } }
+        .toast($toast)
+    }
+
+    private func load() async {
+        do {
+            data = try await api.care()
+            error = nil
+        } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
+    private func add(_ x: CareTemplate) async {
+        guard x.n != nil || x.asNeeded == true else {
+            form = CareFormTarget(task: nil, template: x.key, name: CareLabels.templateName(x.name), category: x.category ?? "care")
+            return
+        }
+        do {
+            try await api.addCareTemplate(x.key)
+            Haptics.tick()
+            toast = ToastMessage(text: LF("“%@” added", CareLabels.templateName(x.name)))
+            await load()
+        } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
+    }
+}

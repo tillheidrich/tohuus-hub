@@ -14,6 +14,8 @@ struct FocusPrefs: Codable, Sendable, Equatable {
     var timerMin: Int
     /// "Nur eins" on Heute (docs/now.md) – optional, older servers don't send it
     var oneThing: Bool?
+    /// the money card on Heute (Paket B) – off unless switched on; older servers don't send it
+    var todayMoney: Bool?
 
     static let standard = FocusPrefs(gentle: false, todayMax: nil, bundleHour: nil, timerMin: 5, oneThing: false)
 }
@@ -334,6 +336,13 @@ struct FocusSettingsSection: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(L("Gentle mode"))
                         Text(L("No red, no counters. Things that are due say “could be done”.")).font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                }
+                .tint(Theme.primary)
+                Toggle(isOn: Binding(get: { p.todayMoney ?? false }, set: { v in Task { await save(["todayMoney": v]) } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Money on Today"))
+                        Text(L("This week and this month as a small card on Today. Off unless you switch it on.")).font(.caption).foregroundStyle(Theme.ink3)
                     }
                 }
                 .tint(Theme.primary)

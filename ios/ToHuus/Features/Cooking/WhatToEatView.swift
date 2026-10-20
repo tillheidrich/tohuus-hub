@@ -98,12 +98,7 @@ struct WhatToEatSection: View {
             CookHeading(title: LC("Only one thing missing"), hint: LC("put it on the list – or use something else"))
             ForEach(d.oneMissing) { it in oneMissingRow(it) }
         }
-        if !d.quick.isEmpty && filters.max != "20" {
-            CookHeading(title: LC("Quick (≤ 20 min)"))
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Theme.Space.s3) { ForEach(d.quick) { it in ideaTile(it, width: 170) } }
-            }
-        }
+        // „Schnell (≤ 20 Min.)“ is a filter now, not a second list of the same recipes (Paket E, P1-12)
     }
 
     private func filterChips(_ d: WhatToEat) -> some View {

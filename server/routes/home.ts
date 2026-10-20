@@ -283,6 +283,7 @@ r.put('/focus/prefs', (req, res) => {
       bundleHour: z.number().int().min(0).max(23).nullable().optional(),
       timerMin: z.number().int().min(1).max(60).optional(),
       oneThing: z.boolean().optional(),
+      todayMoney: z.boolean().optional(),
     })
     .parse(req.body ?? {});
   res.json(setFocusPrefs(uid, b));

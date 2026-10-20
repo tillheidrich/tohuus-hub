@@ -25,9 +25,15 @@ import {
   HandHeart,
   Sparkle,
   CaretRight,
+  ArrowLeft,
+  Eye,
+  Lightbulb,
+  Scales,
+  ShareNetwork,
+  Target,
 } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { type Location, type Product, del, fmtDate, invalidate, patch, post, useApi } from '../api';
 import { useHousehold } from '../household';
@@ -36,8 +42,8 @@ import { usePeopleDirectory } from '../people/Avatar';
 import { BlickSection } from './Blick';
 import { Carrying, OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat';
 import { CareForHint } from './CareFor';
-import { ShareTextButton } from '../share/share';
-import { TodayDeckSheet } from './Decide';
+import { shareText, useShareMeta } from '../share/share';
+import { AreaEmpty, AreaTiles, AreaTools, type AreaTool } from '../area/AreaTools';
 import { durationLabel, timeLabel, isPast } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
@@ -355,44 +361,52 @@ function QuickAddTask({ filter }: { filter: TaskFilter }) {
   );
 }
 
+/** the five Kopf-&-Fairness tools of Aufgaben + „Ideen & Vorlagen“ – labelled tiles under the list (Paket E) */
+function careTools(): AreaTool[] {
+  return [
+    { key: 'blick', label: t('Who keeps what in mind'), icon: <Eye size={18} />, to: '/aufgaben/blick' },
+    { key: 'load', label: t('Mental load check'), icon: <Scales size={18} />, to: '/denkarbeit' },
+    { key: 'carefor', label: t('People I look after'), icon: <HandHeart size={18} />, to: '/fuer-wen' },
+    { key: 'mind', label: t('On my mind'), icon: <Brain size={18} />, to: '/kopf' },
+    { key: 'week', label: t('Week in review'), icon: <Sparkle size={18} />, to: '/woche' },
+    { key: 'ideas', label: t('Ideas & templates'), icon: <Lightbulb size={18} />, to: '/aufgaben/ideen' },
+  ];
+}
+
+const LATER_SHOWN = 5;
+
 export function Care() {
   const { data, isLoading, error } = useApi<CareData>('care', '/care');
   const me = useApi<Me>('me', '/me');
   const nav = useNavigate();
-  const toast = useToast();
   const { done, sheet } = useCareDone();
   const [sp] = useSearchParams();
   const [openId, setOpenId] = useState<number | null>(() => Number(sp.get('task')) || null);
   // ?new=Bad putzen (global search "New task …") opens the form with the name
   const [form, setForm] = useState<Partial<CareTask> | null>(() => (sp.get('new') ? { name: sp.get('new')!.slice(0, 120), interval_n: null, interval_unit: null, category: 'house' } : null));
-  const [showTemplates, setShowTemplates] = useState(false);
   // Alle · Haushalt · Pflege & Fristen · Für mich (/pflege opens "care")
   const [filter, setFilter] = useState<TaskFilter>(() => {
     const f = sp.get('f');
     return f === 'house' || f === 'care' || f === 'mine' ? f : 'all';
   });
+  const [allLater, setAllLater] = useState(false);
+  const shareMeta = useShareMeta();
+  const toast = useToast();
+  useEffect(() => {
+    const id = Number(sp.get('task'));
+    if (id) setOpenId(id);
+  }, [sp]);
 
   const all = data?.tasks ?? [];
   const tasks = all.filter((x) => taskMatches(x, filter, data?.me));
-  const [deck, setDeck] = useState(false);
-  const dueNow = tasks.filter((x) => ['overdue', 'today', 'soon'].includes(x.state));
+  // zuerst, was ansteht: überfällig und heute, dann demnächst, dann der Rest (gekürzt)
+  const now = tasks.filter((x) => x.state === 'overdue' || x.state === 'today');
+  const soon = tasks.filter((x) => x.state === 'soon');
+  const dueNow = [...now, ...soon];
   const later = tasks.filter((x) => !['overdue', 'today', 'soon'].includes(x.state));
   const open = tasks.find((x) => x.id === openId) ?? null;
-  const freeTemplates = (data?.templates ?? []).filter((x) => !x.added && (filter === 'all' || filter === 'mine' || (x.category ?? 'care') === filter));
-
-  const addTemplate = async (tpl: Template) => {
-    if (!tpl.n && !tpl.as_needed) {
-      setForm({ name: t(tpl.name), template: tpl.key, interval_n: null, interval_unit: null, category: tpl.category ?? 'care' });
-      return;
-    }
-    try {
-      await post('/care', { template: tpl.key });
-      invalidate('care');
-      toast({ text: t('“{name}” added', { name: t(tpl.name) }) });
-    } catch (e) {
-      toast({ text: (e as Error).message, error: true });
-    }
-  };
+  const newTask = () =>
+    setForm({ interval_n: 1, interval_unit: filter === 'care' ? 'month' : 'week', category: filter === 'care' ? 'care' : 'house', visibility: filter === 'mine' ? 'private' : 'household' });
 
   if (isLoading) return <Skeleton n={4} h={64} />;
   if (error || !data)
@@ -401,6 +415,13 @@ export function Care() {
         <Empty icon={<Wrench size={26} />} title={t('Could not load')}>{(error as Error)?.message}</Empty>
       </div>
     );
+
+  const shareLines = () => dueNow.filter((x) => x.visibility !== 'private' && !(x as CareTask & { cared_for_id?: number | null }).cared_for_id).map((x) => `☐ ${x.name} (${dueLabel(x)})`);
+  const tools: AreaTool[] = [
+    { key: 'share', label: t('Share the due tasks'), sub: t('As a short list for a chat'), icon: <ShareNetwork size={18} />, onClick: () => shareTasks(shareText(t('Tasks'), shareLines(), 'tasks', shareMeta), toast), hidden: dueNow.length === 0 },
+    { key: 'labels', label: t('Print labels'), sub: t('QR labels for appliances and places'), icon: <Printer size={18} />, to: '/etiketten?kind=care' },
+    { key: 'calendar', label: t('Calendar & reminders'), sub: t('Read your calendar, Apple Reminders, subscription link – in the settings.'), icon: <CalendarBlank size={18} />, to: '/einstellungen/mitteilungen', hidden: !data.me },
+  ];
 
   return (
     <div className="rise">
@@ -412,40 +433,24 @@ export function Care() {
           <h1>{t('Tasks')}</h1>
         </div>
         <div className="actions">
-          <button className="btn sm" onClick={() => nav('/fokus')}>
-            {t('Just one')}
-          </button>
-          <FreshStartButton overdue={tasks.filter((x) => x.state === 'overdue').length} />
-          {dueNow.length >= 3 && (
-            <button className="btn sm" onClick={() => setDeck(true)}>
-              {t('What will you manage today?')}
-            </button>
-          )}
-          {dueNow.length > 0 && (
-            <ShareTextButton
-              title={t('Tasks')}
-              medium="tasks"
-              className="btn sm"
-              lines={() => dueNow.filter((x) => x.visibility !== 'private' && !(x as CareTask & { cared_for_id?: number | null }).cared_for_id).map((x) => `☐ ${x.name} (${dueLabel(x)})`)}
-            />
-          )}
-          <button className="btn sm" onClick={() => nav('/etiketten?kind=care')}>
-            <Printer size={15} /> {t('Labels')}
-          </button>
-          <button
-            className="btn sm primary"
-            onClick={() =>
-              setForm({ interval_n: 1, interval_unit: filter === 'care' ? 'month' : 'week', category: filter === 'care' ? 'care' : 'house', visibility: filter === 'mine' ? 'private' : 'household' })
-            }
-          >
+          <AreaTools tools={tools} />
+          <button className="btn sm primary" onClick={newTask}>
             <Plus size={15} weight="bold" /> {t('New')}
           </button>
         </div>
       </header>
-      <p className="small muted" style={{ margin: '-10px 0 18px', maxWidth: 560 }}>
-        {t('Bathroom, bed linen, water filter, smoke detectors, passports: what has to be done at home, once or again and again – for everyone or only for you. One tap when done – the next date is set automatically.')}
-      </p>
       <QuickAddTask filter={filter} />
+      {/* „Nur eins“: the one way to take the due tasks one after the other (was also „Was schaffst du heute?“) */}
+      <button className="one-entry" onClick={() => nav('/fokus')}>
+        <Target size={20} aria-hidden="true" />
+        <span className="grow">
+          <b>{t('Just one')}</b>
+          <span className="meta">
+            {now.length > 1 ? t('{n} tasks, one after the other', { n: now.length }) : now.length === 1 ? t('One task, nice and calm') : t('Only ever the next task')}
+          </span>
+        </span>
+        <ArrowRight size={16} aria-hidden="true" />
+      </button>
       <OfferAsks tasks={all} me={data?.me} />
       <div style={{ marginBottom: 16 }}>
         <Seg<TaskFilter>
@@ -460,125 +465,50 @@ export function Care() {
           ]}
         />
       </div>
-      {(() => {
-        // household tasks nobody has in mind yet – counted kindly, never as blame (only where people share the work)
-        const loose = all.filter((x) => x.visibility !== 'private' && !x.assignee_user_id && !x.doer_key && x.state !== 'ok' && x.state !== 'none').length;
-        return loose > 0 && (data?.users?.length ?? 0) > 1 ? (
-          <p className="small muted" style={{ margin: '0 0 14px' }}>
-            {loose === 1 ? t('1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.') : t('{n} due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.', { n: loose })}
-          </p>
-        ) : null;
-      })()}
 
       {tasks.length === 0 ? (
-        <div className="card">
-          <Empty icon={<Wrench size={26} />} art="calendar" title={t('No tasks yet')}>
-            {t('Pick a few from the suggestions below – one tap each. You can adjust the interval later.')}
-          </Empty>
-        </div>
+        <AreaEmpty
+          icon={<ListChecks size={26} />}
+          text={filter === 'all' ? t('No tasks yet. Type one above or take an idea.') : t('Nothing here in this view.')}
+          action={filter === 'all' ? { label: t('Ideas & templates'), icon: <Lightbulb size={14} />, onClick: () => nav('/aufgaben/ideen') } : { label: t('Show all'), onClick: () => setFilter('all') }}
+        />
       ) : (
         <>
-          {dueNow.length > 0 && (
+          {now.length > 0 && (
             <section className="section" style={{ marginTop: 0 }}>
-              <div className="section-head"><h2>{t('Due')}</h2></div>
+              <div className="section-head">
+                <h2>{t('Due now')}</h2>
+                <FreshStartButton overdue={tasks.filter((x) => x.state === 'overdue').length} />
+              </div>
               <div className="list">
-                {dueNow.map((x) => <CareRow key={x.id} task={x} onOpen={() => setOpenId(x.id)} onDone={() => done(x)} />)}
+                {now.map((x) => <CareRow key={x.id} task={x} onOpen={() => setOpenId(x.id)} onDone={() => done(x)} />)}
+              </div>
+            </section>
+          )}
+          {soon.length > 0 && (
+            <section className="section" style={now.length ? undefined : { marginTop: 0 }}>
+              <div className="section-head"><h2>{t('Coming up')}</h2></div>
+              <div className="list">
+                {soon.map((x) => <CareRow key={x.id} task={x} onOpen={() => setOpenId(x.id)} onDone={() => done(x)} />)}
               </div>
             </section>
           )}
           {later.length > 0 && (
             <section className="section" style={dueNow.length ? undefined : { marginTop: 0 }}>
-              <div className="section-head"><h2>{t('Later')}</h2></div>
+              <div className="section-head">
+                <h2>{t('Later')}</h2>
+                {later.length > LATER_SHOWN && <a onClick={() => setAllLater((v) => !v)}>{allLater ? t('Show less') : t('Show all {n}', { n: later.length })}</a>}
+              </div>
               <div className="list">
-                {later.map((x) => <CareRow key={x.id} task={x} onOpen={() => setOpenId(x.id)} onDone={() => done(x)} />)}
+                {(allLater ? later : later.slice(0, LATER_SHOWN)).map((x) => <CareRow key={x.id} task={x} onOpen={() => setOpenId(x.id)} onDone={() => done(x)} />)}
               </div>
             </section>
           )}
         </>
       )}
 
-      <RecentlyDone />
-      <CareForHint />
-      {deck && <TodayDeckSheet tasks={dueNow} onClose={() => setDeck(false)} />}
-      <Carrying onOpenTask={setOpenId} />
-      <WhoDoesWhatSection onOpenTask={setOpenId} />
-      <RatgeberCards areas={['aufgaben', 'kopf']} />
-      <BlickSection onOpenTask={setOpenId} />
-
-      {freeTemplates.length > 0 && (
-        <section className="section">
-          <div className="section-head">
-            <h2>{t('Add in one tap')}</h2>
-            {tasks.length > 0 && <a onClick={() => setShowTemplates((v) => !v)}>{showTemplates ? t('Hide') : t('Show suggestions')}</a>}
-          </div>
-          {(tasks.length === 0 || showTemplates) && (
-            <div className="stack" style={{ gap: 14 }}>
-              {GROUPS.map(([g, label]) => {
-                const list = freeTemplates.filter((x) => x.group === g);
-                if (!list.length) return null;
-                return (
-                  <div key={g}>
-                    <div className="eyebrow" style={{ marginBottom: 6 }}>{t(label)}</div>
-                    <div className="care-tpls">
-                      {list.map((x) => {
-                        const I = careIcon(x.key);
-                        return (
-                          <button key={x.key} className="care-tpl" onClick={() => addTemplate(x)}>
-                            <I size={18} />
-                            <span className="grow">
-                              <b>{t(x.name)}</b>
-                              <span>{intervalLabel(x.n, x.unit)}</span>
-                            </span>
-                            <Plus size={16} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
-
-      {data?.me ? (
-        <div className="stack" style={{ marginTop: 24 }}>
-          <button className="li clickable card nav-row" onClick={() => nav('/einstellungen/mitteilungen')}>
-            <CalendarBlank size={20} aria-hidden="true" />
-            <span className="grow">
-              <span className="title">{t('Calendar & reminders')}</span>
-              <span className="sub">{t('Read your calendar, Apple Reminders, subscription link – in the settings.')}</span>
-            </span>
-            <CaretRight size={16} aria-hidden="true" />
-          </button>
-          <TasksToCalendarHelp />
-          <button className="li clickable card nav-row" onClick={() => nav('/fuer-wen')}>
-            <HandHeart size={20} aria-hidden="true" />
-            <span className="grow">
-              <span className="title">{t('People I look after')}</span>
-              <span className="sub">{t('Visits, appointments, prescriptions – that’s work too.')}</span>
-            </span>
-            <CaretRight size={16} aria-hidden="true" />
-          </button>
-          <button className="li clickable card nav-row" onClick={() => nav('/kopf')}>
-            <Brain size={20} aria-hidden="true" />
-            <span className="grow">
-              <span className="title">{t('On my mind')}</span>
-              <span className="sub">{t('Too small for a list, still work: what you carry around and did on the side.')}</span>
-            </span>
-            <CaretRight size={16} aria-hidden="true" />
-          </button>
-          <button className="li clickable card nav-row" onClick={() => nav('/woche')}>
-            <Sparkle size={20} aria-hidden="true" />
-            <span className="grow">
-              <span className="title">{t('Week in review')}</span>
-              <span className="sub">{t('What you did together last week – and what you did.')}</span>
-            </span>
-            <CaretRight size={16} aria-hidden="true" />
-          </button>
-        </div>
-      ) : null}
+      <RecentlyDone max={3} />
+      <AreaTiles title={t('Mind & fairness')} tiles={careTools()} />
       <TaskDetail
         task={open}
         me={me.data}
@@ -589,6 +519,115 @@ export function Care() {
       />
       <TaskForm initial={form} onClose={() => setForm(null)} />
       {sheet}
+    </div>
+  );
+}
+
+/** share the due tasks as text (system share sheet, else the clipboard) */
+async function shareTasks(text: string, toast: ReturnType<typeof useToast>) {
+  try {
+    if (navigator.share) await navigator.share({ title: t('Tasks'), text });
+    else {
+      await navigator.clipboard.writeText(text);
+      toast({ text: t('Copied') });
+    }
+  } catch {
+    /* cancelled */
+  }
+}
+
+/** „Ideen & Vorlagen“ (/aufgaben/ideen): the one-tap suggestions and the guide articles, out of the task list. */
+export function TaskIdeasPage() {
+  const { data, isLoading } = useApi<CareData>('care', '/care');
+  const toast = useToast();
+  const [form, setForm] = useState<Partial<CareTask> | null>(null);
+  const freeTemplates = (data?.templates ?? []).filter((x) => !x.added);
+  const addTemplate = async (tpl: Template) => {
+    if (!tpl.n && !tpl.as_needed) {
+      setForm({ name: t(tpl.name), template: tpl.key, interval_n: null, interval_unit: null, category: tpl.category ?? 'care' });
+      return;
+    }
+    try {
+      await post('/care', { template: tpl.key });
+      invalidate('care');
+      toast({ text: t('“{name}” added', { name: t(tpl.name) }) });
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  return (
+    <div className="rise">
+      <Link to="/aufgaben" className="back-link small">
+        <ArrowLeft size={14} aria-hidden="true" /> {t('Tasks')}
+      </Link>
+      <header className="page-head">
+        <div>
+          <h1>{t('Ideas & templates')}</h1>
+        </div>
+      </header>
+      <p className="small muted" style={{ margin: '-10px 0 18px', maxWidth: 560 }}>
+        {t('One tap adds a task with a sensible interval. You can change it later.')}
+      </p>
+      {isLoading ? (
+        <Skeleton n={4} h={56} />
+      ) : freeTemplates.length === 0 ? (
+        <AreaEmpty icon={<Check size={26} />} text={t('You already added every suggestion.')} />
+      ) : (
+        <div className="stack" style={{ gap: 14 }}>
+          {GROUPS.map(([g, label]) => {
+            const list = freeTemplates.filter((x) => x.group === g);
+            if (!list.length) return null;
+            return (
+              <div key={g}>
+                <div className="eyebrow" style={{ marginBottom: 6 }}>{t(label)}</div>
+                <div className="care-tpls">
+                  {list.map((x) => {
+                    const I = careIcon(x.key);
+                    return (
+                      <button key={x.key} className="care-tpl" onClick={() => addTemplate(x)}>
+                        <I size={18} />
+                        <span className="grow">
+                          <b>{t(x.name)}</b>
+                          <span>{intervalLabel(x.n, x.unit)}</span>
+                        </span>
+                        <Plus size={16} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <RatgeberCards areas={['aufgaben', 'kopf']} />
+      <div style={{ marginTop: 16 }}>
+        <TasksToCalendarHelp />
+      </div>
+      <TaskForm initial={form} onClose={() => setForm(null)} />
+    </div>
+  );
+}
+
+/** „Wer hat was im Blick“ (/aufgaben/blick): who usually does what, who noticed what, the mental load check. */
+export function BlickPage() {
+  const nav = useNavigate();
+  const openTask = (id: number) => nav(`/aufgaben?task=${id}`);
+  return (
+    <div className="rise">
+      <Link to="/aufgaben" className="back-link small">
+        <ArrowLeft size={14} aria-hidden="true" /> {t('Tasks')}
+      </Link>
+      <header className="page-head">
+        <div>
+          <div className="eyebrow">{t('Mind & fairness')}</div>
+          <h1>{t('Who keeps what in mind')}</h1>
+        </div>
+      </header>
+      <Carrying onOpenTask={openTask} />
+      <BlickSection onOpenTask={openTask} bare />
+      <WhoDoesWhatSection onOpenTask={openTask} />
+      <CareForHint />
     </div>
   );
 }
@@ -1096,7 +1135,7 @@ export function UndoDoneButton({ taskId, logId, name }: { taskId: number; logId:
 }
 
 /** "Zuletzt erledigt": the work people did stays visible for two weeks – who did what, newest first. */
-function RecentlyDone() {
+function RecentlyDone({ max = 5 }: { max?: number }) {
   const q = useApi<{ id: number; task_id: number; done_on: string; actor: string | null; name: string; can_undo?: boolean }[]>(['care', 'recent'], '/care/recent');
   const [all, setAll] = useState(false);
   const rows = q.data ?? [];
@@ -1105,10 +1144,10 @@ function RecentlyDone() {
     <section className="section">
       <div className="section-head">
         <h2>{t('Recently done')}</h2>
-        {rows.length > 5 && <a onClick={() => setAll((v) => !v)}>{all ? t('Show less') : t('Show all {n}', { n: rows.length })}</a>}
+        {rows.length > max && <a onClick={() => setAll((v) => !v)}>{all ? t('Show less') : t('Show all {n}', { n: rows.length })}</a>}
       </div>
       <div className="list">
-        {(all ? rows : rows.slice(0, 5)).map((r) => (
+        {(all ? rows : rows.slice(0, max)).map((r) => (
           <div key={r.id} className="li" style={{ minHeight: 44 }}>
             <Check size={16} weight="bold" style={{ color: 'var(--primary)' }} aria-hidden="true" />
             <div className="grow">

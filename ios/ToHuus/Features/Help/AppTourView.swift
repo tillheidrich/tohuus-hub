@@ -8,7 +8,9 @@ struct AppTourView: View {
     /// bump when the tour gets pages people who saw it should see
     /// 2 (15 Oct 2026): Im Kopf, Für wen ich da bin, Unterwegs, Wochenrückblick
     /// 3 (18 Oct 2026): short again – Deine Leiste, Demnächst, Rückgängig, Haushaltswissen, Assistent, Bring mir was
-    static let version = 3
+    /// 4 (20 Oct 2026, Paket B): five cards like the web – Leiste & Zuhause, Lupe & Mehr, Assistent (KI freiwillig,
+    /// with the AI switches), Nur eins, Was nutzt ihr?
+    static let version = 4
     static let seenKey = "tour.ios.version"
 
     @Environment(AppModel.self) private var app
@@ -24,27 +26,21 @@ struct AppTourView: View {
         let body: String
     }
 
-    /// six short pages (18 Oct 2026) – the rest of the app is found on the way; the AI choice comes last
+    /// five cards (Paket B, web: Tour.tsx steps) – the third one carries the person's AI choice
     private var pages: [Page] {
-        var p: [Page] = [
-            Page(id: "bar", symbol: "dock.rectangle", title: L("Your bar, the way you need it"),
-                 body: L("Today, Shopping, Cooking, Tasks and Home sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there. Your picture at the top right opens More with everything else.")),
-            Page(id: "ahead", symbol: "calendar", title: L("Coming up: thought of in time"),
-                 body: L("Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.")),
-            Page(id: "undo", symbol: "arrow.uturn.backward", title: L("Ticked off by mistake?"),
-                 body: L("Tap “Undo” right after. Later you find it in Tasks under “Recently done”.")),
+        [
+            Page(id: "bar", symbol: "dock.rectangle", title: L("Your areas sit at the bottom"),
+                 body: app.moduleOn("stock")
+                    ? L("Today, Shopping, Cooking, Tasks and Home. Home holds the pantry, house info, household knowledge and “Where’s what?”. Press and hold the bar to swap areas.")
+                    : L("Today, Shopping, Cooking and Tasks. Press and hold the bar to swap areas.")),
+            Page(id: "more", symbol: "person.crop.circle", title: L("Top right: search and More"),
+                 body: L("The magnifying glass finds every thing and every setting. Your picture opens More: money, people, settings and help.")),
+            Page(id: "assistant", symbol: "sparkles", title: L("Just say what’s missing"), body: ""),
+            Page(id: "one", symbol: "scope", title: L("Not a good day? Just one."),
+                 body: L("“Just one” shows you one task at a time, the rest waits. Switch it on right on Today or in Settings › Me › Calm & focus.")),
+            Page(id: "use", symbol: "square.grid.2x2", title: L("Too much? Switch off what you don’t need."),
+                 body: L("Settings › Areas & places › What do you use? hides whole areas. You find this tour again under Help.")),
         ]
-        if app.moduleOn("knowledge") {
-            p.append(Page(id: "knowledge", symbol: "brain", title: L("Household knowledge: write it down once"),
-                          body: L("Mika’s shoe size, the filter for the cooker hood, where the main water tap is. What usually only one of you knows is there for everyone. Notes you already have come in with “Import”.")))
-        }
-        p.append(Page(id: "speak", symbol: "sparkles", title: L("Just tell the assistant"),
-                      body: L("“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.")))
-        if !app.singleHousehold && app.moduleOn("treats") {
-            p.append(Page(id: "treats", symbol: "hand.raised", title: L("Bring mir was"),
-                          body: L("Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”.")))
-        }
-        return p
     }
 
     var body: some View {
@@ -52,17 +48,19 @@ struct AppTourView: View {
             VStack(spacing: 0) {
                 TabView(selection: $page) {
                     ForEach(Array(pages.enumerated()), id: \.element.id) { i, p in
-                        card(p).tag(i)
+                        Group {
+                            if p.id == "assistant" { choice } else { card(p) }
+                        }
+                        .tag(i)
                     }
-                    choice.tag(pages.count)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .always))
                 .animation(reduceMotion ? nil : Motion.standard, value: page)
                 Button {
-                    if page < pages.count { page += 1 } else { finish() }
+                    if page < pages.count - 1 { page += 1 } else { finish() }
                 } label: {
-                    Text(page < pages.count ? L("Next") : L("Let’s go"))
+                    Text(page < pages.count - 1 ? L("Next") : L("Let’s go"))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.borderedProminent).tint(Theme.primary)
@@ -101,7 +99,8 @@ struct AppTourView: View {
         }
     }
 
-    /// The last page: the person decides about AI (both later in Einstellungen › Mit oder ohne KI).
+    /// The third card: Plus and the assistant, and the person's own choice about AI (both later in Einstellungen ›
+    /// Verbindungen & Geräte › KI). AI is optional – everything works without it.
     private var choice: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Space.s4) {
@@ -111,9 +110,9 @@ struct AppTourView: View {
                     .frame(width: 88, height: 88)
                     .background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: 44, style: .continuous))
                     .accessibilityHidden(true)
-                Text(L("AI: you decide")).font(Theme.title()).foregroundStyle(Theme.ink)
+                Text(L("Just say what’s missing")).font(Theme.title()).foregroundStyle(Theme.ink)
                     .accessibilityAddTraits(.isHeader)
-                Text(L("The list, suggestions, cooking and money work without any AI. You can change both switches later in Settings › Connections & devices › AI."))
+                Text(L("With Plus or the assistant at the bottom right: “milk is out” goes on the list. AI is optional – everything works without it, and you switch it in Settings › Connections & devices › AI."))
                     .foregroundStyle(Theme.ink2)
                     .fixedSize(horizontal: false, vertical: true)
                 if app.aiLocked {
@@ -158,11 +157,19 @@ struct AppTourView: View {
     }
 
     /// shown once per tour version after signing in (not in UI tests or screenshot runs; -debugTour YES forces it)
+    ///
+    /// -debugNoTour wins over everything (20 Oct 2026): it used to be read only as `-debugNoTour YES`. Passed bare
+    /// (`-debugNoTour -debugTab stock`), the argument domain took the next flag as its value, so the bool was false,
+    /// and the following flag was lost as well – the tour came up in simulator runs. It was also checked after
+    /// -debugTour, so a run that kept both forced the tour. Now the bare flag counts, anywhere in the arguments.
     static var due: Bool {
         let d = UserDefaults.standard
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("-debugNoTour") && d.string(forKey: "debugNoTour").map({ !["NO", "0", "false"].contains($0) }) ?? true { return false }
+        if d.bool(forKey: "debugNoTour") { return false }
         if d.bool(forKey: "debugTour") { return true }
         // simulator, UI test and screenshot runs sign in with -debugToken: no tour in the way
-        if d.bool(forKey: "debugNoTour") || d.string(forKey: "debugToken") != nil { return false }
+        if d.string(forKey: "debugToken") != nil { return false }
         return UserDefaults.standard.integer(forKey: seenKey) < version
     }
 }

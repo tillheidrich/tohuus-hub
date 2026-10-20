@@ -113,7 +113,7 @@ describe('Mehr and Zuhause (Paket A)', () => {
     // Geld: a row on the phone, the desktop sidebar shows it as an area
     expect(alltag.items.find((l) => l.to === '/geld')?.phoneOnly).toBe(true);
     expect(tos(gs.find((g) => g.key === 'familie'))).toEqual(['/einstellungen/haushalt/leute', '/bar', '/fuer-wen']);
-    expect(tos(gs.find((g) => g.key === 'kopf'))).toEqual(['/kopf', '/fokus', '/denkarbeit', '/woche']);
+    expect(tos(gs.find((g) => g.key === 'kopf'))).toEqual(['/kopf', '/fokus', '/aufgaben/blick', '/denkarbeit', '/woche']);
     expect(tos(gs.find((g) => g.key === 'hilfe'))).toEqual(['/einstellungen', '/hilfe', '/so-funktioniert-tohuus', '/gut-zu-wissen', '/mehr/alle']);
     for (const g of gs) expect(g.items.filter((l) => l.to !== '/mehr/alle').length, g.key).toBeLessThanOrEqual(nav.MORE_MAX);
     // no settings rows in Mehr any more – one row „Einstellungen“

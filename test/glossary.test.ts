@@ -17,7 +17,7 @@ const DE_BANNED: [RegExp, string][] = [
   [/\bBestand(s|es)?\b/, 'Vorrat'],
   [/Produkte im Haus/, 'Vorrat'],
   [/Was ToHuus sich merkt|Haushaltsgedächtnis|Gedächtnis/, 'Haushaltswissen'],
-  [/[Ee]ins nach dem anderen|Eine Sache nach der anderen/, 'Nur eins'],
+  [/[Ee]ins nach dem anderen|Eine Sache nach der anderen|Was schaffst du heute/, 'Nur eins'],
   [/Pflege & Hausinfo/, 'Hausinfo'],
   [/Geldliste/, 'Abrechnung'],
   [/Drucker & Bons/, 'Drucker'],
@@ -38,7 +38,7 @@ const DE_BANNED: [RegExp, string][] = [
 const EN_BANNED: [RegExp, string][] = [
   [/\bTreats\b/, 'Bring me something'],
   [/What ToHuus remembers|Your household memory/, 'Household knowledge'],
-  [/One thing at a time|\bOne at a time\b/, 'Just one'],
+  [/One thing at a time|\bOne at a time\b|What will you manage today/, 'Just one'],
   [/With or without AI|Access & AI/, 'AI / AI assistants & access'],
   [/Printers & tickets/, 'Printers'],
   [/\bmoney lists?\b/i, 'split'],
@@ -156,7 +156,8 @@ describe('glossary (docs/glossary.md)', () => {
     expect(nav).not.toMatch(/t\('Cook'\)/);
     expect(webDe['Needed again soon']).toBe('Bald wieder nötig');
     expect(fs.readFileSync(path.join(ROOT, 'web', 'src', 'pages', 'Today.tsx'), 'utf8')).toContain("t('Needed again soon')");
-    expect(fs.readFileSync(path.join(ROOT, 'ios', 'ToHuus', 'Features', 'Today', 'TodayExtras.swift'), 'utf8')).toContain('case .rhythm: return L("Needed again soon")');
+    // Paket B: "Bald wieder nötig" is a line on the list card (iPhone TodayView.swift listCard)
+    expect(fs.readFileSync(path.join(ROOT, 'ios', 'ToHuus', 'Features', 'Today', 'TodayView.swift'), 'utf8')).toContain('Text(L("Needed again soon"))');
     expect(webDe['Just one']).toBe('Nur eins');
     expect(webDe['Household knowledge']).toBe('Haushaltswissen');
     expect(webDe['Knowledge']).toBe('Wissen');

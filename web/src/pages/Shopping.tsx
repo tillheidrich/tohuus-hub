@@ -9,12 +9,13 @@ import {
   ClipboardText,
   CloudArrowUp,
   DotsThree,
-  HandHeart,
+  UserCircle,
   Plus,
   ShareNetwork,
   ShoppingCart,
   Storefront,
   Tag,
+  Package,
   TextAa,
   Trash,
   WifiSlash,
@@ -48,6 +49,7 @@ import { type ShopItem, type ShopView, type Store, SECTION_KEYS, SectionIcon, Se
 import { ItemBuyAt } from '../shop/BuyAt';
 import { Avatar, Empty, Seg, Sheet, Skeleton, Thumb, Toggle, useToast } from '../ui';
 import { EmptyArt } from '../art';
+import { AreaEmpty, AreaTools } from '../area/AreaTools';
 import { BonButton } from './Bons';
 import { useOutOfHouse } from './Ha2';
 import { ComposerVisibility, ItemPrivacy, ShareMark, type Visibility, VisibilityPanel, addHiddenText, readClipboard, shareSubline } from './Share';
@@ -427,9 +429,22 @@ export function Shopping() {
         </div>
         <div className="shop-tools">
           <Seg value={mode} onChange={(m) => switchMode(m)} options={[['list', t('List')], ['store', t('In the store')]]} label={t('Store mode')} />
-          <button className="icon-btn plain" onClick={() => setViewOpen(true)} aria-label={t('How the list looks for me')} title={t('How the list looks for me')}>
-            <TextAa size={20} />
-          </button>
+          {/* rare things in one labelled menu (Paket E): view, put away, offers, a new list */}
+          <AreaTools
+            tools={[
+              { key: 'look', label: t('How the list looks for me'), sub: t('Text size and rows'), icon: <TextAa size={18} />, onClick: () => setViewOpen(true) },
+              {
+                key: 'tostock',
+                label: t('Put away when checked off'),
+                sub: t('Checked-off products go straight into your stock.'),
+                icon: <Package size={18} />,
+                toggle: { on: toStock, onChange: (v) => { setToStock(v); storeSet('sw.toStock', v ? '1' : '0'); } },
+                hidden: inStore,
+              },
+              { key: 'offer', label: t('Offer'), sub: t('Put something on sale on the list'), icon: <Tag size={18} />, onClick: () => setOfferOpen(true), hidden: inStore || listId !== 0 || Boolean(me.data?.actor.houseGuest) },
+              { key: 'newlist', label: t('New list'), sub: t('For a store, a person or an occasion'), icon: <Plus size={18} />, onClick: () => setNewList(true), hidden: !view?.lists || Boolean(me.data?.actor.houseGuest) },
+            ]}
+          />
         </div>
       </header>
       {/* Wünsche: a labelled door instead of a gift symbol without text (Paket A, UX audit P1-6) */}
@@ -540,31 +555,9 @@ export function Shopping() {
         />
       )}
 
-      {!inStore && (
-        <div className="shop-setting">
-          <span>
-            <b>{t('Put away when checked off')}</b>
-            <span className="muted">{t('Checked-off products go straight into your stock.')}</span>
-          </span>
-          <Toggle
-            on={toStock}
-            label={t('Put away when checked off')}
-            onChange={(v) => {
-              setToStock(v);
-              storeSet('sw.toStock', v ? '1' : '0');
-            }}
-          />
-        </div>
-      )}
-
       {!inStore && !usualsOpen && (
         <div className="row wrap" style={{ marginTop: 12, gap: 4 }}>
           <UsualsButton onClick={() => setUsualsOpen(true)} />
-          {listId === 0 && !me.data?.actor.houseGuest && (
-            <button className="btn ghost sm" onClick={() => setOfferOpen(true)}>
-              <Tag size={16} /> {t('Offer')}
-            </button>
-          )}
         </div>
       )}
       {!inStore && usualsOpen && <UsualsGrid onClose={() => setUsualsOpen(false)} onAdd={(name, id) => run({ type: 'add', text: name, product_id: id, list_id: listId || null })} />}
@@ -584,9 +577,11 @@ export function Shopping() {
           </div>
         ) : !view || (view.open === 0 && ticked === 0) ? (
           <div className="shop-empty">
-            <Empty icon={<Basket size={26} />} art={inStore ? 'bag' : 'list'} title={inStore ? t('Nothing left to get') : t('Your list is empty')}>
-              {inStore ? t('Everything is in the basket or bought.') : t('Anything that runs low lands here automatically. Or just start typing above.')}
-            </Empty>
+            {inStore ? (
+              <AreaEmpty card={false} icon={<Basket size={26} />} text={t('Everything is in the basket or bought.')} action={{ label: t('Back to the list'), onClick: () => switchMode('list') }} />
+            ) : (
+              <AreaEmpty card={false} icon={<Basket size={26} />} text={t('Your list is empty. Type above what is missing.')} action={{ label: t('Our usuals'), onClick: () => setUsualsOpen(true) }} />
+            )}
           </div>
         ) : (
           groups.map((g) => (
@@ -934,8 +929,8 @@ function ShopRow({ i, big = false, store = false, fresh = false, onCheck, onMore
         </span>
       )}
       {onClaim && !on && (
-        <button className="btn sm claim-btn" onClick={onClaim} aria-label={t('I’ll get it')}>
-          <HandHeart size={16} aria-hidden="true" />
+        <button className="btn sm claim-btn claim-text" onClick={onClaim}>
+          {/* text, no hand: the hand means „Bring mir was“ (UX audit P1-14) */}
           <span className="claim-label">{t('I’ll get it')}</span>
         </button>
       )}
@@ -1050,7 +1045,7 @@ function ItemSheet({ item, me, lists, siblings, onPlace, onClose, run }: { item:
       <div className="stack">
         <ItemEditor item={item} />
         {home.ui.claims && (<>
-        <div className="eyebrow row" style={{ gap: 6 }}><HandHeart size={14} /> {t('Who takes care of it?')}</div>
+        <div className="eyebrow row" style={{ gap: 6 }}><UserCircle size={14} /> {t('Who takes care of it?')}</div>
         <div className="who-pick">
           {(members.data ?? []).map((m) => {
             const on = item.claim?.user_id === m.id;

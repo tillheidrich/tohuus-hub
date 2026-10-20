@@ -59,7 +59,7 @@ struct WeekGlanceCard: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(LF("%d of %d days planned", planned, model.days.count))
             if needCook > 0 {
-                Label(needCook == 1 ? L("1 meal still needs someone at the stove.") : LF("%d meals still need someone at the stove.", needCook), systemImage: "hand.raised")
+                Label(needCook == 1 ? L("1 meal still needs someone at the stove.") : LF("%d meals still need someone at the stove.", needCook), systemImage: "frying.pan")
                     .font(.caption).foregroundStyle(Theme.ink2)
             }
             Button(action: openBoard) {

@@ -1,7 +1,8 @@
 /** Guided tour, demo-data start and data reset */
 import { Router } from 'express';
 import { z } from 'zod';
-import { setSetting } from '../db.js';
+import { getSetting, setSetting } from '../db.js';
+import { isLang } from '../languages.js';
 import { t } from '../i18n.js';
 import { requireAdmin, requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
@@ -9,6 +10,7 @@ import { seedKidsDemo } from '../lib/kids.js';
 import { onboardState, updateOnboardState } from '../lib/onboard.js';
 import { ResetError, SCOPES, dataOverview, demoMarks, demoNudge, demoStatus, dismissDemoNudge, removeDemo, resetData, setTourState, startChoice, tourState } from '../lib/tour.js';
 import { wipeDemo } from '../lib/wipe.js';
+import { adoptRequestLang } from '../lib/instance-lang.js';
 import { seedDemo } from '../seed.js';
 
 export const r = Router();
@@ -47,7 +49,14 @@ r.put('/tour', (req, res) => {
 
 /** First start: begin with an empty household or explore the demo household first. */
 r.post('/tour/start', requireAdmin, (req, res) => {
-  const b = z.object({ choice: z.enum(['empty', 'demo']) }).parse(req.body ?? {});
+  const b = z.object({ choice: z.enum(['empty', 'demo']), language: z.string().max(8).optional() }).parse(req.body ?? {});
+  // Paket B: the admin picks the household language on this first screen – the samples follow it (self-hosted
+  // servers used to seed in the server default while the screen was German)
+  if (b.language && isLang(b.language)) {
+    setSetting('language', b.language);
+    // the default household name follows ("Our home" → "Unser Zuhause"); a name someone typed stays
+    if (['Our home', 'Unser Zuhause'].includes(String(getSetting('household.name', '')))) setSetting('household.name', t('Our home'));
+  }
   let seeded = false;
   let removed: unknown = null;
   if (b.choice === 'demo') {
@@ -69,7 +78,9 @@ r.post('/tour/start', requireAdmin, (req, res) => {
 r.get('/tour/data', requireAdmin, (_req, res) => res.json(dataOverview()));
 
 /** Load the demo household into an empty household (e.g. to look around once more). */
-r.post('/tour/demo', requireAdmin, (_req, res) => {
+r.post('/tour/demo', requireAdmin, (req, res) => {
+  // self-hosted, nobody chose a language yet: the admin's app/browser language decides, also for the demo (Paket E)
+  adoptRequestLang(req, true);
   const seeded = seedDemo({ force: true });
   if (!seeded) {
     res.status(409).json({ error: t('Demo data can only be loaded into an empty household.') });

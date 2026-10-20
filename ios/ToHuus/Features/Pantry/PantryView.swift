@@ -121,38 +121,35 @@ struct PantryView: View {
             .rootChrome()
             .navigationDestination(for: Int.self) { id in ProductDetailView(productId: id, store: store) }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
+                // Paket E: one labelled menu for the rare tools (check, grouping, scanner, labels) – „+“ stays the main action
+                ToolbarItem(placement: .topBarTrailing) {
+                    AreaToolsMenu {
                         Button { showCheck = true } label: { Label(L("Quick stock check"), systemImage: "checklist") }
-                        Button { showFind = true } label: { Label(L("Where is what?"), systemImage: "mappin.and.ellipse") }
-                        Divider()
+                        Button { showScanner = true } label: { Label(L("Scan barcode"), systemImage: "barcode.viewfinder") }
                         Button { showLeftovers = true } label: { Label(L("Put leftovers away"), systemImage: "takeoutbag.and.cup.and.straw") }
                         Button { showLabelScan = true } label: { Label(L("Scan a box label"), systemImage: "qrcode.viewfinder") }
-                        if !app.isGuest {
-                            Divider()
-                            Button { showLabels = true } label: { Label(L("QR labels"), systemImage: "qrcode") }
-                            Button { showPlaces = true } label: { Label(L("Places & categories"), systemImage: "square.grid.2x2") }
+                        // „Wo ist was?“ is a door above the pantry; only here when there are no doors
+                        if onDoor == nil {
+                            Button { showFind = true } label: { Label(L("Where is what?"), systemImage: "mappin.and.ellipse") }
                         }
-                    } label: {
-                        Image(systemName: "checklist")
-                    }
-                    .accessibilityLabel(L("Check and find"))
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Picker(L("Group by"), selection: $groupRaw) {
+                        Divider()
+                        Picker(selection: $groupRaw) {
                             ForEach(PantryGrouping.allCases) { g in Label(g.title, systemImage: g.icon).tag(g.rawValue) }
-                        }
+                        } label: { Label(L("Group by"), systemImage: "square.grid.2x2") }
+                        .pickerStyle(.menu)
                         if !model.categories.isEmpty {
-                            Picker(L("Category"), selection: $category) {
+                            Picker(selection: $category) {
                                 Text(L("All categories")).tag(Int?.none)
                                 ForEach(model.categories) { c in Text(c.name).tag(Int?.some(c.id)) }
-                            }
+                            } label: { Label(L("Category"), systemImage: category == nil ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill") }
+                            .pickerStyle(.menu)
                         }
-                    } label: {
-                        Image(systemName: category == nil ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                        if !app.isGuest {
+                            Divider()
+                            Button { showLabels = true } label: { Label(L("Print labels"), systemImage: "qrcode") }
+                            Button { showPlaces = true } label: { Label(L("Places & categories"), systemImage: "mappin.and.ellipse") }
+                        }
                     }
-                    .accessibilityLabel(L("Group and filter"))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -161,14 +158,6 @@ struct PantryView: View {
                         Image(systemName: "plus")
                     }
                     .accessibilityLabel(L("New product"))
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showScanner = true
-                    } label: {
-                        Image(systemName: "barcode.viewfinder")
-                    }
-                    .accessibilityLabel(L("Scan barcode"))
                 }
             }
             .sheet(isPresented: $showNew) {
@@ -274,8 +263,8 @@ struct PantryView: View {
                 let q = search.trimmingCharacters(in: .whitespaces)
                 if items.isEmpty && !model.loading {
                     if q.isEmpty {
-                        EmptyStateView(systemImage: "cabinet", title: L("Nothing here yet."),
-                                       message: L("Receipts and ticks fill the pantry by themselves – no need to count."))
+                        EmptyStateView(systemImage: "cabinet", title: L("Nothing in the pantry yet. Start with the fridge."),
+                                       actionTitle: L("New product"), action: { showNew = true })
                             .listRowBackground(Color.clear)
                     } else {
                         EmptyStateView(systemImage: "cabinet", title: LF("Nothing for “%@”", q),

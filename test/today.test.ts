@@ -72,7 +72,13 @@ describe('GET /api/today', () => {
     const r = await get('/api/today');
     expect(r.status).toBe(200);
     const o = r.json;
-    expect(Object.keys(o).sort()).toEqual(['away', 'calm', 'cookToday', 'date', 'greeting', 'household', 'list', 'money', 'notices', 'platt', 'rhythm', 'stillHave'].sort());
+    // the aggregate (older apps) plus the selection of Paket B (docs/today.md)
+    expect(Object.keys(o).sort()).toEqual(
+      ['away', 'calm', 'cookToday', 'date', 'greeting', 'household', 'list', 'money', 'notices', 'platt', 'rhythm', 'stillHave', 'cards', 'now', 'soonAgain', 'useSoon', 'context', 'entries', 'moneyOnToday'].sort(),
+    );
+    expect(o.cards.length).toBeLessThanOrEqual(5);
+    expect(o.cards).not.toContain('money');
+    expect(o.cards.filter((k: string) => k === 'context').length).toBeLessThanOrEqual(1);
     expect(o.greeting).toMatch(/Till$/);
     expect(o.household.name).toBeTruthy();
     expect(o.rhythm.length).toBeLessThanOrEqual(5);
@@ -105,6 +111,14 @@ describe('GET /api/today', () => {
     const median = times.sort((a, b) => a - b)[3];
     console.log(`[today] median ${median.toFixed(1)} ms (${times.map((t) => t.toFixed(1)).join(', ')})`);
     expect(median).toBeLessThan(50);
+    // with the selection (tasks, context candidates) for an admin
+    const v: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      const t0 = performance.now();
+      today.todayView({ userId: 1, name: 'Till', admin: true });
+      v.push(performance.now() - t0);
+    }
+    expect(v.sort((a, b) => a - b)[3]).toBeLessThan(50);
   });
 });
 

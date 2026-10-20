@@ -9,8 +9,7 @@ import { checkVisionModel } from '../lib/ai.js';
 import { requireAuth } from '../lib/auth.js';
 import { cookIdeas } from '../lib/cookideas.js';
 import { MoneyError, moneyOverview } from '../lib/money.js';
-import { todayAggregate } from '../lib/today.js';
-import { modules } from '../lib/modules.js';
+import { todayView } from '../lib/today.js';
 import { r as assistant } from './assistant.js';
 import { r as rhythm } from './rhythm.js';
 
@@ -18,19 +17,18 @@ export const r = Router();
 
 r.get('/today', requireAuth, (req: any, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const raw = todayAggregate({ userId: req.actor?.userId ?? null, name: req.actor?.kind === 'user' ? req.actor?.name : null });
-  // "Was nutzen wir?" (modules.ts): switched-off areas leave "Heute" (their data stays)
-  const m = modules();
-  const out = {
-    ...raw,
-    stillHave: m.stock ? raw.stillHave : [],
-    cookToday: m.cook ? raw.cookToday : null,
-    money: m.money ? raw.money : null,
-    notices: raw.notices.filter((n) => m.money || n.kind !== 'budget'),
-  };
-  // permanent guests (area: people) never see money or receipts
-  if (req.actor?.houseGuest) res.json({ ...out, money: null, notices: [] });
-  else res.json(out);
+  // the selection (cards, Jetzt dran, the one context place) is made here for web and iPhone alike (lib/today.ts
+  // todayView, rules in lib/today-select.ts); switched-off areas, guests and roles are handled there
+  const a = req.actor;
+  res.json(
+    todayView({
+      userId: a?.userId ?? null,
+      name: a?.kind === 'user' ? a?.name : null,
+      admin: a?.role === 'admin',
+      guestLevel: a?.houseGuest?.level ?? null,
+      link: a?.kind === 'guest',
+    }),
+  );
 });
 
 r.get('/money/overview', requireAuth, (req, res) => {

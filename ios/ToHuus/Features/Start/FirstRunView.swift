@@ -1,38 +1,34 @@
 import SwiftUI
 
-/// The first-run setup for a new household (web: pages/Onboarding.tsx, /willkommen), list first, no stock-keeping:
-/// 1 "Wer gehört dazu?" (form + name) → 2 "Was nutzt ihr?" (areas) → 2b "Wie kocht ihr?" (CookStyleViews.swift, only
-/// with the cooking area on, skippable) → 3 "Wo kauft ihr meistens ein?" (skipped when
-/// sign-up asked) → 4 "Wo ist eure Liste heute?" (paste, photo, fresh) → 5 the 30-second walk "da · fehlt · egal"
-/// → 6 "Wer kauft sonst ein?" (invite link + QR, not for one-person households) → 7 receipt + notifications.
+/// The first-run setup for a new household (web: pages/Onboarding.tsx, /willkommen), list first, no stock-keeping.
+/// Paket B (UX audit 5.6, 20 Oct 2026): five steps, the same on the web – 1 "Wer gehört dazu?" (form + name) →
+/// 2 "Was nutzt ihr?" (areas) → 3 "Eure erste Liste" (paste, photo, or start fresh with the 30-second walk
+/// "da · fehlt · egal") → 4 "Wer kauft sonst ein?" (invite link + QR, not for one-person households) → 5 "Alles
+/// bereit" (receipt + notifications). Cooking style and shops moved to "Erste Schritte" and the settings.
 /// Every step can be skipped; progress is kept on the server (PATCH /api/onboarding), so the web continues it too.
 struct FirstRunView: View {
     let store: ServerStore
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
 
-    enum Step: String, CaseIterable { case who, use, cook, shops, list, walk, invite, finish }
-    /// the server keeps the older step names (onboarding-state.ts STEPS)
-    private static let serverStep: [Step: String] = [.who: "home", .use: "home", .cook: "home", .shops: "home", .list: "where", .walk: "places", .invite: "invite", .finish: "stock"]
-    private static let fromServer: [String: Step] = ["home": .who, "where": .list, "places": .walk, "spots": .walk, "invite": .invite, "stock": .finish]
+    enum Step: String, CaseIterable { case who, use, list, invite, finish }
+    /// the server keeps the older step names (onboarding-state.ts STEPS) – the same mapping as the web
+    private static let serverStep: [Step: String] = [.who: "home", .use: "where", .list: "places", .invite: "invite", .finish: "stock"]
+    private static let fromServer: [String: Step] = ["home": .who, "where": .use, "places": .list, "spots": .list, "invite": .invite, "stock": .finish]
 
     @State private var step: Step = .who
     @State private var loaded = false
     @State private var form: String?
     @State private var homeName = ""
-    @State private var shopsAsked = true
-    /// „Wie kocht ihr?“ only while the cooking area is on (it can be switched off one step earlier)
-    @State private var cookOn = true
+    /// step 3: "Neu anfangen" opens the 30-second walk inside the same step
+    @State private var walking = false
     @State private var showReceipt = false
     @State private var showPaperList = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var steps: [Step] {
         Step.allCases.filter { s in
-            if s == .invite && form == "single" { return false }
-            if s == .shops && shopsAsked { return false }
-            if s == .cook && !cookOn { return false }
-            return true
+            !(s == .invite && form == "single")
         }
     }
 
@@ -59,7 +55,8 @@ struct FirstRunView: View {
             .canvasBackground()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    if index > 0 { Button { go(steps[index - 1]) } label: { Label(L("Back"), systemImage: "chevron.left") } }
+                    if walking { Button { walking = false } label: { Label(L("Back"), systemImage: "chevron.left") } }
+                    else if index > 0 { Button { go(steps[index - 1]) } label: { Label(L("Back"), systemImage: "chevron.left") } }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L("Skip setup")) { Task { await close(skipped: true) } }
@@ -85,11 +82,13 @@ struct FirstRunView: View {
     @ViewBuilder private var content: some View {
         switch step {
         case .who: FirstRunWho(form: $form, name: $homeName) { next() }
-        case .use: FirstRunModules { Task { await loadModules(); next() } }
-        case .cook: FirstRunCookStyle(api: store.api) { next() }
-        case .shops: FirstRunShops { next() }
-        case .list: FirstRunList(store: store, photo: { showPaperList = true }) { next() }
-        case .walk: FirstRunWalk(store: store, form: form ?? "couple") { next() }
+        case .use: FirstRunModules { next() }
+        case .list:
+            if walking {
+                FirstRunWalk(store: store, form: form ?? "couple") { walking = false; next() }
+            } else {
+                FirstRunList(store: store, photo: { showPaperList = true }, fresh: { walking = true }) { next() }
+            }
         case .invite: FirstRunInvite(api: store.api, form: form ?? "family") { next() }
         case .finish:
             FirstRunFinish(receipt: { showReceipt = true }, done: { Task { await close(skipped: false) } })
@@ -105,14 +104,7 @@ struct FirstRunView: View {
                 _ = try? await store.api.send("PATCH", "api/onboarding", json: ["started": true], as: Ignored.self)
             }
         }
-        // asked once: at cloud sign-up or here
-        if let c: JSONValue = try? await store.api.get("api/shop/stores/choices") { shopsAsked = c["chosen"]?.bool ?? true }
-        await loadModules()
         loaded = true
-    }
-
-    private func loadModules() async {
-        if let m: [String: Bool] = try? await store.api.get("api/modules") { cookOn = m["cook"] ?? true }
     }
 
     private func go(_ s: Step) {
@@ -354,111 +346,13 @@ private struct FirstRunModules: View {
     }
 }
 
-// MARK: 2b · Wie kocht ihr?
-
-/// Skippable: "Skip" keeps the default (only stove and oven, no machine recipes).
-private struct FirstRunCookStyle: View {
-    let api: APIClient
-    let next: () -> Void
-    @State private var model = CookStyleModel()
-    @State private var busy = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s4) {
-            StepHeader(title: LC("How do you cook?"),
-                       lead: LC("So we only suggest what works in your kitchen. Several answers are fine."))
-            VStack(spacing: Theme.Space.s3) {
-                CookStylePicker(model: model) { styles in Task { await model.save(api, styles) } }
-            }
-            .padding(Theme.Space.s3)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
-            if let e = model.error { ErrorBanner(message: e) }
-            NextButton(busy: busy) {
-                Task {
-                    // "Next" without touching anything still records the answer
-                    if model.loaded && !model.asked {
-                        busy = true
-                        await model.save(api, model.styles)
-                        busy = false
-                    }
-                    next()
-                }
-            }
-            Button(L("Skip")) { next() }
-                .frame(maxWidth: .infinity)
-                .foregroundStyle(Theme.ink2)
-        }
-        .task { await model.load(api) }
-    }
-}
-
-// MARK: 3 · Wo kauft ihr meistens ein?
-
-private struct FirstRunShops: View {
-    let next: () -> Void
-    @Environment(AppModel.self) private var app
-    @State private var choices: [String] = []
-    @State private var picked: [String] = []
-    @State private var own = ""
-    @State private var busy = false
-    @State private var error: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s4) {
-            StepHeader(title: L("Where do you usually shop?"),
-                       lead: L("Store mode and “Where to buy?” show these shops – the ones you use most come first."))
-            FlowLayout(spacing: 8) {
-                ForEach(all, id: \.self) { s in
-                    ChoiceChip(title: s, on: picked.contains(s)) {
-                        if let i = picked.firstIndex(of: s) { picked.remove(at: i) } else { picked.append(s) }
-                    }
-                }
-            }
-            HStack {
-                TextField(L("Other shop, e.g. farm shop"), text: $own)
-                    .textFieldStyle(.roundedBorder)
-                    .submitLabel(.done)
-                    .onSubmit(addOwn)
-                Button(L("Add"), action: addOwn).disabled(own.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            Text(L("Pick as many as you like – you can change it any time.")).font(.footnote).foregroundStyle(Theme.ink3)
-            if let error { ErrorBanner(message: error) }
-            NextButton(busy: busy) { Task { await save() } }
-        }
-        .task {
-            guard let api = app.api, let c: JSONValue = try? await api.get("api/shop/stores/choices") else { return }
-            choices = (c["stores"]?.array?.compactMap(\.string) ?? []) + [c["market"]?.string].compactMap { $0 }
-            picked = c["own"]?.array?.compactMap(\.string) ?? []
-        }
-    }
-
-    private var all: [String] { choices + picked.filter { !choices.contains($0) } }
-
-    private func addOwn() {
-        let n = own.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty else { return }
-        if !picked.contains(where: { $0.caseInsensitiveCompare(n) == .orderedSame }) { picked.append(n) }
-        own = ""
-    }
-
-    private func save() async {
-        busy = true
-        defer { busy = false }
-        do {
-            _ = try await app.api?.send("PUT", "api/shop/stores/choice", json: ["stores": picked], as: Ignored.self)
-            next()
-        } catch {
-            self.error = APIError.from(error).localizedDescription
-        }
-    }
-}
-
-// MARK: 4 · Wo ist eure Liste heute?
+// MARK: 3 · Eure erste Liste
 
 private struct FirstRunList: View {
     let store: ServerStore
     let photo: () -> Void
+    /// "Neu anfangen": the 30-second walk
+    let fresh: () -> Void
     let next: () -> Void
     @State private var pasting = false
     @State private var text = ""
@@ -468,7 +362,7 @@ private struct FirstRunList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s4) {
-            StepHeader(title: L("Where is your list today?"), lead: L("Bring it along – nothing has to be typed twice."))
+            StepHeader(title: L("Your first list"), lead: L("Where is your list today? Bring it along – nothing has to be typed twice."))
             if pasting {
                 TextEditor(text: $text)
                     .frame(minHeight: 160)
@@ -492,7 +386,7 @@ private struct FirstRunList: View {
                     focused = true
                 }
                 ChoiceTile(symbol: "camera", title: L("Photo of the paper list"), hint: L("Read on this iPhone – you pick the lines."), chevron: true, action: photo)
-                ChoiceTile(symbol: "sparkles", title: L("Start fresh"), hint: L("The next step fills the list in 30 seconds."), chevron: true, action: next)
+                ChoiceTile(symbol: "sparkles", title: L("Start fresh"), hint: L("The next step fills the list in 30 seconds."), chevron: true, action: fresh)
                 if let note { Text(note).font(.footnote).foregroundStyle(Theme.primaryText) }
                 if store.list.openCount > 0 {
                     NextButton { next() }
@@ -514,7 +408,7 @@ private struct FirstRunList: View {
     }
 }
 
-// MARK: 5 · 30 Sekunden: was fehlt?
+// MARK: 3b · 30 Sekunden: was fehlt? (inside step 3)
 
 private struct FirstRunWalk: View {
     let store: ServerStore
@@ -614,7 +508,7 @@ private struct FirstRunWalk: View {
     }
 }
 
-// MARK: 6 · Wer kauft sonst ein?
+// MARK: 4 · Wer kauft sonst ein?
 
 private struct FirstRunInvite: View {
     let api: APIClient
@@ -709,7 +603,7 @@ private struct FirstRunInvite: View {
     }
 }
 
-// MARK: 7 · Bon teilen + Mitteilungen
+// MARK: 5 · Alles bereit (Bon teilen + Mitteilungen)
 
 private struct FirstRunFinish: View {
     let receipt: () -> Void
@@ -719,8 +613,8 @@ private struct FirstRunFinish: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s4) {
-            StepHeader(title: L("Share a receipt?"),
-                       lead: L("From every receipt ToHuus remembers what you buy and how often – that’s where the suggestions on “Today” come from. And “Money” shows where it goes."))
+            StepHeader(eyebrow: L("Done"), title: L("All set"),
+                       lead: L("Today shows you what is up next. If you like, share a receipt now: from it ToHuus learns what you buy and how often."))
             ChoiceTile(symbol: "doc.text.viewfinder", title: L("Add a receipt"), hint: L("Photo, PDF or eBon – supermarket, drugstore, bakery …"), chevron: true, action: receipt)
             if push.state == .notAsked {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {

@@ -1,12 +1,7 @@
 /** Aufgaben (area: tasks, 14 Oct 2026) and the assistant icon */
 export const tasks: Record<string, string> = {
   Tasks: 'Aufgaben',
-  'Tasks today': 'Aufgaben heute',
   'All tasks': 'Alle Aufgaben',
-  'All done for today.': 'Für heute ist alles geschafft.',
-  'Nothing else is due.': 'Sonst ist nichts fällig.',
-  'Tick off what’s done – the next date sets itself.': 'Hak ab, was erledigt ist – der nächste Termin kommt von selbst.',
-  '{done} of {total} done today': '{done} von {total} heute geschafft',
   'Done: {name}': 'Erledigt: {name}',
   overdue: 'überfällig',
   Area: 'Bereich',
@@ -28,8 +23,6 @@ export const tasks: Record<string, string> = {
   'Sub-items': 'Unterpunkte',
   'Sub-items (optional)': 'Unterpunkte (optional)',
   'e.g. sink, mirror, floor': 'z. B. Waschbecken, Spiegel, Boden',
-  '1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.': '1 fällige Aufgabe hat noch niemand im Blick – tipp sie an und sag „Ich hab’s im Blick“.',
-  '{n} due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.': '{n} fällige Aufgaben hat noch niemand im Blick – tipp eine an und sag „Ich hab’s im Blick“.',
   'taking turns': 'abwechselnd',
   'Take turns': 'Abwechselnd',
   '“Done” passes it to the next one.': '„Erledigt“ gibt sie an die nächste Person weiter.',
@@ -146,7 +139,6 @@ export const tasks: Record<string, string> = {
   "A few things could be done": "Ein paar Sachen wären dran",
   "Smaller steps": "Kleinere Schritte",
   "Focus on this": "Nur das hier",
-  "Just one is enough.": "Nur eins reicht.",
   "Mostly me": "Mache meistens ich",
   "We share it": "Teilen wir",
   "Mostly someone else": "Macht meistens jemand anders",
@@ -281,15 +273,8 @@ export const tasks: Record<string, string> = {
   'Only you see this part.': 'Diesen Teil siehst nur du.',
   'Show on Heute': 'Auf „Heute“ zeigen',
   'At the start of each week, until you’ve seen it.': 'Zum Wochenanfang, bis du ihn gesehen hast.',
-  // Heute › Demnächst (TasksAheadCard)
+  // Aufgaben › Demnächst
   'Coming up': 'Demnächst',
-  'So nothing catches you off guard.': 'Damit dich nichts überrascht.',
-  'tonight: put out': 'heute Abend rausstellen',
-  'tomorrow evening: put out': 'morgen Abend rausstellen',
-  '{day} evening: put out': '{day} abends rausstellen',
-  'collection {day}': 'Abfuhr {day}',
-  'tomorrow {time}': 'morgen {time}',
-  'on {day}': 'am {day}',
   '{name} is open again.': '{name} ist wieder offen.',
   'Undo: {name}': 'Rückgängig: {name}',
   // "Jetzt" – eine Sache nach der anderen (20 Oct 2026, docs/now.md)
@@ -319,7 +304,8 @@ export const tasks: Record<string, string> = {
   '{n} more after this': 'noch {n} danach',
   'When nobody has it, it shows on the kid tablet too.': 'Wenn es niemand hat, steht es auch auf dem Kinder-Tablet.',
   'Today shows only the next task – then the next one.': 'Heute zeigt nur die nächste Aufgabe – danach die nächste.',
-  'A lot at once?': 'Viel auf einmal?',
-  'With “Just one” you only see the next task – the rest waits.': 'Mit „Nur eins“ siehst du nur die nächste Aufgabe – der Rest wartet.',
-  'Try it': 'Ausprobieren',
+  // Aufgaben › „Nur eins“ (one entry since 20.10.2026)
+  '{n} tasks, one after the other': '{n} Aufgaben, eine nach der anderen',
+  'One task, nice and calm': 'Eine Aufgabe, ganz in Ruhe',
+  'Only ever the next task': 'Immer nur die nächste Aufgabe',
 };

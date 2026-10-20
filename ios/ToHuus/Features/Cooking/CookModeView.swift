@@ -467,7 +467,7 @@ final class CookTimers {
     }
 
     nonisolated(unsafe) private static let durationRe = try! NSRegularExpression(
-        pattern: #"(\d+(?:[.,]\d+)?)(?:\s*(?:-|–|bis|to|or|oder)\s*(\d+(?:[.,]\d+)?))?\s*(stunden|stunde|std\.?|hours?|hrs?|h|minuten|minute|min\.?|mins?|sekunden|sek\.?|seconds?|secs?|s)(?![\p{L}])"#,
+        pattern: #"(\d+(?:[.,]\d+)?)(?:\s*(?:-|–|bis|to|or|oder)\s*(\d+(?:[.,]\d+)?))?\s*(stunden|stunde|std\.?|hours?|hrs?|h|minuten|minutes?|min\.?|mins?|sekunden|sek\.?|seconds?|secs?|s)(?![\p{L}])"#,
         options: [.caseInsensitive])
 
     /// "10 Min.", "1–2 Std.", "30 Sek." in the step text and the appliance time → seconds (the longer end of a range).

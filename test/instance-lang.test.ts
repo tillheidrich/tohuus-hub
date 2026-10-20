@@ -88,4 +88,22 @@ describe('self-hosted: first language', () => {
     // later visitors see the household language, whatever their browser says
     expect((await call('GET', '/api/auth/options', { headers: { 'accept-language': 'en-GB' } })).json.language).toBe('de');
   });
+
+  it('the first-start screen sets the language the admin picks – the samples follow it, not the browser (Paket B)', async () => {
+    const app = await call('POST', '/api/auth/app', { body: { name: 'Admin', password: 'selfhost123', device: 'Browser' } });
+    const h = { authorization: `Bearer ${app.json.token}`, 'accept-language': 'de-DE,de;q=0.9' };
+    const r = await call('POST', '/api/tour/start', { body: { choice: 'demo', language: 'en' }, headers: h });
+    expect(r.status).toBe(200);
+    expect(r.json.seeded).toBe(true);
+    expect((await call('GET', '/api/instance', { headers: { 'accept-language': 'de-DE' } })).json.lang).toBe('en');
+    const { db } = await import('../server/db');
+    const names = (db.prepare('SELECT name FROM products').all() as { name: string }[]).map((x) => x.name);
+    expect(names.length).toBeGreaterThan(10);
+    expect(names).not.toContain('Vanille-Eis');
+    const { getSetting } = await import('../server/db');
+    expect(['Our home', null, '']).toContain(getSetting('household.name', null));
+    // an unknown language is ignored, the household keeps its own
+    await call('POST', '/api/tour/start', { body: { choice: 'empty', language: 'xx' }, headers: h });
+    expect((await call('GET', '/api/instance')).json.lang).toBe('en');
+  });
 });

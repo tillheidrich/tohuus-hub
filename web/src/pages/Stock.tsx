@@ -1,11 +1,12 @@
-import { MagnifyingGlass, Package, Plus, SlidersHorizontal } from '@phosphor-icons/react';
+import { Barcode, CaretDown, CaretRight, ClipboardText, MagnifyingGlass, Package, Plus, QrCode, SlidersHorizontal } from '@phosphor-icons/react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { type Category, type Location, type Product, fmtQty, invalidate, post, qc, useApi } from '../api';
-import { Empty, LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
+import { LevelPicker, Skeleton, StatusBadge, Stepper, Thumb, expiryText, useToast } from '../ui';
 import { Ic } from '../placeicons';
 import { t } from '../i18n';
-import { QuickCheckButton, WasteCard } from './FreshParts';
+import { WasteCard } from './FreshParts';
+import { AreaEmpty, AreaTools, type AreaTool } from '../area/AreaTools';
 import { BoxesStock } from './Leftovers';
 import { StarterSheet } from './Onboarding';
 import { DemoTag, useDemoMarks } from './Samples';
@@ -29,7 +30,23 @@ export function Stock({ onNew }: { onNew: () => void }) {
   const categories = useApi<Category[]>('categories', '/categories');
   const [q, setQ] = useState('');
   const [starter, setStarter] = useState(false);
-  const [group, setGroup] = useState<'location' | 'category'>('location');
+  const [group, setGroup] = useState<'location' | 'category'>(() => {
+    try {
+      return localStorage.getItem('tohuus.stock.group') === 'category' ? 'category' : 'location';
+    } catch {
+      return 'location';
+    }
+  });
+  const setGroupKeep = (g: 'location' | 'category') => {
+    setGroup(g);
+    try {
+      localStorage.setItem('tohuus.stock.group', g);
+    } catch {
+      /* private mode */
+    }
+  };
+  // places from the third on start folded (UX audit P1-15) – one tap opens them
+  const [unfolded, setUnfolded] = useState<Set<string>>(new Set());
   const nav = useNavigate();
   const toast = useToast();
   const ort = params.get('ort') ? Number(params.get('ort')) : null;
@@ -104,6 +121,14 @@ export function Stock({ onNew }: { onNew: () => void }) {
   };
 
   const inHouse = (products.data ?? []).filter((p) => p.total > 0 && p.track_mode !== 'none').length;
+  // rare tools in one labelled menu (Paket E): Abgleich, Gruppierung, Scanner, Etiketten – only „+ Produkt“ stays in the head
+  const tools: AreaTool[] = [
+    { key: 'check', label: t('Quick stock check'), sub: t('Go through a place and correct the numbers'), icon: <ClipboardText size={18} />, to: ort ? `/abgleich/${ort}` : '/abgleich' },
+    { key: 'scan', label: t('Scan a barcode'), sub: t('Find or add a product by its code'), icon: <Barcode size={18} />, to: '/scan' },
+    { key: 'group', label: t('Sort by category'), sub: t('Otherwise by place'), icon: <SlidersHorizontal size={18} />, toggle: { on: group === 'category', onChange: (on) => setGroupKeep(on ? 'category' : 'location') } },
+    { key: 'labels', label: t('Print labels'), sub: t('QR labels for boxes and shelves'), icon: <QrCode size={18} />, to: '/etiketten' },
+  ];
+  const folded = (key: string, i: number) => !q && !ort && status === 'all' && i >= 2 && !unfolded.has(key);
 
   return (
     <div>
@@ -120,12 +145,9 @@ export function Stock({ onNew }: { onNew: () => void }) {
           </span>
         </div>
         <div className="actions">
-          <QuickCheckButton locationId={ort} />
-          <button className="icon-btn" title={t('Group by')} onClick={() => setGroup(group === 'location' ? 'category' : 'location')}>
-            <SlidersHorizontal size={18} />
-          </button>
-          <button className="btn primary" onClick={onNew} aria-label={t('New product')}>
-            <Plus size={16} weight="bold" /> <span className="only-desktop">{t('Product')}</span>
+          <AreaTools tools={tools} />
+          <button className="btn sm primary" onClick={onNew} aria-label={t('New product')}>
+            <Plus size={15} weight="bold" /> {t('Product')}
           </button>
         </div>
       </header>
@@ -145,47 +167,56 @@ export function Stock({ onNew }: { onNew: () => void }) {
             </button>
           ))}
         </div>
-        <div className="chips">
-          {STATUS_FILTERS.map(([k, l]) => (
-            <button key={k} className={`chip ${status === k ? 'on' : ''}`} onClick={() => setParam('status', k === 'all' ? null : k)}>
-              {k !== 'all' && k !== 'instock' && k !== 'attention' && <span className={`sdot ${k}`} />}
-              {t(l)}
-            </button>
-          ))}
-        </div>
+        <label className="row stock-status" style={{ gap: 8 }}>
+          <span className="small muted">{t('Show')}</span>
+          <select className="input" style={{ width: 'auto', minHeight: 44 }} value={status} onChange={(e) => setParam('status', e.target.value === 'all' ? null : e.target.value)}>
+            {STATUS_FILTERS.map(([k, l]) => (
+              <option key={k} value={k}>
+                {t(l)}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {products.isLoading ? (
         <Skeleton n={6} />
       ) : filtered.length === 0 ? (
-        <div className="card">
-          <Empty
-            icon={<Package size={26} />}
-            art={q ? undefined : 'shelf'}
-            title={q ? t('Nothing for “{q}”', { q }) : (products.data ?? []).length === 0 ? t('Nothing in stock yet') : t('Nothing here')}
-            action={!q && (products.data ?? []).length === 0 ? { label: t('Add typical staples'), onClick: () => setStarter(true) } : undefined}
-          >
-            {q ? (
-              <button className="btn sm" style={{ marginTop: 8 }} onClick={onNew}>
-                {t('Add “{q}”', { q })}
-              </button>
-            ) : (
-              t('Upload a REWE receipt, scan a barcode or add products by hand.')
-            )}
-          </Empty>
+        <>
+          {q ? (
+            <AreaEmpty icon={<MagnifyingGlass size={26} />} text={t('Nothing for “{q}”', { q })} action={{ label: t('Add “{q}”', { q }), icon: <Plus size={14} weight="bold" />, onClick: onNew }} />
+          ) : (products.data ?? []).length === 0 ? (
+            <AreaEmpty icon={<Package size={26} />} text={t('Nothing in the pantry yet. Start with the fridge.')} action={{ label: t('Add typical staples'), onClick: () => setStarter(true) }} />
+          ) : (
+            <AreaEmpty icon={<Package size={26} />} text={t('Nothing here in this view.')} action={{ label: t('Show everything'), onClick: () => setParams(new URLSearchParams(), { replace: true }) }} />
+          )}
           <StarterSheet open={starter} onClose={() => setStarter(false)} />
-        </div>
+        </>
       ) : (
         <div className="stack" style={{ gap: 22 }}>
           {!q && !ort && status === 'all' && <BoxesStock />}
-          {groups.map((g) => (
+          {groups.map((g, gi) => (
             <section key={g.key}>
+              {folded(g.key, gi) ? (
+                <button className="row stock-fold" aria-expanded={false} onClick={() => setUnfolded((u) => new Set(u).add(g.key))}>
+                  <Ic name={g.icon} size={18} />
+                  <h2 className="h3">{g.title}</h2>
+                  <span className="small muted mono">{g.items.length}</span>
+                  <CaretRight size={16} style={{ marginLeft: 'auto' }} aria-hidden="true" />
+                </button>
+              ) : (
               <div className="row" style={{ marginBottom: 8, gap: 8, color: 'var(--ink-2)' }}>
                 <Ic name={g.icon} size={18} />
                 <h2 className="h3">{g.title}</h2>
                 <span className="small muted mono">{g.items.length}</span>
+                {unfolded.has(g.key) && (
+                  <button className="icon-btn plain" style={{ marginLeft: 'auto' }} aria-label={t('Fold')} onClick={() => setUnfolded((u) => { const n = new Set(u); n.delete(g.key); return n; })}>
+                    <CaretDown size={16} />
+                  </button>
+                )}
               </div>
-              <div className="list">
+              )}
+              {!folded(g.key, gi) && <div className="list">
                 {g.items.map((p) => (
                   <div key={p.id} className="li clickable" onClick={() => nav(`/bestand/${p.id}`)}>
                     <Thumb p={p} />
@@ -214,7 +245,7 @@ export function Stock({ onNew }: { onNew: () => void }) {
                     )}
                   </div>
                 ))}
-              </div>
+              </div>}
             </section>
           ))}
         </div>

@@ -2,13 +2,14 @@
  * "Was essen wir heute?" – fast, decisive dinner helper from what's in the house.
  * Full panel on the Cook page, compact entry on Today.
  */
-import { ArrowRight, ArrowsClockwise, Basket, BowlFood, CalendarCheck, Camera, ChefHat, Clock, DiceFive, Heart, Link as LinkIcon, Swap, X } from '@phosphor-icons/react';
+import { ArrowRight, ArrowsClockwise, Basket, BowlFood, CalendarCheck, ChefHat, Clock, DiceFive, Heart, Link as LinkIcon, Swap, X } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { invalidate, post, useApi } from '../api';
 import { FreezerBucket, type FreezerItem } from './Leftovers';
 import { t } from '../i18n';
 import { Sheet, useToast } from '../ui';
+import { AreaEmpty } from '../area/AreaTools';
 
 interface Alt {
   product_id: number;
@@ -250,15 +251,6 @@ export function WhatToEatPanel({ onAddRecipe }: { onAddRecipe: () => void }) {
         </Bucket>
       )}
 
-      {d.quick.length > 0 && f.max !== '20' && (
-        <Bucket title={t('Quick (≤ 20 min)')}>
-          <div className="hscroll">
-            {d.quick.map((it) => (
-              <IdeaCard key={it.key} it={it} small onClick={() => nav(`/rezepte/${it.recipe_id}`)} />
-            ))}
-          </div>
-        </Bucket>
-      )}
       <SwapSheet req={swap} onClose={() => setSwap(null)} />
     </section>
   );
@@ -415,39 +407,8 @@ function PickCard({ pick, onAgain, onClose, busy, onSwap }: { pick: Pick; onAgai
 }
 
 function EmptyHelp({ onAddRecipe }: { onAddRecipe: () => void }) {
-  const nav = useNavigate();
-  return (
-    <div className="card pad stack wte-empty">
-      <div>
-        <b>{t('No recipes yet – so no suggestions yet.')}</b>
-        <div className="small muted">{t('Three quick ways to get started. After that this screen answers “what do we eat today?” from what’s in the house.')}</div>
-      </div>
-      <button className="li clickable" onClick={onAddRecipe}>
-        <span className="wte-ic"><LinkIcon size={20} /></span>
-        <div className="grow">
-          <div className="title">{t('Add your favourites')}</div>
-          <div className="sub">{t('Paste a link from Cookidoo, Chefkoch or any recipe site')}</div>
-        </div>
-        <ArrowRight size={16} />
-      </button>
-      <button className="li clickable" onClick={onAddRecipe}>
-        <span className="wte-ic"><Camera size={20} /></span>
-        <div className="grow">
-          <div className="title">{t('Snap recipe cards')}</div>
-          <div className="sub">{t('HelloFresh cards, a cookbook page – or send the photo to your AI assistant')}</div>
-        </div>
-        <ArrowRight size={16} />
-      </button>
-      <button className="li clickable" onClick={() => nav('/einstellungen/verbindungen/home-assistant')}>
-        <span className="wte-ic"><CalendarCheck size={20} /></span>
-        <div className="grow">
-          <div className="title">{t('Bring in the Cookidoo week')}</div>
-          <div className="sub">{t('Via Home Assistant – planned dishes arrive with their cooking time')}</div>
-        </div>
-        <ArrowRight size={16} />
-      </button>
-    </div>
-  );
+  // one rule for every empty state of the areas: icon, one sentence, one button (Paket E)
+  return <AreaEmpty icon={<ChefHat size={26} />} text={t('No recipes yet. Add the first one you like.')} action={{ label: t('Add a recipe'), icon: <LinkIcon size={14} />, onClick: onAddRecipe }} />;
 }
 
 // ------------------------------------------------------------------ "take X instead"

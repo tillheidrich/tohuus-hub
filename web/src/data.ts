@@ -213,7 +213,64 @@ function fromServer(raw: any): Today {
       : null,
     notices: (raw.notices ?? []).map((n: any) => (typeof n === 'string' ? n : { kind: n.kind, text: n.text, to: n.to ?? n.path ?? null })),
     counts: { attention: (raw.stillHave ?? []).filter((x: any) => x.kind === 'expiring' || x.kind === 'leftover').length },
+    // Paket B: the server's selection (lib/today.ts todayView); a server without it gets a calm fallback
+    cards: Array.isArray(raw.cards) ? raw.cards : fallbackCards(raw),
+    now: raw.now ?? null,
+    soonAgain: raw.soonAgain ?? (raw.rhythm ?? []).slice(0, 3),
+    useSoon: (raw.useSoon ?? (raw.stillHave ?? []).filter((x: any) => x.kind === 'expiring' || x.kind === 'leftover').slice(0, 3)).map(stillOf),
+    context: raw.context ?? null,
+    entries: raw.entries ?? { checkin: false, mind: false },
+    moneyOnToday: Boolean(raw.moneyOnToday),
   };
+}
+
+const stillOf = (x: any): StillHave => ({
+  ...x,
+  note: x.label ?? x.note ?? null,
+  status: x.kind === 'expiring' && (x.daysLeft ?? 0) < 0 ? 'expired' : x.kind === 'expiring' ? 'expiring' : (x.status ?? x.kind),
+});
+
+/** An older server without `cards`: list, use soon and cook, as far as there is something to say. */
+function fallbackCards(raw: any): TodayCardKey[] {
+  const out: TodayCardKey[] = [];
+  if ((raw.list?.open ?? 0) > 0 || (raw.rhythm ?? []).length > 0) out.push('list');
+  if ((raw.stillHave ?? []).some((x: any) => x.kind === 'expiring' || x.kind === 'leftover')) out.push('still');
+  if (raw.cookToday) out.push('cook');
+  return out;
+}
+
+/** Heute's cards (server/lib/today-select.ts) – at most five, the context place last. */
+export type TodayCardKey = 'now' | 'list' | 'still' | 'cook' | 'money' | 'context';
+/** one task on "Jetzt dran" (server/lib/next-task.ts NowCard) */
+export interface NowTask {
+  id: number;
+  name: string;
+  emoji: string;
+  note: string | null;
+  next_due: string | null;
+  due_time: string | null;
+  state: string;
+  level: 'overdue' | 'today' | 'promised' | 'mine' | 'open';
+  effort_min: number | null;
+  doer: { key: string; name: string; color: string } | null;
+  checklist: { text: string; done: boolean }[];
+  place: string | null;
+  private: boolean;
+}
+export interface TodayNow {
+  items: NowTask[];
+  more: number;
+  oneThing: boolean;
+  gentle: boolean;
+  max: number;
+  /** a permanent guest: tasks handed to them, ticked off through /guest-tasks */
+  guest: boolean;
+}
+export interface TodayContext {
+  kind: 'occasion' | 'orders' | 'handover' | 'bins' | 'imports' | 'budget' | 'demo' | 'trial' | 'week' | 'pulse' | 'start';
+  text: string;
+  path: string | null;
+  detail?: string | null;
 }
 export interface Today {
   greeting?: string;
@@ -233,6 +290,16 @@ export interface Today {
   counts?: { attention?: number; products?: number };
   /** true when built from the old endpoints (server without /api/today) */
   legacy?: boolean;
+  /** Paket B (docs/today.md): what Heute shows, in this order – the server decides */
+  cards: TodayCardKey[];
+  now: TodayNow | null;
+  /** "Bald wieder nötig" on the list card (purchase rhythm) */
+  soonAgain: RhythmItem[];
+  /** "Bald verbrauchen": expiring and leftovers only */
+  useSoon: StillHave[];
+  context: TodayContext | null;
+  entries: { checkin: boolean; mind: boolean };
+  moneyOnToday: boolean;
 }
 
 const tryGet = <T>(p: string) => get<T>(p).catch(() => null);
@@ -274,6 +341,16 @@ async function legacyToday(): Promise<Today> {
     notices,
     counts: { attention: att.length, products: o.counts?.products },
     legacy: true,
+    cards: [open.length ? 'list' : null, att.some((a) => a.status === 'expiring' || a.status === 'expired') ? 'still' : null, top ? 'cook' : null].filter(Boolean) as TodayCardKey[],
+    now: null,
+    soonAgain: [],
+    useSoon: att
+      .filter((a) => a.status === 'expiring' || a.status === 'expired')
+      .slice(0, 3)
+      .map((a) => ({ productId: a.id, name: a.name, nextExpiry: a.nextExpiry, status: a.status })),
+    context: null,
+    entries: { checkin: false, mind: false },
+    moneyOnToday: false,
   };
 }
 

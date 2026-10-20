@@ -1,12 +1,12 @@
-import { ArrowsClockwise, Camera, Cards, ChefHat, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
+import { ArrowsClockwise, Camera, Cards, ChefHat, CookingPot, Heart, Link as LinkIcon, MagnifyingGlass, Package, Plus, TextAa } from '@phosphor-icons/react';
 import { DemoTag, useDemoMarks } from './Samples';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError, api, invalidate, post, useApi } from '../api';
-import { getOr, imgSrc } from '../data';
-import { Empty, Seg, Sheet, Skeleton, useToast } from '../ui';
+import { Seg, Sheet, Skeleton, useToast } from '../ui';
+import { AreaEmpty, AreaTools, type AreaTool } from '../area/AreaTools';
 import { lang, t } from '../i18n';
 import { WeekPlan } from './Week';
 import { SwipeDeck } from './SwipeDeck';
@@ -18,33 +18,32 @@ import { RecipePackageSheet } from './RecipePackage';
 import { CookidooSheet, type CookidooDraft } from './CookidooSheet';
 import { HowTo } from '../help';
 import { CatalogNew } from './CloudRecipes';
+import { cookStartView, isCookView, rememberCookView, sessionCookView, type CookView } from '../area/cookStart';
+import { todayStr } from './Plan2';
 
-type View = 'ideas' | 'week' | 'recipes';
-const VIEW_KEY = 'sw.kitchen.view';
-const loadView = (): View => {
-  try {
-    const v = localStorage.getItem(VIEW_KEY);
-    return v === 'week' || v === 'recipes' ? v : 'ideas';
-  } catch {
-    return 'ideas';
-  }
-};
+type View = CookView;
 
 /**
  * Kochen (plan 2026-10-12): one screen, cooking as an output of what is at home. "Ideen" = what you can cook now
  * (`/api/cook/ideas`, falls back to the existing what-to-eat panel) plus the swipe deck; "Woche" = the optional
- * week plan; "Rezepte" = the collection. The choice is remembered per device.
+ * week plan; "Rezepte" = the collection. Start: „Woche“ when the running week has a plan entry, else „Was kochen
+ * wir?“ (area/cookStart.ts); a view picked by hand stays for the session.
  */
 export function Kitchen({ me }: { me: Me }) {
   const [sp] = useSearchParams();
-  const [view, setViewState] = useState<View>(() => (sp.get('view') as View) || (sp.get('add') ? 'recipes' : loadView()));
+  const [picked, setPicked] = useState<View | null>(() => (isCookView(sp.get('view')) ? (sp.get('view') as View) : sp.get('add') ? 'recipes' : sessionCookView()));
+  // the running week (what „Woche“ shows first, same query as WeekPlan) decides the start view
+  const thisWeek = useApi<{ entries: unknown[] }>(['plan', todayStr()], picked ? null : `/plan?from=${todayStr()}&days=7`);
+  // decided once per visit: planning a meal from „Was kochen wir?“ must not flip the page to „Woche“
+  const [auto, setAuto] = useState<View | null>(null);
+  const start = cookStartView({ chosen: picked, weekEntries: thisWeek.error ? 0 : thisWeek.data?.entries?.length });
+  useEffect(() => {
+    if (!auto && !picked && start) setAuto(start);
+  }, [auto, picked, start]);
+  const view = picked ?? auto ?? start;
   const setView = (v: View) => {
-    setViewState(v);
-    try {
-      localStorage.setItem(VIEW_KEY, v);
-    } catch {
-      /* ignore */
-    }
+    setPicked(v);
+    rememberCookView(v);
   };
   const [importOpen, setImportOpen] = useState(() => sp.get('add') === '1' && !sp.get('cookidoo'));
   // shared Cookidoo link in the cloud (Share page) → confirm title + ingredients here
@@ -54,8 +53,14 @@ export function Kitchen({ me }: { me: Me }) {
     if (u) post<CookidooDraft>('/recipes/import/cookidoo/draft', { url: u }).then(setCkDraft).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const nav = useNavigate();
   const recipes = useApi<any[]>('recipes', '/recipes');
+  const [pkgOpen, setPkgOpen] = useState(false);
+  const tools: AreaTool[] = [
+    { key: 'kitchen', label: t('Kitchen mode'), sub: t('Full screen, big text, the screen stays on'), icon: <CookingPot size={18} />, to: '/kochen/kueche' },
+    { key: 'fav', label: t('Favourites'), sub: t('What you like to eat'), icon: <Heart size={18} />, to: '/lieblinge' },
+    { key: 'pkg', label: t('Upload recipe package'), icon: <Package size={18} />, onClick: () => setPkgOpen(true) },
+    { key: 'sources', label: t('More ways to add recipes'), sub: t('Recipe database, other apps, any AI, file'), icon: <LinkIcon size={18} />, to: '/einstellungen/bereiche/rezepte' },
+  ];
   return (
     <div className="kitchen">
       <header className="page-head">
@@ -64,20 +69,20 @@ export function Kitchen({ me }: { me: Me }) {
           <h1>{t('Cooking')}</h1>
         </div>
         <div className="actions">
-          <button className="btn ghost" onClick={() => nav('/lieblinge')}>
-            <Heart size={16} /> {t('Favourites')}
-          </button>
-          <button className="btn" onClick={() => setImportOpen(true)}>
-            <Plus size={16} weight="bold" /> {t('Recipe')}
+          <AreaTools tools={tools} />
+          <button className="btn sm primary" onClick={() => setImportOpen(true)}>
+            <Plus size={15} weight="bold" /> {t('Recipe')}
           </button>
         </div>
       </header>
       <div className="kitchen-seg">
-        <Seg value={view} onChange={setView} label={t('View')} options={[['ideas', t('What shall we cook?')], ['week', t('Week')], ['recipes', t('Recipes')]]} />
+        <Seg value={view ?? 'week'} onChange={setView} label={t('View')} options={[['week', t('Week')], ['ideas', t('What shall we cook?')], ['recipes', t('Recipes')]]} />
       </div>
+      {!view && <Skeleton n={2} h={180} />}
       {view === 'ideas' && <IdeasView onAddRecipe={() => setImportOpen(true)} />}
       {view === 'week' && <WeekView />}
-      {view === 'recipes' && <RecipesView recipes={recipes} />}
+      {view === 'recipes' && <RecipesView recipes={recipes} onAddRecipe={() => setImportOpen(true)} />}
+      <RecipePackageSheet open={pkgOpen} onClose={() => setPkgOpen(false)} />
       <RecipeImport open={importOpen} onClose={() => setImportOpen(false)} vision={me.features.vision} />
       <CookidooSheet draft={ckDraft} onClose={() => setCkDraft(null)} vision={me.features.vision} />
     </div>
@@ -97,54 +102,32 @@ interface Idea {
 }
 const missName = (m: NonNullable<Idea['missing']>[number]) => (typeof m === 'string' ? m : (m.text ?? m.name ?? ''));
 
-/** "Daraus könnt ihr heute kochen" from /api/cook/ideas – hidden on servers without it (the panel below covers the same). */
-function CookIdeas() {
-  const q = useQuery<Idea[] | null>({
-    queryKey: ['cook', 'ideas'],
-    // { ready, almost, probablyAtHome } (docs/api-today.md); ready first, then 1–2 missing
-    queryFn: () => getOr<any>('/cook/ideas?limit=8', () => null).then((d) => (d == null ? null : Array.isArray(d) ? d : [...(d.ready ?? []), ...(d.almost ?? [])])),
-    retry: false,
-  });
-  const nav = useNavigate();
-  const toast = useToast();
-  const [added, setAdded] = useState<Set<number>>(new Set());
-  if (!q.data?.length) return null;
-  const addMissing = async (i: Idea) => {
-    const miss = (i.missing ?? []).map((m) => ({ name: missName(m), productId: typeof m === 'string' ? null : (m.productId ?? null) }));
-    // through the recipe: every row keeps its line as note ("für Curry: 2 Hähnchenbrustfilets")
-    await post(`/recipes/${i.recipeId}/shopping`, { only: miss.map((m) => m.name) });
-    setAdded(new Set(added).add(i.recipeId));
-    invalidate('shopping', 'today');
-    toast({ text: miss.length === 1 ? t('{name} is on the shopping list', { name: miss[0].name }) : t('{n} things are on the shopping list', { n: miss.length }) });
-  };
+/** Was kochen wir? – one list of suggestions (filters, one „Entscheidet ihr für uns“), browsing in its own sheet (P1-12) */
+function IdeasView({ onAddRecipe }: { onAddRecipe: () => void }) {
+  const [browse, setBrowse] = useState(false);
   return (
-    <section className="ideas" aria-labelledby="h-ideas">
-      <h2 id="h-ideas">{t('You can cook this today')}</h2>
-      <div className="cidea-strip">
-        {q.data.slice(0, 8).map((i) => {
-          const miss = (i.missing ?? []).map(missName);
-          return (
-            <article key={i.recipeId} className="cidea">
-              <button className="cidea-img" onClick={() => nav(`/rezepte/${i.recipeId}`)} aria-label={i.title}>
-                {i.image ? <img src={imgSrc(i.image)!} alt="" loading="lazy" /> : <ChefHat size={30} aria-hidden="true" />}
-              </button>
-              <b>{i.title}</b>
-              <span className="meta">{miss.length === 0 ? t('Everything is at home') : t('Missing: {list}', { list: miss.join(', ') })}</span>
-              {i.probablyHave && i.probablyHave.length > 0 && <span className="meta">{t('Probably at home: {list}', { list: i.probablyHave.join(', ') })}</span>}
-              {miss.length > 0 && (
-                <button className="btn sm" disabled={added.has(i.recipeId)} onClick={() => addMissing(i)}>
-                  {added.has(i.recipeId) ? t('On the list') : t('Put on the list')}
-                </button>
-              )}
-            </article>
-          );
-        })}
-      </div>
-    </section>
+    <>
+      <WhatToEatPanel onAddRecipe={onAddRecipe} />
+      <button type="button" className="hcard deck-entry" style={{ marginTop: 20 }} onClick={() => setBrowse(true)}>
+        <span className="deck-entry-icon" aria-hidden="true">
+          <Cards size={22} />
+        </span>
+        <span className="grow">
+          <b>{t('Browse ideas')}</b>
+          <span className="meta">{t('One recipe at a time, sorted by what is at home.')}</span>
+        </span>
+      </button>
+      <CatalogNew />
+      {browse && (
+        <Sheet open onClose={() => setBrowse(false)} title={t('Browse ideas')}>
+          <BrowseDeck onAddRecipe={() => { setBrowse(false); onAddRecipe(); }} />
+        </Sheet>
+      )}
+    </>
   );
 }
 
-function IdeasView({ onAddRecipe }: { onAddRecipe: () => void }) {
+function BrowseDeck({ onAddRecipe }: { onAddRecipe: () => void }) {
   const [tm, setTm] = useState<'all' | 'tm' | 'no'>('all');
   const sugg = useApi<any[]>(['suggest', tm], `/recipes/suggest?limit=20${tm === 'tm' ? '&thermomix=1' : tm === 'no' ? '&thermomix=0' : ''}`);
   const [idx, setIdx] = useState(0);
@@ -152,23 +135,8 @@ function IdeasView({ onAddRecipe }: { onAddRecipe: () => void }) {
   const deck = sugg.data ?? [];
   const cur = deck[idx % Math.max(1, deck.length)];
   const next = deck[(idx + 1) % Math.max(1, deck.length)];
-  const [weekDeck, setWeekDeck] = useState(false);
   return (
     <>
-      <button type="button" className="hcard deck-entry" onClick={() => setWeekDeck(true)}>
-        <span className="deck-entry-icon" aria-hidden="true">
-          <Cards size={22} />
-        </span>
-        <span className="grow">
-          <b>{t('What shall we eat this week?')}</b>
-          <span className="meta">{t('A few ideas, one at a time – yes puts it on a free evening.')}</span>
-        </span>
-      </button>
-      {weekDeck && <WeekMealDeckSheet onClose={() => setWeekDeck(false)} />}
-      <CookIdeas />
-      <CatalogNew />
-      <WhatToEatPanel onAddRecipe={onAddRecipe} />
-      <h2 style={{ margin: '28px 0 12px' }}>{t('Browse ideas')}</h2>
       <div className="row between wrap" style={{ marginBottom: 14 }}>
         {deck.some((s) => s.recipe?.thermomix) && (
           <Seg value={tm} onChange={(v) => { setTm(v); setIdx(0); }} options={[['all', t('All')], ['tm', 'Thermomix'], ['no', t('Without')]]} />
@@ -182,11 +150,7 @@ function IdeasView({ onAddRecipe }: { onAddRecipe: () => void }) {
       {sugg.isLoading ? (
         <div className="skel" style={{ height: 420, maxWidth: 420, margin: '0 auto', borderRadius: 26 }} />
       ) : !cur ? (
-        <div className="card">
-          <Empty icon={<ChefHat size={26} />} art="book" title={t('No suggestions yet')} action={{ label: t('Add a recipe'), icon: <Plus size={14} weight="bold" />, onClick: onAddRecipe }}>
-            {t('Add a few favorite recipes – by link, photo (e.g. a HelloFresh card) or via Claude/ChatGPT.')}
-          </Empty>
-        </div>
+        <AreaEmpty card={false} icon={<ChefHat size={26} />} text={t('No suggestions yet. Add a few recipes you like.')} action={{ label: t('Add a recipe'), icon: <Plus size={14} weight="bold" />, onClick: onAddRecipe }} />
       ) : (
         <SwipeDeck
           cards={[cur, next].filter((x, i) => x && (i === 0 || x !== cur)).map((s) => ({
@@ -208,8 +172,19 @@ function IdeasView({ onAddRecipe }: { onAddRecipe: () => void }) {
 
 function WeekView() {
   const settings = useApi<any>('settings', '/settings');
+  const [weekDeck, setWeekDeck] = useState(false);
   return (
     <>
+      <button type="button" className="hcard deck-entry" onClick={() => setWeekDeck(true)}>
+        <span className="deck-entry-icon" aria-hidden="true">
+          <Cards size={22} />
+        </span>
+        <span className="grow">
+          <b>{t('What shall we eat this week?')}</b>
+          <span className="meta">{t('A few ideas, one at a time – yes puts it on a free evening.')}</span>
+        </span>
+      </button>
+      {weekDeck && <WeekMealDeckSheet onClose={() => setWeekDeck(false)} />}
       <WeekPlan cookidoo={Boolean(settings.data?.ha?.url && settings.data?.ha?.token)} />
       <VotesCard />
     </>
@@ -229,9 +204,8 @@ interface IngredientHit {
   missing: string[];
 }
 
-function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean } }) {
+function RecipesView({ recipes, onAddRecipe }: { recipes: { data?: any[]; isLoading: boolean }; onAddRecipe: () => void }) {
   const [q, setQ] = useState('');
-  const [pkgOpen, setPkgOpen] = useState(false);
   const nav = useNavigate();
   const demo = useDemoMarks();
   const terms = ingredientTerms(q);
@@ -260,15 +234,16 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
         <button className="linkish" onClick={() => setQ(lang() === 'de' ? 'mit: ' : 'with: ')}>
           {t('Search by ingredients')}
         </button>
-        <button className="btn sm" onClick={() => setPkgOpen(true)}>
-          <Package size={16} /> {t('Upload recipe package')}
-        </button>
       </div>
       {terms && <p className="small muted" style={{ margin: '0 0 10px' }}>{t('Recipes with {list} – most matches first. Nothing needs to be in stock for this.', { list: terms.join(', ') })}</p>}
       {recipes.isLoading || (terms && hits.isLoading) ? (
         <Skeleton n={2} h={180} />
       ) : list.length === 0 ? (
-        <div className="card pad small muted">{q ? t('No recipe matches “{q}”.', { q }) : t('Your recipes will show up here.')}</div>
+        q ? (
+          <div className="card pad small muted">{t('No recipe matches “{q}”.', { q })}</div>
+        ) : (
+          <AreaEmpty icon={<ChefHat size={26} />} text={t('No recipes yet. Add the first one you like.')} action={{ label: t('Add a recipe'), icon: <Plus size={14} weight="bold" />, onClick: onAddRecipe }} />
+        )
       ) : (
         <div className="rgrid">
           {list.map((r: any) => (
@@ -295,7 +270,6 @@ function RecipesView({ recipes }: { recipes: { data?: any[]; isLoading: boolean 
         </div>
       )}
       <SwapRulesCard />
-      <RecipePackageSheet open={pkgOpen} onClose={() => setPkgOpen(false)} />
     </section>
   );
 }

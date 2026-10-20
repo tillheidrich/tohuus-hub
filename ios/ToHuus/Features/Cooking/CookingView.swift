@@ -46,6 +46,18 @@ final class CookModel {
     }
 }
 
+/// Kochen, Startansicht (web: area/cookStart.ts › cookStartView, same rule): the running week has at least one plan
+/// entry → „Woche“ (1), otherwise „Was kochen wir?“ (0). A view picked by hand stays for this app session.
+enum CookStart {
+    @MainActor static var chosen: Int?
+    /// nil = the plan is not loaded yet
+    static func tab(chosen: Int?, weekEntries: Int?) -> Int? {
+        if let chosen { return chosen }
+        guard let n = weekEntries else { return nil }
+        return n > 0 ? 1 : 0
+    }
+}
+
 struct CookingView: View {
     let store: ServerStore
     @Environment(AppModel.self) private var app
@@ -66,8 +78,11 @@ struct CookingView: View {
     @State private var model = CookModel()
     @State private var week = WeekModel()
     @State private var feedback = CookFeedback()
-    @State private var tab = 0
+    /// Woche · Was kochen wir? · Rezepte (Paket E: this order, the week first)
+    @State private var tab = CookStart.chosen ?? 1
+    @State private var startDecided = false
     @State private var search = ""
+    @State private var showBrowse = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -114,6 +129,19 @@ struct CookingView: View {
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { showFavourites = false } } }
                 }
             }
+            .sheet(isPresented: $showBrowse) {
+                NavigationStack {
+                    ScrollView {
+                        SuggestDeckSection(store: store, openRecipe: { ref in showBrowse = false; Task { @MainActor in try? await Task.sleep(for: .milliseconds(450)); open(ref) } },
+                                           addRecipe: { showBrowse = false; showImport = true })
+                            .padding(Theme.Space.s4)
+                    }
+                    .canvasBackground()
+                    .navigationTitle(L("Browse ideas"))
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L("Done")) { showBrowse = false } } }
+                }
+            }
             .sheet(isPresented: $showPackage) {
                 NavigationStack { RecipePackageView(store: store) { showPackage = false } }
             }
@@ -129,18 +157,16 @@ struct CookingView: View {
                         Button { showEditor = true } label: { Label(L("New recipe"), systemImage: "square.and.pencil") }
                         Button { showImport = true } label: { Label(L("Take over: link, photo or text"), systemImage: "link") }
                         Button { sourcesQuery = nil; showSources = true } label: { Label(LC("Discover recipes"), systemImage: "globe.europe.africa") }
-                        Divider()
-                        Button { showTools = true } label: { Label(L("Recipe tools"), systemImage: "wrench.and.screwdriver") }
                     } label: { Label(L("Add recipe"), systemImage: "plus") }
                     .hoverEffect(.highlight)
                 }
+                // rare things in one labelled menu (Paket E): kitchen mode, favourites, recipe tools
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { showFavourites = true } label: { Label(L("Favourites"), systemImage: "heart") }
-                        .hoverEffect(.highlight)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { app.showKitchen = true } label: { Label(L("Kitchen mode"), systemImage: "frying.pan") }
-                        .hoverEffect(.highlight)
+                    AreaToolsMenu {
+                        Button { app.showKitchen = true } label: { Label(L("Kitchen mode"), systemImage: "frying.pan") }
+                        Button { showFavourites = true } label: { Label(L("Favourites"), systemImage: "heart") }
+                        Button { showTools = true } label: { Label(L("Recipe tools"), systemImage: "wrench.and.screwdriver") }
+                    }
                 }
             }
             .onChange(of: app.searchRequest) { _, _ in consumeSearch() }
@@ -148,7 +174,19 @@ struct CookingView: View {
                 consumeSearch()
                 applyDebug()
             }
+            .task { await decideStart() }
         }
+    }
+
+    /// once per screen: open on „Woche“ when the running week has a plan entry, else on „Was kochen wir?“ (CookStart)
+    private func decideStart() async {
+        guard !startDecided else { return }
+        startDecided = true
+        guard CookStart.chosen == nil, UserDefaults.standard.string(forKey: "debugCook") == nil else { return }
+        let n = (try? await store.api.weekPlan(from: CookDay.today()))?.entries.count
+        // a tap, a search or a saved recipe in the meantime wins
+        guard CookStart.chosen == nil, tab == 1, let t = CookStart.tab(chosen: nil, weekEntries: n) else { return }
+        tab = t
     }
 
     /// after a sheet saved a recipe: open it once the sheet is gone
@@ -196,9 +234,9 @@ struct CookingView: View {
     private var column: some View {
         ScrollView {
             CardStack(spacing: Theme.Space.s4) {
-                Picker("", selection: $tab) {
-                    Text(L("What shall we cook?")).tag(0)
+                Picker("", selection: Binding(get: { tab }, set: { tab = $0; CookStart.chosen = $0 })) {
                     Text(L("Week")).tag(1)
+                    Text(L("What shall we cook?")).tag(0)
                     Text(L("Recipes")).tag(2)
                 }
                 .pickerStyle(.segmented)
@@ -206,13 +244,12 @@ struct CookingView: View {
                 if let error = model.error, tab == 2 { ErrorBanner(message: error) { Task { await model.load(store.api) } } }
                 switch tab {
                 case 0:
-                    CookIdeasStrip(store: store, feedback: feedback, openRecipe: open)
-                    WeekMealDeckEntry(store: store) { Task { await week.load(store.api) } }
-                    if app.isCloud { CatalogNewSection(store: store, openRecipe: open) }
+                    // one list of suggestions (no recipe twice on this page, P1-12); browsing has its own sheet
                     WhatToEatSection(store: store, feedback: feedback, openRecipe: open, openImport: { showImport = true }, fallback: AnyView(ideas))
-                    SuggestDeckSection(store: store, openRecipe: open, addRecipe: { showImport = true })
-                        .padding(.top, Theme.Space.s4)
+                    browseEntry.padding(.top, Theme.Space.s2)
+                    if app.isCloud { CatalogNewSection(store: store, openRecipe: open) }
                 case 1:
+                    WeekMealDeckEntry(store: store) { Task { await week.load(store.api) } }
                     WeekPlanSection(store: store, model: week, feedback: feedback, openRecipe: open)
                 default:
                     recipeList
@@ -264,6 +301,27 @@ struct CookingView: View {
 }
 
 extension CookingView {
+    /// „Ideen durchblättern“ as its own entry, not under the suggestions (UX audit P1-12)
+    var browseEntry: some View {
+        Button { showBrowse = true } label: {
+            HStack(spacing: Theme.Space.s3) {
+                Image(systemName: "rectangle.stack").font(.title2).foregroundStyle(Theme.primaryText)
+                    .frame(width: 44, height: 44).background(Theme.primarySoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L("Browse ideas")).font(.headline).foregroundStyle(Theme.ink)
+                    Text(L("One recipe at a time, sorted by what is at home.")).font(.caption).foregroundStyle(Theme.ink2)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
+            }
+            .padding(Theme.Space.s3)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
     /// „Rezepte entdecken“: open recipe database with photos (also in „Rezept hinzufügen“).
     var discoverCard: some View {
         Button { sourcesQuery = nil; showSources = true } label: {

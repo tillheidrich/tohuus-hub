@@ -1,5 +1,5 @@
 /** "I'll take care of it" for planned meals: who cooks. No points, no ranking – just so nobody does it twice. */
-import { HandHeart } from '@phosphor-icons/react';
+import { ChefHat } from '@phosphor-icons/react';
 import { useMemo } from 'react';
 import type { Me } from '../App';
 import { invalidate, post, useApi } from '../api';
@@ -63,7 +63,7 @@ export function CookPicker({ entryId, claim, suggested }: { entryId: number; cla
   return (
     <div className="stack" style={{ gap: 8 }}>
       <div className="eyebrow row" style={{ gap: 6 }}>
-        <HandHeart size={14} /> {claim ? t('{name} cooks', { name: claim.name }) : t('Who cooks?')}
+        <ChefHat size={14} /> {claim ? t('{name} cooks', { name: claim.name }) : t('Who cooks?')}
       </div>
       {!claim && suggested && (
         <p className="small muted" style={{ margin: 0 }}>

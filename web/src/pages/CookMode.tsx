@@ -8,6 +8,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useDialog } from '../ui';
 import { Amounts } from '../RegionAmounts';
 import { t } from '../i18n';
+import { StepTimerButtons, TimerBar, useCookTimers } from '../area/cookTimers';
+import '../area/area.css';
 
 const SPEED_RE = /^(Stufe|Speed)\s*/i;
 
@@ -36,6 +38,8 @@ export function DeviceChips({ tm }: { tm?: DeviceSettings | null }) {
 export function CookMode({ r, houseNote, onClose, onDone }: { r: any; houseNote: string | null; onClose: () => void; onDone: () => void }) {
   const steps: { text: string; section?: string | null; tm?: DeviceSettings | null }[] = r.steps ?? [];
   const [i, setI] = useState(0);
+  // timers from the step text keep running when you go on (like the iPhone)
+  const timers = useCookTimers();
   // keep the screen on while cooking (where the browser allows it)
   useEffect(() => {
     let lock: any = null;
@@ -65,6 +69,11 @@ export function CookMode({ r, houseNote, onClose, onDone }: { r: any; houseNote:
         </button>
         <h2>{r.title}</h2>
       </div>
+      {timers.items.length > 0 && (
+        <div style={{ padding: '8px 16px 0' }}>
+          <TimerBar timers={timers} />
+        </div>
+      )}
       <div className="cookmode-body" aria-live="polite">
         {houseNote && (
           <div className="cookmode-note">
@@ -82,6 +91,7 @@ export function CookMode({ r, houseNote, onClose, onDone }: { r: any; houseNote:
               <Amounts text={s.text} />
             </div>
             <DeviceChips tm={s.tm} />
+            <StepTimerButtons text={s.text} deviceTime={s.tm?.time} label={`${t('Step {n} of {total}', { n: i + 1, total: steps.length })} · ${r.title}`} timers={timers} />
           </>
         )}
       </div>

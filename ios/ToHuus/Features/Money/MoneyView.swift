@@ -33,13 +33,15 @@ struct MoneyView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 CardStack(spacing: Theme.Space.s4) {
+                    // the one main action stays visible (Paket E; as a sheet the toolbar has no room for a „+“ next to search and avatar)
+                    Button { showExpense = true } label: { Label(L("Add an expense"), systemImage: "plus") }
+                        .buttonStyle(PrimaryButtonStyle())
                     if !(meta?.members ?? []).isEmpty { MoneyViewSwitch(view: $view) }
                     if view == "mine" {
                         Label(L("Only what belongs to you: your personal entries and items marked for you. Nobody else sees them."), systemImage: "lock")
                             .font(.caption).foregroundStyle(Theme.ink2)
                     }
                     monthSwitcher
-                    moreLinks
                     if let error { ErrorBanner(message: error) { Task { await load() } } }
                     if let o = overview {
                         let nothing = (o.total ?? 0) == 0 && o.byCategory.isEmpty
@@ -58,30 +60,17 @@ struct MoneyView: View {
                         // list2 G: shared flat – who is ahead this month (hides itself for other household forms)
                         if view != "mine" { WgBalanceCard(api: store.api, month: monthKey) }
                         if !cheapest.isEmpty && view != "mine" { cheapestCard }
+                        // one sentence, one button (Paket E)
                         if nothing && view == "mine" {
-                            EmptyStateView(art: .receipt, title: L("Nothing of your own this month"),
-                                           message: L("Mark an expense or receipt as “just for me”, or a receipt item as yours – it shows up here."),
+                            EmptyStateView(art: .receipt, title: L("Nothing of your own this month."),
                                            actionTitle: L("Add a personal expense")) { showExpense = true }
                         } else if nothing {
-                            EmptyStateView(art: .receipt, title: L("No receipts this month yet."),
-                                           message: L("Add a receipt photo or forward your e-receipts – ToHuus does the rest."),
+                            EmptyStateView(art: .receipt, title: L("Share a receipt, then you see here what food and household cost."),
                                            actionTitle: L("Add receipt")) { showReceipt = true }
                         }
                     } else if loading {
                         ProgressView().frame(maxWidth: .infinity).padding(.top, 60)
                     }
-                    Button {
-                        showReceipt = true
-                    } label: {
-                        Label(L("Add receipt"), systemImage: "doc.text.viewfinder")
-                    }
-                    .buttonStyle(SecondaryButtonStyle())
-                    Button { showExpense = true } label: { Label(L("Add an expense"), systemImage: "plus") }
-                        .buttonStyle(SecondaryButtonStyle())
-                    NavigationLink(value: MoneyRoute.settings) {
-                        Label(L("Categories & sharing"), systemImage: "gearshape").font(.subheadline)
-                    }
-                    .frame(minHeight: 44)
                 }
                 .padding(Theme.Space.s4)
                 .padding(.bottom, 80)
@@ -89,6 +78,20 @@ struct MoneyView: View {
             .canvasBackground()
             .navigationTitle(L("Money"))
             .rootChrome()
+            .toolbar {
+                // Paket E: „+“ adds an expense; the rest in one labelled menu (web: Money.tsx)
+                ToolbarItem(placement: .topBarTrailing) {
+                    AreaToolsMenu {
+                        Button { path.append(.detail) } label: { Label(L("In detail"), systemImage: "chart.bar.xaxis") }
+                        Button { path.append(.receipts) } label: { Label(L("Receipts"), systemImage: "doc.text") }
+                        Button { showReceipt = true } label: { Label(L("Add receipt"), systemImage: "doc.text.viewfinder") }
+                        if view != "mine" {
+                            Button { path.append(.newList) } label: { Label(L("New split"), systemImage: "person.3") }
+                        }
+                        Button { path.append(.settings) } label: { Label(L("Categories & sharing"), systemImage: "gearshape") }
+                    }
+                }
+            }
             .refreshable { await load() }
             .task(id: "\(monthKey)-\(view)-\(store.revision("imports"))") { await load() }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }

@@ -9,8 +9,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
 import { invalidate, post, put, qc, useApi } from '../api';
 import { type HouseholdForm, useHousehold } from '../household';
-import { t } from '../i18n';
-import { Sheet, Skeleton, Toggle, useDialog, useToast } from '../ui';
+import { lang, LANGUAGE_OPTIONS, setLang, t, type Lang } from '../i18n';
+import { Seg, Sheet, Skeleton, Toggle, useDialog, useToast } from '../ui';
 import { useGettingStarted } from './Onboarding';
 import { DataWipe } from './DataWipe';
 import { HomeTiles } from '../art';
@@ -70,67 +70,49 @@ const nav = (to: string) => [`.sidebar a[href="${to}"]`, `.tabbar a[href="${to}"
 const MORE = '.avatar-btn';
 const TITLE = '.main h1';
 
-/** The steps, in the household language (built at render time so t() picks the right dictionary).
- * Short again since 18 Oct 2026: six pages plus the end – the rest is found on the way. Switched-off areas
- * ("Was nutzt ihr?") and Bring mir was in a household of one are left out. */
-function steps(form: HouseholdForm = 'family', mods?: Record<string, boolean>): Step[] {
-  const on = (m: string) => !mods || mods[m] !== false;
+/**
+ * The steps, in the household language (built at render time so t() picks the right dictionary).
+ * Paket B (UX audit 5.6, 20 Oct 2026): five cards, the same on the iPhone (AppTourView.swift) – the bar and Zuhause,
+ * search and More at the top right, Plus and the assistant (AI is optional), "Nur eins", "Was nutzt ihr?".
+ */
+function steps(_form: HouseholdForm = 'family', mods?: Record<string, boolean>): Step[] {
+  const stock = !mods || mods.stock !== false;
   return [
     {
       id: 'bar',
       route: '/',
       targets: ['.tabbar', '.sidebar .nav-group'],
-      title: t('Your bar, the way you need it'),
-      body: t('Today, Shopping, Cooking, Tasks and Home sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there. Your picture at the top right opens More with everything else.'),
+      title: t('Your areas sit at the bottom'),
+      body: stock
+        ? t('Today, Shopping, Cooking, Tasks and Home. Home holds the pantry, house info, household knowledge and “Where’s what?”. Press and hold the bar to swap areas.')
+        : t('Today, Shopping, Cooking and Tasks. Press and hold the bar to swap areas.'),
     },
     {
-      id: 'ahead',
+      id: 'more',
       route: '/',
-      targets: ['.main .page-head h1', '.main h1'],
-      title: t('Coming up: thought of in time'),
-      body: t('Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.'),
+      targets: [MORE, '.sidebar .who'],
+      title: t('Top right: search and More'),
+      body: t('The magnifying glass finds every thing and every setting. Your picture opens More: money, people, settings and help.'),
     },
     {
-      id: 'undo',
-      route: '/aufgaben',
-      targets: [TITLE],
-      title: t('Ticked off by mistake?'),
-      body: t('Tap “Undo” right after. Later you find it in Tasks under “Recently done”.'),
-    },
-    ...(on('knowledge')
-      ? [
-          {
-            id: 'knowledge',
-            route: '/wissen',
-            targets: [TITLE],
-            title: t('Household knowledge: write it down once'),
-            body: t('Mika’s shoe size, the filter for the cooker hood, where the main water tap is. What usually only one of you knows is there for everyone. Notes you already have come in with “Import”.'),
-          },
-        ]
-      : []),
-    {
-      id: 'speak',
+      id: 'assistant',
       route: '/',
-      targets: ['.assist-fab'],
-      title: t('Just tell the assistant'),
-      body: t('“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.'),
+      targets: ['.assist-fab', '.today-head .icon-btn'],
+      title: t('Just say what’s missing'),
+      body: t('With Plus or the assistant at the bottom right: “milk is out” goes on the list. AI is optional – everything works without it, and you switch it in Settings › Connections & devices › AI.'),
     },
-    ...(form === 'single' || !on('treats')
-      ? []
-      : [
-          {
-            id: 'treats',
-            route: '/bestellen',
-            targets: [TITLE],
-            title: t('Bring mir was'),
-            body: t('Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”. Guests too, with a link.'),
-          },
-        ]),
     {
-      id: 'done',
+      id: 'one',
+      route: '/',
+      targets: ['.today-now', '.today-head h1'],
+      title: t('Not a good day? Just one.'),
+      body: t('“Just one” shows you one task at a time, the rest waits. Switch it on right on Today or in Settings › Me › Calm & focus.'),
+    },
+    {
+      id: 'use',
       targets: [],
-      title: t('That’s the tour'),
-      body: t('You can take it again any time under Help. Your picture at the top right opens More, with the settings and everything else.'),
+      title: t('Too much? Switch off what you don’t need.'),
+      body: t('Settings › Areas & places › What do you use? hides whole areas. You find this tour again under Help.'),
     },
   ];
 }
@@ -265,7 +247,7 @@ function TourOverlay({ start, mods, onStep, onClose }: { start: number; mods?: R
         el.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
         r = el.getBoundingClientRect();
       }
-      setViaMore(el.matches(MORE));
+      setViaMore(el.matches(MORE) && step.id !== 'more');
       setRect((cur) => (cur && cur.top === r.top && cur.left === r.left && cur.width === r.width && cur.height === r.height ? cur : { top: r.top, left: r.left, width: r.width, height: r.height }));
     };
     update();
@@ -366,11 +348,18 @@ function TourOverlay({ start, mods, onStep, onClose }: { start: number; mods?: R
  */
 export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => void }) {
   const [busy, setBusy] = useState<'empty' | 'demo' | null>(null);
+  // Paket B: the household language is chosen here, before any sample row exists – the samples come in the language
+  // the admin sees and picks, not in whatever the server or the browser header defaulted to
+  const [language, setLanguage] = useState<Lang>(lang());
   const toast = useToast();
+  const pickLanguage = (l: Lang) => {
+    setLanguage(l);
+    setLang(l);
+  };
   const choose = async (choice: 'empty' | 'demo') => {
     setBusy(choice);
     try {
-      await post('/tour/start', { choice });
+      await post('/tour/start', { choice, language });
       // also the queries of pages that are not on screen: Today's redirect must not see the old "wizard due"
       await Promise.all([qc.refetchQueries({ queryKey: ['onboarding'], type: 'all' }), qc.refetchQueries({ queryKey: ['tour'], type: 'all' })]);
       await qc.invalidateQueries();
@@ -386,12 +375,19 @@ export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => 
       <div className="stack demo-ask" style={{ gap: 22 }}>
         <header>
           <HomeTiles className="onb-homes" />
-          <div className="eyebrow">{t('Welcome')}</div>
+          <div className="eyebrow">{t('Before the setup: one question')}</div>
           <h1>{t('Would you like sample data to get to know ToHuus?')}</h1>
           <p className="muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
             {t('A filled-in example household: a list, things at home and a few recipes. Each sample is marked, and you remove them all with one tap.')}
           </p>
         </header>
+        {LANGUAGE_OPTIONS.length > 1 && (
+          <div className="field">
+            <span className="eyebrow">{t('Language')}</span>
+            <Seg<Lang> value={language} onChange={pickLanguage} label={t('Language')} options={LANGUAGE_OPTIONS} />
+            <span className="small muted">{t('The sample data and the app speak this language. You can change it later in Settings › Household.')}</span>
+          </div>
+        )}
         <div className="demo-ask-actions">
           <button className="btn primary lg" disabled={busy !== null} onClick={() => choose('demo')}>
             <Flask size={18} /> {t('Yes, with samples')}

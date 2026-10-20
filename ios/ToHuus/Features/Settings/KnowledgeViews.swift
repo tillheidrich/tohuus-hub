@@ -89,7 +89,7 @@ struct HowItWorksView: View {
          L("ToHuus shows what you can cook today and what's missing for it. The week plan is optional.")),
         ("eurosign.circle", L("Know where the money goes"),
          L("Receipts show what groceries and household cost per month, per shop and per category – and which prices went up.")),
-        ("hand.raised", L("Nothing to maintain"),
+        ("checkmark.seal", L("Nothing to maintain"),
          L("You don't have to count stock or keep anything up to date. The more you capture, the better ToHuus knows your home – but it works from day one.")),
     ]
 

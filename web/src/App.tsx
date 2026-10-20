@@ -94,6 +94,9 @@ const Order = page(() => import('./pages/Order'), 'Order');
 const MenuEditor = page(() => import('./pages/Menu'), 'MenuEditor');
 const Settings = page(() => import('./pages/Settings'), 'Settings');
 const Care = page(load.care, 'Care');
+const TaskIdeasPage = page(load.care, 'TaskIdeasPage');
+const BlickPage = page(load.care, 'BlickPage');
+const KitchenModePage = page(() => import('./pages/KitchenMode'), 'KitchenModePage');
 const Away = page(() => import('./pages/Away'), 'Away');
 const Spending = page(() => import('./pages/Spending'), 'Spending');
 const Labels = page(() => import('./pages/Labels'), 'Labels');
@@ -386,6 +389,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/einkauf/wuensche/schenken" element={<GivingPage />} />
               <Route path="/einkauf/wuensche/:id" element={<WishListPage />} />
               <Route path="/kochen" element={<Kitchen me={me} />} />
+              <Route path="/kochen/kueche" element={<KitchenModePage />} />
               <Route path="/rezepte/:id" element={<RecipeDetail />} />
               <Route path="/abstimmung/:id" element={<VotePage />} />
               <Route path="/geld" element={<Money />} />
@@ -405,6 +409,8 @@ function Shell({ me }: { me: Me }) {
               <Route path="/bestellen/karte" element={<MenuEditor me={me} />} />
               <Route path="/einstellungen/*" element={<Settings me={me} />} />
               <Route path="/aufgaben" element={<Care />} />
+              <Route path="/aufgaben/ideen" element={<TaskIdeasPage />} />
+              <Route path="/aufgaben/blick" element={<BlickPage />} />
               <Route path="/fokus" element={<FocusPage />} />
               <Route path="/denkarbeit" element={<LoadCardsPage />} />
               <Route path="/rueckblick" element={<ReviewPage />} />

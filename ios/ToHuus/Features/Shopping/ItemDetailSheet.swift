@@ -219,7 +219,7 @@ struct ItemDetailSheet: View {
                 .padding(.vertical, 6)
             }
         } header: {
-            Label(L("Who takes care of it?"), systemImage: "hand.raised")
+            Label(L("Who takes care of it?"), systemImage: "person.crop.circle")
         } footer: {
             Text(L("Just so nobody buys it twice. No points, no ranking."))
         }

@@ -11,13 +11,9 @@ final class TodayModel {
     private(set) var error: String?
     private(set) var limited = false
     private(set) var busyIds: Set<Int> = []
-    /// the person's own card order (GET /api/list/today-order)
-    var order: [String] = []
+    /// only while the context place is the weekly question / getting started
     private(set) var pulse: PulseState?
     private(set) var started: GettingStarted?
-    /// "Bring mir was": open wishes the others have for me, and my own open ones (the card only shows while there are some)
-    private(set) var treatsForMe: [TreatOrder] = []
-    private(set) var treatsMine: [TreatOrder] = []
 
     func load(_ store: ServerStore, guest: Bool, admin: Bool) async {
         loading = true
@@ -37,30 +33,19 @@ final class TodayModel {
             let e = APIError.from(error)
             if !e.isOffline || today == nil { self.error = e.localizedDescription }
         }
-        // the extras never block Heute
-        if !guest, let o = try? await store.api.todayOrder() { order = o }
-        pulse = guest ? nil : try? await store.api.pulse()
-        started = admin ? try? await store.api.gettingStarted() : nil
-        let open: (TreatOrder) -> Bool = { $0.status == "new" || $0.status == "accepted" }
-        treatsForMe = guest ? [] : ((try? await store.api.treatRequests()) ?? []).filter(open)
-        treatsMine = ((try? await store.api.myTreats()) ?? []).filter(open)
+        // the extras never block Heute, and are only asked for when the server chose them
+        let kind = today?.context?.kind
+        pulse = !guest && kind == "pulse" ? try? await store.api.pulse() : nil
+        started = admin && kind == "start" ? try? await store.api.gettingStarted() : nil
     }
 
     func saveOrder(_ keys: [TodayCardKey], store: ServerStore) async -> String? {
-        let old = order
-        order = keys.map(\.rawValue)
         do {
-            try await store.api.setTodayOrder(order)
+            try await store.api.setTodayOrder(keys.map(\.rawValue))
             return nil
         } catch {
-            order = old
             return APIError.from(error).localizedDescription
         }
-    }
-
-    func restoreOrder(_ old: [String], store: ServerStore) async {
-        order = old
-        try? await store.api.setTodayOrder(old)
     }
 
     func pulseAnswered() { pulse = nil }
@@ -83,21 +68,10 @@ final class TodayModel {
             return APIError.from(error).localizedDescription
         }
         today?.rhythm.removeAll { $0.productId == item.productId }
+        today?.soonAgain.removeAll { $0.productId == item.productId }
         store.touch("shopping")
         await store.refreshList()
         return LF("%@ is on the shopping list", item.name)
-    }
-
-    func dismiss(_ item: RhythmItem, store: ServerStore) async -> String? {
-        busyIds.insert(item.productId)
-        defer { busyIds.remove(item.productId) }
-        do {
-            try await store.api.dismissRhythm(item.productId)
-        } catch {
-            return L("Couldn’t save")
-        }
-        today?.rhythm.removeAll { $0.productId == item.productId }
-        return L("Okay – ToHuus asks again later.")
     }
 
     func missingToList(_ cook: TodayPayload.CookToday, store: ServerStore) async -> String? {
@@ -121,9 +95,10 @@ final class TodayModel {
     }
 }
 
-/// Heute (web: pages/Today.tsx): greeting, notices, the getting-started checklist, then the cards in the person's own
-/// order – Fällig · Aufgaben · Liste · Das habt ihr noch · Heute kochen? · Geld · the weekly question. Each card hides
-/// when it has nothing to say, except "Fällig", which then shows the three ways in.
+/// Heute, Paket B (web: pages/Today.tsx, docs/today.md): the head, then at most five calm cards in a fixed order –
+/// Jetzt dran · Liste · Bald verbrauchen · Heute kochen · (Geld, only when switched on) · one context place. The
+/// server decides which cards show (`cards` of /api/today); this view only draws them. No forms on Heute: Check-in
+/// and Im Kopf are small ways in below the cards. The calm card only when there is really nothing.
 struct TodayView: View {
     @Environment(AppModel.self) private var app
     let store: ServerStore
@@ -132,15 +107,14 @@ struct TodayView: View {
     @State private var model = TodayModel()
     @State private var toast: ToastMessage?
     @State private var arranging = false
-    @State private var showReceipt = false
-    @State private var showPaperList = false
     @State private var showFirstRun = false
+    @State private var showCheckin = false
     @State private var path = NavigationPath()
 
-    private enum Push: Hashable { case imports, invites, notifications, treats, recipe(Int, Int?), wishes, wishList(Int), giving }
+    private enum Push: Hashable { case imports, treats, recipe(Int, Int?), wishes, wishList(Int), giving, mind, week, invites, notifications }
 
     private var refreshKey: Int {
-        store.revision("shopping") + store.revision("stock") + store.revision("recipes") + store.revision("imports")
+        store.revision("shopping") + store.revision("stock") + store.revision("recipes") + store.revision("imports") + store.revision("care")
     }
 
     private var guestLevel: String? { app.isGuest ? (app.guestLevel ?? "paused") : nil }
@@ -155,36 +129,18 @@ struct TodayView: View {
                     if let note = OfflineNote.for(["api/today"]) { note }
                     if let error = model.error { ErrorBanner(message: error) { Task { await reload() } } }
                     if let t = model.today {
-                        notices(t)
-                        // a permanent guest: what the household handed to them (GET /api/guest-tasks)
-                        if app.isGuest {
-                            GuestTasksCard(api: store.api, refresh: refreshKey) { msg in toast = ToastMessage(text: msg) }
-                        }
-                        if !app.isGuest { SampleNudgeCard() }
-                        if let g = model.started, g.showChecklist == true, app.isAdmin || g.admin == true {
-                            TodayChecklistCard(g: g, open: openChecklist, hide: { Task { await model.hideChecklist(store: store) } })
-                        }
-                        ForEach(shownCards(t)) { key in card(key, t) }
-                        if !app.isGuest {
-                            // in the evening, every other day at most: "Was habt ihr heute gelöst?"
-                            CheckinCard(api: store.api, refresh: refreshKey) { msg in
-                                toast = ToastMessage(text: msg)
-                                Task { await reload() }
-                            }
-                            CareForHintCard(api: store.api, refresh: refreshKey) { msg in toast = ToastMessage(text: msg) }
-                        }
-                        if canArrange && shownCards(t).count > 1 {
+                        ForEach(cards(t)) { key in card(key, t) }
+                        // "Fertig für heute": a quiet end – nothing to keep scrolling
+                        // no article below it (Paket B: Heute shows no "Gut zu wissen")
+                        if t.calm == true && !app.isGuest { CalmCard() }
+                        entries(t)
+                        if !app.isGuest && movable(t).count > 1 {
                             Button(L("Arrange cards")) { arranging = true }
                                 .font(.subheadline.weight(.semibold))
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }
-                        // "Fertig für heute": a quiet end – nothing to keep scrolling
-                        if t.calm == true && !app.isGuest {
-                            CalmCard()
-                            FactCard(api: store.api, topic: "calm")
-                        }
                     } else if model.limited || !store.isOnline {
-                        listCard(open: store.list.openCount, recent: [])
+                        listCard(open: store.list.openCount, recent: [], soon: [])
                     } else if model.loading {
                         ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
                     }
@@ -202,23 +158,37 @@ struct TodayView: View {
             .navigationDestination(for: Push.self) { p in
                 switch p {
                 case .imports: ImportsListView(store: store)
-                case .invites: InvitesView(api: store.api)
-                case .notifications: NotificationSettingsView()
                 case .treats: TreatsView(api: store.api)
                 case .recipe(let id, let plan): RecipeDetailView(recipeId: id, store: store, planEntryId: plan)
                 // wish lists: "Linas Geburtstag in 12 Tagen · 3 Wünsche noch frei", "2 Geschenke noch besorgen"
                 case .wishes: WishesView(api: store.api)
                 case .wishList(let id): WishListDetailView(api: store.api, listId: id)
                 case .giving: GivingView(api: store.api)
+                case .mind: MindView(api: store.api)
+                case .week: WeekReviewView(api: store.api) { Task { await reload() } }
+                case .invites: InvitesView(api: store.api)
+                case .notifications: NotificationSettingsView()
                 }
             }
             .sheet(isPresented: $arranging) {
                 if let t = model.today {
-                    TodayArrangeSheet(keys: shownCards(t)) { keys in Task { await saveOrder(keys) } }
+                    TodayArrangeSheet(keys: movable(t)) { keys in Task { await saveOrder(keys) } }
                 }
             }
-            .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
-            .sheet(isPresented: $showPaperList) { PaperListSheet(store: store) }
+            .sheet(isPresented: $showCheckin, onDismiss: { Task { await reload() } }) {
+                NavigationStack {
+                    ScrollView {
+                        CheckinCard(api: store.api, refresh: refreshKey) { msg in
+                            showCheckin = false
+                            toast = ToastMessage(text: msg)
+                        }
+                        .padding(Theme.Space.s4)
+                    }
+                    .canvasBackground()
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { showCheckin = false } } }
+                }
+                .presentationDetents([.medium, .large])
+            }
             .fullScreenCover(isPresented: $showFirstRun, onDismiss: { Task { await reload() } }) {
                 FirstRunView(store: store)
             }
@@ -227,66 +197,87 @@ struct TodayView: View {
 
     private func reload() async { await model.load(store, guest: app.isGuest, admin: app.isAdmin) }
 
-    private var canArrange: Bool { !app.isGuest }
+    // MARK: cards – the server's choice
 
-    // MARK: cards in order
-
-    private func available(_ key: TodayCardKey, _ t: TodayPayload) -> Bool {
-        switch key {
-        case .rhythm: return true
-        case .tasks: return allows("/aufgaben")
-        case .list: return allows("/einkauf")
-        case .still: return !t.stillHave.isEmpty && app.moduleOn("stock")
-        case .cook:
-            guard let c = t.cookToday, c.recipeId != nil || c.title != nil else { return false }
-            return app.moduleOn("cook") && allows("/kochen")
-        case .money: return t.money != nil && app.moduleOn("money") && allows("/geld")
-        case .pulse: return model.pulse?.question != nil && !app.isGuest
-        case .orders:
-            guard app.moduleOn("treats"), !app.singleHousehold, allows("/bestellen") else { return false }
-            return !(model.treatsForMe.isEmpty && model.treatsMine.isEmpty)
+    private func cards(_ t: TodayPayload) -> [TodayCardKey] {
+        let keys = t.cards.map { $0.compactMap(TodayCardKey.init(rawValue:)) } ?? TodayCardKey.fallback(t)
+        // the app's own module state can be newer than the answer (switched off a moment ago)
+        return keys.filter { k in
+            switch k {
+            case .still: return app.moduleOn("stock") && !t.useSoon.isEmpty
+            case .cook: return app.moduleOn("cook") && t.cookToday != nil && allows("/kochen")
+            case .money: return app.moduleOn("money") && t.money != nil && allows("/geld")
+            case .now: return t.now != nil
+            case .context: return t.context != nil
+            case .list: return allows("/einkauf")
+            }
         }
     }
 
-    private func shownCards(_ t: TodayPayload) -> [TodayCardKey] {
-        TodayCardKey.sorted(TodayCardKey.allCases.filter { available($0, t) }, by: model.order)
-    }
+    private func movable(_ t: TodayPayload) -> [TodayCardKey] { cards(t).filter { $0 != .context } }
 
     @ViewBuilder private func card(_ key: TodayCardKey, _ t: TodayPayload) -> some View {
         switch key {
-        case .rhythm: dueCard(t.rhythm)
-        case .tasks:
-            TodayOfferAsks(api: store.api, refresh: refreshKey)
-            if !app.isGuest { WeekReviewTeaser(api: store.api, refresh: refreshKey) }
-            if !app.isGuest { MindTodayCard(api: store.api, refresh: refreshKey) }
-            TasksTodayCard(api: store.api, refresh: refreshKey)
-            TasksAheadCard(api: store.api, refresh: refreshKey)
-            StarsCard(api: store.api, refresh: refreshKey)
-            if !app.isGuest { ReviewTeaser(api: store.api, refresh: refreshKey) }
-        case .list: listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [])
-        case .still: EatSoonCard(items: t.stillHave, store: store)
-        case .cook: if let c = t.cookToday { cookCard(c) }
-        case .money: if let m = t.money { moneyCard(m) }
-        case .orders: ordersCard
-        case .pulse:
-            if let p = model.pulse {
-                TodayPulseCard(api: store.api, pulse: p) {
-                    model.pulseAnswered()
-                    toast = ToastMessage(text: L("Thanks – noted for this week."))
+        case .now:
+            if let n = t.now {
+                TodayNowCard(api: store.api, now: n, refresh: refreshKey, openTasks: { openTab(.tasks) }) { msg in
+                    if let msg { toast = msg }
+                    Task { await reload() }
                 }
             }
+        case .list: listCard(open: t.list?.open ?? store.list.openCount, recent: t.list?.recent ?? [], soon: t.soonAgain)
+        case .still: EatSoonCard(items: t.useSoon, store: store)
+        case .cook: if let c = t.cookToday { cookCard(c) }
+        case .money: if let m = t.money { moneyCard(m) }
+        case .context: if let c = t.context { contextCard(c) }
         }
     }
 
     private func saveOrder(_ keys: [TodayCardKey]) async {
-        let old = model.order
+        let old = model.today.map(movable) ?? []
         if let e = await model.saveOrder(keys, store: store) {
             toast = ToastMessage(text: e, isError: true)
         } else {
             toast = ToastMessage(text: L("Order saved"), actionTitle: L("Undo")) {
-                Task { await model.restoreOrder(old, store: store) }
+                Task {
+                    _ = await model.saveOrder(old, store: store)
+                    await reload()
+                }
             }
+            await reload()
         }
+    }
+
+    // MARK: small ways in (never a form on Heute)
+
+    @ViewBuilder private func entries(_ t: TodayPayload) -> some View {
+        let checkin = t.entries?.checkin == true && !app.isGuest
+        let mind = t.entries?.mind == true && !app.isGuest
+        if checkin || mind {
+            FlowLayout(spacing: 8) {
+                if checkin {
+                    entryChip(L("What did you solve today?"), "checkmark.circle") { showCheckin = true }
+                }
+                if mind {
+                    entryChip(L("Something on your mind?"), "lightbulb") { path.append(Push.mind) }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func entryChip(_ title: String, _ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 44)
+                .background(Theme.surface, in: Capsule())
+                .overlay(Capsule().stroke(Theme.line, lineWidth: 1))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: header
@@ -311,9 +302,6 @@ struct TodayView: View {
                 if let others = model.today?.away?.others, !others.isEmpty {
                     Text(LF("Away: %@", others.map { LF("%@ (until %@)", $0.name, AwayText.day($0.until)) }.joined(separator: ", ")))
                         .font(.footnote).foregroundStyle(Theme.ink2)
-                }
-                if let hh = model.today?.householdName ?? app.activeHousehold?.name {
-                    Text(hh).font(.subheadline).foregroundStyle(Theme.ink2)
                 }
             }
             Spacer()
@@ -364,37 +352,59 @@ struct TodayView: View {
         }
     }
 
-    // MARK: notices
+    // MARK: the one context place
 
-    @ViewBuilder private func notices(_ t: TodayPayload) -> some View {
-        ForEach(Array(t.notices.prefix(3).enumerated()), id: \.offset) { i, n in
-            let target = model.links.first { $0.text == n.text }?.target ?? model.links[safe: i]?.target
-            let text = n.kind == "import" ? LF("Receipt “%@” is waiting for a quick look", n.text)
-                : n.kind == "order" ? LF("%@ would love something", n.text) : n.text
-            if let target, canOpen(target) {
-                Button { open(target) } label: { noticeRow(text, link: true) }
-                    .buttonStyle(.plain)
-            } else {
-                noticeRow(text, link: false)
+    @ViewBuilder private func contextCard(_ c: TodayPayload.TodayContext) -> some View {
+        if c.kind == "pulse", let p = model.pulse, p.question != nil {
+            TodayPulseCard(api: store.api, pulse: p) {
+                model.pulseAnswered()
+                toast = ToastMessage(text: L("Thanks – noted for this week."))
+                Task { await reload() }
             }
+        } else if c.kind == "start", let g = model.started, g.showChecklist == true {
+            TodayChecklistCard(g: g, open: openChecklist, hide: { Task { await model.hideChecklist(store: store); await reload() } })
+        } else if c.kind == "demo" {
+            SampleNudgeCard()
+        } else {
+            Button { open(c) } label: {
+                HStack(spacing: Theme.Space.s3) {
+                    Image(systemName: Self.contextSymbol[c.kind] ?? "info.circle")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(width: 36, height: 36)
+                        .background(Theme.surface, in: Circle())
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(c.text).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
+                        if let d = c.detail { Text(d).font(.caption).foregroundStyle(Theme.ink2) }
+                    }
+                    Spacer(minLength: 0)
+                    if c.path != nil { Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.ink3).accessibilityHidden(true) }
+                }
+                .padding(Theme.Space.s3)
+                .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                .background(["bins", "orders", "handover", "occasion"].contains(c.kind) ? Theme.warningSoft : Theme.infoSoft, in: RoundedRectangle(cornerRadius: Theme.Radius.lg))
+                .overlay(RoundedRectangle(cornerRadius: Theme.Radius.lg).stroke(Theme.line, lineWidth: 1))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
     }
 
-    private func noticeRow(_ text: String, link: Bool) -> some View {
-        HStack(alignment: .top, spacing: Theme.Space.s2) {
-            Image(systemName: "info.circle").foregroundStyle(Theme.info).accessibilityHidden(true)
-            Text(text).font(.subheadline).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
-            Spacer(minLength: 0)
-            if link { Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.ink3).accessibilityHidden(true) }
-        }
-        .padding(Theme.Space.s3)
-        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-        .background(Theme.infoSoft, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
-    }
+    private static let contextSymbol: [String: String] = [
+        "occasion": "gift", "orders": "hand.raised", "handover": "arrow.left.arrow.right", "bins": "trash", "imports": "doc.text", "budget": "eurosign.circle",
+        "demo": "flask", "trial": "hourglass", "week": "sparkles", "pulse": "questionmark.bubble", "start": "flag",
+    ]
 
-    private func canOpen(_ target: String) -> Bool {
-        let p = target.split(separator: "?").first.map(String.init) ?? target
-        return ["/import", "/geld", "/ausgaben", "/einkauf", "/bestand", "/aufgaben", "/kochen", "/rezepte"].contains { p == $0 || p.hasPrefix($0 + "/") }
+    private func open(_ c: TodayPayload.TodayContext) {
+        switch c.kind {
+        case "orders": path.append(Push.treats)
+        case "week": path.append(Push.week)
+        case "trial": app.showPaywall = true
+        case "start": showFirstRun = true
+        case "bins": openTab(.tasks)
+        default: if let p = c.path { open(p) }
+        }
     }
 
     private func open(_ target: String) {
@@ -408,114 +418,77 @@ struct TodayView: View {
         else if p.hasPrefix("/bestand") { openTab(.stock) }
         else if p.hasPrefix("/aufgaben") { openTab(.tasks) }
         else if p.hasPrefix("/kochen") || p.hasPrefix("/rezepte") { openTab(.cooking) }
+        else if p.hasPrefix("/bestellen") { path.append(Push.treats) }
+        else if p.hasPrefix("/woche") { path.append(Push.week) }
+        else if p.hasPrefix("/einstellungen") { openSettings() }
     }
-
-    // MARK: getting started
 
     private func openChecklist(_ key: String) {
         switch key {
         case "home": showFirstRun = true
         case "invite": path.append(Push.invites)
-        case "stock": if app.moduleOn("stock") { openTab(.stock) } else { showReceipt = true }
+        case "stock": openTab(app.moduleOn("stock") ? .stock : .shopping)
         case "phone": path.append(Push.notifications)
         case "recipe": openTab(.cooking)
         default: break
         }
     }
 
-    // MARK: 1 · Fällig
+    // MARK: 2 · Liste (with "Bald wieder nötig")
 
-    private func dueCard(_ items: [RhythmItem]) -> some View {
-        Card(title: L("Needed again soon"), systemImage: TodayCardKey.rhythm.symbol) {
-            if items.isEmpty {
-                TodayEntryLevels(shareReceipt: { showReceipt = true }, photoOfList: { showPaperList = true })
-            } else {
-                Text(L("ToHuus remembers how often you buy these. Put them on the list?"))
-                    .font(.footnote).foregroundStyle(Theme.ink2)
-                ForEach(items.prefix(3)) { item in dueRow(item) }
-                if items.count > 3 {
-                    Button {
-                        openTab(.shopping)
-                    } label: {
-                        Label(LF("%d more suggestions on the shopping list", items.count - 3), systemImage: "arrow.right")
-                            .font(.subheadline.weight(.semibold))
-                    }
-                    .frame(minHeight: 44)
-                }
-            }
-        }
-    }
-
-    private func dueRow(_ item: RhythmItem) -> some View {
-        VStack(alignment: .leading, spacing: Theme.Space.s2) {
-            HStack(spacing: Theme.Space.s3) {
-                ProductThumb(path: item.image, api: store.api, size: 40)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name).font(Theme.rowFont).foregroundStyle(Theme.ink)
-                    if !item.detail.isEmpty { Text(item.detail).font(.caption).foregroundStyle(Theme.ink3).lineLimit(2) }
-                }
-                Spacer(minLength: 0)
-            }
-            if model.busyIds.contains(item.productId) {
-                ProgressView().frame(maxWidth: .infinity, minHeight: 44)
-            } else {
-                HStack(spacing: Theme.Space.s2) {
-                    Button {
-                        Task { if let m = await model.accept(item, store: store) { toast = ToastMessage(text: m) } }
-                    } label: {
-                        Label(L("Put on the list"), systemImage: "basket").frame(maxWidth: .infinity, minHeight: 36)
-                    }
-                    .buttonStyle(.borderedProminent).tint(Theme.primary)
-                    .accessibilityLabel(LF("Put %@ on the list", item.name))
-                    Button {
-                        Task { if let m = await model.dismiss(item, store: store) { toast = ToastMessage(text: m) } }
-                    } label: {
-                        Text(L("Still have it")).frame(maxWidth: .infinity, minHeight: 36)
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityLabel(LF("Still have %@", item.name))
-                }
-                .font(.subheadline.weight(.semibold))
-            }
-        }
-        .padding(.vertical, 2)
-    }
-
-    // MARK: 2 · Liste
-
-    private func listCard(open: Int, recent: [TodayPayload.RecentChange]) -> some View {
-        Button {
-            openTab(.shopping)
-        } label: {
-            Card(title: L("List"), systemImage: TodayCardKey.list.symbol) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("\(open)").font(Theme.number()).foregroundStyle(Theme.primaryText).numberTransition(Double(open))
-                    Text(open == 1 ? L("thing on the list") : L("things on the list")).foregroundStyle(Theme.ink2)
-                    Spacer()
-                    Image(systemName: "chevron.right").foregroundStyle(Theme.ink3)
-                }
-                ForEach(recent.prefix(3), id: \.stableId) { r in
-                    HStack(alignment: .top, spacing: Theme.Space.s2) {
-                        Circle()
-                            .fill(r.checked == true ? Theme.ink3 : Theme.primary)
-                            .frame(width: 7, height: 7)
-                            .padding(.top, 7)
-                            .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(r.title).font(.subheadline).foregroundStyle(r.checked == true ? Theme.ink3 : Theme.ink)
-                                .strikethrough(r.checked == true)
-                            Text([r.checked == true ? L("ticked off") : nil, r.origin ?? ServerDate.relative(r.at)].compactMap { $0 }.joined(separator: " · "))
-                                .font(.caption).foregroundStyle(Theme.ink3)
+    private func listCard(open: Int, recent: [TodayPayload.RecentChange], soon: [RhythmItem]) -> some View {
+        Card(title: L("List"), systemImage: TodayCardKey.list.symbol) {
+            if open > 0 {
+                Button {
+                    openTab(.shopping)
+                } label: {
+                    VStack(alignment: .leading, spacing: Theme.Space.s2) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("\(open)").font(Theme.number()).foregroundStyle(Theme.primaryText).numberTransition(Double(open))
+                            Text(open == 1 ? L("thing on the list") : L("things on the list")).foregroundStyle(Theme.ink2)
+                            Spacer()
+                            Image(systemName: "chevron.right").foregroundStyle(Theme.ink3)
+                        }
+                        ForEach(recent.filter { $0.checked != true }.prefix(3), id: \.stableId) { r in
+                            HStack(alignment: .top, spacing: Theme.Space.s2) {
+                                Circle().fill(Theme.primary).frame(width: 7, height: 7).padding(.top, 7).accessibilityHidden(true)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(r.title).font(.subheadline).foregroundStyle(Theme.ink)
+                                    if let o = r.origin ?? ServerDate.relative(r.at) { Text(o).font(.caption).foregroundStyle(Theme.ink3) }
+                                }
+                            }
                         }
                     }
+                    .contentShape(Rectangle())
                 }
-                if open == 0 && recent.isEmpty {
-                    Text(L("The list is empty. Everyone in the household can add to it – it updates live."))
-                        .font(.footnote).foregroundStyle(Theme.ink2)
+                .buttonStyle(.plain)
+            }
+            if !soon.isEmpty {
+                if open > 0 { Divider() }
+                Text(L("Needed again soon")).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
+                FlowLayout(spacing: 8) {
+                    ForEach(soon) { r in
+                        Button {
+                            Task { if let m = await model.accept(r, store: store) { toast = ToastMessage(text: m) } }
+                        } label: {
+                            Label(r.name, systemImage: "plus")
+                                .font(.subheadline.weight(.semibold))
+                                .padding(.horizontal, 12)
+                                .frame(minHeight: 44)
+                                .background(Theme.primarySoft, in: Capsule())
+                                .contentShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(model.busyIds.contains(r.productId))
+                        .accessibilityLabel(LF("Put %@ on the list", r.name))
+                    }
                 }
             }
+            if open == 0 && soon.isEmpty {
+                Text(L("The list is empty. Everyone in the household can add to it – it updates live."))
+                    .font(.footnote).foregroundStyle(Theme.ink2)
+            }
         }
-        .buttonStyle(.plain)
     }
 
     // MARK: 4 · Heute kochen?
@@ -540,10 +513,6 @@ struct TodayView: View {
                         Text(cook.title ?? "").font(.headline).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
                         Text(cookLine(cook)).font(.caption).foregroundStyle(cook.kind != "planned" && cook.missing.isEmpty ? Theme.primaryText : Theme.ink2)
                             .multilineTextAlignment(.leading)
-                        if let have = cook.probablyHave, !have.isEmpty {
-                            Text(LF("Probably at home: %@", have.joined(separator: ", "))).font(.caption).foregroundStyle(Theme.ink3)
-                                .multilineTextAlignment(.leading)
-                        }
                     }
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.ink3)
@@ -578,47 +547,7 @@ struct TodayView: View {
         return parts.filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
-    // MARK: Bring mir was
-
-    /// what the others asked me for and my own open wishes – tap opens Bring mir was
-    private var ordersCard: some View {
-        Button {
-            path.append(Push.treats)
-        } label: {
-            Card(title: L("Bring me something"), systemImage: TodayCardKey.orders.symbol) {
-                VStack(alignment: .leading, spacing: Theme.Space.s2) {
-                    ForEach(model.treatsForMe.prefix(3)) { o in
-                        orderRow(o.forUserId != nil ? LF("%@ asks you", o.guestName ?? "") : LF("%@ would love something", o.guestName ?? ""),
-                                 [o.itemsText, o.status == "accepted" ? o.byName.map { LF("Coming right up – %@ is bringing it", $0) } : nil]
-                                    .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "),
-                                 done: o.status == "accepted")
-                    }
-                    ForEach(model.treatsMine.prefix(2)) { o in
-                        orderRow(o.itemsText.isEmpty ? L("Your wish") : o.itemsText,
-                                 o.status == "accepted" ? (o.byName.map { LF("Coming right up – %@ is bringing it", $0) } ?? L("Coming right up")) : L("Waiting for a reply"),
-                                 done: o.status == "accepted")
-                    }
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func orderRow(_ title: String, _ meta: String, done: Bool) -> some View {
-        HStack(alignment: .top, spacing: Theme.Space.s2) {
-            Image(systemName: done ? "checkmark.circle.fill" : "circle").foregroundStyle(done ? Theme.primary : Theme.ink3).accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.ink)
-                if !meta.isEmpty { Text(meta).font(.caption).foregroundStyle(Theme.ink2) }
-            }
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.ink3).accessibilityHidden(true)
-        }
-        .frame(minHeight: 44)
-        .contentShape(Rectangle())
-    }
-
-    // MARK: 5 · Geld
+    // MARK: Geld (off unless switched on: Einstellungen › Ich › Ruhe & Fokus)
 
     private func moneyCard(_ m: TodayPayload.TodayMoney) -> some View {
         Button {
@@ -651,18 +580,10 @@ struct TodayView: View {
                             .font(.caption).foregroundStyle(over ? Theme.low : Theme.ink2)
                     }
                 }
-                if m.month == 0 {
-                    Text(L("Share a receipt and ToHuus shows where the money for food and household goes."))
-                        .font(.footnote).foregroundStyle(Theme.ink2)
-                }
             }
         }
         .buttonStyle(.plain)
     }
-}
-
-private extension Array {
-    subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
 }
 
 /// The Plattdeutsch saying under the greeting; a tap shows what it means.

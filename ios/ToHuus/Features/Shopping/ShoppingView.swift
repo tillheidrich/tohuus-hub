@@ -76,8 +76,8 @@ struct ShoppingView: View {
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
                 if store.list.sections.isEmpty && store.list.basket.isEmpty {
-                    EmptyStateView(systemImage: "checkmark.circle", title: L("Nothing missing right now."),
-                                   message: L("Type what's missing, or tell the assistant."))
+                    EmptyStateView(systemImage: "checkmark.circle", title: L("Your list is empty. Type above what is missing."),
+                                   actionTitle: L("Our usuals"), action: { showUsuals = true })
                         .listRowBackground(Color.clear)
                 }
                 groupSections
@@ -451,7 +451,7 @@ struct ShoppingView: View {
                         Text(extra).font(.caption).foregroundStyle(Theme.ink2).lineLimit(2)
                     }
                     if !checked, let claim = item.claim, (me?.claimsOn ?? true) {
-                        Label(claimLine(claim), systemImage: "hand.raised.fill").labelStyle(ShopTightLabelStyle())
+                        Label(claimLine(claim), systemImage: "person.crop.circle.badge.checkmark").labelStyle(ShopTightLabelStyle())
                             .font(.caption.weight(.semibold)).foregroundStyle(Theme.primaryText).lineLimit(1)
                     }
                     if density != .compact && !shopMode {
@@ -481,7 +481,7 @@ struct ShoppingView: View {
                 Button {
                     Task { await claim(item, on: !mine) }
                 } label: {
-                    Label(mine ? L("Release") : L("I'll get it"), systemImage: mine ? "hand.raised.slash" : "hand.raised.fill")
+                    Label(mine ? L("Release") : L("I'll get it"), systemImage: mine ? "person.crop.circle.badge.xmark" : "person.crop.circle.badge.checkmark")
                 }
                 .tint(mine ? Theme.ink3 : Theme.info)
             }
@@ -504,9 +504,9 @@ struct ShoppingView: View {
             Button { detailItem = item } label: { Label(L("Edit row"), systemImage: "square.and.pencil") }
             if !item.isChecked && item.id > 0 && (me?.claimsOn ?? true) {
                 if item.claim != nil && item.claim?.userId == me?.userId {
-                    Button { Task { await claim(item, on: false) } } label: { Label(L("Release"), systemImage: "hand.raised.slash") }
+                    Button { Task { await claim(item, on: false) } } label: { Label(L("Release"), systemImage: "person.crop.circle.badge.xmark") }
                 } else {
-                    Button { Task { await claim(item, on: true) } } label: { Label(L("I'll get it"), systemImage: "hand.raised.fill") }
+                    Button { Task { await claim(item, on: true) } } label: { Label(L("I'll get it"), systemImage: "person.crop.circle.badge.checkmark") }
                 }
             }
             if item.isChecked && item.id > 0 {
@@ -867,8 +867,9 @@ struct ShoppingView: View {
                 .accessibilityLabel(L("Choose list"))
             }
         }
+        // Paket E: one labelled menu instead of a bare „…“
         ToolbarItem(placement: .topBarTrailing) {
-            Menu {
+            AreaToolsMenu {
                 Button { showReceipt = true } label: { Label(L("Add receipt"), systemImage: "doc.text.viewfinder") }
                 Button { showPaperList = true } label: { Label(L("Photograph a paper list"), systemImage: "list.bullet.rectangle") }
                 Divider()
@@ -885,11 +886,7 @@ struct ShoppingView: View {
                 Toggle(isOn: $toStock) { Label(L("Put away when checked off"), systemImage: "archivebox") }
                 Button { showListLook = true } label: { Label(L("How the list looks for me"), systemImage: "textformat.size") }
                 Button { showShopSettings = true } label: { Label(L("Shops & aisles"), systemImage: "storefront") }
-            } label: {
-                // receipts, paper lists, usuals, wishes, sharing – more than receipts, so the general "more" symbol
-                Image(systemName: "ellipsis.circle")
             }
-            .accessibilityLabel(L("More for the list"))
             .accessibilityHint(L("Receipts, paper lists, usuals, offers, import, sharing and how the list looks"))
         }
     }

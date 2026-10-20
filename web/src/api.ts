@@ -144,10 +144,11 @@ const TOPIC_KEYS: Record<string, string[]> = {
   imports: ['today', 'money', 'rhythm', 'imports', 'import', 'overview', 'spending', 'quality'],
   orders: ['today', 'orders', 'overview'],
   notifications: ['notifications'],
-  settings: ['billing', 'settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share', 'memory', 'knowledge'],
-  care: ['care'],
-  away: ['away'],
-  tour: ['tour', 'overview', 'products', 'recipes', 'shopping', 'onboarding'],
+  settings: ['today', 'billing', 'settings', 'me', 'onboarding', 'people', 'people-dir', 'people-me', 'appearance', 'share', 'memory', 'knowledge'],
+  // Heute's "Jetzt dran" and its context place follow tasks, settings, absences and sample data (Paket B)
+  care: ['care', 'today'],
+  away: ['away', 'today'],
+  tour: ['today', 'tour', 'overview', 'products', 'recipes', 'shopping', 'onboarding'],
 };
 
 export function connectEvents(url = '/api/events') {

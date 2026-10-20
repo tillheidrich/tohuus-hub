@@ -1,28 +1,24 @@
-import { ArrowDown, ArrowRight, ArrowUp, Basket, Camera, Check, ChefHat, DotsSixVertical, MagnifyingGlass, Microphone, Plus, Receipt, TextAa } from '@phosphor-icons/react';
+import { ArrowDown, ArrowRight, ArrowsLeftRight, ArrowUp, Basket, CalendarCheck, ChatCircleText, Check, ChefHat, DotsSixVertical, Flag, Flask, Gift, HandHeart, Hourglass, Lightbulb, LockSimple, MagnifyingGlass, Plus, Receipt, Sparkle, Trash, Wallet } from '@phosphor-icons/react';
+import { CalmCard, CheckinCard } from './Checkin';
 import { DemoNudge } from './Samples';
-import { TasksAheadCard, TasksTodayCard } from './TasksToday';
-import { TodayOfferAsks } from './WhoDoesWhat';
-import { StarsCard } from './Stars';
-import { ReviewTeaser } from './Review';
-import { WeekReviewTeaser } from './WeekReview';
-import { MindTodayCard } from './Mind';
-import { CalmCard, CheckinCard, GuestTasksCard } from './Checkin';
-import { CareForHint } from './CareFor';
-import { Fragment, type ReactNode, useState } from 'react';
+import { Fragment, lazy, type ReactNode, Suspense, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Me } from '../App';
-import { fmtDate, invalidate, post, put, qc, useApi } from '../api';
+import { fmtDate, invalidate, post, put, qc } from '../api';
 import { useDrag } from '../dnd';
 import { PulseCard, usePulse } from '../pulse';
 import '../dnd.css';
-import { assistantAvailable, openAssistant } from '../assistant/Fab';
-import { type CookToday, imgSrc, type Notice, type RhythmItem, type StillHave, type Today as TodayData, TODAY_KEY, useToday } from '../data';
+import { type CookToday, imgSrc, type NowTask, type RhythmItem, type StillHave, type Today as TodayData, type TodayCardKey, type TodayContext, type TodayNow, TODAY_KEY, useToday } from '../data';
+import { OneThingToday } from '../focus/Now';
 import { locale, t } from '../i18n';
-import { originLine, rhythmLine } from '../origin';
+import { originLine } from '../origin';
 import { guestAllows } from '../people/access';
-import { moduleAllows } from '../nav';
 import { money } from '../region';
-import { Avatar, Empty, expiryText, useToast } from '../ui';
+import { Avatar, Empty, expiryText, Sheet, useToast } from '../ui';
+import { timeLabel } from './taskTime';
+
+/** the getting-started checklist lives with the setup (a separate chunk) – loaded only when it is the context */
+const ChecklistCard = lazy(() => import('./Onboarding').then((m) => ({ default: m.ChecklistCard })));
 
 function greeting() {
   const h = new Date().getHours();
@@ -37,11 +33,6 @@ function greeting() {
 /** Optimistic edit of the cached /today answer (the server confirms via SSE). */
 const patchToday = (fn: (d: TodayData) => TodayData) => qc.setQueryData<TodayData>(TODAY_KEY, (d) => (d ? fn(d) : d));
 
-/**
- * Heute (plan 2026-10-12): one request (`/api/today`), at most five calm cards in a fixed order –
- * Fällig · Liste · Das habt ihr noch · Heute kochen? · Geld. Each card hides when it has nothing to say,
- * except "Fällig", which then invites the three ways in: share a receipt, photo of the paper list, just say it.
- */
 /** The Plattdeutsch saying under the greeting; a tap shows what it means. */
 function PlattLine({ p }: { p: NonNullable<TodayData['platt']> }) {
   const [open, setOpen] = useState(false);
@@ -59,18 +50,19 @@ function PlattLine({ p }: { p: NonNullable<TodayData['platt']> }) {
   );
 }
 
+/**
+ * Heute, Paket B (UX audit 10/2026, docs/today.md): the head, then at most five calm cards in a fixed order –
+ * Jetzt dran · Liste · Bald verbrauchen · Heute kochen · (Geld, only when switched on) · one context place.
+ * The server decides which cards show (`cards` from /api/today); this page only draws them. No forms on Heute:
+ * Check-in and Im Kopf are small ways in below the cards. The calm card only when there is really nothing.
+ */
 export function Today({ me }: { me: Me }) {
   const q = useToday();
   const nav = useNavigate();
   const gl = me.actor.houseGuest?.level;
   const d = q.data;
-  // list2 J: the weekly F&F question (opt-in, only Sunday/Monday)
-  const pulse = usePulse(!gl);
-  // "Bring mir was": open wishes for me and my own – the card only shows while something is open
-  const orders = useTodayOrders(moduleAllows(me.modules, '/bestellen') && guestAllows(gl, '/bestellen'), Boolean(gl));
-  const now = new Date();
-  const date = now.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
-  const localDay = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
+  const [checkin, setCheckin] = useState(false);
+  const date = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
   const head = (
     <header className="today-head">
@@ -85,9 +77,7 @@ export function Today({ me }: { me: Me }) {
             date
           )}
         </div>
-        <h1 className="greet">
-          {d?.greeting ?? `${greeting()}, ${me.actor.name}!`}
-        </h1>
+        <h1 className="greet">{d?.greeting ?? `${greeting()}, ${me.actor.name}!`}</h1>
         {d?.platt && <PlattLine p={d.platt} />}
         {d?.away?.others.length ? (
           <p className="small muted away-others">
@@ -137,47 +127,55 @@ export function Today({ me }: { me: Me }) {
     );
   }
 
+  const node = (k: TodayCardKey): ReactNode => {
+    switch (k) {
+      case 'now':
+        return d.now ? <NowCard now={d.now} /> : null;
+      case 'list':
+        return <ListCard d={d} />;
+      case 'still':
+        return <StillHaveCard items={d.useSoon} />;
+      case 'cook':
+        return d.cookToday ? <CookCard c={d.cookToday} /> : null;
+      case 'money':
+        return d.money ? <MoneyCard m={d.money} /> : null;
+      case 'context':
+        return d.context ? <ContextCard c={d.context} me={me} /> : null;
+    }
+  };
+  const canArrange = !gl && Boolean(me.actor.userId);
+
   return (
     <div className="today2">
       {head}
-      {d.notices.length > 0 && <Notices list={d.notices} />}
-      {gl && <GuestTasksCard />}
-      {!gl && <DemoNudge />}
-      <TodayCards
-        cards={[
-          ['rhythm', <DueCard items={d.rhythm} legacy={d.legacy} />],
-          ['tasks', guestAllows(gl, '/aufgaben') ? (
-            <>
-              <TodayOfferAsks />
-              <WeekReviewTeaser guest={Boolean(gl)} />
-              <TasksTodayCard today={localDay()} />
-              <TasksAheadCard />
-              <CheckinCard guest={Boolean(gl)} />
-              {!gl && <CareForHint />}
-              <MindTodayCard guest={Boolean(gl)} />
-              <StarsCard guest={Boolean(gl)} />
-              <ReviewTeaser guest={Boolean(gl)} />
-            </>
-          ) : null],
-          ['list', guestAllows(gl, '/einkauf') ? <ListCard d={d} /> : null],
-          ['still', d.stillHave.length > 0 ? <StillHaveCard items={d.stillHave} /> : null],
-          ['cook', guestAllows(gl, '/kochen') && d.cookToday ? <CookCard c={d.cookToday} /> : null],
-          ['money', guestAllows(gl, '/geld') && d.money ? <MoneyCard m={d.money} /> : null],
-          ['pulse', pulse.data?.question ? <PulseCard pulse={pulse.data} /> : null],
-          ['orders', orders.forMe.length + orders.own.length > 0 ? <OrdersCard {...orders} /> : null],
-        ]}
-        canArrange={!gl && Boolean(me.actor.userId)}
-      />
-      {d.calm && !gl && <CalmCard />}
+      <TodayCards cards={d.cards.map((k) => [k, node(k)] as [TodayCardKey, ReactNode])} canArrange={canArrange} />
+      {d.calm && <CalmCard fact={false} />}
+      {(d.entries.mind || d.entries.checkin) && (
+        <div className="today-entries" role="group" aria-label={t('Small ways in')}>
+          {d.entries.checkin && (
+            <button className="chip" onClick={() => setCheckin(true)}>
+              <CalendarCheck size={16} aria-hidden="true" /> {t('What did you solve today?')}
+            </button>
+          )}
+          {d.entries.mind && (
+            <button className="chip" onClick={() => nav('/kopf')}>
+              <Lightbulb size={16} aria-hidden="true" /> {t('Something on your mind?')}
+            </button>
+          )}
+        </div>
+      )}
+      <Sheet open={checkin} onClose={() => setCheckin(false)} label={t('What did you solve today?')}>
+        <CheckinCard />
+      </Sheet>
     </div>
   );
 }
 
-function CardHead({ title, shape, link }: { title: string; shape: string; link?: { label: string; to: string } }) {
+function CardHead({ id, title, shape, link }: { id: string; title: string; shape: string; link?: { label: string; to: string } }) {
   const nav = useNavigate();
   return (
     <div className="hcard-h">
-      <h2>
+      <h2 id={id}>
         <span className={`shape ${shape}`} aria-hidden="true" />
         {title}
       </h2>
@@ -190,19 +188,117 @@ function CardHead({ title, shape, link }: { title: string; shape: string; link?:
   );
 }
 
-// ------------------------------------------------------------------ 1 · Fällig
+// ------------------------------------------------------------------ 1 · Jetzt dran
 
-function DueCard({ items, legacy }: { items: RhythmItem[]; legacy?: boolean }) {
-  const toast = useToast();
+/** what is due for me now (server: the same queue as "Nur eins" and /fokus, docs/now.md), at most "Heute höchstens" */
+function NowCard({ now }: { now: TodayNow }) {
   const nav = useNavigate();
+  const toast = useToast();
   const [busy, setBusy] = useState<number | null>(null);
-  const act = async (r: RhythmItem, kind: 'accept' | 'dismiss') => {
+  const setOne = async (on: boolean) => {
+    try {
+      await put('/focus/prefs', { oneThing: on });
+      invalidate('focus', 'today');
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  const done = async (x: NowTask) => {
+    setBusy(x.id);
+    try {
+      if (now.guest) {
+        const r = await post<{ message?: string }>(`/guest-tasks/${x.id}/done`);
+        toast({ text: r.message ?? t('Done.') });
+      } else {
+        const r = await post<{ task: { next_due: string | null }; log_id?: number }>(`/care/${x.id}/done`, {});
+        toast({
+          text: r.task.next_due ? t('Done. Next time: {date}', { date: fmtDate(r.task.next_due, { day: 'numeric', month: 'short' }) }) : t('Done.'),
+          action: { label: t('Undo'), run: () => post(`/care/${x.id}/undo`, { log_id: r.log_id ?? null }).then(() => invalidate('care', 'today')) },
+        });
+      }
+      invalidate('care', 'today');
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    } finally {
+      setBusy(null);
+    }
+  };
+  const total = now.items.length + now.more;
+  const meta = (x: NowTask) =>
+    [
+      x.level === 'overdue' ? (now.gentle ? t('could be done') : t('overdue')) : x.level === 'promised' ? t('you said you’d do it') : x.due_time ? t('today {time}', { time: timeLabel(x.due_time) }) : t('due today'),
+      x.place,
+      x.doer?.name,
+      x.checklist?.length ? t('{done} of {total}', { done: x.checklist.filter((c) => c.done).length, total: x.checklist.length }) : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  return (
+    <section className="hcard today-now" aria-labelledby="h-now">
+      <div className="hcard-h">
+        <h2 id="h-now">
+          <span className="shape a" aria-hidden="true" />
+          {t('Up now')}
+        </h2>
+        <div className="row" style={{ gap: 6 }}>
+          {!now.guest && (now.oneThing || total > 1) && (
+            <button className={`chip ${now.oneThing ? 'on' : ''}`} aria-pressed={now.oneThing} onClick={() => setOne(!now.oneThing)} title={t('Show only the next task')}>
+              {t('Just one')}
+            </button>
+          )}
+          {!now.guest && (
+            <button className="linkish" onClick={() => nav('/aufgaben')}>
+              {t('All tasks')} <ArrowRight size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+      {now.oneThing ? (
+        <OneThingToday />
+      ) : (
+        <ul className="hrows">
+          {now.items.map((x) => (
+            <li key={x.id} className="hrow">
+              <span className="now-emoji" aria-hidden="true">
+                {x.emoji}
+              </span>
+              <div className="grow">
+                <b>
+                  {x.private && <LockSimple size={13} aria-label={t('Only for me')} style={{ marginRight: 4, verticalAlign: '-1px' }} />}
+                  {x.name}
+                </b>
+                <span className={`meta ${x.level === 'overdue' && !now.gentle ? 'late' : ''}`}>{meta(x)}</span>
+              </div>
+              <button className="btn sm" disabled={busy === x.id} onClick={() => done(x)} aria-label={t('Done: {name}', { name: x.name })}>
+                <Check size={15} weight="bold" /> {t('Done')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!now.oneThing && now.more > 0 && (
+        <button className="linkish" onClick={() => nav(now.gentle ? '/fokus' : '/aufgaben')}>
+          {now.gentle ? t('Just one') : t('{n} more', { n: now.more })} <ArrowRight size={12} />
+        </button>
+      )}
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ 2 · Liste (with "Bald wieder nötig")
+
+function ListCard({ d }: { d: TodayData }) {
+  const nav = useNavigate();
+  const toast = useToast();
+  const [busy, setBusy] = useState<number | null>(null);
+  const open = d.list.open;
+  const accept = async (r: RhythmItem) => {
     setBusy(r.productId);
     try {
-      await post(`/rhythm/${r.productId}/${kind}`);
-      patchToday((x) => ({ ...x, rhythm: x.rhythm.filter((y) => y.productId !== r.productId), list: kind === 'accept' ? { ...x.list, open: x.list.open + 1 } : x.list }));
+      await post(`/rhythm/${r.productId}/accept`);
+      patchToday((x) => ({ ...x, soonAgain: x.soonAgain.filter((y) => y.productId !== r.productId), rhythm: x.rhythm.filter((y) => y.productId !== r.productId), list: { ...x.list, open: x.list.open + 1 } }));
       qc.invalidateQueries({ queryKey: ['shopping'] });
-      toast({ text: kind === 'accept' ? t('{name} is on the shopping list', { name: r.name }) : t('Okay – ToHuus asks again later.') });
+      toast({ text: t('{name} is on the shopping list', { name: r.name }) });
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     } finally {
@@ -210,139 +306,63 @@ function DueCard({ items, legacy }: { items: RhythmItem[]; legacy?: boolean }) {
     }
   };
   return (
-    <section className="hcard due" aria-labelledby="h-due">
-      <div className="hcard-h">
-        <h2 id="h-due">
-          <span className="shape c" aria-hidden="true" />
-          {t('Needed again soon')}
-        </h2>
-      </div>
-      {items.length > 3 && (
-        <button className="linkish due-more" onClick={() => nav('/einkauf')}>
-          {t('{n} more suggestions on the shopping list', { n: items.length - 3 })} <ArrowRight size={14} />
-        </button>
-      )}
-      {items.length === 0 ? (
-        <EntryLevels legacy={legacy} />
-      ) : (
-        <ul className="hrows">
-          {items.slice(0, 3).map((r) => (
-            <li key={r.productId} className="hrow due-row">
-              <div className="grow">
-                <b>{r.name}</b>
-                <span className="meta">{rhythmLine(r.everyDays, r.lastBought, r.label)}</span>
-              </div>
-              <div className="due-act">
-                <button className="btn sm primary" disabled={busy === r.productId} onClick={() => act(r, 'accept')}>
-                  <Basket size={15} /> {t('Put on the list')}
-                </button>
-                <button className="btn sm" disabled={busy === r.productId} onClick={() => act(r, 'dismiss')}>
-                  {t('Still have it')}
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
-/** Empty "Fällig": the three ways to give ToHuus something to remember – whatever the household's digital level. */
-function EntryLevels({ legacy }: { legacy?: boolean }) {
-  const nav = useNavigate();
-  const canTalk = assistantAvailable();
-  return (
-    <div className="entry">
-      <p className="meta">
-        {legacy
-          ? t('Nothing due yet. The more receipts and ticked-off shopping ToHuus sees, the better it knows what you run out of.')
-          : t('Nothing due right now. ToHuus remembers how often you buy things – from receipts and from ticking off the list.')}
-      </p>
-      <div className="entry-grid">
-        <button className="entry-tile" onClick={() => nav('/import?mode=file')}>
-          <Receipt size={22} />
-          <b>{t('Share a receipt')}</b>
-          <span>{t('eBon, PDF, delivery')}</span>
-        </button>
-        <button className="entry-tile" onClick={() => nav('/import?mode=photo')}>
-          <Camera size={22} />
-          <b>{t('Photo of the list')}</b>
-          <span>{t('paper receipt or note')}</span>
-        </button>
-        {canTalk ? (
-          <button className="entry-tile" onClick={() => openAssistant()}>
-            <Microphone size={22} />
-            <b>{t('Just say it')}</b>
-            <span>{t('“Milk is out”')}</span>
-          </button>
-        ) : (
-          <button className="entry-tile" onClick={() => nav('/import?mode=text')}>
-            <TextAa size={22} />
-            <b>{t('Just type it')}</b>
-            <span>{t('“milk, bread, coffee”')}</span>
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ------------------------------------------------------------------ 2 · Liste
-
-function ListCard({ d }: { d: TodayData }) {
-  const nav = useNavigate();
-  const open = d.list.open;
-  return (
     <section className="hcard" aria-labelledby="h-list">
-      <div className="hcard-h">
-        <h2 id="h-list">
-          <span className="shape s" aria-hidden="true" />
-          {t('List')}
-        </h2>
-        <button className="linkish" onClick={() => nav('/einkauf')}>
-          {t('Open')} <ArrowRight size={14} />
+      <CardHead id="h-list" title={t('List')} shape="s" link={{ label: t('Open'), to: '/einkauf' }} />
+      {open > 0 && (
+        <button className="list-sum" onClick={() => nav('/einkauf')}>
+          <span className="big">{open}</span>
+          <span>{open === 1 ? t('thing on the list') : t('things on the list')}</span>
         </button>
-      </div>
-      <button className="list-sum" onClick={() => nav('/einkauf')}>
-        <span className="big">{open}</span>
-        <span>{open === 1 ? t('thing on the list') : t('things on the list')}</span>
-      </button>
-      {d.list.recent.length > 0 && (
+      )}
+      {open > 0 && d.list.recent.some((r) => !r.checked) && (
         <ul className="hrows quiet">
-          {d.list.recent.slice(0, 3).map((r) => (
-            <li key={r.id} className="hrow">
-              <span className={`dotmk ${r.checked ? 'done' : ''}`} aria-hidden="true" />
-              <div className="grow">
-                <b className={r.checked ? 'struck' : undefined}>
-                  {r.qty && r.qty !== 1 ? `${String(r.qty).replace('.', ',')}× ` : ''}
-                  {r.name}
-                </b>
-                <span className="meta">{[r.checked ? t('ticked off') : null, originLine(r.origin, r.by, r.at)].filter(Boolean).join(' · ')}</span>
-              </div>
-            </li>
-          ))}
+          {d.list.recent
+            .filter((r) => !r.checked)
+            .slice(0, 3)
+            .map((r) => (
+              <li key={r.id} className="hrow">
+                <span className="dotmk" aria-hidden="true" />
+                <div className="grow">
+                  <b>
+                    {r.qty && r.qty !== 1 ? `${String(r.qty).replace('.', ',')}× ` : ''}
+                    {r.name}
+                  </b>
+                  <span className="meta">{originLine(r.origin, r.by, r.at)}</span>
+                </div>
+              </li>
+            ))}
         </ul>
       )}
-      {open === 0 && d.list.recent.length === 0 && <p className="meta">{t('The list is empty. Everyone in the household can add to it – it updates live.')}</p>}
+      {d.soonAgain.length > 0 && (
+        <div className="soon-again">
+          <span className="meta">{t('Needed again soon')}</span>
+          <div className="chips">
+            {d.soonAgain.map((r) => (
+              <button key={r.productId} className="chip" disabled={busy === r.productId} onClick={() => accept(r)} aria-label={t('Put {name} on the list', { name: r.name })}>
+                <Plus size={13} weight="bold" aria-hidden="true" /> {r.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
-// ------------------------------------------------------------------ 3 · Das habt ihr noch
+// ------------------------------------------------------------------ 3 · Bald verbrauchen
 
 function StillHaveCard({ items }: { items: StillHave[] }) {
   const nav = useNavigate();
   return (
     <section className="hcard" aria-labelledby="h-still">
-      <CardHead title={t('Still at home – use soon')} shape="h" link={{ label: t('Pantry'), to: '/bestand?status=attention' }} />
+      <CardHead id="h-still" title={t('Use soon')} shape="h" link={{ label: t('Pantry'), to: '/bestand?status=attention' }} />
       <ul className="hrows">
         {items.slice(0, 3).map((s, i) => {
           const id = s.productId ?? s.id;
           const when = s.note ?? expiryText(s.nextExpiry ?? s.expiresOn ?? null);
           return (
             <li key={id ?? i} className="hrow">
-              <span className={`mk ${s.status === 'expired' ? 'out' : s.kind === 'probably' ? 'ok' : 'soon'}`} aria-hidden="true" />
+              <span className={`mk ${s.status === 'expired' ? 'out' : 'soon'}`} aria-hidden="true" />
               <button className="grow plain-row" onClick={() => id && nav(`/bestand/${id}`)}>
                 <b>{s.name}</b>
                 <span className="meta">{[when, s.location].filter(Boolean).join(' · ')}</span>
@@ -355,7 +375,7 @@ function StillHaveCard({ items }: { items: StillHave[] }) {
   );
 }
 
-// ------------------------------------------------------------------ 4 · Heute kochen?
+// ------------------------------------------------------------------ 4 · Heute kochen
 
 function CookCard({ c }: { c: CookToday }) {
   const nav = useNavigate();
@@ -375,7 +395,7 @@ function CookCard({ c }: { c: CookToday }) {
   };
   return (
     <section className="hcard cook" aria-labelledby="h-cook">
-      <CardHead title={c.kind === 'planned' ? t('Planned for today') : t('Cook today?')} shape="a" link={{ label: t('More ideas'), to: '/kochen' }} />
+      <CardHead id="h-cook" title={c.kind === 'planned' ? t('Planned for today') : t('Cook today?')} shape="a" link={{ label: t('More ideas'), to: '/kochen' }} />
       <button className="cook-main" onClick={() => nav(c.recipeId ? `/rezepte/${c.recipeId}${c.planId ? `?plan=${c.planId}` : ''}` : '/kochen?view=week')}>
         <span className="cook-img">{c.image ? <img src={imgSrc(c.image)!} alt="" loading="lazy" /> : <ChefHat size={28} aria-hidden="true" />}</span>
         <span className="grow">
@@ -392,7 +412,6 @@ function CookCard({ c }: { c: CookToday }) {
             )}
             {c.timeMin ? ` · ${t('{n} min', { n: c.timeMin })}` : ''}
           </span>
-          {c.probablyHave && c.probablyHave.length > 0 && <span className="meta">{t('Probably at home: {list}', { list: c.probablyHave.join(', ') })}</span>}
         </span>
       </button>
       {missing.length > 0 && (
@@ -404,7 +423,7 @@ function CookCard({ c }: { c: CookToday }) {
   );
 }
 
-// ------------------------------------------------------------------ 5 · Geld
+// ------------------------------------------------------------------ Geld (off unless switched on: Einstellungen › Ich › Ruhe & Fokus)
 
 function MoneyCard({ m }: { m: NonNullable<TodayData['money']> }) {
   const nav = useNavigate();
@@ -414,7 +433,7 @@ function MoneyCard({ m }: { m: NonNullable<TodayData['money']> }) {
   const cur = m.currency ? { currency: m.currency } : {};
   return (
     <section className="hcard money" aria-labelledby="h-money">
-      <CardHead title={t('Money')} shape="t" link={{ label: t('Details'), to: '/geld' }} />
+      <CardHead id="h-money" title={t('Money')} shape="t" link={{ label: t('Details'), to: '/geld' }} />
       <button className="money-glance" onClick={() => nav('/geld')}>
         <span>
           <span className="meta">{t('This week')}</span>
@@ -435,124 +454,96 @@ function MoneyCard({ m }: { m: NonNullable<TodayData['money']> }) {
           </span>
         </div>
       )}
-      {m.month === 0 && <p className="meta">{t('Share a receipt and ToHuus shows where the money for food and household goes.')}</p>}
     </section>
   );
 }
 
-// ------------------------------------------------------------------ Bring mir was
+// ------------------------------------------------------------------ the one context place
 
-type TodayOrder = { id: number; status: string; guest_name?: string | null; for_user_id?: number | null; by_name?: string | null; note?: string | null; lines: { name: string; qty: number }[] };
-const orderItems = (o: TodayOrder) => (o.lines.length ? o.lines.map((l) => `${l.qty}× ${l.name}`).join(', ') : o.note ? `„${o.note}“` : '');
+const CONTEXT_ICON: Record<TodayContext['kind'], ReactNode> = {
+  occasion: <Gift size={20} aria-hidden="true" />,
+  orders: <HandHeart size={20} aria-hidden="true" />,
+  handover: <ArrowsLeftRight size={20} aria-hidden="true" />,
+  bins: <Trash size={20} aria-hidden="true" />,
+  imports: <Receipt size={20} aria-hidden="true" />,
+  budget: <Wallet size={20} aria-hidden="true" />,
+  demo: <Flask size={20} aria-hidden="true" />,
+  trial: <Hourglass size={20} aria-hidden="true" />,
+  week: <Sparkle size={20} aria-hidden="true" />,
+  pulse: <ChatCircleText size={20} aria-hidden="true" />,
+  start: <Flag size={20} aria-hidden="true" />,
+};
 
-/**
- * "Bring mir was" on Heute (an arrangeable card like the others, key `orders`): what the others asked you for and
- * your own open wishes. Shown only while something is open – the full page is /bestellen.
- */
-function useTodayOrders(on: boolean, guest: boolean) {
-  const reqs = useApi<TodayOrder[]>(['orders', 'today-requests'], on && !guest ? '/bar/requests' : null);
-  const mine = useApi<TodayOrder[]>(['orders', 'today-mine'], on ? '/bar/my-orders' : null);
-  const open = (o: TodayOrder) => o.status === 'new' || o.status === 'accepted';
-  return { forMe: on ? (reqs.data ?? []).filter(open) : [], own: on ? (mine.data ?? []).filter(open) : [] };
-}
-
-function OrdersCard({ forMe, own }: { forMe: TodayOrder[]; own: TodayOrder[] }) {
+/** One hint at a time – the server picked the most important one (lib/today-select.ts CONTEXT_PRIORITY). */
+function ContextCard({ c, me }: { c: TodayContext; me: Me }) {
   const nav = useNavigate();
-  return (
-    <section className="hcard" aria-labelledby="h-orders">
-      <CardHead title={t('Bring me something')} shape="c" link={{ label: t('Open'), to: '/bestellen' }} />
-      <ul className="hrows">
-        {forMe.slice(0, 3).map((o) => (
-          <li key={`r${o.id}`} className="hrow">
-            <span className={`mk ${o.status === 'accepted' ? 'ok' : 'soon'}`} aria-hidden="true" />
-            <button className="grow plain-row" onClick={() => nav('/bestellen')}>
-              <b>{o.for_user_id ? t('{name} asks you', { name: o.guest_name ?? '' }) : t('{name} would love something', { name: o.guest_name ?? '' })}</b>
-              <span className="meta">{[orderItems(o), o.status === 'accepted' && o.by_name ? t('Coming right up – {name} is bringing it', { name: o.by_name }) : null].filter(Boolean).join(' · ')}</span>
-            </button>
-          </li>
-        ))}
-        {own.slice(0, 2).map((o) => (
-          <li key={`m${o.id}`} className="hrow">
-            <span className={`mk ${o.status === 'accepted' ? 'ok' : 'soon'}`} aria-hidden="true" />
-            <button className="grow plain-row" onClick={() => nav('/bestellen')}>
-              <b>{orderItems(o) || t('Your wish')}</b>
-              <span className="meta">{o.status === 'accepted' ? (o.by_name ? t('Coming right up – {name} is bringing it', { name: o.by_name }) : t('Coming right up')) : t('Waiting for a reply')}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </section>
+  const pulse = usePulse(c.kind === 'pulse');
+  // the weekly question, getting started and sample data keep their own small cards (the same on the iPhone)
+  if (c.kind === 'pulse') return pulse.data?.question ? <PulseCard pulse={pulse.data} /> : null;
+  if (c.kind === 'start')
+    return (
+      <Suspense fallback={null}>
+        <ChecklistCard me={me} />
+      </Suspense>
+    );
+  if (c.kind === 'demo') return <DemoNudge />;
+  const body = (
+    <>
+      <span className="ctx-icon">{CONTEXT_ICON[c.kind]}</span>
+      <span className="grow">
+        <b>{c.text}</b>
+        {c.detail && <span className="meta">{c.detail}</span>}
+      </span>
+      {c.path && <ArrowRight size={16} aria-hidden="true" />}
+    </>
+  );
+  return c.path ? (
+    <button className={`today-context ctx-${c.kind}`} onClick={() => nav(c.path!)}>
+      {body}
+    </button>
+  ) : (
+    <div className={`today-context ctx-${c.kind}`}>{body}</div>
   );
 }
 
-// ------------------------------------------------------------------ notices
-
-function Notices({ list }: { list: Notice[] }) {
-  const nav = useNavigate();
-  return (
-    <ul className="notices">
-      {list.slice(0, 3).map((n, i) => {
-        const o = typeof n === 'string' ? { text: n } : n;
-        const text = o.kind === 'import' ? t('Receipt “{title}” is waiting for a quick look', { title: o.text }) : o.kind === 'order' ? t('{name} would love something', { name: o.text }) : o.text;
-        return (
-          <li key={i}>
-            {'to' in o && o.to ? (
-              <button className="notice" onClick={() => nav(o.to!)}>
-                <span className="grow">{text}</span>
-                <ArrowRight size={16} />
-              </button>
-            ) : (
-              <div className="notice">{text}</div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-/** The cards of "Heute" in the person's own order (list2 H): drag in "Anordnen", or up / down as the menu way. */
-function TodayCards({ cards, canArrange }: { cards: [string, ReactNode][]; canArrange: boolean }) {
-  const saved = useApi<{ order: string[] }>(['today', 'order'], canArrange ? '/list/today-order' : null);
+/** The cards in the server's order; "Karten anordnen" moves the first ones (the context place stays last). */
+function TodayCards({ cards, canArrange }: { cards: [TodayCardKey, ReactNode][]; canArrange: boolean }) {
   const [arrange, setArrange] = useState(false);
   const toast = useToast();
-  const order = saved.data?.order ?? [];
-  const pos = (k: string) => {
-    const i = order.indexOf(k);
-    return i < 0 ? 100 + cards.findIndex((c) => c[0] === k) : i;
-  };
-  const shown = cards.filter((c) => c[1]).sort((a, b) => pos(a[0]) - pos(b[0]));
+  const shown = cards.filter((c) => c[1]);
+  const movable = shown.filter((c) => c[0] !== 'context').map((c) => c[0]);
   const save = async (next: string[], undo: string[]) => {
-    qc.setQueryData(['today', 'order'], { order: next });
     try {
       await put('/list/today-order', { order: next });
+      invalidate('today');
       toast({ text: t('Order saved'), action: { label: t('Undo'), run: () => void put('/list/today-order', { order: undo }).then(() => invalidate('today')) } });
     } catch (e) {
       invalidate('today');
       toast({ text: (e as Error).message, error: true });
     }
   };
-  const keys = shown.map((c) => c[0]);
-  const move = (k: string, to: number) => {
-    const rest = keys.filter((x) => x !== k);
+  const move = (k: TodayCardKey, to: number) => {
+    const rest = movable.filter((x) => x !== k);
     rest.splice(Math.max(0, Math.min(rest.length, to)), 0, k);
-    void save(rest, keys);
+    patchToday((x) => ({ ...x, cards: [...rest, ...x.cards.filter((y) => !rest.includes(y))] }));
+    void save(rest, movable);
   };
   const drag = useDrag({
     disabled: !arrange,
     onDrop: (payload, d) => {
-      const k = payload as string;
-      if (!d.row || d.row === k) return;
-      const rest = keys.filter((x) => x !== k);
-      const at = rest.indexOf(d.row);
+      const k = payload as TodayCardKey;
+      if (!d.row || d.row === k || d.row === 'context') return;
+      const rest = movable.filter((x) => x !== k);
+      const at = rest.indexOf(d.row as TodayCardKey);
       move(k, d.after ? at + 1 : at);
     },
   });
   return (
     <>
       <div className={`today-cards ${arrange ? 'arranging' : ''}`} data-drop="cards:today">
-        {shown.map(([k, node], i) =>
-          arrange ? (
+        {shown.map(([k, node]) => {
+          const i = movable.indexOf(k);
+          return arrange && k !== 'context' ? (
             <div key={k} className="arrange-card" data-drop-row={k} {...drag(k, k)}>
               <div className="arrange-bar">
                 <DotsSixVertical size={18} aria-hidden="true" />
@@ -560,7 +551,7 @@ function TodayCards({ cards, canArrange }: { cards: [string, ReactNode][]; canAr
                 <button className="icon-btn sm" data-no-drag disabled={i === 0} onClick={() => move(k, i - 1)} aria-label={t('Up')}>
                   <ArrowUp size={14} />
                 </button>
-                <button className="icon-btn sm" data-no-drag disabled={i === shown.length - 1} onClick={() => move(k, i + 1)} aria-label={t('Down')}>
+                <button className="icon-btn sm" data-no-drag disabled={i === movable.length - 1} onClick={() => move(k, i + 1)} aria-label={t('Down')}>
                   <ArrowDown size={14} />
                 </button>
               </div>
@@ -570,10 +561,10 @@ function TodayCards({ cards, canArrange }: { cards: [string, ReactNode][]; canAr
             </div>
           ) : (
             <Fragment key={k}>{node}</Fragment>
-          ),
-        )}
+          );
+        })}
       </div>
-      {canArrange && shown.length > 1 && (
+      {canArrange && movable.length > 1 && (
         <button className="linkish arrange-toggle" onClick={() => setArrange((a) => !a)}>
           {arrange ? t('Done') : t('Arrange cards')}
         </button>

@@ -243,7 +243,7 @@ enum SearchRegistry {
     enum Target: String {
         case account, household, people, invite, places, notifications, connections, data, ai, calendar, labels, help
         case servers, devices, guests, treats, knowledge, wishes, giving, receipts, spending, favourites, houseInfo, away, listLook, focus, loadCards
-        case find, kitchen, careFor, mind, week, settings, howItWorks, goodToKnow, handover
+        case find, kitchen, careFor, mind, week, settings, howItWorks, goodToKnow, handover, blick, taskIdeas
     }
 
     struct Entry: Identifiable {
@@ -330,6 +330,8 @@ enum SearchRegistry {
         case .careFor: CareForView(api: api)
         case .mind: MindView(api: api)
         case .week: WeekReviewView(api: api)
+        case .blick: BlickView(api: api)
+        case .taskIdeas: TaskIdeasView(api: api)
         case .howItWorks: HowItWorksView()
         case .goodToKnow: FactsView()
         case .handover: HandoverGuestView(api: api)

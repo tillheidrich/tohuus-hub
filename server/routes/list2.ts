@@ -452,7 +452,9 @@ r.post(
 
 /** Order of the cards on "Heute", per person. */
 // 'tasks': the Aufgaben card (web TasksToday, iPhone TasksTodayCard) – without it every arrangement with it was refused
-const TODAY_CARDS = ['rhythm', 'tasks', 'list', 'still', 'cook', 'money', 'notices', 'pulse', 'orders'] as const;
+// Paket B (20 Oct 2026): 'now' (Jetzt dran) and 'context'; the older keys still arrive from older apps and are
+// mapped by lib/today-select.ts normalizeOrder (tasks → now, rhythm → list, the rest dropped)
+const TODAY_CARDS = ['now', 'list', 'still', 'cook', 'money', 'context', 'rhythm', 'tasks', 'notices', 'pulse', 'orders'] as const;
 r.get('/list/today-order', (req, res) => res.json({ order: userId(req) ? getUserPref<string[]>(userId(req)!, 'today.order', []) : [] }));
 r.put('/list/today-order', (req, res) => {
   const b = z.object({ order: z.array(z.enum(TODAY_CARDS)).max(TODAY_CARDS.length) }).parse(req.body);

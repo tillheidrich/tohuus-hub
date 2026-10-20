@@ -7,7 +7,7 @@
  * Chart rules (dataviz skill): one series → no legend, values as text labels in ink (never in the bar colour),
  * bars anchored at zero, no grid, every chart also readable as a list/table for screen readers.
  */
-import { ArrowDown, ArrowRight, ArrowUp, CaretLeft, CaretRight, Coins, GearSix, Lightbulb, LockSimple, Plus, Receipt, Trash } from '@phosphor-icons/react';
+import { ArrowDown, ArrowUp, CaretLeft, CaretRight, ChartBar, Coins, GearSix, Lightbulb, LockSimple, Plus, Receipt, Trash, UsersThree } from '@phosphor-icons/react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +18,7 @@ import { getOr } from '../data';
 import { locale, t } from '../i18n';
 import { money } from '../region';
 import { Empty } from '../ui';
+import { AreaEmpty, AreaTools } from '../area/AreaTools';
 import { WgBalanceCard } from '../shop/forms';
 import { CheapestCard } from '../shop/offers';
 import { ExpenseFormSheet, MoneySettingsSheet, useMoneyMeta, useView, ViewSwitch } from '../money/entry';
@@ -175,11 +176,16 @@ export function Money() {
           <h1>{t('Money')}</h1>
         </div>
         <div className="actions">
+          <AreaTools
+            tools={[
+              { key: 'detail', label: t('In detail'), sub: t('Every purchase, every item, per person'), icon: <ChartBar size={18} />, to: '/ausgaben' },
+              { key: 'receipt', label: t('Share a receipt'), sub: t('Photo, PDF or eBon'), icon: <Receipt size={18} />, to: '/import?mode=file' },
+              { key: 'split', label: t('New split'), sub: t('Pizza night, a weekend away: who paid what'), icon: <UsersThree size={18} />, onClick: () => setNewList(true), hidden: mine },
+              { key: 'settings', label: t('Categories & sharing'), icon: <GearSix size={18} />, onClick: () => setSettings(true) },
+            ]}
+          />
           <button className="btn primary sm" onClick={() => setEntry('new')}>
-            <Plus size={15} /> {t('Expense')}
-          </button>
-          <button className="btn ghost" onClick={() => nav('/ausgaben')}>
-            {t('In detail')} <ArrowRight size={16} />
+            <Plus size={15} weight="bold" /> {t('Expense')}
           </button>
         </div>
       </header>
@@ -218,13 +224,9 @@ export function Money() {
         <div className="money-grid">
           <div className="hcard">
             {mine ? (
-              <Empty icon={<LockSimple size={26} />} title={t('Nothing of your own this month')} action={{ label: t('Add a personal expense'), onClick: () => setEntry('new') }}>
-                {t('Mark an expense or receipt as “just for me”, or a receipt item as yours – it shows up here.')}
-              </Empty>
+              <AreaEmpty card={false} icon={<LockSimple size={26} />} text={t('Nothing of your own this month.')} action={{ label: t('Add a personal expense'), onClick: () => setEntry('new') }} />
             ) : (
-              <Empty icon={<Receipt size={26} />} art="receipt" title={t('Nothing spent this month – or no receipts yet')} action={{ label: t('Share a receipt'), onClick: () => nav('/import?mode=file') }}>
-                {t('Every receipt you share shows up here: per shop, per category, and what got more expensive.')}
-              </Empty>
+              <AreaEmpty card={false} icon={<Receipt size={26} />} text={t('Share a receipt, then you see here what food and household cost.')} action={{ label: t('Share a receipt'), onClick: () => nav('/import?mode=file') }} />
             )}
           </div>
           {!mine && <MoneyListsCard onOpen={setListId} onNew={() => setNewList(true)} />}
@@ -232,7 +234,7 @@ export function Money() {
       ) : (
         <div className={`money-grid ${q.isFetching ? 'refreshing' : ''}`}>
           <TotalCard d={d} fmt={fmt} ongoing={month === current} />
-          {d.purchases.some((p) => !removal.isHidden(p.key)) && <Purchases list={d.purchases.filter((p) => !removal.isHidden(p.key))} fmt={fmt} onOpen={setPurchase} onAll={() => nav('/ausgaben')} onRemove={removePurchase} />}
+          {d.purchases.some((p) => !removal.isHidden(p.key)) && <Purchases list={d.purchases.filter((p) => !removal.isHidden(p.key))} fmt={fmt} onOpen={setPurchase} onRemove={removePurchase} />}
           {d.byWeek.length > 1 && <WeekTrend weeks={d.byWeek} fmt={fmt} />}
           {d.byCategory.length > 0 && <Bars title={t('By category')} parts={d.byCategory} fmt={fmt} />}
           {d.byShop.length > 0 && <Bars title={t('By shop')} parts={d.byShop} fmt={fmt} unit={(n) => (n === 1 ? t('1 visit') : t('{n} visits', { n }))} />}
@@ -265,11 +267,6 @@ export function Money() {
           {d.legacy && <p className="meta money-note">{t('Price changes and saving hints appear as soon as this server has the new money overview.')}</p>}
         </div>
       )}
-      <p className="meta money-note">
-        <button className="linkish" onClick={() => setSettings(true)}>
-          <GearSix size={14} aria-hidden="true" /> {t('Categories & sharing')}
-        </button>
-      </p>
       <ExpenseFormSheet target={entry} onClose={() => setEntry(null)} preset={mine ? { private_for: meta.data?.me ?? null } : undefined} />
       <MoneySettingsSheet open={settings} onClose={() => setSettings(false)} />
       <NewMoneyListSheet
@@ -289,7 +286,7 @@ export function Money() {
 const SHOWN = 6;
 
 /** The month's purchases, newest first – tap one for its items. */
-function Purchases({ list, fmt, onOpen, onAll, onRemove }: { list: Purchase[]; fmt: (n: number, digits?: number) => string; onOpen: (p: { kind: 'receipt' | 'expense'; id: number }) => void; onAll: () => void; onRemove?: (p: Purchase) => void }) {
+function Purchases({ list, fmt, onOpen, onRemove }: { list: Purchase[]; fmt: (n: number, digits?: number) => string; onOpen: (p: { kind: 'receipt' | 'expense'; id: number }) => void; onRemove?: (p: Purchase) => void }) {
   const [all, setAll] = useState(false);
   const shown = all ? list : list.slice(0, SHOWN);
   return (
@@ -299,9 +296,6 @@ function Purchases({ list, fmt, onOpen, onAll, onRemove }: { list: Purchase[]; f
           <span className="shape c" aria-hidden="true" />
           {t('Purchases')}
         </h2>
-        <button className="linkish small" onClick={onAll}>
-          {t('In detail')}
-        </button>
       </div>
       <ul className="purchases">
         {shown.map((p) => (

@@ -88,44 +88,41 @@ extension APIClient {
 
 // MARK: - card order
 
-/// The cards of Heute that can be arranged (server list2.ts TODAY_CARDS) – the web's default order.
+/// The cards of Heute (Paket B, server lib/today-select.ts): at most five, the server picks and orders them.
+/// The person may move the first ones ("Karten anordnen"); `context` stays last.
 enum TodayCardKey: String, CaseIterable, Identifiable {
-    case rhythm, tasks, list, still, cook, money, pulse, orders
+    case now, list, still, cook, money, context
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .rhythm: return L("Needed again soon")
-        case .tasks: return L("Tasks today")
+        case .now: return L("Up now")
         case .list: return L("List")
-        case .still: return L("Still at home – use soon")
+        case .still: return L("Use soon")
         case .cook: return L("Cook today?")
         case .money: return L("Money")
-        case .pulse: return L("One question for the week")
-        case .orders: return L("Bring me something")
+        case .context: return L("Hint")
         }
     }
 
     var symbol: String {
         switch self {
-        case .rhythm: return "clock.arrow.circlepath"
-        case .tasks: return "checklist"
+        case .now: return "checklist"
         case .list: return "cart"
-        case .still: return "refrigerator"
+        case .still: return "leaf"
         case .cook: return "fork.knife"
         case .money: return "eurosign.circle"
-        case .pulse: return "questionmark.bubble"
-        case .orders: return "hand.raised"
+        case .context: return "info.circle"
         }
     }
 
-    /// saved order first, then the rest in the default order
-    static func sorted(_ keys: [TodayCardKey], by order: [String]) -> [TodayCardKey] {
-        func pos(_ k: TodayCardKey) -> Int {
-            if let i = order.firstIndex(of: k.rawValue) { return i }
-            return 100 + (allCases.firstIndex(of: k) ?? 0)
-        }
-        return keys.sorted { pos($0) < pos($1) }
+    /// a server without `cards` (older self-hosted versions): list, use soon and cook, as far as they say something
+    static func fallback(_ t: TodayPayload) -> [TodayCardKey] {
+        var out: [TodayCardKey] = []
+        if (t.list?.open ?? 0) > 0 || !t.rhythm.isEmpty { out.append(.list) }
+        if t.stillHave.contains(where: { $0.kind == "expiring" || $0.kind == "leftover" }) { out.append(.still) }
+        if t.cookToday != nil { out.append(.cook) }
+        return out
     }
 }
 
@@ -227,7 +224,7 @@ struct TodayPulseCard: View {
     private static let labels: [String: String] = ["0": "never", "1-2": "1–2 times", "3-5": "3–5 times", "more": "more often"]
 
     var body: some View {
-        Card(title: L("One question for the week"), systemImage: TodayCardKey.pulse.symbol) {
+        Card(title: L("One question for the week"), systemImage: "questionmark.bubble") {
             Text(L("How often did someone have to ask “Do we still have …?” this week?"))
                 .font(.subheadline).foregroundStyle(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)

@@ -4,7 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { storeImageBytes } from './lib/images.js';
-import { db, getSetting, lang, setSetting } from './db.js';
+import { db, getSetting, lang, setSetting, setSettingDefault } from './db.js';
+import { FIRST_LANGUAGE, languageChosen } from './lib/instance-lang.js';
 import { t } from './i18n.js';
 import { adjustStock, createProduct } from './lib/catalog.js';
 import { NAME_MAX, PASSWORD_MIN, hashPassword, randomToken } from './lib/auth.js';
@@ -295,6 +296,21 @@ function addDays(d: number) {
 export function seedDemo(opts: { force?: boolean } = {}): boolean {
   if (getSetting('demo.seeded', false) && !opts.force) return false;
   if ((db.prepare('SELECT COUNT(*) n FROM products').get() as { n: number }).n > 0) return false;
+  // Paket E: a self-hosted server nobody chose a language for yet (SEED_DEMO on the first start) used to seed the demo
+  // in English (config.language defaults to 'en') – then a German app showed English sample products. Like the rest
+  // of the first start (instance-lang.ts) the demo now speaks German then; the browser can still choose afterwards.
+  if (!languageChosen()) {
+    setSetting('language', FIRST_LANGUAGE);
+    try {
+      return seedDemoNow();
+    } finally {
+      setSettingDefault('language');
+    }
+  }
+  return seedDemoNow();
+}
+
+function seedDemoNow(): boolean {
   // the demo household lives in the neutral base places; a household that already picked its own keeps them
   ensureBasePlaces();
   // a German household gets German base names (places/categories may have been created while it was still English)

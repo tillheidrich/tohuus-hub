@@ -56,7 +56,9 @@ extension APIClient {
     func tourInfo() async throws -> TourInfo { try await get("api/tour") }
     /// "Möchtest du Beispieldaten …?" – `demo` loads the marked sample household, `empty` starts empty.
     func answerSampleQuestion(demo: Bool) async throws {
-        _ = try await send("POST", "api/tour/start", json: ["choice": demo ? "demo" : "empty"], as: Ignored.self, timeout: 90)
+        // Paket B: the samples come in the language this app shows (de/en), not in the server's default
+        let ui = String((Bundle.main.preferredLocalizations.first ?? "de").prefix(2))
+        _ = try await send("POST", "api/tour/start", json: ["choice": demo ? "demo" : "empty", "language": ui], as: Ignored.self, timeout: 90)
     }
     func demoMarks() async throws -> DemoMarks { try await get("api/tour/demo/marks") }
     func removeSampleData() async throws -> DemoRemoveResult {

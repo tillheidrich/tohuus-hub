@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "Das habt ihr noch" on Heute, with the actions per row: used up, still there, plan it.
+/// "Bald verbrauchen" on Heute (Paket B: at most three, expiring and leftovers only), with the actions per row: used up, still there, plan it.
 /// Used up / still there answer the quick check for the place of the first batch (POST /api/fresh/check/:place),
 /// so nothing goes on the list by itself; things only "probably at home" use /api/stock/used-up (which does).
 struct EatSoonCard: View {
@@ -12,10 +12,10 @@ struct EatSoonCard: View {
     @State private var busy: Set<String> = []
     @State private var note: String?
 
-    private var visible: [StillHaveItem] { Array(items.filter { !gone.contains($0.id) }.prefix(6)) }
+    private var visible: [StillHaveItem] { Array(items.filter { !gone.contains($0.id) }.prefix(3)) }
 
     var body: some View {
-        Card(title: L("You still have"), systemImage: "leaf") {
+        Card(title: L("Use soon"), systemImage: "leaf") {
             if visible.isEmpty {
                 Text(L("All taken care of.")).font(.subheadline).foregroundStyle(Theme.ink3)
             }

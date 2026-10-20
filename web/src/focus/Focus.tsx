@@ -21,6 +21,8 @@ export interface FocusPrefs {
   timerMin: number;
   /** "Nur eins" on Heute (docs/now.md) */
   oneThing?: boolean;
+  /** the money card on Heute – off by default (Paket B) */
+  todayMoney?: boolean;
 }
 
 let gentle = false;
@@ -357,6 +359,7 @@ export function FocusSettingsCard() {
       await put('/focus/prefs', patchBody);
       invalidate('focus');
       invalidate('care');
+      invalidate('today');
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     }
@@ -381,6 +384,13 @@ export function FocusSettingsCard() {
             <div className="small muted">{t('Today shows only the next task – then the next one.')}</div>
           </div>
           <Toggle on={Boolean(p.oneThing)} onChange={(v) => save({ oneThing: v })} label={t('Just one')} />
+        </div>
+        <div className="row between">
+          <div>
+            <b>{t('Money on Today')}</b>
+            <div className="small muted">{t('This week and this month as a small card on Today. Off unless you switch it on.')}</div>
+          </div>
+          <Toggle on={Boolean(p.todayMoney)} onChange={(v) => save({ todayMoney: v })} label={t('Money on Today')} />
         </div>
         <div className="field">
           <span className="eyebrow">{t('On Today, at most')}</span>

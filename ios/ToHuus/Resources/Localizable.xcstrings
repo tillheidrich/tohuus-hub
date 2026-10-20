@@ -324,23 +324,6 @@
         }
       }
     },
-    "%@ done": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ done"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ erledigt"
-          }
-        }
-      }
-    },
     "%@ each": {
       "extractionState": "manual",
       "localizations": {
@@ -1735,23 +1718,6 @@
         }
       }
     },
-    "%d can wait": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d can wait"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d darf warten"
-          }
-        }
-      }
-    },
     "%d cards added – fill in what applies, delete the rest.": {
       "extractionState": "manual",
       "localizations": {
@@ -2041,23 +2007,6 @@
         }
       }
     },
-    "%d due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d due tasks have nobody keeping them in mind yet – tap one and say “I keep it in mind”."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d fällige Aufgaben hat noch niemand im Blick – tipp eine an und sag „Ich hab’s im Blick“."
-          }
-        }
-      }
-    },
     "%d entries": {
       "extractionState": "manual",
       "localizations": {
@@ -2122,23 +2071,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Dateien"
-          }
-        }
-      }
-    },
-    "%d for today. That’s enough.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d for today. That’s enough."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d für heute. Das reicht."
           }
         }
       }
@@ -2789,23 +2721,6 @@
         }
       }
     },
-    "%d of %d done today": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d of %d done today"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d von %d heute geschafft"
-          }
-        }
-      }
-    },
     "%d of %d lines recognised automatically": {
       "extractionState": "manual",
       "localizations": {
@@ -3295,23 +3210,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d Aufgaben verschoben"
-          }
-        }
-      }
-    },
-    "%d tasks, one at a time – none of it is bad.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d tasks, one at a time – none of it is bad."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d Aufgaben, eine nach der anderen – nichts davon ist schlimm."
           }
         }
       }
@@ -4043,23 +3941,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "1 Display"
-          }
-        }
-      }
-    },
-    "1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 due task has nobody keeping it in mind yet – tap it and say “I keep it in mind”."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 fällige Aufgabe hat noch niemand im Blick – tipp sie an und sag „Ich hab’s im Blick“."
           }
         }
       }
@@ -7902,23 +7783,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alles leer"
-          }
-        }
-      }
-    },
-    "All done for today.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All done for today."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Für heute ist alles geschafft."
           }
         }
       }
@@ -17817,23 +17681,6 @@
         }
       }
     },
-    "Done – thank you!": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done – thank you!"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erledigt – danke!"
-          }
-        }
-      }
-    },
     "Done!": {
       "extractionState": "manual",
       "localizations": {
@@ -27541,23 +27388,6 @@
         }
       }
     },
-    "I’ll do it today": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I’ll do it today"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mach ich heute"
-          }
-        }
-      }
-    },
     "I’ll think along": {
       "extractionState": "manual",
       "localizations": {
@@ -35276,23 +35106,6 @@
         }
       }
     },
-    "None of this is bad. Pick what fits today – the rest can wait a week.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "None of this is bad. Pick what fits today – the rest can wait a week."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nichts davon ist schlimm. Nimm, was heute passt – der Rest darf eine Woche warten."
-          }
-        }
-      }
-    },
     "Normal": {
       "extractionState": "manual",
       "localizations": {
@@ -36105,23 +35918,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerade ist nichts fällig. ToHuus merkt sich, wie oft ihr etwas kauft – aus Bons und vom Abhaken."
-          }
-        }
-      }
-    },
-    "Nothing else is due.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing else is due."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sonst ist nichts fällig."
           }
         }
       }
@@ -38519,23 +38315,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur eins"
-          }
-        }
-      }
-    },
-    "Just one is enough.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Just one is enough."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nur eins reicht."
           }
         }
       }
@@ -54095,23 +53874,6 @@
         }
       }
     },
-    "Sorted for today.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sorted for today."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Für heute sortiert."
-          }
-        }
-      }
-    },
     "Sorts the list by this shop's aisles": {
       "extractionState": "manual",
       "localizations": {
@@ -57151,23 +56913,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aufgaben"
-          }
-        }
-      }
-    },
-    "Tasks today": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tasks today"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aufgaben heute"
           }
         }
       }
@@ -60823,23 +60568,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abhaken"
-          }
-        }
-      }
-    },
-    "Tick off what’s done – the next date sets itself.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tick off what’s done – the next date sets itself."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hak ab, was erledigt ist – der nächste Termin kommt von selbst."
           }
         }
       }
@@ -65196,23 +64924,6 @@
         }
       }
     },
-    "What will you manage today?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What will you manage today?"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Was schaffst du heute?"
-          }
-        }
-      }
-    },
     "What would you like?": {
       "extractionState": "manual",
       "localizations": {
@@ -68932,23 +68643,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dein Abo wurde wiederhergestellt."
-          }
-        }
-      }
-    },
-    "Your tasks here": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your tasks here"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deine Aufgaben hier"
           }
         }
       }
@@ -76535,23 +76229,6 @@
         }
       }
     },
-    "while %@ is away": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "while %@ is away"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "solange %@ weg ist"
-          }
-        }
-      }
-    },
     "while cooking": {
       "extractionState": "manual",
       "localizations": {
@@ -77449,108 +77126,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Demnächst"
-          }
-        }
-      }
-    },
-    "So nothing catches you off guard.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "So nothing catches you off guard."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Damit dich nichts überrascht."
-          }
-        }
-      }
-    },
-    "tonight: put out": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tonight: put out"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "heute Abend rausstellen"
-          }
-        }
-      }
-    },
-    "tomorrow evening: put out": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tomorrow evening: put out"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "morgen Abend rausstellen"
-          }
-        }
-      }
-    },
-    "%@ evening: put out": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ evening: put out"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ abends rausstellen"
-          }
-        }
-      }
-    },
-    "collection %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "collection %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abfuhr %@"
-          }
-        }
-      }
-    },
-    "tomorrow %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tomorrow %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "morgen %@"
           }
         }
       }
@@ -85494,57 +85069,6 @@
         }
       }
     },
-    "A lot at once?": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A lot at once?"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Viel auf einmal?"
-          }
-        }
-      }
-    },
-    "With “Just one” you only see the next task – the rest waits.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "With “Just one” you only see the next task – the rest waits."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mit „Nur eins“ siehst du nur die nächste Aufgabe – der Rest wartet."
-          }
-        }
-      }
-    },
-    "Try it": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try it"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ausprobieren"
-          }
-        }
-      }
-    },
     "A link your calendar app can subscribe to": {
       "extractionState": "manual",
       "localizations": {
@@ -88686,6 +88210,686 @@
           "stringUnit": {
             "state": "translated",
             "value": "Am Anfang Heute, Einkauf, Kochen, Aufgaben und Zuhause. Geld, Wissen oder Bring mir was holst du dir nach unten, wenn du sie brauchst, jede Person für sich."
+          }
+        }
+      }
+    },
+    "Tools": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werkzeuge"
+          }
+        }
+      }
+    },
+    "Ideas & templates": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideas & templates"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideen & Vorlagen"
+          }
+        }
+      }
+    },
+    "Mind & fairness": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mind & fairness"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopf & Fairness"
+          }
+        }
+      }
+    },
+    "No tasks yet. Type one above or take an idea.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tasks yet. Type one above or take an idea."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Aufgaben. Tipp oben eine ein oder nimm eine Idee."
+          }
+        }
+      }
+    },
+    "Nothing here in this view.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing here in this view."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In dieser Ansicht ist gerade nichts."
+          }
+        }
+      }
+    },
+    "Due now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt dran"
+          }
+        }
+      }
+    },
+    "Share the due tasks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share the due tasks"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fällige Aufgaben teilen"
+          }
+        }
+      }
+    },
+    "One tap adds a task with a sensible interval. You can change it later.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One tap adds a task with a sensible interval. You can change it later."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Tipp legt die Aufgabe mit passendem Abstand an. Ändern kannst du ihn später."
+          }
+        }
+      }
+    },
+    "You already added every suggestion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You already added every suggestion."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast schon alle Vorschläge übernommen."
+          }
+        }
+      }
+    },
+    "One recipe at a time, sorted by what is at home.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One recipe at a time, sorted by what is at home."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Rezept nach dem anderen, sortiert nach dem, was da ist."
+          }
+        }
+      }
+    },
+    "Nothing in the pantry yet. Start with the fridge.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in the pantry yet. Start with the fridge."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nichts im Vorrat. Fang mit dem Kühlschrank an."
+          }
+        }
+      }
+    },
+    "Your list is empty. Type above what is missing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your list is empty. Type above what is missing."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Liste ist leer. Tipp oben ein, was fehlt."
+          }
+        }
+      }
+    },
+    "Nothing of your own this month.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing of your own this month."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Monat nichts nur für dich."
+          }
+        }
+      }
+    },
+    "Share a receipt, then you see here what food and household cost.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share a receipt, then you see here what food and household cost."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teil einen Bon, dann siehst du hier, was Essen und Haushalt kosten."
+          }
+        }
+      }
+    },
+    "People I look after": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People I look after"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für wen ich da bin"
+          }
+        }
+      }
+    },
+    "Money on Today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Money on Today"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geld auf Heute"
+          }
+        }
+      }
+    },
+    "This week and this month as a small card on Today. Off unless you switch it on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week and this month as a small card on Today. Off unless you switch it on."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Woche und dieser Monat als kleine Karte auf Heute. Aus, bis du es einschaltest."
+          }
+        }
+      }
+    },
+    "With Plus or the assistant at the bottom right: “milk is out” goes on the list. AI is optional – everything works without it, and you switch it in Settings › Connections & devices › AI.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With Plus or the assistant at the bottom right: “milk is out” goes on the list. AI is optional – everything works without it, and you switch it in Settings › Connections & devices › AI."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Plus oder dem Assistenten unten rechts: „Milch ist alle“ landet auf der Liste. KI ist freiwillig. Alles geht auch ohne, an- und ausschalten kannst du sie unter Einstellungen › Verbindungen & Geräte › KI."
+          }
+        }
+      }
+    },
+    "Your areas sit at the bottom": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your areas sit at the bottom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unten sind deine Bereiche"
+          }
+        }
+      }
+    },
+    "Today, Shopping, Cooking, Tasks and Home. Home holds the pantry, house info, household knowledge and “Where’s what?”. Press and hold the bar to swap areas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, Shopping, Cooking, Tasks and Home. Home holds the pantry, house info, household knowledge and “Where’s what?”. Press and hold the bar to swap areas."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute, Einkauf, Kochen, Aufgaben und Zuhause. In Zuhause liegen Vorrat, Hausinfo, Haushaltswissen und „Wo ist was?“. Halt die Leiste gedrückt, um Bereiche zu tauschen."
+          }
+        }
+      }
+    },
+    "Today, Shopping, Cooking and Tasks. Press and hold the bar to swap areas.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, Shopping, Cooking and Tasks. Press and hold the bar to swap areas."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute, Einkauf, Kochen und Aufgaben. Halt die Leiste gedrückt, um Bereiche zu tauschen."
+          }
+        }
+      }
+    },
+    "Top right: search and More": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top right: search and More"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oben rechts: Lupe und Mehr"
+          }
+        }
+      }
+    },
+    "The magnifying glass finds every thing and every setting. Your picture opens More: money, people, settings and help.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The magnifying glass finds every thing and every setting. Your picture opens More: money, people, settings and help."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Lupe findet jede Sache und jede Einstellung. Dein Bild öffnet Mehr, mit Geld, Leuten, Einstellungen und Hilfe."
+          }
+        }
+      }
+    },
+    "Just say what’s missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just say what’s missing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag einfach, was fehlt"
+          }
+        }
+      }
+    },
+    "Not a good day? Just one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not a good day? Just one."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein guter Tag? Nur eins."
+          }
+        }
+      }
+    },
+    "“Just one” shows you one task at a time, the rest waits. Switch it on right on Today or in Settings › Me › Calm & focus.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Just one” shows you one task at a time, the rest waits. Switch it on right on Today or in Settings › Me › Calm & focus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Nur eins“ zeigt dir eine Aufgabe nach der anderen, der Rest wartet. Einschalten kannst du es direkt auf Heute oder unter Einstellungen › Ich › Ruhe & Fokus."
+          }
+        }
+      }
+    },
+    "Too much? Switch off what you don’t need.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too much? Switch off what you don’t need."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu viel? Schalt ab, was ihr nicht braucht."
+          }
+        }
+      }
+    },
+    "Settings › Areas & places › What do you use? hides whole areas. You find this tour again under Help.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings › Areas & places › What do you use? hides whole areas. You find this tour again under Help."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter Einstellungen › Bereiche & Orte › Was nutzt ihr? blendest du ganze Bereiche aus. Die Tour findest du jederzeit unter Hilfe."
+          }
+        }
+      }
+    },
+    "Where is your list today? Bring it along – nothing has to be typed twice.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where is your list today? Bring it along – nothing has to be typed twice."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo ist eure Liste heute? Bring sie mit, nichts muss doppelt getippt werden."
+          }
+        }
+      }
+    },
+    "Your first list": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your first list"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eure erste Liste"
+          }
+        }
+      }
+    },
+    "All set": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All set"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles bereit"
+          }
+        }
+      }
+    },
+    "Today shows you what is up next. If you like, share a receipt now: from it ToHuus learns what you buy and how often.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today shows you what is up next. If you like, share a receipt now: from it ToHuus learns what you buy and how often."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute zeigt dir ab jetzt, was dran ist. Wenn du magst, teil gleich noch einen Bon. Daraus lernt ToHuus, was ihr wie oft kauft."
+          }
+        }
+      }
+    },
+    "Up now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up now"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt dran"
+          }
+        }
+      }
+    },
+    "Something on your mind?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something on your mind?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was im Kopf?"
+          }
+        }
+      }
+    },
+    "Hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hint"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinweis"
+          }
+        }
+      }
+    },
+    "%d tasks, one after the other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d tasks, one after the other"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d Aufgaben, eine nach der anderen"
+          }
+        }
+      }
+    },
+    "One task, nice and calm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One task, nice and calm"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Aufgabe, ganz in Ruhe"
+          }
+        }
+      }
+    },
+    "Only ever the next task": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only ever the next task"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immer nur die nächste Aufgabe"
+          }
+        }
+      }
+    },
+    "1 due task has nobody keeping it in mind yet. Tap it and say “I keep it in mind”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 due task has nobody keeping it in mind yet. Tap it and say “I keep it in mind”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 fällige Aufgabe hat noch niemand im Blick. Tipp sie an und sag „Ich hab’s im Blick“."
+          }
+        }
+      }
+    },
+    "%d due tasks have nobody keeping them in mind yet. Tap one and say “I keep it in mind”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d due tasks have nobody keeping them in mind yet. Tap one and say “I keep it in mind”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d fällige Aufgaben hat noch niemand im Blick. Tipp eine an und sag „Ich hab’s im Blick“."
           }
         }
       }

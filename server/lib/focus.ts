@@ -31,9 +31,11 @@ export interface FocusPrefs {
   timerMin: number;
   /** "Nur eins" (docs/now.md): Heute shows only the next task as one card – the order comes from lib/next-task.ts */
   oneThing: boolean;
+  /** the money card on Heute (Paket B, 20 Oct 2026): off unless the person switches it on */
+  todayMoney: boolean;
 }
 
-const DEFAULTS: FocusPrefs = { gentle: false, todayMax: null, bundleHour: null, timerMin: 5, oneThing: false };
+const DEFAULTS: FocusPrefs = { gentle: false, todayMax: null, bundleHour: null, timerMin: 5, oneThing: false, todayMoney: false };
 
 export function focusPrefs(userId: number | null | undefined): FocusPrefs {
   if (!userId) return { ...DEFAULTS };
@@ -44,6 +46,7 @@ export function focusPrefs(userId: number | null | undefined): FocusPrefs {
     bundleHour: typeof raw.bundleHour === 'number' && raw.bundleHour >= 0 && raw.bundleHour <= 23 ? Math.round(raw.bundleHour) : null,
     timerMin: typeof raw.timerMin === 'number' && raw.timerMin >= 1 && raw.timerMin <= 60 ? Math.round(raw.timerMin) : DEFAULTS.timerMin,
     oneThing: raw.oneThing === true,
+    todayMoney: raw.todayMoney === true,
   };
 }
 

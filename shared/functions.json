@@ -15,7 +15,7 @@
       { "id": "alltag", "rows": ["wishes", "money", "treats", "away", "receipts", "handover"] },
       { "id": "zuhause", "rows": ["houseinfo", "knowledge", "find"], "whenNotInBar": "stock" },
       { "id": "familie", "rows": ["people", "guests", "carefor"] },
-      { "id": "kopf", "rows": ["mind", "focus", "loadcards", "week"] },
+      { "id": "kopf", "rows": ["mind", "focus", "blick", "loadcards", "week"] },
       { "id": "hilfe", "rows": ["settings", "help", "howitworks", "goodtoknow"] }
     ],
     "max": 5
@@ -93,8 +93,12 @@
       "platforms": ["web", "ios"], "roles": ["admin", "member"], "module": "cook" },
     { "id": "kitchen", "group": "alltag", "title": { "de": "Küchenmodus", "en": "Kitchen mode" },
       "words": { "de": "küchenmodus küche ipad arbeitsfläche kochen bildschirm", "en": "kitchen mode ipad counter cooking screen" },
-      "web": null, "ios": "kitchen", "help": null, "icon": { "web": "CookingPot", "ios": "frying.pan" },
-      "platforms": ["ios"], "roles": ["admin", "member"], "module": "cook" },
+      "web": "/kochen/kueche", "ios": "kitchen", "help": null, "icon": { "web": "CookingPot", "ios": "frying.pan" },
+      "platforms": ["web", "ios"], "roles": ["admin", "member"], "module": "cook" },
+    { "id": "taskideas", "group": "alltag", "title": { "de": "Ideen & Vorlagen", "en": "Ideas & templates" },
+      "words": { "de": "ideen vorlagen vorschläge aufgaben ratgeber putzplan rauchmelder wasserfilter", "en": "ideas templates suggestions tasks guide cleaning plan smoke detector water filter" },
+      "web": "/aufgaben/ideen", "ios": "taskIdeas", "help": "aufgaben", "icon": { "web": "ListChecks", "ios": "lightbulb" },
+      "platforms": ["web", "ios"], "roles": ["admin", "member"] },
 
     { "id": "people", "group": "familie", "title": { "de": "Leute", "en": "People" },
       "words": { "de": "leute personen mitglieder kinder rolle wer wohnt hier familie", "en": "people members children role who lives here family" },
@@ -117,6 +121,10 @@
       "words": { "de": "im kopf gedanken nebenbei erledigt dran gedacht gesehen mental load denke an", "en": "on my mind thoughts mental load remembered noticed" },
       "web": "/kopf", "ios": "mind", "help": "kopf-voll", "icon": { "web": "Lightbulb", "ios": "brain.head.profile" },
       "platforms": ["web", "ios"], "roles": ["admin", "member"] },
+    { "id": "blick", "group": "kopf", "title": { "de": "Wer hat was im Blick", "en": "Who keeps what in mind" },
+      "words": { "de": "wer hat was im blick wer macht was fair verteilt gemerkt geplant erledigt mental load", "en": "who keeps what in mind who does what fair share noticed planned mental load" },
+      "web": "/aufgaben/blick", "ios": "blick", "help": "kopf-voll", "icon": { "web": "Eye", "ios": "eye" },
+      "platforms": ["web", "ios"], "roles": ["admin", "member"] },
     { "id": "loadcards", "group": "kopf", "title": { "de": "Denkarbeit-Check", "en": "Mental load check" },
       "words": { "de": "denkarbeit mental load unsichtbare arbeit karten wer denkt an was fair verteilen", "en": "mental load check invisible work cards fair share" },
       "web": "/denkarbeit", "ios": "loadCards", "help": "kopf-voll", "icon": { "web": "Scales", "ios": "scalemass" },
@@ -126,7 +134,7 @@
       "web": "/woche", "ios": "week", "help": null, "icon": { "web": "CalendarCheck", "ios": "calendar" },
       "platforms": ["web", "ios"], "roles": ["admin", "member"] },
     { "id": "focus", "group": "kopf", "title": { "de": "Nur eins", "en": "Just one" },
-      "words": { "de": "nur eins fokus konzentration adhs ads timer eine aufgabe nach der anderen anfangen sanfter modus", "en": "just one focus concentration adhd timer one task at a time gentle" },
+      "words": { "de": "nur eins fokus konzentration adhs ads timer eine aufgabe nach der anderen anfangen sanfter modus was schaffst du heute fällige aufgaben", "en": "just one focus concentration adhd timer one task at a time gentle what will you manage today due tasks" },
       "web": "/fokus", "ios": "focus", "help": "eine-sache", "icon": { "web": "Target", "ios": "scope" },
       "platforms": ["web", "ios"], "roles": ["admin", "member"] },
 
