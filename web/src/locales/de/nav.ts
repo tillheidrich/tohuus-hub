@@ -16,4 +16,5 @@ export const navbar: Record<string, string> = {
   'Saved on this device. It goes to your other devices once you’re online.': 'Auf diesem Gerät gespeichert. Sobald du online bist, kommt es auf deine anderen Geräte.',
   'Same on all your devices.': 'Gilt auf all deinen Geräten.',
   'Adjust the bar': 'Leiste anpassen',
+  'All functions': 'Alle Funktionen',
 };

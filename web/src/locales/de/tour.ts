@@ -110,7 +110,7 @@ export const tour: Record<string, string> = {
     '„Beispieldaten entfernen“ löscht nur, was die Beispiele angelegt haben. „Neu anfangen“ leert die Bereiche, die du auswählst – nach einer automatischen Sicherung.',
   // tour 18 Oct 2026 (six pages)
   'Your bar, the way you need it': 'Deine Leiste, so wie du sie brauchst',
-  'Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there, like “Bring me something” or Knowledge. Everything else is under More.': 'Unten stehen Heute, Einkauf, Kochen und Aufgaben. Halt die Leiste lange gedrückt (oder Einstellungen › Ich › Deine Leiste) und leg selbst fest, was dort steht, zum Beispiel Bring mir was oder Wissen. Alles andere findest du unter Mehr.',
+  'Today, Shopping, Cooking, Tasks and Home sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there. Your picture at the top right opens More with everything else.': 'Unten stehen Heute, Einkauf, Kochen, Aufgaben und Zuhause. Halt die Leiste lange gedrückt (oder Einstellungen › Ich › Deine Leiste) und leg selbst fest, was dort steht. Dein Bild oben rechts öffnet Mehr, da findest du alles andere.',
   'Coming up: thought of in time': 'Demnächst: rechtzeitig dran gedacht',
   'Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.': 'Unter Heute siehst du, was in den nächsten Tagen ansteht. Die Tonne kommt schon am Vorabend, denn dann muss sie raus.',
   'Ticked off by mistake?': 'Aus Versehen abgehakt?',
@@ -120,7 +120,7 @@ export const tour: Record<string, string> = {
   'Just tell the assistant': 'Sag’s einfach dem Assistenten',
   '“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.': '„Mira hat Dienstag um 15 Uhr Zahnarzt“ landet mit Datum bei den Aufgaben, „Mika hat jetzt Schuhgröße 29“ im Wissen, „Milch ist alle“ auf der Liste. Er sagt dir, was er gemacht hat, und alles lässt sich rückgängig machen.',
   'Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”. Guests too, with a link.': 'Liegst du krank auf dem Sofa oder hast gerade die Hände voll? Wünsch dir mit zwei Tipps einen Tee, und jemand zu Hause sagt „Ich bring’s“. Gäste auch, per Link.',
-  'You can take it again any time under Help. Everything else, from house info to settings, is under More.': 'Die Tour findest du jederzeit wieder unter Hilfe. Alles andere, von der Hausinfo bis zu den Einstellungen, steht unter Mehr.',
+  'You can take it again any time under Help. Your picture at the top right opens More, with the settings and everything else.': 'Die Tour findest du jederzeit wieder unter Hilfe. Dein Bild oben rechts öffnet Mehr, mit den Einstellungen und allem anderen.',
   // Settings › Data, plan & account › Data & reset (DataWipe.tsx)
   'Data & reset': 'Daten & Zurücksetzen',
   'Clear single areas or everything and start again. What you delete can be restored for {days} days – after that it is gone for good, photos and PDFs included.': 'Leer einzelne Bereiche oder alles und fang neu an. Was du löschst, kannst du {days} Tage lang wiederherstellen – danach ist es endgültig weg, auch Fotos und PDFs.',

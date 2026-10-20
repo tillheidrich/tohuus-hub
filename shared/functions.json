@@ -9,10 +9,21 @@
     { "id": "kopf", "de": "Kopf & Fairness", "en": "Mind & fairness" },
     { "id": "hilfe", "de": "Einstellungen & Hilfe", "en": "Settings & help" }
   ],
+  "more": {
+    "about": "Mehr (Paket A, docs/navigation.md): diese Gruppen in dieser Reihenfolge, je höchstens fünf sichtbare Zeilen, auf iPhone und Web gleich (web/src/search/functions.ts moreMenu, iOS MoreMenu.swift). Ausgeblendet wird, was die Person nicht sehen darf (Rolle, Gast-Stufe, „Was nutzt ihr?“) und was schon in ihrer Leiste steht. Die Türen der Gruppe „zuhause“ stehen als eigene Gruppe in Mehr, wenn der Tab Zuhause nicht in der Leiste ist. Alles Übrige steht unter „Alle Funktionen“.",
+    "groups": [
+      { "id": "alltag", "rows": ["wishes", "money", "treats", "away", "receipts", "handover"] },
+      { "id": "zuhause", "rows": ["houseinfo", "knowledge", "find"], "whenNotInBar": "stock" },
+      { "id": "familie", "rows": ["people", "guests", "carefor"] },
+      { "id": "kopf", "rows": ["mind", "focus", "loadcards", "week"] },
+      { "id": "hilfe", "rows": ["settings", "help", "howitworks", "goodtoknow"] }
+    ],
+    "max": 5
+  },
   "functions": [
     { "id": "today", "group": "bereiche", "title": { "de": "Heute", "en": "Today" },
       "words": { "de": "heute start startseite übersicht", "en": "today start home overview" },
-      "web": "/", "ios": "tab:today", "help": "erste-schritte", "icon": { "web": "House", "ios": "sun.max" },
+      "web": "/", "ios": "tab:today", "help": "erste-schritte", "icon": { "web": "Sun", "ios": "sun.max" },
       "platforms": ["web", "ios"], "roles": ["admin", "member", "guest"] },
     { "id": "shopping", "group": "bereiche", "title": { "de": "Einkauf", "en": "Shopping" },
       "words": { "de": "einkauf einkaufsliste liste einkaufen laden supermarkt", "en": "shopping list shop store groceries" },
@@ -26,9 +37,9 @@
       "words": { "de": "aufgaben putzen haushalt termine fristen pflege müll", "en": "tasks chores cleaning appointments deadlines bins" },
       "web": "/aufgaben", "ios": "tab:tasks", "help": "aufgaben", "icon": { "web": "ListChecks", "ios": "checklist" },
       "platforms": ["web", "ios"], "roles": ["admin", "member", "guest"] },
-    { "id": "stock", "group": "bereiche", "title": { "de": "Vorrat", "en": "Pantry" },
-      "words": { "de": "vorrat zuhause zu hause kühlschrank keller vorräte haltbarkeit bald verbrauchen", "en": "pantry home stock fridge cellar use soon" },
-      "web": "/bestand", "ios": "tab:stock", "help": "vorrat", "icon": { "web": "Package", "ios": "cabinet" },
+    { "id": "stock", "group": "bereiche", "title": { "de": "Zuhause", "en": "Home" },
+      "words": { "de": "zuhause zu hause vorrat kühlschrank keller vorräte haltbarkeit bald verbrauchen", "en": "home pantry stock fridge cellar use soon" },
+      "web": "/bestand", "ios": "tab:stock", "help": "vorrat", "icon": { "web": "House", "ios": "house" },
       "platforms": ["web", "ios"], "roles": ["admin", "member", "guest"], "module": "stock" },
 
     { "id": "houseinfo", "group": "zuhause", "title": { "de": "Hausinfo", "en": "House info" },
@@ -52,7 +63,7 @@
       "words": { "de": "bring mir was wunsch sofa getränk snack karte bestellen", "en": "bring me something wish sofa drink snack menu order treat" },
       "web": "/bestellen", "ios": "treats", "help": "bring-mir-was", "icon": { "web": "HandHeart", "ios": "hand.raised" },
       "platforms": ["web", "ios"], "roles": ["admin", "member", "guest"], "module": "treats" },
-    { "id": "wishes", "group": "alltag", "title": { "de": "Wünsche", "en": "Wishes" },
+    { "id": "wishes", "group": "alltag", "title": { "de": "Wünsche", "en": "Wishes" }, "more": { "de": "Wunschlisten & Geschenke", "en": "Wish lists & gifts" },
       "words": { "de": "wünsche wunsch wunschliste wunschzettel geschenk geschenke geburtstag weihnachten hochzeit anlass reservieren schenken merkliste", "en": "wishes wish list gift gifts birthday christmas wedding reserve" },
       "web": "/einkauf/wuensche", "ios": "wishes", "help": "wunschlisten", "icon": { "web": "Gift", "ios": "gift" },
       "platforms": ["web", "ios"], "roles": ["admin", "member"] },
@@ -64,6 +75,10 @@
       "words": { "de": "urlaub verreist unterwegs übergabe packen haushüter", "en": "trip away holiday handover packing house sitter" },
       "web": "/urlaub", "ios": "away", "help": null, "icon": { "web": "Suitcase", "ios": "suitcase" },
       "platforms": ["web", "ios"], "roles": ["admin", "member"] },
+    { "id": "handover", "group": "alltag", "title": { "de": "Übergabe", "en": "Handover" },
+      "words": { "de": "übergabe haushüten haussitter gast was zu tun ist", "en": "handover house sitting sitter guest what to do" },
+      "web": "/uebergabe", "ios": "handover", "help": null, "icon": { "web": "Suitcase", "ios": "suitcase" },
+      "platforms": ["web", "ios"], "roles": ["guest"] },
     { "id": "receipts", "group": "alltag", "title": { "de": "Bons & Importe", "en": "Receipts & imports" },
       "words": { "de": "bons bon kassenbon ebon rechnung import einlesen", "en": "receipts receipt e-receipt invoice import" },
       "web": "/import", "ios": "receipts", "help": "kassenbons", "icon": { "web": "Receipt", "ios": "doc.text" },

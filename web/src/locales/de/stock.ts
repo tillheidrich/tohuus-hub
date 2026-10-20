@@ -57,7 +57,7 @@ export const stock: Record<string, string> = {
   "In stock": "Vorhanden",
   "No location": "Ohne Ort",
   "No category": "Ohne Kategorie",
-  "1 product at home": "1 Produkt im Haus",
+  "1 product at home": "1 Sache im Vorrat",
   "{n} products at home": "{n} Sachen im Vorrat",
   "Stock": "Vorrat",
   "Group by": "Gruppierung",

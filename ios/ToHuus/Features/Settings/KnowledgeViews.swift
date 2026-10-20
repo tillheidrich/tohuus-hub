@@ -84,7 +84,7 @@ struct HowItWorksView: View {
         ("arrow.uturn.backward", L("Suggestions, and everything can be undone"),
          L("Every suggestion shows its reason. Ticked off or deleted by mistake? Undo brings it back – also for what the assistant did.")),
         ("rectangle.bottomthird.inset.filled", L("Your bar"),
-         L("Today, Shopping, Cooking, Tasks and Stock to start with. Bring Money, Knowledge or Bring me something down when you need them – each person their own.")),
+         L("Today, Shopping, Cooking, Tasks and Home to start with. Bring Money, Knowledge or Bring me something down when you need them – each person their own.")),
         ("fork.knife", L("Cook with what's at home"),
          L("ToHuus shows what you can cook today and what's missing for it. The week plan is optional.")),
         ("eurosign.circle", L("Know where the money goes"),

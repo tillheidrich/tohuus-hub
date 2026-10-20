@@ -88621,6 +88621,74 @@
           }
         }
       }
+    },
+    "More areas": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More areas"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Bereiche"
+          }
+        }
+      }
+    },
+    "All functions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All functions"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Funktionen"
+          }
+        }
+      }
+    },
+    "Today, Shopping, Cooking, Tasks and Home sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there. Your picture at the top right opens More with everything else.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, Shopping, Cooking, Tasks and Home sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there. Your picture at the top right opens More with everything else."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unten stehen Heute, Einkauf, Kochen, Aufgaben und Zuhause. Halt die Leiste lange gedrückt (oder Einstellungen › Ich › Deine Leiste) und leg selbst fest, was dort steht. Dein Bild oben rechts öffnet Mehr, da findest du alles andere."
+          }
+        }
+      }
+    },
+    "Today, Shopping, Cooking, Tasks and Home to start with. Bring Money, Knowledge or Bring me something down when you need them – each person their own.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today, Shopping, Cooking, Tasks and Home to start with. Bring Money, Knowledge or Bring me something down when you need them – each person their own."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am Anfang Heute, Einkauf, Kochen, Aufgaben und Zuhause. Geld, Wissen oder Bring mir was holst du dir nach unten, wenn du sie brauchst, jede Person für sich."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

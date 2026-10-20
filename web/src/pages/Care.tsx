@@ -41,7 +41,6 @@ import { TodayDeckSheet } from './Decide';
 import { durationLabel, timeLabel, isPast } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
-import { HomeDoors } from '../home/HomeSwitch';
 import { RatgeberCards } from './RatgeberCards';
 import { FreshStartButton, SplitButton, isGentle, mergeSteps, suggestSteps } from '../focus/Focus';
 import { TasksToCalendarHelp } from './CalendarSync';
@@ -405,7 +404,6 @@ export function Care() {
 
   return (
     <div className="rise">
-      <HomeDoors side="tasks" />
       <header className="page-head">
         <div>
           <div className="eyebrow">

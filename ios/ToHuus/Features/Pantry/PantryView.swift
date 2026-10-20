@@ -62,6 +62,8 @@ final class PantryModel {
 
 struct PantryView: View {
     let store: ServerStore
+    /// Zuhause (Paket A): the doors Hausinfo, Haushaltswissen, Wo ist was? on top of the list (HomeView.swift)
+    var onDoor: ((HomeDoor) -> Void)? = nil
     @Environment(AppModel.self) private var app
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var width: CGFloat = 0
@@ -115,7 +117,7 @@ struct PantryView: View {
                 }
             }
             .onGeometryChangeCompat { w in width = w }
-            .navigationTitle(L("Pantry"))
+            .navigationTitle(onDoor == nil ? L("Pantry") : L("Home"))
             .rootChrome()
             .navigationDestination(for: Int.self) { id in ProductDetailView(productId: id, store: store) }
             .toolbar {
@@ -253,6 +255,16 @@ struct PantryView: View {
 
     private var list: some View {
             List {
+                if let onDoor {
+                    VStack(alignment: .leading, spacing: Theme.Space.s4) {
+                        ZuhauseDoors(open: onDoor)
+                        Text(L("Pantry")).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink)
+                            .accessibilityAddTraits(.isHeader)
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 0, trailing: 16))
+                }
                 filterBar
                 if let note = OfflineNote.for(["api/products"]) { note.listRowBackground(Color.clear) }
                 if let error = model.error {

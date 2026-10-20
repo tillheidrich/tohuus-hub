@@ -28,7 +28,7 @@ struct AppTourView: View {
     private var pages: [Page] {
         var p: [Page] = [
             Page(id: "bar", symbol: "dock.rectangle", title: L("Your bar, the way you need it"),
-                 body: L("Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there, like “Bring me something” or Knowledge. Everything else is under More.")),
+                 body: L("Today, Shopping, Cooking, Tasks and Home sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there. Your picture at the top right opens More with everything else.")),
             Page(id: "ahead", symbol: "calendar", title: L("Coming up: thought of in time"),
                  body: L("Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.")),
             Page(id: "undo", symbol: "arrow.uturn.backward", title: L("Ticked off by mistake?"),

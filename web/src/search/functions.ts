@@ -15,6 +15,8 @@ export interface FnEntry {
   id: string;
   group: FnGroup;
   title: { de: string; en: string };
+  /** a longer row title in Mehr (optional) */
+  more?: { de: string; en: string };
   words: { de: string; en: string };
   /** web route, null when the function only exists on the iPhone */
   web: string | null;
@@ -62,3 +64,55 @@ export function matchFunctions(q: string, list: FnEntry[]): FnEntry[] {
 }
 
 export const fnTitle = (f: FnEntry, lang: string) => (lang === 'de' ? f.title.de : f.title.en);
+/** the row title in Mehr (Wünsche: „Wunschlisten & Geschenke“), otherwise the title */
+export const fnMoreTitle = (f: FnEntry, lang: string) => (f.more ? (lang === 'de' ? f.more.de : f.more.en) : fnTitle(f, lang));
+
+// ------------------------------------------------------------------ Mehr (Paket A, docs/navigation.md)
+
+interface MoreSpec {
+  groups: { id: FnGroup; rows: string[]; whenNotInBar?: string }[];
+  max: number;
+}
+export const MORE_SPEC = (data as unknown as { more: MoreSpec }).more;
+
+export interface MoreCtx extends FnCtx {
+  /** ids of the functions that have a place in this person's bar (shopping, stock, money, wishes, treats …) */
+  inBar: string[];
+  /** the guest level / route check of the platform (web: guestAllows + moduleAllows on the route) */
+  allows?: (f: FnEntry) => boolean;
+  /** a household of one: „Bring mir was“ needs someone at home to ask */
+  single?: boolean;
+}
+
+/**
+ * The groups of Mehr – the same on the iPhone (MoreMenu.swift `MoreMenu.groups`) and the web (pages/More.tsx, the
+ * desktop sidebar): the groups of shared/functions.json › more in their order, each row only when the person may see
+ * it and it is not in their bar, at most `max` rows a group. The Zuhause doors become a group of their own when the
+ * Zuhause tab is not in the bar (switched off, a guest without it, an own bar without it).
+ */
+export function moreMenu(c: MoreCtx): { id: FnGroup; rows: FnEntry[] }[] {
+  const seen = new Map(functionsFor(c).map((f) => [f.id, f]));
+  const out: { id: FnGroup; rows: FnEntry[] }[] = [];
+  for (const g of MORE_SPEC.groups) {
+    if (g.whenNotInBar && c.inBar.includes(g.whenNotInBar)) continue;
+    const rows = g.rows
+      .map((id) => seen.get(id))
+      .filter((f): f is FnEntry => Boolean(f))
+      .filter((f) => !c.inBar.includes(f.id) && !(c.single && f.id === 'treats') && (!c.allows || c.allows(f)))
+      .slice(0, MORE_SPEC.max);
+    if (rows.length) out.push({ id: g.id, rows });
+  }
+  return out;
+}
+
+/** the ids of the functions shown in Mehr – for the "Alle Funktionen" page: everything else */
+export const moreIds = (c: MoreCtx) => new Set(moreMenu(c).flatMap((g) => g.rows.map((f) => f.id)));
+
+/** the doors on top of the Zuhause tab (group "zuhause"), in register order */
+export function zuhauseDoors(c: FnCtx & { allows?: (f: FnEntry) => boolean }): FnEntry[] {
+  return functionsFor(c).filter((f) => f.group === 'zuhause' && (!c.allows || c.allows(f)));
+}
+
+/** bar area id (nav.tsx NAV_AREAS, iOS AppArea) → function id */
+export const AREA_FUNCTION: Record<string, string> = { orders: 'treats' };
+export const areaFunction = (area: string) => AREA_FUNCTION[area] ?? area;

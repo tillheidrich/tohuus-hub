@@ -13,7 +13,7 @@ Web, iPhone, Cloud und eigenem Server. Routen, Ids und Modul-Schlüssel bleiben 
 | Einkaufsliste, Laden-Modus | Einkauf (Seite), Liste (Karte), Im Laden (Modus) | Shopping, List, In the store | – | `shopping` / `/einkauf` |
 | Rezepte, Wochenplan | Kochen | Cooking | Cook | `cooking` / `/kochen` |
 | Wiederkehrendes zu Hause | Aufgaben | Tasks | Pflege (als Bereich) | `tasks` / `/aufgaben` |
-| Tab „was bei uns ist“ (Vorrat + Türen) | Zuhause | Home | – | `stock` / `/bestand` (Umbau: Paket A) |
+| Tab „was bei uns ist“ (Vorrat + Türen) | Zuhause | Home | – | `stock` / `/bestand`, Alias `/zuhause` (Paket A: Vorrat + Türen Hausinfo, Haushaltswissen, Wo ist was?) |
 | Lebensmittel und Sachen im Haus | Vorrat | Pantry | Bestand, Produkte im Haus | – |
 | Was wieder gekauft werden müsste (Kaufrhythmus) | Bald wieder nötig | Needed again soon | Fällig (für Käufe) | Heute-Karte `rhythm` |
 | Aufgabe ist dran | fällig | due | – | – |
@@ -92,7 +92,7 @@ Eine Liste aller Funktionen außerhalb der Einstellungen (die stehen in `web/src
 - iPhone: `ios/project.yml` kopiert die Datei ins App-Bundle; `FunctionRegister` in `GlobalSearchView.swift` liest sie
   und filtert mit denselben Regeln.
 - Nur auf einer Plattform (bewusst): `kitchen` (Küchenmodus, iPad; Web entscheidet Paket E).
-- Mehr baut Paket A aus derselben Datei um.
+- Mehr (Paket A) liest `more` aus derselben Datei: Gruppen, Zeilen, höchstens fünf je Gruppe (`docs/navigation.md`). Optional `more` an einer Funktion = längerer Zeilentitel in Mehr (Wünsche: „Wunschlisten & Geschenke“).
 - `test/functions-registry.test.ts`: jede Route existiert, jedes iOS-Ziel ist bekannt, jeder Hilfe-Slug existiert,
   Web und iPhone liefern dieselben Ids.
 

@@ -9969,22 +9969,168 @@ button.rcard {
     display: none;
   }
 }
-/* the doors on top of Aufgaben (Hausinfo, Urlaub) and Vorrat (Wo ist was?) – home/HomeSwitch.tsx */
-.home-switch {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0 0 14px;
+/* Zuhause (Paket A, home/HomeSwitch.tsx): labelled doors on top of the pantry – two tiles side by side (symbol over the
+   word), a third one as a full-width row below; one door alone is a full row. Desktop: three in a row. */
+.zuhause-doors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  align-items: stretch;
+  gap: var(--sp-2);
+  margin: 2px 0 var(--sp-6);
 }
-.home-doors {
+.zuhause-doors.n1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+.zuhause-door {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'ic . chev' 'label label label';
+  row-gap: 14px;
+  align-items: start;
+  min-height: 104px;
+  margin: 0;
+  padding: 14px 12px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+/* the third door (and a single one): a row – symbol, word, arrow */
+.zuhause-doors.n3 > .zuhause-door:nth-child(3),
+.zuhause-doors.n1 > .zuhause-door {
+  grid-column: 1 / -1;
+  grid-template-areas: 'ic label chev';
+  align-items: center;
+  column-gap: 12px;
+  min-height: 64px;
+}
+.zuhause-door:active {
+  transform: scale(0.98);
+}
+@media (hover: hover) {
+  .zuhause-door:hover {
+    background: color-mix(in srgb, var(--surface-2) 60%, var(--surface));
+  }
+}
+.zuhause-door:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.zuhause-door .ic {
+  grid-area: ic;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  background: var(--sand);
+  color: var(--ink);
+}
+.zuhause-door:nth-child(2) .ic {
+  background: var(--primary-soft);
+}
+.zuhause-door:nth-child(3) .ic {
+  background: var(--sage-soft);
+}
+.zuhause-door b {
+  grid-area: label;
+  font-size: var(--fs-row);
+  font-weight: 600;
+  line-height: 1.25;
+  min-width: 0;
+}
+.zuhause-door .chev {
+  grid-area: chev;
+  color: var(--ink-2);
+  align-self: center;
+}
+@media (min-width: 720px) {
+  .zuhause-doors,
+  .zuhause-doors.n3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .zuhause-doors.n3 > .zuhause-door:nth-child(3) {
+    grid-column: auto;
+    grid-template-areas: 'ic . chev' 'label label label';
+    align-items: start;
+    min-height: 104px;
+  }
+}
+.zuhause-head {
+  margin-bottom: var(--sp-3);
+}
+/* the pantry's own small head under the doors */
+.page-subhead {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+}
+.page-subhead .subhead-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.page-subhead h2 {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+.page-subhead .actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+/* Einkauf: the labelled door to the wish lists */
+.door-row {
+  display: flex;
+  margin: 0 0 var(--sp-3);
+}
+.door-chip {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  min-height: 44px;
+  padding: 0 14px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--dur-press) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
-.home-doors .chip {
-  white-space: nowrap;
-  min-height: 40px;
+.door-chip:active {
+  transform: scale(0.98);
+}
+@media (hover: hover) {
+  .door-chip:hover {
+    background: var(--surface-2);
+  }
+}
+.door-chip .chev {
+  color: var(--ink-2);
+}
+/* search + Mehr at the top right of every area page on a phone (App.tsx RootChrome, iOS RootChrome.swift) */
+.root-chrome {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
+  margin: -14px -6px 0 0;
+  min-height: 44px;
+}
+@media (min-width: 960px) {
+  .root-chrome {
+    display: none;
+  }
 }
 .side-search .side-kbd {
   margin-left: auto;
@@ -10276,14 +10422,6 @@ html.gentle .badge.empty {
 .seg { align-self: flex-start; }
 .seg.full { display: flex; align-self: stretch; }
 .seg.full button { flex: 1; }
-/* chip rows scroll to the screen edge and fade out instead of being cut off inside the margin */
-.home-doors {
-  margin: 0 calc(var(--page-gutter, 16px) * -1);
-  padding: 2px var(--page-gutter, 16px);
-  scroll-padding: 0 var(--page-gutter, 16px);
-  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
-  mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
-}
 /* list rows on phones: "Ich hol's" as an icon so the name gets the room */
 .claim-btn { display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 480px) {

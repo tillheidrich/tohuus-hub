@@ -197,6 +197,8 @@ struct FunctionRegister: Decodable, Sendable {
         var id: String
         var group: String
         var title: Text
+        /// a longer row title in Mehr (Wünsche: „Wunschlisten & Geschenke“)
+        var more: Text?
         var words: Text
         var web: String?
         var ios: String?
@@ -207,11 +209,21 @@ struct FunctionRegister: Decodable, Sendable {
         var module: String?
     }
     var functions: [Fn]
+    /// the group titles (Mehr, Alle Funktionen)
+    struct GroupTitle: Decodable, Sendable { var id: String; var de: String; var en: String }
+    var groups: [GroupTitle]?
+    /// Mehr: groups, their rows, the most rows a group shows (MoreMenu.swift; web: moreMenu in search/functions.ts)
+    struct MoreSpec: Decodable, Sendable {
+        struct G: Decodable, Sendable { var id: String; var rows: [String]; var whenNotInBar: String? }
+        var groups: [G]
+        var max: Int
+    }
+    var more: MoreSpec?
 
     static let shared: FunctionRegister = {
         guard let url = Bundle.main.url(forResource: "functions", withExtension: "json"),
               let data = try? Data(contentsOf: url),
-              let r = try? JSONDecoder().decode(FunctionRegister.self, from: data) else { return FunctionRegister(functions: []) }
+              let r = try? JSONDecoder().decode(FunctionRegister.self, from: data) else { return FunctionRegister(functions: [], groups: nil, more: nil) }
         return r
     }()
 
@@ -231,7 +243,7 @@ enum SearchRegistry {
     enum Target: String {
         case account, household, people, invite, places, notifications, connections, data, ai, calendar, labels, help
         case servers, devices, guests, treats, knowledge, wishes, giving, receipts, spending, favourites, houseInfo, away, listLook, focus, loadCards
-        case find, kitchen, careFor, mind, week, settings, howItWorks, goodToKnow
+        case find, kitchen, careFor, mind, week, settings, howItWorks, goodToKnow, handover
     }
 
     struct Entry: Identifiable {
@@ -320,6 +332,7 @@ enum SearchRegistry {
         case .week: WeekReviewView(api: api)
         case .howItWorks: HowItWorksView()
         case .goodToKnow: FactsView()
+        case .handover: HandoverGuestView(api: api)
         // shown as a sheet / full screen by GlobalSearchView.functionRow
         case .find, .kitchen, .settings: HelpCenterView(store: store)
         }

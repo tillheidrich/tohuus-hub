@@ -15,6 +15,7 @@ import { kidLock } from './kidlock';
 import { areasInMore, load, moreGroups, myBar, mySidebar, tabFor } from './nav';
 import { NavBarPage, navPrefOf, useBarLongPress, useNavSync } from './navbar';
 import { GlobalSearch, useSearchHotkey } from './search/GlobalSearch';
+import { FUNCTIONS } from './search/functions';
 import { useOnboardingRedirect } from './onboarding-state';
 import { guestAllows } from './people/access';
 import { enablePeopleDirectory } from './people/Avatar';
@@ -69,6 +70,7 @@ const Stock = page(load.stock, 'Stock');
 const Kitchen = page(load.cook, 'Kitchen');
 const Money = page(load.money, 'Money');
 const More = page(load.more, 'More');
+const AllFunctions = page(load.more, 'AllFunctions');
 const ProductDetail = page(() => import('./pages/Product'), 'ProductDetail');
 const ProductForm = page(() => import('./pages/Product'), 'ProductForm');
 const Check = page(() => import('./pages/Check'), 'Check');
@@ -253,8 +255,17 @@ function Shell({ me }: { me: Me }) {
     window.addEventListener('tohuus:search', openSearch);
     return () => window.removeEventListener('tohuus:search', openSearch);
   }, [openSearch]);
-  // the desktop sidebar's Mehr: with an own bar, the other areas come first (on a phone they are rows of /mehr)
-  const groups = moreGroups({ guest: gl, admin: me.actor.role === 'admin', cloud: inst.data?.mode === 'cloud', modules: mods, areas: navPref ? areasInMore(gl, mods, navPref) : undefined });
+  // the desktop sidebar's Mehr: the same groups as /mehr (shared/functions.json), minus what the sidebar already shows
+  const groups = moreGroups({
+    guest: gl,
+    admin: me.actor.role === 'admin',
+    cloud: inst.data?.mode === 'cloud',
+    modules: mods,
+    areas: navPref ? areasInMore(gl, mods, navPref) : undefined,
+    bar: phoneTabs.map((l) => l.key),
+    sidebar: tabs.map((l) => l.key),
+    single: isSingle(me),
+  });
   // an extra area in the own bar (Wünsche, Hausinfo …) is lit on its own pages (nav.tsx tabFor)
   const activeTab = tabFor(loc.pathname, navPref ? phoneTabs.map((l) => l.key) : undefined);
   // gentle mode (focus): no "needs attention" counter on Vorrat
@@ -308,14 +319,21 @@ function Shell({ me }: { me: Me }) {
               </NavLink>
             ))}
           </div>
-          <div className="nav-group nav-more">
-            <div className="nav-group-title">{t('More')}</div>
-            {groups.flatMap((g) => g.items).map((l) => (
-              <NavLink key={l.to} to={l.to} className={() => `navlink sm ${loc.pathname + loc.search === l.to || ((loc.pathname === l.to || loc.pathname.startsWith(`${l.to}/`)) && !l.to.includes('?')) ? 'active' : ''}`}>
-                {l.label}
-              </NavLink>
-            ))}
-          </div>
+          {/* Mehr in groups with their titles, like /mehr (UX audit P2-6); rows the sidebar already shows are left out */}
+          {groups.map((g) => {
+            const items = g.items.filter((l) => !l.phoneOnly);
+            if (!items.length) return null;
+            return (
+              <div key={g.key} className="nav-group nav-more">
+                <div className="nav-group-title">{g.title}</div>
+                {items.map((l) => (
+                  <NavLink key={l.to} to={l.to} className={() => `navlink sm ${loc.pathname + loc.search === l.to || ((loc.pathname === l.to || loc.pathname.startsWith(`${l.to}/`)) && !l.to.includes('?')) ? 'active' : ''}`}>
+                    {l.label}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         {guestAllows(gl, '/bestand') && (
           <button className="btn primary side-add" onClick={() => setAdd(true)}>
@@ -348,6 +366,8 @@ function Shell({ me }: { me: Me }) {
         {/* ToHuus Cloud: read-only after the trial, and the calm card for plan limits (billing/PlanHint.tsx) */}
         <ReadonlyNote />
         <PlanHintHost />
+        {/* search + Mehr on every area page (phone), like RootChrome on the iPhone – Heute has them in its own head */}
+        {hasRootChrome(loc.pathname) && <RootChrome me={me} />}
         <div key={loc.pathname} className="page-fade">
           {/* a page that fails shows a card with "Neu laden" here – tab bar and sidebar stay (./crash.tsx) */}
           <CrashBoundary>
@@ -357,6 +377,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/heute" element={<Navigate to="/" replace />} />
               <Route path="/bestand" element={<Stock onNew={() => setNewProduct(true)} />} />
               <Route path="/vorrat" element={<Navigate to="/bestand" replace />} />
+              <Route path="/zuhause" element={<Navigate to="/bestand" replace />} />
               <Route path="/bestand/:id" element={<ProductDetail />} />
               <Route path="/abgleich" element={<Check />} />
               <Route path="/abgleich/:id" element={<Check />} />
@@ -369,6 +390,7 @@ function Shell({ me }: { me: Me }) {
               <Route path="/abstimmung/:id" element={<VotePage />} />
               <Route path="/geld" element={<Money />} />
               <Route path="/mehr" element={<More me={me} />} />
+              <Route path="/mehr/alle" element={<AllFunctions me={me} />} />
               <Route path="/leiste" element={<NavBarPage me={me} />} />
               <Route path="/wissen" element={<KnowledgePage me={me} />} />
               <Route path="/merkt-sich" element={<KnowledgePage me={me} />} />
@@ -455,6 +477,31 @@ function Shell({ me }: { me: Me }) {
           <WhatsNew me={me} />
         </Suspense>
       )}
+    </div>
+  );
+}
+
+/** a household of one: no „Bring mir was“ (Order.tsx, the tour) */
+const isSingle = (me: Me) => Boolean(me.home?.form_chosen && me.home.form === 'single');
+
+/** pages with the search + avatar row on a phone: every function page of the register (Heute and Mehr have their own) */
+const ROOT_PATHS = new Set([...FUNCTIONS.map((f) => f.web).filter((p): p is string => Boolean(p) && p !== '/' && !p!.startsWith('/einstellungen')), '/mehr/alle']);
+const hasRootChrome = (path: string) => ROOT_PATHS.has(path.replace(/\/$/, '') || '/');
+
+/**
+ * The top row of every area page on a phone (Paket A, UX audit P0-1): search and the avatar that opens Mehr, at the
+ * same place as on the iPhone (Design/RootChrome.swift). Hidden on the desktop – the sidebar has both.
+ */
+function RootChrome({ me }: { me: Me }) {
+  const nav = useNavigate();
+  return (
+    <div className="root-chrome">
+      <button className="icon-btn plain" onClick={() => window.dispatchEvent(new Event('tohuus:search'))} aria-label={t('Search')} title={t('Search')}>
+        <MagnifyingGlass size={22} />
+      </button>
+      <button className="avatar-btn" onClick={() => nav('/mehr')} aria-label={t('More: settings, people, guests …')} title={t('More')}>
+        <Avatar name={me.actor.name} personKey={me.actor.userId ? `u${me.actor.userId}` : null} size={34} />
+      </button>
     </div>
   );
 }

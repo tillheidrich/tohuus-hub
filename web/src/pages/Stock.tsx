@@ -107,11 +107,17 @@ export function Stock({ onNew }: { onNew: () => void }) {
 
   return (
     <div>
-      <HomeDoors side="stock" />
-      <header className="page-head">
-        <div>
-          <div className="eyebrow">{inHouse === 1 ? t('1 product at home') : t('{n} products at home', { n: inHouse })}</div>
-          <h1>{t('Pantry')}</h1>
+      {/* Zuhause (Paket A): title, the three doors, then the pantry with its own small head */}
+      <header className="page-head zuhause-head">
+        <h1>{t('Home')}</h1>
+      </header>
+      <HomeDoors />
+      <header className="page-subhead">
+        <div className="subhead-title">
+          <h2>{t('Pantry')}</h2>
+          <span className="count-badge" aria-label={inHouse === 1 ? t('1 product at home') : t('{n} products at home', { n: inHouse })}>
+            {inHouse}
+          </span>
         </div>
         <div className="actions">
           <QuickCheckButton locationId={ort} />

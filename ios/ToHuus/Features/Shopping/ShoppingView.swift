@@ -124,8 +124,16 @@ struct ShoppingView: View {
             .rootChrome()
             .toolbar { toolbar }
             .safeAreaInset(edge: .top) {
-                HStack { SyncBadge(online: store.isOnline, pending: store.pendingCount); Spacer() }
-                    .padding(.horizontal)
+                HStack {
+                    // Wünsche: a labelled door instead of a gift symbol in a menu (Paket A, UX audit P1-6; web: WishDoor)
+                    if !shopMode && !app.isGuest {
+                        DoorChip(title: L("Wishes"), icon: "gift") { showWishes = true }
+                            .accessibilityHint(L("Wish lists & gifts"))
+                    }
+                    Spacer()
+                    SyncBadge(online: store.isOnline, pending: store.pendingCount)
+                }
+                .padding(.horizontal)
             }
             .overlay(alignment: .bottom) { undoBar }
             .sheet(isPresented: $showReceipt) { ReceiptCaptureView(store: store) }
@@ -868,7 +876,6 @@ struct ShoppingView: View {
                 Button { showRecent = true } label: { Label(L("Recently done"), systemImage: "clock.arrow.circlepath") }
                 if !app.isGuest {
                     Button { showOffers = true } label: { Label(L("Offers"), systemImage: "tag") }
-                    Button { showWishes = true } label: { Label(L("Wishes & Merkliste"), systemImage: "gift") }
                 }
                 Divider()
                 Button { showPaste = true } label: { Label(L("Paste a list"), systemImage: "doc.on.clipboard") }

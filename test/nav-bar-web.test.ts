@@ -47,10 +47,11 @@ describe('Deine Leiste (web nav)', () => {
     expect(keys(areasInMore(undefined, { cook: false, money: false }, pref).tabs)).toEqual(['/einkauf', '/aufgaben']);
   });
 
-  it('cleans a stored choice like the server and marks Haushaltswissen active', () => {
+  it('cleans a stored choice like the server; Haushaltswissen lights Zuhause, or itself when in the bar', () => {
     expect(cleanNav(['today', 'stock', 'stock', 'x', 'money', 'tasks', 'cooking', 'shopping'])).toEqual(['stock', 'money', 'tasks', 'cooking']);
     expect(cleanNav(null)).toBeNull();
-    expect(tabFor('/wissen')).toBe('/wissen');
+    expect(tabFor('/wissen')).toBe('/bestand');
+    expect(tabFor('/wissen', ['/', '/wissen'])).toBe('/wissen');
   });
 
   it('Bring mir was, Wünsche and Hausinfo can take a place – and keep their own row when not in it', () => {
@@ -75,8 +76,70 @@ describe('Deine Leiste (web nav)', () => {
     expect(tabFor('/einkauf/wuensche/3')).toBe('/einkauf');
     expect(tabFor('/einkauf/wuensche/3', ['/', '/einkauf', '/einkauf/wuensche'])).toBe('/einkauf/wuensche');
     expect(tabFor('/einkauf', ['/', '/einkauf', '/einkauf/wuensche'])).toBe('/einkauf');
-    expect(tabFor('/hausinfo')).toBe('/aufgaben');
+    // Hausinfo is a door of Zuhause now (Paket A), Urlaub a row of Mehr
+    expect(tabFor('/hausinfo')).toBe('/bestand');
+    expect(tabFor('/wo')).toBe('/bestand');
+    expect(tabFor('/urlaub')).toBe('/mehr');
+    expect(tabFor('/zuhause')).toBe('/bestand');
     expect(tabFor('/hausinfo', ['/', '/hausinfo'])).toBe('/hausinfo');
     expect(tabFor('/bestellen', ['/', '/bestellen'])).toBe('/bestellen');
+  });
+});
+
+describe('Mehr and Zuhause (Paket A)', () => {
+  const ids = (gs: { key: string }[]) => gs.map((g) => g.key);
+  const tos = (g?: { items: { to: string }[] }) => (g?.items ?? []).map((l) => l.to);
+  const groupsFor = (o: { guest?: string; admin?: boolean; modules?: Record<string, boolean>; pref?: string[] | null; single?: boolean }) => {
+    const pref = nav.cleanNav(o.pref ?? null);
+    return nav.moreGroups({
+      guest: o.guest,
+      admin: o.admin ?? true,
+      cloud: true,
+      modules: o.modules ?? {},
+      areas: nav.areasInMore(o.guest, o.modules ?? {}, pref),
+      bar: myBar(o.guest, o.modules ?? {}, pref).map((l) => l.key),
+      sidebar: mySidebar(o.guest, o.modules ?? {}, pref).map((l) => l.key),
+      single: o.single,
+    });
+  };
+
+  it('the default bar: Zuhause instead of Vorrat, four groups in Mehr, Wünsche first in Alltag', () => {
+    expect(myBar(undefined, {}, null).map((l) => l.label())).toEqual(['Today', 'Shopping', 'Cooking', 'Tasks', 'Home']);
+    const gs = groupsFor({});
+    expect(ids(gs)).toEqual(['alltag', 'familie', 'kopf', 'hilfe']);
+    const alltag = gs.find((g) => g.key === 'alltag')!;
+    expect(alltag.items[0]).toMatchObject({ to: '/einkauf/wuensche', label: 'Wish lists & gifts' });
+    expect(tos(alltag)).toEqual(['/einkauf/wuensche', '/geld', '/bestellen', '/urlaub', '/import']);
+    // Geld: a row on the phone, the desktop sidebar shows it as an area
+    expect(alltag.items.find((l) => l.to === '/geld')?.phoneOnly).toBe(true);
+    expect(tos(gs.find((g) => g.key === 'familie'))).toEqual(['/einstellungen/haushalt/leute', '/bar', '/fuer-wen']);
+    expect(tos(gs.find((g) => g.key === 'kopf'))).toEqual(['/kopf', '/fokus', '/denkarbeit', '/woche']);
+    expect(tos(gs.find((g) => g.key === 'hilfe'))).toEqual(['/einstellungen', '/hilfe', '/so-funktioniert-tohuus', '/gut-zu-wissen', '/mehr/alle']);
+    for (const g of gs) expect(g.items.filter((l) => l.to !== '/mehr/alle').length, g.key).toBeLessThanOrEqual(nav.MORE_MAX);
+    // no settings rows in Mehr any more – one row „Einstellungen“
+    expect(gs.flatMap((g) => g.items).filter((l) => l.to.startsWith('/einstellungen') && l.to !== '/einstellungen' && l.to !== '/einstellungen/haushalt/leute')).toEqual([]);
+  });
+
+  it('what is in the own bar is not repeated; without Zuhause in the bar its doors become a group', () => {
+    const gs = groupsFor({ pref: ['shopping', 'wishes', 'money', 'orders'] });
+    const all = gs.flatMap((g) => tos(g));
+    expect(all).not.toContain('/einkauf/wuensche');
+    expect(all).not.toContain('/geld');
+    expect(all).not.toContain('/bestellen');
+    expect(tos(gs.find((g) => g.key === 'zuhause'))).toEqual(['/hausinfo', '/wissen', '/wo']);
+    // the main areas left out sit on top (Geld has its row in Alltag)
+    expect(tos(gs.find((g) => g.key === 'areas'))).toEqual(['/kochen', '/aufgaben', '/bestand']);
+  });
+
+  it('switched-off areas, a household of one, guests', () => {
+    const off = groupsFor({ modules: { stock: false, money: false, treats: false } });
+    expect(tos(off.find((g) => g.key === 'zuhause'))).toEqual(['/hausinfo', '/wissen']);
+    expect(off.flatMap((g) => tos(g))).not.toContain('/geld');
+    expect(groupsFor({ single: true }).flatMap((g) => tos(g))).not.toContain('/bestellen');
+    // a permanent guest (only „Bring mir was“ and the list): no wishes, no money, no people; their handover
+    const guest = groupsFor({ guest: 'order', admin: false });
+    const rows = guest.flatMap((g) => tos(g));
+    expect(rows).toEqual(expect.arrayContaining(['/bestellen', '/uebergabe', '/hausinfo', '/wissen', '/einstellungen', '/hilfe']));
+    for (const no of ['/einkauf/wuensche', '/geld', '/urlaub', '/einstellungen/haushalt/leute', '/kopf', '/wo']) expect(rows).not.toContain(no);
   });
 });

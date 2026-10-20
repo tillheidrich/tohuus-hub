@@ -16,7 +16,6 @@ import {
   Storefront,
   Tag,
   TextAa,
-  Gift,
   Trash,
   WifiSlash,
   X,
@@ -30,7 +29,7 @@ import type { Me } from '../App';
 import { type Product, ApiError, api, get, invalidate, patch, post, qc, useApi } from '../api';
 import { useHousehold } from '../household';
 import { t } from '../i18n';
-import { Link } from 'react-router-dom';
+import { WishDoor } from '../home/HomeSwitch';
 import { getOr, useInstance } from '../data';
 import { originLabel, rhythmLine } from '../origin';
 import { flush, pendingQueue, queueOp, shopOp, useOfflineState, useWakeLock } from '../shop/offline';
@@ -431,13 +430,14 @@ export function Shopping() {
           <button className="icon-btn plain" onClick={() => setViewOpen(true)} aria-label={t('How the list looks for me')} title={t('How the list looks for me')}>
             <TextAa size={20} />
           </button>
-          {!inStore && !me.data?.actor.houseGuest && (
-            <Link className="icon-btn plain" to="/einkauf/wuensche" aria-label={t('Wishes & Merkliste')} title={t('Wishes & Merkliste')}>
-              <Gift size={20} />
-            </Link>
-          )}
         </div>
       </header>
+      {/* Wünsche: a labelled door instead of a gift symbol without text (Paket A, UX audit P1-6) */}
+      {!inStore && !me.data?.actor.houseGuest && (
+        <div className="door-row">
+          <WishDoor />
+        </div>
+      )}
       {inStore && view?.store && <p className="eyebrow shop-at">{t('At {store}', { store: view.store.name })}</p>}
 
       {view?.lists && !me.data?.actor.houseGuest && (

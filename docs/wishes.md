@@ -1,7 +1,7 @@
 # Wish lists / Merkliste (13 Oct 2026, wish-list app features 20 Oct 2026)
 
-Mehr › Haushalt › „Wunschlisten & Geschenke“ (first row), Einkauf › Wünsche (web `/einkauf/wuensche`, iPhone also from
-the door on top of Einkauf), „Deine Leiste“ (`wishes`), the global search („Wunsch“, „Geschenk“, „Geburtstag“) and
+Mehr › Alltag › „Wunschlisten & Geschenke“ (first row), the labelled door „Wünsche“ on top of Einkauf (web
+`/einkauf/wuensche`), „Deine Leiste“ (`wishes`), the global search („Wunsch“, „Geschenk“, „Geburtstag“) and
 hints on Heute. A household collects what someone wishes for („Linas Geburtstag“, „Weihnachtswünsche“) or what it
 wants to remember („Merkliste Kekse“). Gap analysis against the wish-list apps: [wishes-gap.md](wishes-gap.md).
 

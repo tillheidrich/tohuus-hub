@@ -1,8 +1,9 @@
 import SwiftUI
 import UIKit
 
-/// The areas (18 Oct 2026: Heute · Einkauf · Kochen · Aufgaben · Vorrat, then Geld) plus "Mehr" behind the avatar.
-/// Aufgaben and Vorrat used to share one tab "Zuhause" behind a switch – now each is a tab of its own (web: nav.tsx).
+/// The areas (Paket A, 20 Oct 2026: Heute · Einkauf · Kochen · Aufgaben · Zuhause, then Geld) plus "Mehr" behind the
+/// avatar. Zuhause (id `stock`) is the pantry with labelled doors on top: Hausinfo, Haushaltswissen, Wo ist was?
+/// (HomeView.swift; web: nav.tsx, home/HomeSwitch.tsx).
 /// The iPhone tab bar holds five: a sixth would bring the system's own "More" tab next to the avatar's Mehr. So Geld
 /// – the area people open least – takes a place only when Kochen or Vorrat is switched off; otherwise it is the first
 /// row in Mehr and opens as a sheet. iPad sidebar: all areas.
@@ -30,7 +31,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .today: return L("Today")
         case .shopping: return L("Shopping")
         case .tasks: return L("Tasks")
-        case .stock: return L("Pantry")
+        case .stock: return L("Home")
         case .cooking: return L("Cooking")
         case .money: return L("Money")
         case .knowledge: return L("Knowledge")
@@ -46,7 +47,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .today: return "sun.max"
         case .shopping: return "cart"
         case .tasks: return "checklist"
-        case .stock: return "cabinet"
+        case .stock: return "house"
         case .cooking: return "fork.knife"
         case .money: return "eurosign.circle"
         case .knowledge: return "brain"

@@ -51,8 +51,8 @@ export const explain: Record<string, string> = {
   'On Today, “Coming up” shows what is next tomorrow and in the next days, and who has taken it on. The bin is there the evening before.':
     'Auf Heute zeigt „Demnächst“, was morgen und in den nächsten Tagen kommt und wer es sich vorgenommen hat. Die Tonne steht dort schon am Vorabend.',
   'Ticked off or deleted by mistake? “Undo” brings it back.': 'Aus Versehen abgehakt oder gelöscht? „Rückgängig“ holt es zurück.',
-  'The bar starts with Today, Shopping, Cooking, Tasks and Stock. Money, Knowledge, Bring me something and more can be added, each person for themselves.':
-    'Unten stehen am Anfang Heute, Einkauf, Kochen, Aufgaben und Vorrat. Geld, Wissen, Bring mir was und mehr holt sich jede Person für sich dazu.',
+  'The bar starts with Today, Shopping, Cooking, Tasks and Home. Money, Knowledge, Bring me something and more can be added, each person for themselves.':
+    'Unten stehen am Anfang Heute, Einkauf, Kochen, Aufgaben und Zuhause. Geld, Wissen, Bring mir was und mehr holt sich jede Person für sich dazu.',
   'In the cloud there is an open monthly limit: with Plus and the trial 800 full-length messages, then shorter replies, from 1,500 AI pauses until the month ends. Everything without AI keeps working.':
     'In der Cloud gibt es eine offene Grenze pro Monat: mit Plus und in der Testphase 800 Nachrichten in voller Länge, danach kürzere Antworten, ab 1.500 pausiert die KI bis zum Monatsende. Alles ohne KI läuft weiter.',
   // Hilfe (pages/Help.tsx), 18 Oct 2026

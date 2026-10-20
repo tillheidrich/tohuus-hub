@@ -81,7 +81,7 @@ function steps(form: HouseholdForm = 'family', mods?: Record<string, boolean>): 
       route: '/',
       targets: ['.tabbar', '.sidebar .nav-group'],
       title: t('Your bar, the way you need it'),
-      body: t('Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there, like “Bring me something” or Knowledge. Everything else is under More.'),
+      body: t('Today, Shopping, Cooking, Tasks and Home sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there. Your picture at the top right opens More with everything else.'),
     },
     {
       id: 'ahead',
@@ -130,7 +130,7 @@ function steps(form: HouseholdForm = 'family', mods?: Record<string, boolean>): 
       id: 'done',
       targets: [],
       title: t('That’s the tour'),
-      body: t('You can take it again any time under Help. Everything else, from house info to settings, is under More.'),
+      body: t('You can take it again any time under Help. Your picture at the top right opens More, with the settings and everything else.'),
     },
   ];
 }

@@ -60,9 +60,9 @@ export function helpCopy(k) {
             '<b>Heute</b>: was fällig ist, was demnächst kommt, was bald weg muss und was ihr heute kochen könnt.',
             '<b>Einkauf</b>: die gemeinsame Liste, der Modus für den Laden und eure Wünsche.',
             '<b>Kochen</b>: Ideen aus dem, was da ist, Rezepte, Lieblinge und der Wochenplan.',
-            '<b>Aufgaben</b>: was zu Hause zu tun ist, auch mit Termin. Oben findest du die Hausinfo und den Urlaub.',
-            '<b>Vorrat</b>: was da ist und was bald weg muss, nur wenn ihr mögt.',
-          ), p('Geld, das <a href="haushaltswissen.html">Haushaltswissen</a>, <a href="bring-mir-was.html">Bring mir was</a>, Wünsche und alles Weitere stehen unter „Mehr“. Was du oft brauchst, holst du dir in die Leiste unten, siehe <a href="deine-leiste.html">Deine Leiste</a>. Habt ihr Kochen, Vorrat oder Geld unter „Was nutzt ihr?“ abgeschaltet, verschwinden sie überall.', 'Der runde Knopf mit dem Funkeln ist der Assistent, er ist auf jeder Seite. Oben rechts auf jeder Seite findest du die Suche und dein Bild. Dein Bild öffnet „Mehr“ mit Haushalt, Einstellungen, Geräten & Verbindungen und der Hilfe.')],
+            '<b>Aufgaben</b>: was zu Hause zu tun ist, auch mit Termin.',
+            '<b>Zuhause</b>: oben die Hausinfo, das <a href="haushaltswissen.html">Haushaltswissen</a> und „Wo ist was?“, darunter der Vorrat, also was da ist und was bald weg muss.',
+          ), p('Geld, Wünsche, <a href="bring-mir-was.html">Bring mir was</a>, Urlaub & Übergabe und alles Weitere stehen unter „Mehr“. Was du oft brauchst, holst du dir in die Leiste unten, siehe <a href="deine-leiste.html">Deine Leiste</a>. Habt ihr Kochen, Vorrat oder Geld unter „Was nutzt ihr?“ abgeschaltet, verschwinden sie überall.', 'Der runde Knopf mit dem Funkeln ist der Assistent, er ist auf jeder Seite. Oben rechts auf jeder Seite findest du die Suche und dein Bild. Dein Bild öffnet „Mehr“ mit Alltag, Familie & Gäste, Kopf & Fairness, den Einstellungen und der Hilfe.')],
           ['Alles finden', p('Die Lupe oben rechts sucht in Funktionen, Einstellungen und allem aus eurem Haushalt: Produkte, Liste, Rezepte, Aufgaben, Hausinfo und Leute. Im Browser öffnest du sie auch mit ⌘K, Strg+K oder „/“. Mehr dazu unter <a href="so-funktioniert-tohuus.html#suchen">So funktioniert ToHuus</a>.')],
           ['Die erste Woche', ol(
             'Schreibt auf die Liste, was fehlt, und hakt ab, was ihr kauft.',
@@ -439,7 +439,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'hausinfo', pair: 'house-info', group: 'people', title: 'Hausinfo für Gäste und Babysitter',
         desc: 'Vom Gäste-WLAN bis zur Kaffeemaschine: Karten mit allem, was jemand wissen muss, der bei euch aufpasst oder zu Besuch ist.',
         sections: [
-          ['Wofür', p('Die Hausinfo (oben unter Aufgaben, auf Wunsch auch in deiner Leiste) sammelt auf Karten, was Babysitter, Großeltern, Haus- und Tiersitter oder Übernachtungsbesuch wissen müssen. Ihr schreibt es einmal auf und schickt danach nur noch einen Link, statt jedes Mal dieselben Fragen zu beantworten.')],
+          ['Wofür', p('Die Hausinfo (oben in Zuhause, auf Wunsch auch in deiner Leiste) sammelt auf Karten, was Babysitter, Großeltern, Haus- und Tiersitter oder Übernachtungsbesuch wissen müssen. Ihr schreibt es einmal auf und schickt danach nur noch einen Link, statt jedes Mal dieselben Fragen zu beantworten.')],
           ['Was auf die Karten kommt', ul(
             '<b>Gäste-WLAN</b>: Netz und Passwort als Code. Wer ihn sehen darf, tippt auf „Zeigen“ und bekommt einen QR-Code, mit dem das Handy ins WLAN kommt.',
             '<b>So geht’s hier</b>: Heizung, Spülmaschine, Rollläden, Waschmaschine, Fernseher, Kaffeemaschine.',
@@ -765,7 +765,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Das hilft auch der KI. Ein Assistent kann nur mit dem arbeiten, was er über euch weiß. Mit dem Haushaltswissen beantwortet er „Welche Schuhgröße hat Mika?“, ohne zu raten, der Assistent in ToHuus genauso wie Claude oder ChatGPT über <a href="claude-chatgpt.html">MCP</a>.',
           )],
           ['Eintragen', p(
-            'Das Haushaltswissen findest du unter „Mehr“ › Wissen oder in deiner Leiste. Tipp einen Satz wie „Mika Schuhgröße 31“ oder „Rollo Wohnzimmer 120 x 160“, oder sag ihn dem Assistenten. Solche kurzen Sätze versteht ToHuus auch ohne KI. Jede Karte gehört zu einer Person, einem Raum aus „Wo ist was?“, einem Produkt oder einer freien Bezeichnung.',
+            'Das Haushaltswissen findest du oben in Zuhause oder in deiner Leiste. Tipp einen Satz wie „Mika Schuhgröße 31“ oder „Rollo Wohnzimmer 120 x 160“, oder sag ihn dem Assistenten. Solche kurzen Sätze versteht ToHuus auch ohne KI. Jede Karte gehört zu einer Person, einem Raum aus „Wo ist was?“, einem Produkt oder einer freien Bezeichnung.',
             'Gibt es zur selben Sache schon eine Karte, bekommt sie den neuen Wert. Im Verlauf stehen die früheren Werte mit Datum, und du kannst einen zurückholen.',
           )],
           ['Finden', p('Über die Suche, über die Person, den Raum oder die Sache, oder du fragst den Assistenten: „Wie breit ist das Rollo im Bad?“')],
@@ -786,15 +786,15 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         slug: 'deine-leiste', pair: 'your-bar', group: 'start', title: 'Deine Leiste',
         desc: 'Welche Bereiche unten in der Leiste stehen, stellt jede Person für sich ein.',
         sections: [
-          ['Der Anfang', p('Am Anfang stehen unten Heute, Einkauf, Kochen, Aufgaben und Vorrat. Habt ihr Kochen oder Vorrat abgeschaltet, rückt Geld nach. Alles andere findest du unter „Mehr“.')],
+          ['Der Anfang', p('Am Anfang stehen unten Heute, Einkauf, Kochen, Aufgaben und Zuhause. Habt ihr Kochen oder den Vorrat abgeschaltet, rückt Geld nach. Alles andere findest du unter „Mehr“.')],
           ['Was du nach unten holen kannst', p('Heute bleibt immer vorn. Dazu wählst du bis zu vier Bereiche in deiner Reihenfolge:'), ul(
             'Einkauf, Kochen, Aufgaben, Vorrat und Geld',
             'Wissen, also das <a href="haushaltswissen.html">Haushaltswissen</a>',
             '<a href="bring-mir-was.html">Bring mir was</a>',
             'Wünsche und Hausinfo',
-          ), p('Der Assistent bleibt der runde Knopf unten rechts. Personen, Urlaub, „Wo ist was?“ und die Einstellungen bleiben unter „Mehr“.')],
+          ), p('Der Assistent bleibt der runde Knopf unten rechts. Leute, Urlaub & Übergabe und die Einstellungen bleiben unter „Mehr“.')],
           ['So geht es', ol(
-            'Lange auf die Leiste drücken, unter „Mehr“ auf „Leiste anpassen“ tippen oder Einstellungen › Ich › Deine Leiste öffnen.',
+            'Lange auf die Leiste drücken oder Einstellungen › Ich › Deine Leiste öffnen.',
             'Mit dem grünen Plus holst du einen Bereich dazu, mit dem roten Minus nimmst du ihn raus.',
             'Am Griff ziehst du die Bereiche in die Reihenfolge, die du willst. „Wie am Anfang“ setzt alles zurück.',
           ), p('Im Browser am Computer geht es auch mit einem Rechtsklick auf die Bereiche in der Seitenleiste.')],
@@ -823,7 +823,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         slug: 'wunschlisten', pair: 'wish-lists', group: 'shop', title: 'Wunschlisten',
         desc: 'Wunschlisten für Geburtstage, Weihnachten und dich selbst, mit Link für Gäste und ohne dass jemand die Überraschung verrät.',
         sections: [
-          ['Wo du sie findest', p('Unter „Mehr“ ganz oben im Haushalt („Wunschlisten & Geschenke“), über die Suche mit „Wunsch“, „Geschenk“ oder „Geburtstag“ und oben in Einkauf. Wenn du sie oft brauchst, holst du dir „Wünsche“ in deine Leiste (siehe <a href="deine-leiste.html">Deine Leiste</a>).')],
+          ['Wo du sie findest', p('Unter „Mehr“ ganz oben in Alltag („Wunschlisten & Geschenke“), über die Suche mit „Wunsch“, „Geschenk“ oder „Geburtstag“ und über die Tür „Wünsche“ oben in Einkauf. Wenn du sie oft brauchst, holst du dir „Wünsche“ in deine Leiste (siehe <a href="deine-leiste.html">Deine Leiste</a>).')],
           ['Eine Liste anlegen', ol(
             'Auf „Neue Liste“ tippen und einen Anlass wählen, etwa Geburtstag oder Weihnachten. Das Datum ist freiwillig.',
             'Festlegen, für wen sie ist: für dich, für jemanden im Haushalt oder für einen Namen wie „Lina“ oder „Oma“.',
@@ -934,9 +934,9 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             '<b>Today</b>: what is due, what is coming up, what should be used soon and what you can cook.',
             '<b>Shopping</b>: the shared list, shop mode and your wishes.',
             '<b>Cooking</b>: ideas from what is at home, recipes, favourites and the week plan.',
-            '<b>Tasks</b>: what needs doing at home, appointments included. At the top you find the house info and “Trip / away”.',
-            '<b>Stock</b>: what is at home and what should be used soon, only if you want it.',
-          ), p('Money, <a href="household-knowledge.html">home knowledge</a>, <a href="bring-me-something.html">Bring me something</a>, wishes and the rest are under “More”. Whatever you need often goes into the bar at the bottom, see <a href="your-bar.html">Your bar</a>. If you switch off cooking, stock or money under “What do you use?”, they disappear everywhere.', 'The round button with the sparkle is the assistant, on every page. At the top right of every page you find search and your picture. Your picture opens “More” with household, settings, devices & connections and help.')],
+            '<b>Tasks</b>: what needs doing at home, appointments included.',
+            '<b>Home</b>: at the top the house info, the <a href="household-knowledge.html">household knowledge</a> and “Where’s what?”, below it the pantry: what is at home and what should be used soon.',
+          ), p('Money, wishes, <a href="bring-me-something.html">Bring me something</a>, trip & handover and the rest are under “More”. Whatever you need often goes into the bar at the bottom, see <a href="your-bar.html">Your bar</a>. If you switch off cooking, stock or money under “What do you use?”, they disappear everywhere.', 'The round button with the sparkle is the assistant, on every page. At the top right of every page you find search and your picture. Your picture opens “More” with everyday things, family & guests, mind & fairness, the settings and help.')],
           ['Search', p(
             'The magnifier at the top right is on every page; in the browser there is also the search field in the sidebar. Press ⌘K, Ctrl+K or “/” to open it from anywhere, as long as you are not typing somewhere else.',
             'It finds what you can reach in ToHuus: functions and settings (also with words like “password”, “print labels” or “dark mode”), products in stock, what is on the list, recipes, also by an ingredient, tasks, house info cards and people in the household. If nothing fits, it offers to put your words on the list or create a new task.',
@@ -1062,7 +1062,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         slug: 'house-info', pair: 'hausinfo', group: 'people', title: 'House info for guests and babysitters',
         desc: 'From the guest Wi-Fi to the coffee machine: cards with everything someone looking after your home needs to know, and a link without an account.',
         sections: [
-          ['What it is for', p('The house info (at the top of Tasks, or in your bar if you like) holds on cards what babysitters, grandparents, house and pet sitters or overnight guests need to know. Write it down once and then just send a link instead of answering the same questions every time.')],
+          ['What it is for', p('The house info (at the top of Home, or in your bar if you like) holds on cards what babysitters, grandparents, house and pet sitters or overnight guests need to know. Write it down once and then just send a link instead of answering the same questions every time.')],
           ['What goes on the cards', ul(
             '<b>Guest Wi-Fi</b>: network and password as a code. Whoever may see it taps “Show” and gets a QR code that takes a phone onto the Wi-Fi.',
             '<b>How things work</b>: heating, dishwasher, blinds, washing machine, TV, coffee machine.',
@@ -1318,7 +1318,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
             '<b>Rules</b>: what goes in which bin at your place.',
           ), tip('Codes, PINs and Wi-Fi keys are not accepted here. They belong in the house info under Codes.')],
           ['Why it helps', p('Usually one person knows these things and keeps getting asked. Once it is in ToHuus, you ask ToHuus. There is nothing to maintain: whoever notices a change adds the new value, and the old one stays in the history.', 'It helps AI too. With home knowledge the assistant answers “What shoe size is Mika?” without guessing, and so do Claude or ChatGPT over <a href="connect-claude-chatgpt.html">MCP</a>.')],
-          ['Adding', p('Find it under “More” › Knowledge or in your bar. Type a sentence like “Mika shoe size 12” or “Living room blind 120 x 160”, or tell the assistant. ToHuus understands short sentences like these without AI too.')],
+          ['Adding', p('Find it at the top of Home or in your bar. Type a sentence like “Mika shoe size 12” or “Living room blind 120 x 160”, or tell the assistant. ToHuus understands short sentences like these without AI too.')],
           ['Bringing notes and lists in', p('Under Import, paste text from notes or emails, or pick a list: Excel, Numbers or Google Sheets as CSV, or a text file. Markdown, for example from Obsidian or Notion, and JSON work too.', 'Before anything is saved you see every card found, marked “new”, “new value” or “unchanged”, and tick what goes in. Codes and passwords stay out, health details become private. “Undo” takes back the whole import.')],
           ['Saving it as a file', p('Under Export you get everything, or what the search shows, as Markdown, CSV or JSON. On the iPhone use “Save to Files”. Only what you may see is exported, and every one of these files can be read in again.')],
           ['Who sees what', p('Every card is for the whole household or only for you. Health details are private by default and only reach an AI if your household allows it. Regular guests only see cards you share with guests.')],
@@ -1329,9 +1329,9 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'your-bar', pair: 'deine-leiste', group: 'start', title: 'Your bar',
         desc: 'Everyone chooses which areas sit in the bar at the bottom.',
         sections: [
-          ['The start', p('The bar starts with Today, Shopping, Cooking, Tasks and Stock. If cooking or stock is switched off, Money moves up. Everything else is under “More”.')],
+          ['The start', p('The bar starts with Today, Shopping, Cooking, Tasks and Home. If cooking or the pantry is switched off, Money moves up. Everything else is under “More”.')],
           ['What you can add', p('Today always stays first. Then up to four areas in your order: Shopping, Cooking, Tasks, Stock, Money, Knowledge, <a href="bring-me-something.html">Bring me something</a>, Wishes or House info. The assistant stays the round button at the bottom right.')],
-          ['How', ol('Touch and hold the bar, tap “Adjust the bar” under “More”, or open Settings › Me › Your bar.', 'The green plus adds an area, the red minus removes it.', 'Drag the handles into the order you like. “Back to the start” resets it.')],
+          ['How', ol('Touch and hold the bar, or open Settings › Me › Your bar.', 'The green plus adds an area, the red minus removes it.', 'Drag the handles into the order you like. “Back to the start” resets it.')],
           ['Who it is for', p('Your bar is yours, the same on iPhone, iPad and in the browser. The others keep theirs. Regular guests always get the standard bar.')],
         ],
         related: ['getting-started', 'how-tohuus-works'],
@@ -1340,7 +1340,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'wish-lists', pair: 'wunschlisten', group: 'shop', title: 'Wish lists',
         desc: 'Wish lists for birthdays, Christmas and yourself, with a link for guests and without anyone spoiling the surprise.',
         sections: [
-          ['Where to find them', p('Under “More”, first row of Household (“Wish lists & gifts”), in the search with “wish”, “gift” or “birthday”, and on top of Shopping. If you use them a lot, put “Wishes” in your bar (see <a href="your-bar.html">Your bar</a>).')],
+          ['Where to find them', p('Under “More”, first row of Everyday (“Wish lists & gifts”), in the search with “wish”, “gift” or “birthday”, and through the door “Wishes” on top of Shopping. If you use them a lot, put “Wishes” in your bar (see <a href="your-bar.html">Your bar</a>).')],
           ['Make a list', ol(
             'Tap “New list” and pick an occasion such as Birthday or Christmas. The date is optional.',
             'Say who it is for: you, someone in the household or a name like “Lina” or “Grandma”.',

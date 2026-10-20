@@ -1,8 +1,8 @@
 import StoreKit
 import SwiftUI
 
-/// "Mehr": account, household, the same groups as the web's Mehr (MoreSections), settings, plan & storage, devices,
-/// sign out, delete account, legal, web settings.
+/// "Mehr": the profile row and the search, then the same groups as the web's Mehr (MoreSections → MoreMenu.swift,
+/// shared/functions.json), then what only the App Store app needs (legal, version, error log) and Abmelden.
 struct SettingsView: View {
     let store: ServerStore
     /// iPad sidebar: shown as an area, not as a sheet (no "Done")
@@ -51,17 +51,8 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.ink2)
                 }
                 if let api = app.api { MoreSections(store: store, api: api) }
-                // Einstellungen (Paket C, 20 Oct 2026): one row – six pages with their own search (SettingsHome.swift)
-                Section(L("Settings & help")) {
-                    NavigationLink(value: SettingsRoute.home) {
-                        Label(L("Settings"), systemImage: "gearshape")
-                    }
-                    NavigationLink { HelpCenterView(store: store) } label: { Label(L("Help"), systemImage: "questionmark.circle") }
-                    Button { showTour = true } label: { Label(L("Take the tour"), systemImage: "map") }
-                    NavigationLink { HowItWorksView() } label: { Label(L("How ToHuus works"), systemImage: "lightbulb") }
-                    NavigationLink { FactsView() } label: { Label(L("Good to know"), systemImage: "book") }
-                    NavigationLink { ErrorLogView() } label: { Label(L("Error log"), systemImage: "ladybug") }
-                }
+                // Einstellungen & Hilfe is the last group of MoreSections (shared/functions.json, Paket A): Einstellungen
+                // (six pages, SettingsHome.swift), Hilfe (with the tour), So funktioniert ToHuus, Gut zu wissen, Alle Funktionen
                 SampleDataSettingsSection()
                 // Abo & Speicher: Einstellungen › Daten, Abo & Konto (PlanStorageView)
                 Section(L("Legal")) {
@@ -69,6 +60,7 @@ struct SettingsView: View {
                     if let i = app.instance?.legal?.imprint, let url = URL(string: i) { Link(L("Imprint"), destination: url) }
                     Link(L("Terms"), destination: Legal.terms(app.instance))
                     LabeledContent(L("Version"), value: ErrorLog.appVersion)
+                    NavigationLink { ErrorLogView() } label: { Label(L("Error log"), systemImage: "ladybug") }
                     if let url = FeedbackMail.url(instance: app.instance, household: app.session?.householdId) {
                         Link(destination: url) { Label(L("Send feedback"), systemImage: "envelope") }
                     }

@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// Mehr (UX benchmark 2.3, docs/design/ux-benchmark-2026-10-14.md): the household and the devices groups of the one
-/// Mehr list; SettingsView adds the profile row, search, settings and help. What used to be "Rund ums Zuhause",
-/// "Bons & Rezepte" lives in its tab now (Zuhause, Geld, Kochen, Einkauf). Same filters as the web (guest level and the
-/// switched-off areas of "Was nutzt ihr?"). Every entry is native.
+/// Mehr (UX audit 2026-10 Paket A, docs/navigation.md): the groups of the one Mehr list, built from
+/// shared/functions.json like the web (MoreMenu.swift); SettingsView adds the profile row and the search. Same filters
+/// as the web (role, guest level and the switched-off areas of "Was nutzt ihr?"). Every entry is native.
 struct MoreSections: View {
     @Environment(AppModel.self) private var app
     let store: ServerStore
@@ -17,11 +16,11 @@ struct MoreSections: View {
 
     var body: some View {
         Group {
-            // areas without a place in the iPhone tab bar (AppModel.areasInMore): Geld by default, with "Deine Leiste"
-            // every area not in it – first rows here, and the shortcut to change the bar
-            if sizeClass != .regular && (!app.areasInMore.isEmpty || app.ownBar != nil) {
-                Section {
-                    ForEach(app.areasInMore) { a in
+            // main areas an own bar ("Deine Leiste") left out: first rows here. Geld has its row in Alltag below.
+            let areas = app.areasInMore.filter { $0 != .money }
+            if sizeClass != .regular && !areas.isEmpty {
+                Section(areas.count == 1 ? areas[0].title : L("More areas")) {
+                    ForEach(areas) { a in
                         Button {
                             app.requestedTab = a.rawValue
                             app.showMore = false
@@ -29,54 +28,11 @@ struct MoreSections: View {
                         } label: { Label(a.title, systemImage: a.icon) }
                         .foregroundStyle(Theme.ink)
                     }
-                    if !app.isGuest {
-                        NavigationLink { NavBarSettingsView() } label: { Label(L("Adjust the bar"), systemImage: "dock.rectangle") }
-                            .foregroundStyle(Theme.ink2)
-                    }
                 }
             }
-            // Haushalt: the people and the guests (UX benchmark 2.3 – one list, every function at most two taps away)
-            Section(L("Household")) {
-                // Wunschlisten (20 Oct 2026): first row – hard to find behind the door on top of Einkauf before.
-                // Permanent guests never see wish lists.
-                if !app.isGuest {
-                    NavigationLink { WishesView(api: api) } label: { Label(L("Wish lists & gifts"), systemImage: "gift") }
-                }
-                // Haushaltswissen (18 Oct 2026): first row, its own symbol; guests see what is shared with them
-                if allows("/wissen") {
-                    NavigationLink { KnowledgeView(api: api) } label: { Label(L("Household knowledge"), systemImage: "brain") }
-                }
-                if allows("/einstellungen/haushalt/leute") {
-                    NavigationLink { HouseholdView(api: api) } label: { Label(L("People"), systemImage: "person.2") }
-                    // GET/POST /api/invites are for admins (server/routes/invites.ts) – a member would only see "forbidden"
-                    if !app.isGuest && app.isAdmin {
-                        NavigationLink { InvitesView(api: api) } label: { Label(L("Invite someone"), systemImage: "person.badge.plus") }
-                    }
-                }
-                if allows("/bar") {
-                    NavigationLink { GuestLinksView(api: api, guestsArea: true) } label: { Label(L("Guests"), systemImage: "wineglass") }
-                }
-                if showTreats {
-                    NavigationLink { TreatsView(api: api) } label: { Label(L("Bring me something"), systemImage: "hand.raised") }
-                }
-            }
-            // permanent guests: what the Zuhause tab shows members (Hausinfo, Wo ist was?) and their handover
-            if app.isGuest {
-                Section(L("Around the home")) {
-                    if allows("/wo") {
-                        Button { showFind = true } label: { Label(L("Where’s what?"), systemImage: "mappin.and.ellipse") }
-                            .foregroundStyle(Theme.ink)
-                    }
-                    if allows("/hausinfo") {
-                        NavigationLink { HouseGuideView() } label: { Label(L("House info"), systemImage: "info.circle") }
-                    }
-                    if allows("/uebergabe") {
-                        NavigationLink { HandoverGuestView(api: api) } label: { Label(L("Handover"), systemImage: "suitcase") }
-                    }
-                }
-            }
-            // Geräte & Verbindungen moved into Einstellungen › Verbindungen & Geräte, Kalender into Mitteilungen & Kalender,
-            // angemeldete Geräte into Ich › Anmeldung & Sicherheit (Paket C, SettingsHome.swift)
+            // Alltag · (Zuhause) · Familie & Gäste · Kopf & Fairness · Einstellungen & Hilfe – from shared/functions.json,
+            // the same rows as the web's Mehr (Paket A, MoreMenu.swift)
+            MoreMenuSections(store: store)
         }
         .sheet(isPresented: $showFind) { FindView(store: store) { id in
                 showFind = false

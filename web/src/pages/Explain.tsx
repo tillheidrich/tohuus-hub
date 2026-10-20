@@ -80,7 +80,7 @@ function sections(ai: boolean | null): Section[] {
       icon: <SquaresFour size={20} />,
       title: t('Your bar'),
       points: [
-        t('The bar starts with Today, Shopping, Cooking, Tasks and Stock. Money, Knowledge, Bring me something and more can be added, each person for themselves.'),
+        t('The bar starts with Today, Shopping, Cooking, Tasks and Home. Money, Knowledge, Bring me something and more can be added, each person for themselves.'),
       ],
       slug: 'deine-leiste',
     },

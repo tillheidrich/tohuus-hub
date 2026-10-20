@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { FUNCTIONS, FUNCTION_GROUPS, functionsFor, matchFunctions, type FnCtx } from '../web/src/search/functions';
+import { FUNCTIONS, FUNCTION_GROUPS, MORE_SPEC, functionsFor, matchFunctions, moreMenu, zuhauseDoors, type FnCtx } from '../web/src/search/functions';
 import { resolveSettingsPath } from '../web/src/settings/registry';
 import { helpCopy } from '../site/src/help.mjs';
 
@@ -17,6 +17,9 @@ const ONE_PLATFORM: Record<string, 'web' | 'ios'> = {
   // Küchenmodus: iPad at the counter; the web decides in Paket E (UX audit P1-10)
   kitchen: 'ios',
 };
+
+/** functions only a permanent guest sees (members find the same under Urlaub & Übergabe) */
+const GUEST_ONLY = new Set(['handover']);
 
 /** routes of the signed-in web app (App.tsx) */
 function webRoutes(): string[] {
@@ -60,7 +63,9 @@ describe('shared/functions.json', () => {
       expect(f.title.de && f.title.en && f.words.de && f.words.en, f.id).toBeTruthy();
       expect(f.platforms.length, f.id).toBeGreaterThan(0);
       for (const r of f.roles) expect(['admin', 'member', 'guest'], f.id).toContain(r);
-      expect(f.roles, f.id).toContain('admin');
+      // everyone in the household sees it – except what only a permanent guest has (their handover)
+      if (!GUEST_ONLY.has(f.id)) expect(f.roles, f.id).toContain('admin');
+      else expect(f.roles, f.id).toEqual(['guest']);
       // a platform listed has its target, a missing one is a documented exception
       expect(Boolean(f.web), `${f.id} web`).toBe(f.platforms.includes('web'));
       expect(Boolean(f.ios), `${f.id} ios`).toBe(f.platforms.includes('ios'));
@@ -125,5 +130,78 @@ describe('shared/functions.json', () => {
     // no hand-written function list on the iPhone any more
     expect(ios).not.toMatch(/Entry\(title: L\("Today"\)/);
     expect(read('ios', 'project.yml')).toMatch(/- path: \.\.\/shared\/functions\.json\n\s+buildPhase: resources/);
+  });
+});
+
+describe('Mehr from the register (Paket A): iPhone = web = shared/functions.json', () => {
+  it('the groups and rows of Mehr exist, in the order of the UX audit', () => {
+    expect(MORE_SPEC.groups.map((g) => g.id)).toEqual(['alltag', 'zuhause', 'familie', 'kopf', 'hilfe']);
+    expect(MORE_SPEC.max).toBe(5);
+    const byId = new Map(FUNCTIONS.map((f) => [f.id, f]));
+    for (const g of MORE_SPEC.groups) for (const id of g.rows) expect(byId.get(id)?.group, `${g.id}: ${id}`).toBe(g.id);
+    // Wunschlisten & Geschenke: first in Alltag
+    expect(MORE_SPEC.groups[0].rows[0]).toBe('wishes');
+    expect(byId.get('wishes')!.more).toEqual({ de: 'Wunschlisten & Geschenke', en: 'Wish lists & gifts' });
+    // the Zuhause doors: Hausinfo, Haushaltswissen, Wo ist was?
+    expect(zuhauseDoors({ guest: false, admin: true, platform: 'web' }).map((f) => f.id)).toEqual(['houseinfo', 'knowledge', 'find']);
+    expect(byId.get('stock')!.title).toEqual({ de: 'Zuhause', en: 'Home' });
+  });
+
+  it('both platforms get the same Mehr for every role and bar', () => {
+    const ctxs = [
+      { guest: false, admin: true, inBar: ['today', 'shopping', 'cooking', 'tasks', 'stock'] },
+      { guest: false, admin: false, inBar: ['today', 'shopping', 'wishes', 'money', 'treats'] },
+      { guest: true, admin: false, inBar: ['shopping'] },
+      { guest: false, admin: true, inBar: ['today', 'shopping', 'tasks'], modules: { stock: false, money: false, cook: false } },
+      { guest: false, admin: true, inBar: ['today', 'shopping', 'cooking', 'tasks', 'stock'], single: true },
+    ];
+    for (const c of ctxs) {
+      const web = moreMenu({ ...c, platform: 'web' }).map((g) => [g.id, g.rows.map((f) => f.id)]);
+      const ios = moreMenu({ ...c, platform: 'ios' }).map((g) => [g.id, g.rows.map((f) => f.id)]);
+      expect(web).toEqual(ios);
+      for (const [, rows] of web) expect((rows as string[]).length).toBeLessThanOrEqual(MORE_SPEC.max);
+    }
+    // guests: only theirs
+    const guest = moreMenu({ guest: true, admin: false, inBar: ['shopping'], platform: 'web' }).flatMap((g) => g.rows.map((f) => f.id));
+    for (const no of ['wishes', 'money', 'away', 'people', 'guests', 'mind', 'receipts']) expect(guest).not.toContain(no);
+    expect(guest).toContain('handover');
+    expect(moreMenu({ guest: false, admin: true, inBar: [], platform: 'web' }).flatMap((g) => g.rows.map((f) => f.id))).not.toContain('handover');
+  });
+
+  it('the iPhone and the web build Mehr from the register, not by hand', () => {
+    const swift = read('ios', 'ToHuus', 'Features', 'Settings', 'MoreMenu.swift');
+    // the same rules as moreMenu(): skip a group whose tab is in the bar, rows in the bar, single household, allowed, max
+    expect(swift).toContain('if let w = g.whenNotInBar, inBar.contains(w) { continue }');
+    expect(swift).toContain('!inBar.contains($0.id) && !(app.singleHousehold && $0.id == "treats") && allows($0, app: app)');
+    expect(swift).toContain('Array(rows.prefix(spec.max))');
+    expect(swift).toContain('a == .orders ? "treats" : a.rawValue');
+    const links = read('ios', 'ToHuus', 'Features', 'Household', 'HouseholdLinks.swift');
+    expect(links).toContain('MoreMenuSections(store: store)');
+    expect(links).not.toContain('L("Wish lists & gifts")');
+    expect(links).not.toContain('Section(L("Household"))');
+    const settings = read('ios', 'ToHuus', 'Features', 'Settings', 'SettingsView.swift');
+    expect(settings).not.toContain('Section(L("Settings & help"))');
+    const nav = read('web', 'src', 'nav.tsx');
+    expect(nav).toContain('moreMenu({ guest: Boolean(opts.guest)');
+    expect(nav).not.toContain("t('Wish lists & gifts')");
+    expect(read('web', 'src', 'pages', 'More.tsx')).toContain('moreGroups({');
+    // Zuhause: the tab title on both, the doors from the register on both
+    expect(read('ios', 'ToHuus', 'App', 'MainTabView.swift')).toContain('case .stock: return L("Home")');
+    expect(read('ios', 'ToHuus', 'Features', 'Home', 'HomeView.swift')).toContain('MoreMenu.zuhauseDoors(app: app)');
+    expect(read('web', 'src', 'home', 'HomeSwitch.tsx')).toContain('zuhauseDoors({');
+  });
+
+  it('search + avatar on every area page of the web (RootChrome), Wünsche as a labelled door', () => {
+    const app = read('web', 'src', 'App.tsx');
+    expect(app).toContain('{hasRootChrome(loc.pathname) && <RootChrome me={me} />}');
+    for (const p of ['/einkauf', '/kochen', '/aufgaben', '/bestand', '/geld', '/wissen', '/hausinfo', '/bestellen', '/einkauf/wuensche']) {
+      expect(FUNCTIONS.some((f) => f.web === p), p).toBe(true);
+    }
+    expect(read('web', 'src', 'pages', 'Shopping.tsx')).toContain('<WishDoor />');
+    expect(read('web', 'src', 'pages', 'Shopping.tsx')).not.toContain("t('Wishes & Merkliste')");
+    expect(read('ios', 'ToHuus', 'Features', 'Shopping', 'ShoppingView.swift')).toContain('DoorChip(title: L("Wishes"), icon: "gift")');
+    // Aufgaben has no doors any more (Hausinfo → Zuhause, Urlaub → Mehr › Alltag)
+    expect(read('web', 'src', 'pages', 'Care.tsx')).not.toContain('HomeDoors');
+    expect(read('ios', 'ToHuus', 'Features', 'Home', 'HomeView.swift')).not.toMatch(/struct TasksAreaView[\s\S]*?DoorBar[\s\S]*?struct StockAreaView/);
   });
 });
