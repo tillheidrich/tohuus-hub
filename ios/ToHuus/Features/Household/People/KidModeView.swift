@@ -86,7 +86,9 @@ struct KidModeView: View {
     @State private var home: KidHome?
     @State private var gone = false
     @State private var offline = false
+    /// 0 I'd like … · 1 Where is …? · 2 To do ("Jetzt", docs/now.md)
     @State private var tab = 0
+    @State private var tabChosen = false
     @State private var pick: KidHome.Tile?
     @State private var sent: KidHome.Tile?
     @State private var nope: (id: Int, text: String)?
@@ -145,10 +147,12 @@ struct KidModeView: View {
         VStack(spacing: Theme.Space.s4) {
             topBar(h)
             if !h.wishes.isEmpty { wishStrip(h) }
-            if !h.find.isEmpty && h.quiet == nil {
-                Picker("", selection: Binding(get: { tab }, set: { tab = $0; speech.say($0 == 0 ? L("I’d like …") : L("Where is …?")) })) {
+            let withTasks = !(h.tasks?.queue.isEmpty ?? true) || (tab == 2 && h.tasks != nil)
+            if (!h.find.isEmpty || withTasks) && h.quiet == nil {
+                Picker("", selection: Binding(get: { tab }, set: { tab = $0; speech.say($0 == 2 ? L("To do") : $0 == 0 ? L("I’d like …") : L("Where is …?")) })) {
+                    if withTasks { Text(L("To do")).tag(2) }
                     Text(L("I’d like …")).tag(0)
-                    Text(L("Where is …?")).tag(1)
+                    if !h.find.isEmpty { Text(L("Where is …?")).tag(1) }
                 }
                 .pickerStyle(.segmented)
                 .controlSize(.large)
@@ -156,6 +160,8 @@ struct KidModeView: View {
             }
             if let q = h.quiet {
                 quiet(q.until)
+            } else if tab == 2, let tasks = h.tasks {
+                KidNowPanel(api: api, token: session.token, initial: tasks, reads: reads) { speech.say($0) }
             } else if tab == 1 && !h.find.isEmpty {
                 ScrollView { LazyVGrid(columns: columns, spacing: Theme.Space.s4) { ForEach(h.find) { findTile($0) } }.padding(.bottom, Theme.Space.s6) }
             } else if h.tiles.isEmpty {
@@ -391,6 +397,12 @@ struct KidModeView: View {
         do {
             let h = try await api.kidHome(token: session.token)
             home = h
+            // "Jetzt" first when there is something to do – decided once, the child switches freely after that
+            if !tabChosen {
+                tabChosen = true
+                if h.tasks?.next != nil { tab = 2 }
+            }
+            TaskTimerLive.endExpired()
             offline = false
             speech.language = h.language
             speech.allowed = h.kid.speak == true

@@ -15,6 +15,7 @@ import { emit } from './bus.js';
 import { listProducts } from './catalog.js';
 import { findThings } from './find.js';
 import { deleteImage } from './images.js';
+import { nextTasks } from './next-task.js';
 import { notify } from './notify.js';
 import { createOrder } from './orders.js';
 import { DEFAULT_RULES, artFor, defaultWhitelist, evaluate, limitApplies, localParts, quietNow, rulesSchema, type KidLimit, type KidRules } from './kids-rules.js';
@@ -69,6 +70,8 @@ migrate(
 
 // AI switch per child (ai-policy.ts): only parents/admins change it, never the kid tablet
 migrate('kids-ai-1', `ALTER TABLE kid_profiles ADD COLUMN ai_off INTEGER NOT NULL DEFAULT 0;`);
+// "Jetzt" (docs/now.md): the kid tablet shows one task at a time – parents can switch it to a list
+migrate('kids-now', `ALTER TABLE kid_profiles ADD COLUMN task_view TEXT NOT NULL DEFAULT 'now';`);
 
 export const AVATARS = ['fox', 'bear', 'rabbit', 'cat', 'owl', 'frog', 'mouse', 'hedgehog'] as const;
 
@@ -114,8 +117,20 @@ function publicKid(k: KidRow) {
     rules: parseRules(k.rules),
     find_ids: JSON.parse(k.find_ids || '[]') as number[],
     ai: !(k as any).ai_off,
+    task_view: taskViewOf(k),
     created_at: k.created_at,
   };
+}
+
+export type KidTaskView = 'now' | 'list';
+const taskViewOf = (k: KidRow): KidTaskView => ((k as KidRow & { task_view?: string }).task_view === 'list' ? 'list' : 'now');
+
+/** The kid's tasks (lib/next-task.ts): their own and open ones parents marked "kids may do it", in the server's order. */
+export function kidTasks(kid: KidRow) {
+  const q = nextTasks({ kind: 'kid', kidId: kid.id });
+  // the tablet needs no notes about grown-up things – title, picture, steps and the timer length are enough
+  const lite = (c: (typeof q.queue)[number]) => ({ id: c.id, name: c.name, emoji: c.emoji, due_time: c.due_time, level: c.level, effort_min: c.effort_min, checklist: c.checklist, doer: c.doer });
+  return { view: taskViewOf(kid), next: q.next ? lite(q.next) : null, after: q.after, queue: q.queue.map(lite) };
 }
 
 function categoryIcons() {
@@ -140,6 +155,7 @@ export interface KidInput {
   pin?: string | null;
   rules?: KidRules;
   find_ids?: number[];
+  task_view?: KidTaskView;
 }
 
 export function listKids() {
@@ -204,6 +220,7 @@ export async function updateKid(id: number, input: KidInput) {
   if (input.pin !== undefined) set('pin_hash', input.pin ? await hashPin(input.pin) : null);
   if (input.rules !== undefined) set('rules', JSON.stringify(rulesSchema.parse(input.rules)));
   if (input.find_ids !== undefined) set('find_ids', JSON.stringify(input.find_ids.slice(0, 12)));
+  if (input.task_view !== undefined) set('task_view', input.task_view === 'list' ? 'list' : 'now');
   if (sets.length) db.prepare(`UPDATE kid_profiles SET ${sets.join(', ')} WHERE id = ?`).run(...args, id);
   emit('orders');
   return getKid(id)!;
@@ -373,6 +390,8 @@ export function kidHome(device: { id: number }, kid: KidRow) {
     device_id: device.id,
     // shown locked on the tablet: "switched off by your parents" – there is no way to change it from here
     ai: { enabled: !(kid as any).ai_off, locked: true },
+    // "Jetzt": one task at a time (or a list, if parents chose it); nothing during quiet time
+    tasks: quiet ? { view: taskViewOf(kid), next: null, after: 0, queue: [] } : kidTasks(kid),
   };
 }
 

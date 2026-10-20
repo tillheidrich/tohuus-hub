@@ -14,6 +14,7 @@ import { applyBrand } from '../brand';
 import { locale, setLang, t } from '../i18n';
 import { Ic } from '../placeicons';
 import { KidAnimal, KidArt, KidPicture } from './KidArt';
+import { NowCard, type NowTask } from '../focus/Now';
 
 // ------------------------------------------------------------------ device lock
 
@@ -131,7 +132,8 @@ export function KidMode() {
   const d = home.data;
   const gone = (home.error as KidError | null)?.status === 404;
   const speech = useSpeech(Boolean(d?.kid?.speak));
-  const [tab, setTab] = useState<'wish' | 'find'>('wish');
+  const [tab, setTab] = useState<'now' | 'wish' | 'find'>('wish');
+  const firstTab = useRef(false);
   const [pick, setPick] = useState<Tile | null>(null);
   const [sent, setSent] = useState<Tile | null>(null);
   const [nope, setNope] = useState<{ id: number; text: string } | null>(null);
@@ -151,6 +153,12 @@ export function KidMode() {
     document.title = d.kid.name;
   }, [d]);
   if (d) setLang(d.language);
+  // "Jetzt" first when there is something to do (docs/now.md) – decided once, the child switches freely after that
+  useEffect(() => {
+    if (!d || firstTab.current) return;
+    firstTab.current = true;
+    if (d.tasks?.next) setTab('now');
+  }, [d]);
 
   if (home.isLoading) return <div className="kid kid-loading"><div className="kid-spinner" /></div>;
   if (gone)
@@ -175,6 +183,8 @@ export function KidMode() {
   const tiles: Tile[] = d.tiles ?? [];
   const wishes: Wish[] = d.wishes ?? [];
   const reads = kid.age_band === 'reads';
+  const kidTasks: KidTasks | undefined = d.tasks;
+  const withTasks = Boolean(kidTasks && (kidTasks.queue.length > 0 || tab === 'now'));
 
   const tap = (tile: Tile) => {
     if (tile.state !== 'ok') {
@@ -238,16 +248,22 @@ export function KidMode() {
         </div>
       )}
 
-      {d.find?.length > 0 && !d.quiet && (
-        <div className="kid-tabs" role="tablist">
+      {(d.find?.length > 0 || withTasks) && !d.quiet && (
+        <div className={`kid-tabs ${d.find?.length > 0 && withTasks ? 'three' : ''}`} role="tablist">
+          {withTasks && (
+            <button role="tab" aria-selected={tab === 'now'} className={tab === 'now' ? 'on' : ''} onClick={() => { setTab('now'); speech.say(t('To do')); }}>
+              <span className="kid-tab-ic" aria-hidden="true">✅</span>
+              {t('To do')}
+            </button>
+          )}
           <button role="tab" aria-selected={tab === 'wish'} className={tab === 'wish' ? 'on' : ''} onClick={() => { setTab('wish'); speech.say(t('I’d like …')); }}>
             <span className="kid-tab-ic"><KidArt art="apple" /></span>
             {t('I’d like …')}
           </button>
-          <button role="tab" aria-selected={tab === 'find'} className={tab === 'find' ? 'on' : ''} onClick={() => { setTab('find'); speech.say(t('Where is …?')); }}>
+          {d.find?.length > 0 && <button role="tab" aria-selected={tab === 'find'} className={tab === 'find' ? 'on' : ''} onClick={() => { setTab('find'); speech.say(t('Where is …?')); }}>
             <span className="kid-tab-ic"><MagnifyingGlass size={30} weight="bold" /></span>
             {t('Where is …?')}
-          </button>
+          </button>}
         </div>
       )}
 
@@ -258,6 +274,8 @@ export function KidMode() {
           <h1>{t('Sleepy time')}</h1>
           <p>{t('Wishes again from {time}', { time: d.quiet.until })}</p>
         </div>
+      ) : tab === 'now' && kidTasks ? (
+        <KidNow token={token} data={kidTasks} reads={reads} say={speech.say} />
       ) : tab === 'find' ? (
         <div className="kid-grid">
           {d.find.map((f: any) => (
@@ -322,6 +340,110 @@ export function KidMode() {
       <KidAiLocked enabled={(d as any).ai?.enabled !== false} />
       {exit && <ExitPad token={token} hasPin={kid.has_pin} onClose={() => setExit(false)} onDone={() => { setKidLock(null); nav('/'); }} />}
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ "Jetzt": one task at a time (docs/now.md)
+
+interface KidTasks {
+  view: 'now' | 'list';
+  next: NowTask | null;
+  after: number;
+  queue: NowTask[];
+}
+
+/** One big card with a big "Fertig"; after it a short "Super!" and the next one. Undo for 10 seconds. No points. */
+function KidNow({ token, data, reads, say }: { token: string; data: KidTasks; reads: boolean; say: (text: string) => void }) {
+  const [local, setLocal] = useState<KidTasks | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [cheer, setCheer] = useState(false);
+  const [undo, setUndo] = useState<{ id: number; log_id: number } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => setLocal(null), [data]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const q = local ?? data;
+  const done = async (task: NowTask) => {
+    setBusy(true);
+    try {
+      const r = await kapi(token, `/tasks/${task.id}/done`, {});
+      setLocal(r);
+      setCheer(true);
+      say(t('Great, done!'));
+      setTimeout(() => setCheer(false), 1800);
+      setUndo({ id: task.id, log_id: r.log_id });
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setUndo(null), 10_000);
+    } catch {
+      say(t('That didn’t work – try again'));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const takeBack = async () => {
+    if (!undo) return;
+    try {
+      setLocal(await kapi(token, `/tasks/${undo.id}/undo`, { log_id: undo.log_id }));
+    } catch {
+      /* too late – it stays done */
+    }
+    setUndo(null);
+  };
+  const undoBtn = undo && (
+    <button className="btn now-undo" onClick={takeBack}>
+      {t('Undo')}
+    </button>
+  );
+  if (cheer)
+    return (
+      <div className="kid-center small-pad" role="status">
+        <div className="now-emoji" aria-hidden="true">🌟</div>
+        <h2>{t('Great, done!')}</h2>
+        {undoBtn}
+      </div>
+    );
+  if (!q.next)
+    return (
+      <div className="kid-center small-pad" role="status">
+        <div className="now-emoji" aria-hidden="true">🌿</div>
+        <h2>{t('All done for now.')}</h2>
+        <p className="muted">{t('Time to play.')}</p>
+        {undoBtn}
+      </div>
+    );
+  if (q.view === 'list')
+    return (
+      <div className="stack">
+        <ul className="kid-tasklist">
+          {q.queue.map((x) => (
+            <li key={x.id}>
+              <span className="e" aria-hidden="true">{x.emoji}</span>
+              <span className="grow" onClick={() => say(x.name)}>{x.name}</span>
+              <button disabled={busy} onClick={() => done(x)} aria-label={t('Done: {name}', { name: x.name })}>
+                <Check size={30} weight="bold" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div style={{ textAlign: 'center' }}>{undoBtn}</div>
+      </div>
+    );
+  const next = q.next;
+  return (
+    <NowCard
+      task={next}
+      busy={busy}
+      onDone={() => done(next)}
+      timerMin={next.effort_min}
+      showLevel={false}
+      extra={undoBtn}
+      footer={
+        q.after > 0 ? (
+          <button className="linkish now-after" aria-label={t('{n} more after this', { n: q.after })} onClick={() => say(t('{n} more after this', { n: q.after }))}>
+            {reads ? t('{n} more after this', { n: q.after }) : '•'.repeat(Math.min(q.after, 5))}
+          </button>
+        ) : null
+      }
+    />
   );
 }
 

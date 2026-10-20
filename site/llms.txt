@@ -17,6 +17,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Sharing receipts](https://tohuus.heidrich-digital.de/help/receipts.html): E-receipts, PDF, photos and text: how receipts get into ToHuus and what happens to them.
 - [Tasks](https://tohuus.heidrich-digital.de/help/tasks.html): What needs doing at home, once or again and again, who does it and who keeps what in mind.
 - [When your head is full](https://tohuus.heidrich-digital.de/help/a-lot-on-your-mind.html): Small steps, one thing at a time, a visible timer and gentle mode: for heads with a lot going on.
+- [One thing at a time](https://tohuus.heidrich-digital.de/help/one-thing-at-a-time.html): “Now” only ever shows the next task. The next one comes once it is done: on Today with “Just one” and on the kid tablet.
 - [House info for guests and babysitters](https://tohuus.heidrich-digital.de/help/house-info.html): From the guest Wi-Fi to the coffee machine: cards with everything someone looking after your home needs to know, and a link without an account.
 - [The assistant](https://tohuus.heidrich-digital.de/help/speak.html): What the assistant does, what it adds and how to undo it.
 - [With or without AI](https://tohuus.heidrich-digital.de/help/ai-on-or-off.html): What works without AI, what it adds, and how to switch it off for the household, yourself or a child.
@@ -67,6 +68,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Geld: Lebensmittel und Haushalt](https://tohuus.heidrich-digital.de/hilfe/geld.html): Was ein Monat gekostet hat, wo, wofür, und was teurer geworden ist.
 - [Aufgaben](https://tohuus.heidrich-digital.de/hilfe/aufgaben.html): Was zu Hause zu tun ist, einmal oder immer wieder, wer es macht und wer was im Blick hat.
 - [Wenn der Kopf voll ist](https://tohuus.heidrich-digital.de/hilfe/kopf-voll.html): Kleine Schritte, eins nach dem anderen, ein sichtbarer Timer und der sanfte Modus: für Köpfe, in denen viel los ist.
+- [Eine Sache nach der anderen](https://tohuus.heidrich-digital.de/hilfe/eine-sache.html): „Jetzt“ zeigt immer nur die nächste Aufgabe. Erst wenn sie erledigt ist, kommt die nächste: auf Heute mit „Nur eins“ und auf dem Kinder-Tablet.
 - [Der Assistent](https://tohuus.heidrich-digital.de/hilfe/sprechen.html): Was der Assistent kann, was er einträgt und wie du es zurücknimmst.
 - [Mit oder ohne KI](https://tohuus.heidrich-digital.de/hilfe/ki-an-oder-aus.html): Was ohne KI geht, was sie dazu bringt, und wie du sie für Haushalt, dich oder Kinder abschaltest.
 - [Hausinfo für Gäste und Babysitter](https://tohuus.heidrich-digital.de/hilfe/hausinfo.html): Vom Gäste-WLAN bis zur Kaffeemaschine: Karten mit allem, was jemand wissen muss, der bei euch aufpasst oder zu Besuch ist.

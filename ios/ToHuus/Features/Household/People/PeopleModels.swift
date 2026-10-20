@@ -189,6 +189,8 @@ struct KidProfile: Decodable, Sendable, Identifiable {
     var findIds: [Int]
     var ai: Bool?
     var devices: [KidDevice]
+    /// tasks on the tablet: now (one at a time, default) | list
+    var taskView: String?
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: AnyKey.self)
@@ -202,6 +204,7 @@ struct KidProfile: Decodable, Sendable, Identifiable {
         rules = c.first(KidRules.self, "rules") ?? KidRules()
         findIds = c.first([Int].self, "findIds", "find_ids") ?? []
         ai = c.first(Bool.self, "ai")
+        taskView = c.first(String.self, "taskView", "task_view")
         devices = c.first(Lossy<KidDevice>.self, "devices")?.wrappedValue ?? []
     }
 
@@ -336,6 +339,8 @@ struct KidHome: Decodable, Sendable {
     var find: [Find]
     var language: String?
     var ai: JSONValue?
+    /// "Jetzt" (docs/now.md): the kid's tasks, one at a time – optional, older servers don't send it
+    var tasks: NowQueue?
 
     struct Kid: Decodable, Sendable, Hashable {
         var name: String

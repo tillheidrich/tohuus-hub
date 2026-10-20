@@ -12,8 +12,10 @@ struct FocusPrefs: Codable, Sendable, Equatable {
     var todayMax: Int?
     var bundleHour: Int?
     var timerMin: Int
+    /// "Nur eins" on Heute (docs/now.md) – optional, older servers don't send it
+    var oneThing: Bool?
 
-    static let standard = FocusPrefs(gentle: false, todayMax: nil, bundleHour: nil, timerMin: 5)
+    static let standard = FocusPrefs(gentle: false, todayMax: nil, bundleHour: nil, timerMin: 5, oneThing: false)
 }
 
 struct StepSuggestion: Decodable, Sendable {
@@ -41,11 +43,13 @@ enum FocusFlags {
     nonisolated(unsafe) static var gentle = false
     nonisolated(unsafe) static var todayMax: Int?
     nonisolated(unsafe) static var timerMin = 5
+    nonisolated(unsafe) static var oneThing = false
 
     static func apply(_ p: FocusPrefs) {
         gentle = p.gentle
         todayMax = p.todayMax
         timerMin = p.timerMin
+        oneThing = p.oneThing ?? false
     }
 }
 
@@ -340,6 +344,13 @@ struct FocusSettingsSection: View {
                     Text(L("One by one, as usual")).tag(-1)
                     ForEach([7, 8, 9, 10, 12, 15, 17, 18, 19, 20], id: \.self) { h in Text(LF("Once a day at %d:00", h)).tag(h) }
                 }
+                Toggle(isOn: Binding(get: { p.oneThing ?? false }, set: { v in Task { await save(["oneThing": v]) } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("Just one"))
+                        Text(L("Today shows only the next task – then the next one.")).font(.caption).foregroundStyle(Theme.ink3)
+                    }
+                }
+                .tint(Theme.primary)
                 Picker(L("Timer starts with"), selection: Binding(get: { p.timerMin }, set: { v in Task { await save(["timerMin": v]) } })) {
                     ForEach([5, 10, 15, 25], id: \.self) { m in Text(LF("%d min", m)).tag(m) }
                 }

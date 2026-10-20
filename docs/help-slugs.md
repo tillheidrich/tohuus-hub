@@ -50,3 +50,4 @@ The web app keeps the same list in `web/src/help.ts` (`HELP_SLUGS`) – a test c
 | `bring-mir-was` | Bring mir was | Asking for a little something at home, „Ich bring’s“, no points (18 Oct 2026) | Bring mir was |
 | `ki-grenzen` | Faire KI-Grenzen | Monthly limits per plan, cost cap, what keeps working during a pause (18 Oct 2026) | Settings › Plan, assistant |
 | `aufgaben` | Aufgaben | Tasks once/recurring/when needed, who does it, Demnächst and the bin, undo, appointments, private calendar (18 Oct 2026) | Aufgaben, So funktioniert ToHuus |
+| `eine-sache` | Eine Sache nach der anderen | „Jetzt“: the order rule, „Nur eins“ on Heute, the timer and the Live Activity, the kid tablet (20 Oct 2026) | Heute › Aufgaben heute, Kinder-Einstellungen |

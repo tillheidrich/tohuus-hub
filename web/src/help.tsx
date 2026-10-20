@@ -45,6 +45,7 @@ export const HELP_SLUGS = [
   'bring-mir-was',
   'ki-grenzen',
   'aufgaben',
+  'eine-sache',
 ] as const;
 export type HelpSlug = (typeof HELP_SLUGS)[number];
 

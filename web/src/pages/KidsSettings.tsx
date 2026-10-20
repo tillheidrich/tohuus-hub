@@ -34,6 +34,8 @@ interface Kid {
   avatar: string;
   age_band: 'pre' | 'reads';
   speak: boolean;
+  /** tasks on the tablet: one at a time ("Jetzt", default) or a list (docs/now.md) */
+  task_view?: 'now' | 'list';
   has_pin: boolean;
   rules: Rules;
   find_ids: number[];
@@ -224,6 +226,7 @@ function KidForm({ kid, onClose }: { kid: Kid | null; onClose: () => void }) {
     avatar: kid?.avatar ?? ANIMAL_KEYS[Math.floor(Math.random() * ANIMAL_KEYS.length)],
     age_band: kid?.age_band ?? ('pre' as 'pre' | 'reads'),
     speak: kid?.speak ?? true,
+    task_view: kid?.task_view ?? ('now' as 'now' | 'list'),
   });
   const [pin, setPin] = useState('');
   const [err, setErr] = useState('');
@@ -293,6 +296,11 @@ function KidForm({ kid, onClose }: { kid: Kid | null; onClose: () => void }) {
             <div className="small muted">{t('The tablet says the name of what was tapped – in the household language.')}</div>
           </div>
           <Toggle on={f.speak} onChange={(v) => setF({ ...f, speak: v })} />
+        </div>
+        <div className="field">
+          <label>{t('Tasks on the tablet')}</label>
+          <Seg value={f.task_view} onChange={(v) => setF({ ...f, task_view: v })} options={[['now', t('One at a time')], ['list', t('As a list')]]} />
+          <div className="help">{f.task_view === 'now' ? t('One big card with “Done” – then the next one. Calmer for most kids.') : t('All of today’s tasks at once.')}</div>
         </div>
         <div className="field">
           <label>{t('Parent PIN')}</label>

@@ -30,6 +30,7 @@ import {
   type QrKind,
 } from '../lib/care.js';
 import { focusPrefs, freshStart, setFocusPrefs, suggestSteps } from '../lib/focus.js';
+import { nextTasks } from '../lib/next-task.js';
 import { LOAD_ANSWERS, loadCards, setLoadAnswer, taskFromCard } from '../lib/loadcards.js';
 import { BLICK_AREAS, type BlickArea, blickOverview, setCompareOptIn } from '../lib/blick.js';
 import { pointsWeek, setPointsSettings } from '../lib/points.js';
@@ -88,6 +89,8 @@ const careBody = z.object({
   due_time: z.string().max(5).nullable().optional(),
   duration_min: z.number().int().min(5).max(1440).nullable().optional(),
   place: z.string().max(120).nullable().optional(),
+  effort_min: z.number().int().min(1).max(240).nullable().optional(),
+  kids_ok: z.boolean().optional(),
 });
 
 const viewerOf = (req: Request) => req.actor?.userId ?? null;
@@ -244,6 +247,30 @@ r.post('/care/fresh-start', (req, res) => {
   const b = z.object({ per_day: z.number().int().min(1).max(5).optional() }).parse(req.body ?? {});
   res.json(freshStart(uid, b.per_day ?? 2));
 });
+/**
+ * "Jetzt": the next task and the order after it, decided by the server (lib/next-task.ts, docs/now.md).
+ * for=me (default) · user:<id> (another member – never any private task) · kid:<id> (a child profile).
+ * Permanent guests only for themselves and only what was handed to them; guest links never.
+ */
+r.get('/tasks/next', (req, res) => {
+  const me = req.actor?.userId ?? null;
+  if (req.actor?.role === 'guest' || req.actor?.kind === 'guest' || !me) return void res.status(403).json({ error: t('Only household members can do this') });
+  const f = String(req.query.for ?? 'me');
+  const guest = Boolean(req.actor?.houseGuest);
+  const m = /^(user|kid):(\d+)$/.exec(f);
+  if (f !== 'me' && !m) return void res.status(400).json({ error: 'for' });
+  if (m && guest) return void res.status(403).json({ error: t('Not available for guests') });
+  const timer = focusPrefs(memberOf(req)).timerMin;
+  if (!m || (m[1] === 'user' && Number(m[2]) === me)) return void res.json({ for: 'me', person: null, timer_min: timer, ...nextTasks({ kind: 'user', userId: me, self: true }, undefined, { mineOnly: guest }) });
+  const id = Number(m[2]);
+  const person = (m[1] === 'user' ? db.prepare(`SELECT id, name, color FROM users WHERE id = ?`) : db.prepare('SELECT id, name, color FROM kid_profiles WHERE id = ?')).get(id) as
+    | { id: number; name: string; color: string }
+    | undefined;
+  if (!person) return void res.status(404).json({ error: t('Person not found.') });
+  const who = m[1] === 'user' ? ({ kind: 'user', userId: id, self: false } as const) : ({ kind: 'kid', kidId: id } as const);
+  res.json({ for: m[1], person: { key: `${m[1] === 'user' ? 'u' : 'k'}${id}`, name: person.name, color: person.color }, timer_min: timer, ...nextTasks(who) });
+});
+
 /** My focus settings – personal, nobody else sees them. */
 r.get('/focus/prefs', (req, res) => res.json(focusPrefs(memberOf(req))));
 r.put('/focus/prefs', (req, res) => {
@@ -255,6 +282,7 @@ r.put('/focus/prefs', (req, res) => {
       todayMax: z.number().int().min(1).max(10).nullable().optional(),
       bundleHour: z.number().int().min(0).max(23).nullable().optional(),
       timerMin: z.number().int().min(1).max(60).optional(),
+      oneThing: z.boolean().optional(),
     })
     .parse(req.body ?? {});
   res.json(setFocusPrefs(uid, b));

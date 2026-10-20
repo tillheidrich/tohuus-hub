@@ -29,9 +29,11 @@ export interface FocusPrefs {
   bundleHour: number | null;
   /** timer length the focus view starts with, in minutes */
   timerMin: number;
+  /** "Nur eins" (docs/now.md): Heute shows only the next task as one card – the order comes from lib/next-task.ts */
+  oneThing: boolean;
 }
 
-const DEFAULTS: FocusPrefs = { gentle: false, todayMax: null, bundleHour: null, timerMin: 5 };
+const DEFAULTS: FocusPrefs = { gentle: false, todayMax: null, bundleHour: null, timerMin: 5, oneThing: false };
 
 export function focusPrefs(userId: number | null | undefined): FocusPrefs {
   if (!userId) return { ...DEFAULTS };
@@ -41,6 +43,7 @@ export function focusPrefs(userId: number | null | undefined): FocusPrefs {
     todayMax: typeof raw.todayMax === 'number' && raw.todayMax >= 1 && raw.todayMax <= 10 ? Math.round(raw.todayMax) : null,
     bundleHour: typeof raw.bundleHour === 'number' && raw.bundleHour >= 0 && raw.bundleHour <= 23 ? Math.round(raw.bundleHour) : null,
     timerMin: typeof raw.timerMin === 'number' && raw.timerMin >= 1 && raw.timerMin <= 60 ? Math.round(raw.timerMin) : DEFAULTS.timerMin,
+    oneThing: raw.oneThing === true,
   };
 }
 

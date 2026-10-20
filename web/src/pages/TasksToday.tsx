@@ -4,11 +4,14 @@
  * Small on purpose: it is part of the first load, the task page itself is a separate chunk.
  */
 import { useFocusPrefs } from '../focus/Focus';
+import { OneThingToday } from '../focus/Now';
 import { ArrowRight, Check, LockSimple } from '@phosphor-icons/react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmtDate, invalidate, post, useApi } from '../api';
+import { helpUrl } from '../help';
+import { fmtDate, invalidate, post, put, useApi } from '../api';
 import { t } from '../i18n';
-import { timeLabel } from './taskTime';
+import { isPast, timeLabel } from './taskTime';
 import { useToast } from '../ui';
 
 interface TaskLite {
@@ -21,10 +24,22 @@ interface TaskLite {
   checklist?: { text: string; done: boolean }[];
   doer?: { name: string } | null;
   due_time?: string | null;
+  duration_min?: number | null;
   place?: string | null;
 }
 
+/** the tip about "Nur eins" was put away on this device (a per-device convenience, nothing on the server) */
+const TIP = 'sw.tip.oneThing';
+const tipGone = () => {
+  try {
+    return localStorage.getItem(TIP) === '1';
+  } catch {
+    return true;
+  }
+};
+
 export function TasksTodayCard({ today }: { today: string }) {
+  const [tipHidden, setTipHidden] = useState(tipGone);
   const q = useApi<{ tasks: TaskLite[] }>('care', '/care');
   const focus = useFocusPrefs();
   const nav = useNavigate();
@@ -49,17 +64,44 @@ export function TasksTodayCard({ today }: { today: string }) {
       toast({ text: (e as Error).message, error: true });
     }
   };
-  return (
-    <section className="hcard" aria-labelledby="h-tasks">
-      <div className="hcard-h">
-        <h2 id="h-tasks">
-          <span className="shape a" aria-hidden="true" />
-          {t('Tasks today')}
-        </h2>
+  const one = Boolean(focus?.oneThing);
+  // "Nur eins" (docs/now.md): personal, saved on the server, the same on the iPhone
+  const setOne = async (on: boolean) => {
+    try {
+      await put('/focus/prefs', { oneThing: on });
+      invalidate('focus');
+    } catch (e) {
+      toast({ text: (e as Error).message, error: true });
+    }
+  };
+  const head = (
+    <div className="hcard-h">
+      <h2 id="h-tasks">
+        <span className="shape a" aria-hidden="true" />
+        {t('Tasks today')}
+      </h2>
+      <div className="row" style={{ gap: 6 }}>
+        {(one || open.length > 1) && (
+          <button className={`chip ${one ? 'on' : ''}`} aria-pressed={one} onClick={() => setOne(!one)} title={t('Show only the next task')}>
+            {t('Just one')}
+          </button>
+        )}
         <button className="linkish" onClick={() => nav('/aufgaben')}>
           {t('All tasks')} <ArrowRight size={14} />
         </button>
       </div>
+    </div>
+  );
+  if (one)
+    return (
+      <section className="hcard" aria-labelledby="h-tasks">
+        {head}
+        <OneThingToday />
+      </section>
+    );
+  return (
+    <section className="hcard" aria-labelledby="h-tasks">
+      {head}
       <div className="row" style={{ gap: 14, alignItems: 'center', marginBottom: open.length ? 6 : 0 }}>
         <Ring done={doneToday} total={total} />
         <div className="grow">
@@ -67,10 +109,34 @@ export function TasksTodayCard({ today }: { today: string }) {
           <div className="meta">{open.length === 0 ? t('Nothing else is due.') : t('Tick off what’s done – the next date sets itself.')}</div>
         </div>
       </div>
+      {open.length >= 3 && !tipHidden && (
+        <div className="now-tip" role="note">
+          <span>
+            <b>{t('A lot at once?')}</b> {t('With “Just one” you only see the next task – the rest waits.')}{' '}
+            <a href={helpUrl('eine-sache')} target="_blank" rel="noreferrer">{t('How it works')}</a>
+          </span>
+          <span className="row" style={{ gap: 6 }}>
+            <button className="btn sm" onClick={() => setOne(true)}>{t('Try it')}</button>
+            <button
+              className="btn sm ghost"
+              onClick={() => {
+                try {
+                  localStorage.setItem(TIP, '1');
+                } catch {
+                  /* private mode */
+                }
+                setTipHidden(true);
+              }}
+            >
+              {t('Not now')}
+            </button>
+          </span>
+        </div>
+      )}
       {open.length > 0 && (
         <ul className="hrows">
           {open.slice(0, max).map((x) => (
-            <li key={x.id} className="hrow">
+            <li key={x.id} className={`hrow ${isPast(x) ? 'past' : ''}`}>
               <div className="grow">
                 <b>
                   {x.visibility === 'private' && <LockSimple size={13} aria-label={t('Only for me')} style={{ marginRight: 4, verticalAlign: '-1px' }} />}

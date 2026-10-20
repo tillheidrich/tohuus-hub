@@ -16,6 +16,8 @@ Storage is the existing `care_tasks` / `care_log` tables (`server/lib/care.ts`, 
 | `doer_key` | who does it: `u<id>` member or `k<id>` child profile |
 | `assignee` | who keeps it in mind (existing column) |
 | `rotation` | keys taking turns – "done" passes the task to the next one, undo gives it back |
+| `effort_min` | „Dauert etwa“ in minutes (1–240, null) – the timer of „Jetzt“ starts with it (migration `tasks-now`, [now.md](now.md)) |
+| `kids_ok` | „Kinder dürfen das machen“: open household tasks show on the kid tablet too; never on private tasks |
 | `due_time` / `duration_min` / `place` | Termin: with a time (HH:MM, household time) the task is an appointment of `duration_min` minutes (default 60) at `place` – a classic calendar entry (migration `termine-1`) |
 
 A one-off task without a rhythm is archived when it is done. `learned_every_days` on the detail is the median gap between the last done days.
@@ -89,6 +91,12 @@ in `TasksTodayCard.swift`):
 - From 17:00 (household time zone) a bin going out tonight has `now: true`: first in the list, in the primary colour,
   never red. Only tonight's items get a *Erledigt* button.
 - Gentle mode: at most two, no "n more". Tasks that may wait (away) and "when needed" tasks are left out.
+
+## „Jetzt“ (20 Oct 2026)
+
+One task at a time, the order decided by the server: `GET /api/tasks/next` (overdue > today by time > my „Mach ich“ >
+mine coming up > open coming up). „Nur eins“ on Heute, the kid tablet's „Zu tun“, the timer and the iPhone Live
+Activity: see [now.md](now.md).
 
 ## "Mach ich" (14 Oct 2026)
 

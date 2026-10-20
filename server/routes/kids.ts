@@ -18,6 +18,7 @@ import {
   getKid,
   kidFind,
   kidHome,
+  kidTasks,
   kidTiles,
   listKids,
   listWishes,
@@ -31,6 +32,7 @@ import {
   updateKid,
 } from '../lib/kids.js';
 import { runAsAiActor } from '../lib/ai-policy.js';
+import { completeCareTask, undoCareTask } from '../lib/care.js';
 import { rulesSchema } from '../lib/kids-rules.js';
 import { config } from '../config.js';
 import { uploadQuota } from '../lib/plans.js';
@@ -58,6 +60,7 @@ const kidInput = z.object({
   pin: z.string().regex(/^\d{4,8}$/).nullable().optional(),
   rules: rulesSchema.optional(),
   find_ids: z.array(z.number().int()).max(12).optional(),
+  task_view: z.enum(['now', 'list']).optional(),
 });
 
 // ---------------------------------------------------------------- parents (signed in)
@@ -198,6 +201,42 @@ kid.post('/:token/wish', (req, res) => {
     res.json({ id: makeWish(k, device.id, product_id) });
   } catch (e) {
     fail(res, e);
+  }
+});
+
+// ---- "Jetzt" on the tablet (docs/now.md): only the kid's own tasks and open ones parents marked "kids may do it"
+kid.get('/:token/tasks', (req, res) => {
+  const { kid: k } = (req as any).kidDevice;
+  res.json(kidTasks(k));
+});
+
+kid.post('/:token/tasks/:id/done', (req, res) => {
+  const { device, kid: k } = (req as any).kidDevice;
+  const id = Number(req.params.id);
+  if (rateLimited(`kidtask:${device.id}`, 30, 10 * 60_000)) return void res.status(429).json({ error: 'busy', state: 'busy' });
+  if (!kidTasks(k).queue.some((x: { id: number }) => x.id === id)) return void res.status(404).json({ error: t('Task not found') });
+  try {
+    const r = completeCareTask(id, k.name, { actorUserId: null });
+    res.json({ ok: true, log_id: r.log_id, ...kidTasks(k) });
+  } catch (e) {
+    res.status((e as any).status ?? 400).json({ error: (e as Error).message });
+  }
+});
+
+/** "Rückgängig" right after "Fertig": only the kid's own tick of the last two minutes. */
+kid.post('/:token/tasks/:id/undo', (req, res) => {
+  const { kid: k } = (req as any).kidDevice;
+  const id = Number(req.params.id);
+  const { log_id } = z.object({ log_id: z.number().int().positive() }).parse(req.body ?? {});
+  const log = db
+    .prepare(`SELECT id FROM care_log WHERE id = ? AND task_id = ? AND actor_user_id IS NULL AND actor = ? AND created_at > datetime('now', '-2 minutes')`)
+    .get(log_id, id, k.name) as { id: number } | undefined;
+  if (!log) return void res.status(404).json({ error: t('Nothing to undo') });
+  try {
+    undoCareTask(id, k.name, { logId: log.id });
+    res.json({ ok: true, ...kidTasks(k) });
+  } catch (e) {
+    res.status((e as any).status ?? 400).json({ error: (e as Error).message });
   }
 });
 

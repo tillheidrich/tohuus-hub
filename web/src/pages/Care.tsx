@@ -38,7 +38,7 @@ import { Carrying, OfferAsks, OfferBox, WhoDoesWhatSection } from './WhoDoesWhat
 import { CareForHint } from './CareFor';
 import { ShareTextButton } from '../share/share';
 import { TodayDeckSheet } from './Decide';
-import { durationLabel, timeLabel } from './taskTime';
+import { durationLabel, timeLabel, isPast } from './taskTime';
 import { BonButton } from './Bons';
 import { t } from '../i18n';
 import { HomeDoors } from '../home/HomeSwitch';
@@ -98,6 +98,10 @@ export interface CareTask {
   due_time?: string | null;
   duration_min?: number | null;
   place?: string | null;
+  /** "Jetzt" (docs/now.md): roughly how long it takes – the timer starts with it */
+  effort_min?: number | null;
+  /** children may do it when nobody has it (kid tablet) */
+  kids_ok?: boolean;
   /** detail only: the rhythm the household actually keeps */
   learned_every_days?: number | null;
 }
@@ -171,6 +175,8 @@ export function dueLabel(x: Pick<CareTask, 'state' | 'days' | 'next_due'> & { as
 }
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240];
+/** "Dauert etwa" – for the timer of "Jetzt" (docs/now.md) */
+const EFFORTS = [5, 10, 15, 20, 30, 45, 60, 90];
 
 /** "Sam macht’s morgen" – and kindly, once the day is over: "Sam hatte es für Mo., 13. Okt. vor" */
 export function promiseLabel(p: NonNullable<CareTask['promise']>) {
@@ -259,7 +265,7 @@ export function CareRow({ task, onOpen, onDone, compact = false }: { task: CareT
     task.location?.name,
   ].filter(Boolean);
   return (
-    <div className={`li care-li ${onOpen ? 'clickable' : ''}`} onClick={onOpen}>
+    <div className={`li care-li ${onOpen ? 'clickable' : ''} ${isPast(task) ? 'past' : ''}`} onClick={onOpen}>
       <span className={`care-ic ${task.state}`}><I size={20} /></span>
       <div className="grow">
         <div className="title">
@@ -809,6 +815,8 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
         due_time: !needed && f.next_due && f.due_time ? f.due_time : null,
         duration_min: !needed && f.next_due && f.due_time ? (f.duration_min ?? 60) : null,
         place: f.place?.trim() || null,
+        effort_min: f.effort_min ?? null,
+        kids_ok: f.visibility !== 'private' && Boolean(f.kids_ok),
         last_done: f.last_done || null,
         lead_days: f.lead_days ?? undefined,
         location_id: f.location_id ?? null,
@@ -930,6 +938,14 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
             <input className="input" value={f.place ?? ''} maxLength={120} onChange={(e) => set({ place: e.target.value })} placeholder={t('e.g. basement, school, dentist')} />
           </div>
         )}
+        <div className="field">
+          <label>{t('Takes about')}</label>
+          <select className="input" value={f.effort_min ?? ''} onChange={(e) => set({ effort_min: e.target.value ? Number(e.target.value) : null })}>
+            <option value="">{t('Not sure')}</option>
+            {EFFORTS.map((m) => <option key={m} value={m}>{t('{n} min', { n: m })}</option>)}
+          </select>
+          <span className="help">{t('The timer in “Now” starts with it.')}</span>
+        </div>
         <label className="row between">
           <span>
             <b>{t('Only for me')}</b>
@@ -937,6 +953,15 @@ function TaskForm({ initial, onClose }: { initial: Partial<CareTask> | null; onC
           </span>
           <Toggle on={f.visibility === 'private'} onChange={(v) => set({ visibility: v ? 'private' : 'household' })} label={t('Only for me')} />
         </label>
+        {f.visibility !== 'private' && people.some((p) => p.kind === 'child') && (
+          <label className="row between">
+            <span>
+              <b>{t('Kids may do it')}</b>
+              <span className="small muted" style={{ display: 'block' }}>{t('When nobody has it, it shows on the kid tablet too.')}</span>
+            </span>
+            <Toggle on={Boolean(f.kids_ok)} onChange={(v) => set({ kids_ok: v })} label={t('Kids may do it')} />
+          </label>
+        )}
         {f.visibility !== 'private' && people.length > 1 && (
           <label className="row between">
             <span>

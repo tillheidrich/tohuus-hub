@@ -121,5 +121,6 @@ struct ToHuusWidgets: WidgetBundle {
     var body: some Widget {
         ShoppingWidget()
         TripActivityWidget()
+        TaskTimerActivityWidget()
     }
 }

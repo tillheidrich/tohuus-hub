@@ -69,6 +69,10 @@ struct CareTask: Decodable, Sendable, Identifiable, Hashable {
     var dueTime: String?
     var durationMin: Int?
     var place: String?
+    /// "Jetzt" (docs/now.md): roughly how long it takes – the timer starts with it
+    var effortMin: Int?
+    /// children may do it when nobody has it (kid tablet)
+    var kidsOk: Bool?
     /// "Mach ich": who promised it for which day (server: care.ts promiseCareTask)
     var promise: Promise?
     /// follows collection dates from the household's calendar (server: calsync.ts)
@@ -922,6 +926,8 @@ private struct CareTaskForm: View {
     @State private var placeId: Int?
     @State private var productId: Int?
     @State private var note = ""
+    @State private var effort: Int?
+    @State private var kidsOk = false
     @State private var places: [Place] = []
     @State private var busy = false
     @State private var error: String?
@@ -990,11 +996,27 @@ private struct CareTaskForm: View {
                     }
                 }
                 Section {
+                    Picker(L("Takes about"), selection: $effort) {
+                        Text(L("Not sure")).tag(Int?.none)
+                        ForEach([5, 10, 15, 20, 30, 45, 60, 90], id: \.self) { m in Text(LF("%d min", m)).tag(Int?.some(m)) }
+                    }
+                } footer: {
+                    Text(L("The timer in “Now” starts with it."))
+                }
+                Section {
                     Toggle(isOn: $privateTask) {
                         VStack(alignment: .leading) {
                             Text(L("Only for me"))
                             Text(L("Nobody else sees it – not the household, not the assistant for others, not displays."))
                                 .font(.caption).foregroundStyle(Theme.ink3)
+                        }
+                    }
+                    if !privateTask && people.contains(where: { $0.kind == "child" }) {
+                        Toggle(isOn: $kidsOk) {
+                            VStack(alignment: .leading) {
+                                Text(L("Kids may do it"))
+                                Text(L("When nobody has it, it shows on the kid tablet too.")).font(.caption).foregroundStyle(Theme.ink3)
+                            }
                         }
                     }
                     if !privateTask && people.count > 1 {
@@ -1102,6 +1124,8 @@ private struct CareTaskForm: View {
                     }
                     duration = t.durationMin ?? 60
                     place = t.place ?? ""
+                    effort = t.effortMin
+                    kidsOk = t.kidsOk ?? false
                     lead = t.leadDays
                     placeId = t.locationId
                     productId = t.productId
@@ -1138,6 +1162,8 @@ private struct CareTaskForm: View {
             "due_time": nul(mode != "needed" && nextDue != nil ? time.map { TaskTime.hhmm($0) } : nil),
             "duration_min": nul(mode != "needed" && nextDue != nil && time != nil ? duration : nil),
             "place": nul(place.trimmingCharacters(in: .whitespaces).isEmpty ? nil : String(place.trimmingCharacters(in: .whitespaces).prefix(120))),
+            "effort_min": nul(effort),
+            "kids_ok": !privateTask && kidsOk,
         ]
         if let lead { body["lead_days"] = lead }
         let next = (mode == "needed" ? nil : nextDue).map { ServerDate.day($0) }

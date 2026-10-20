@@ -8,6 +8,10 @@ struct TasksTodayCard: View {
     let refresh: Int
     @State private var tasks: [CareTask] = []
     @State private var toast: ToastMessage?
+    /// "Nur eins" (docs/now.md): only the next task as one card – personal, saved on the server
+    @State private var oneThing = FocusFlags.oneThing
+    /// the tip about "Nur eins" was put away on this device
+    @AppStorage("tip.oneThing") private var tipGone = false
 
     private var today: String { ServerDate.day() }
     private var open: [CareTask] { tasks.filter { $0.state == "today" || $0.state == "overdue" } }
@@ -19,8 +23,14 @@ struct TasksTodayCard: View {
         // a LoadSlot, not a Group: .task on an empty Group never runs, so the card would never load (Design/LoadSlot.swift)
         LoadSlot {
             let total = open.count + doneToday
-            if total > 0 {
+            if total > 0 && oneThing {
                 Card(title: L("Tasks today"), systemImage: "checklist") {
+                    oneToggle
+                    OneThingTodayView(api: api, refresh: refresh) { Task { await setOne(false) } }
+                }
+            } else if total > 0 {
+                Card(title: L("Tasks today"), systemImage: "checklist") {
+                    if open.count > 1 { oneToggle }
                     HStack(spacing: Theme.Space.s3) {
                         TaskRing(done: doneToday, total: total)
                         VStack(alignment: .leading, spacing: 2) {
@@ -29,6 +39,21 @@ struct TasksTodayCard: View {
                             Text(open.isEmpty ? L("Nothing else is due.") : L("Tick off what’s done – the next date sets itself."))
                                 .font(.caption).foregroundStyle(Theme.ink3)
                         }
+                    }
+                    if open.count >= 3 && !tipGone {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(L("A lot at once?")).font(.subheadline.weight(.semibold))
+                                + Text(" ") + Text(L("With “Just one” you only see the next task – the rest waits.")).font(.subheadline)
+                            HStack(spacing: Theme.Space.s2) {
+                                Button(L("Try it")) { Task { await setOne(true) } }
+                                    .buttonStyle(.bordered).tint(Theme.primary).frame(minHeight: 44)
+                                Button(L("Not now")) { tipGone = true }
+                                    .buttonStyle(.borderless).frame(minHeight: 44)
+                            }
+                        }
+                        .padding(Theme.Space.s3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.primary.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
                     }
                     ForEach(open.prefix(max)) { t in
                         HStack(spacing: Theme.Space.s3) {
@@ -40,6 +65,8 @@ struct TasksTodayCard: View {
                                 Text([t.state == "overdue" ? (FocusFlags.gentle ? L("could be done") : L("overdue")) : t.dueTime.map { LF("today %@", TaskTime.label($0)) } ?? L("due today"), t.place, t.doer?.name].compactMap { $0 }.joined(separator: " · "))
                                     .font(.caption).foregroundStyle(t.state == "overdue" && !FocusFlags.gentle ? Theme.empty : Theme.ink3)
                             }
+                            // an appointment of today that is over: still there to tick off, but quieter
+                            .opacity(TaskTime.isPast(t) ? 0.55 : 1)
                             Spacer(minLength: 0)
                             Button { Task { await done(t) } } label: {
                                 Label(L("Done"), systemImage: "checkmark").font(.caption.weight(.semibold))
@@ -64,8 +91,37 @@ struct TasksTodayCard: View {
         .toast($toast)
     }
 
+    /// "Nur eins" on and off – a small chip at the top of the card
+    private var oneToggle: some View {
+        HStack {
+            Spacer()
+            Button { Task { await setOne(!oneThing) } } label: {
+                Label(L("Just one"), systemImage: oneThing ? "checkmark.circle.fill" : "circle")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44)
+                    .background(Capsule().fill(oneThing ? Theme.primary.opacity(0.15) : Theme.line.opacity(0.5)))
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(L("Show only the next task"))
+            .accessibilityAddTraits(oneThing ? .isSelected : [])
+        }
+    }
+
+    private func setOne(_ on: Bool) async {
+        do {
+            let p = try await api.setFocusPrefs(["oneThing": on])
+            FocusFlags.apply(p)
+            oneThing = p.oneThing ?? false
+        } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
+    }
+
     private func load() async {
-        if let p = try? await api.focusPrefs() { FocusFlags.apply(p) }
+        if let p = try? await api.focusPrefs() {
+            FocusFlags.apply(p)
+            oneThing = p.oneThing ?? false
+        }
         if let d = try? await api.care() { tasks = d.tasks }
     }
 

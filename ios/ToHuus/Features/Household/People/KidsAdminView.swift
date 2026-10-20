@@ -363,6 +363,7 @@ struct KidFormSheet: View {
     @State private var color = KidText.colors.randomElement() ?? "#f2a33a"
     @State private var ageBand = "pre"
     @State private var speak = true
+    @State private var taskView = "now"
     @State private var pin = ""
     @State private var busy = false
     @State private var error: String?
@@ -411,6 +412,15 @@ struct KidFormSheet: View {
                     Text(ageBand == "pre" ? L("Pictures first, very little text.") : L("Pictures with names, and the exact spot under “Where is …?”."))
                 }
                 Section {
+                    Picker(L("Tasks on the tablet"), selection: $taskView) {
+                        Text(L("One at a time")).tag("now")
+                        Text(L("As a list")).tag("list")
+                    }
+                    .pickerStyle(.segmented)
+                } header: { Text(L("Tasks on the tablet")) } footer: {
+                    Text(taskView == "now" ? L("One big card with “Done” – then the next one. Calmer for most kids.") : L("All of today’s tasks at once."))
+                }
+                Section {
                     Toggle(isOn: $speak) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(L("Read aloud"))
@@ -451,6 +461,7 @@ struct KidFormSheet: View {
                 color = k.color ?? color
                 ageBand = k.ageBand ?? "pre"
                 speak = k.speak ?? true
+                taskView = k.taskView ?? "now"
             }
         }
     }
@@ -460,7 +471,7 @@ struct KidFormSheet: View {
         if !pin.isEmpty && !(4...8).contains(pin.count) { error = L("The PIN needs 4 to 8 digits."); return }
         busy = true
         defer { busy = false }
-        var body: [String: Any] = ["name": name.trimmingCharacters(in: .whitespaces), "avatar": avatar, "color": color, "age_band": ageBand, "speak": speak]
+        var body: [String: Any] = ["name": name.trimmingCharacters(in: .whitespaces), "avatar": avatar, "color": color, "age_band": ageBand, "speak": speak, "task_view": taskView]
         if !pin.isEmpty { body["pin"] = pin }
         do {
             try await api.saveKid(kid?.id, body)

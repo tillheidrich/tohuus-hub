@@ -18,6 +18,8 @@ export interface FocusPrefs {
   todayMax: number | null;
   bundleHour: number | null;
   timerMin: number;
+  /** "Nur eins" on Heute (docs/now.md) */
+  oneThing?: boolean;
 }
 
 let gentle = false;
@@ -352,6 +354,13 @@ export function FocusSettingsCard() {
             <div className="small muted">{t('No red, no counters. Things that are due say “could be done”.')}</div>
           </div>
           <Toggle on={p.gentle} onChange={(v) => save({ gentle: v })} label={t('Gentle mode')} />
+        </div>
+        <div className="row between">
+          <div>
+            <b>{t('Just one')}</b>
+            <div className="small muted">{t('Today shows only the next task – then the next one.')}</div>
+          </div>
+          <Toggle on={Boolean(p.oneThing)} onChange={(v) => save({ oneThing: v })} label={t('Just one')} />
         </div>
         <div className="field">
           <span className="eyebrow">{t('On Today, at most')}</span>

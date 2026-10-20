@@ -92,6 +92,9 @@ migrate('tasks-promise', `ALTER TABLE care_tasks ADD COLUMN promised_by INTEGER;
 migrate('tasks-ext', `ALTER TABLE care_tasks ADD COLUMN ext_kind TEXT;`);
 // "Abgeben": one member asks another to take a task over (habits.ts, docs/who-does-what.md)
 migrate('tasks-offer', `ALTER TABLE care_tasks ADD COLUMN offered_to INTEGER; ALTER TABLE care_tasks ADD COLUMN offered_by INTEGER;`);
+// "Jetzt" (20 Oct 2026, docs/now.md): how long a task roughly takes (minutes, for the timer) and whether children may do
+// it when nobody has it (kids_ok – the kid tablet shows such open tasks too)
+migrate('tasks-now', `ALTER TABLE care_tasks ADD COLUMN effort_min INTEGER; ALTER TABLE care_tasks ADD COLUMN kids_ok INTEGER NOT NULL DEFAULT 0;`);
 
 /**
  * "Macht meistens Sam": the person who did a household task at least 3 of its last (up to) 6 times and 70 % of
@@ -288,6 +291,10 @@ export interface CareRow {
   due_time: string | null;
   duration_min: number | null;
   place: string | null;
+  /** roughly how long it takes, in minutes – the timer of "Jetzt" starts with it (null = the person's default) */
+  effort_min?: number | null;
+  /** children may do it when nobody has it (kid tablet "Jetzt") */
+  kids_ok?: number;
 }
 
 /** Who may see a task: everyone in the household, or – private – only its owner. `viewer` undefined = shared views. */
@@ -365,6 +372,8 @@ export function careView(row: CareRow, today = localDay(0)) {
   return {
     ...row,
     archived: Boolean(row.archived),
+    effort_min: row.effort_min ?? null,
+    kids_ok: Boolean(row.kids_ok),
     as_needed: Boolean(row.as_needed),
     checklist: parseChecklist(row.checklist),
     doer: standIn ?? personOf(row.doer_key),
@@ -468,6 +477,8 @@ export interface CareInput {
   due_time?: string | null;
   duration_min?: number | null;
   place?: string | null;
+  effort_min?: number | null;
+  kids_ok?: boolean;
 }
 
 function cleanTime(v: string | null | undefined) {
@@ -480,6 +491,12 @@ function cleanTime(v: string | null | undefined) {
 function cleanDuration(v: number | null | undefined) {
   if (v == null) return null;
   if (!Number.isInteger(v) || v < 5 || v > 1440) throw userError(t('Invalid duration'));
+  return v;
+}
+
+function cleanEffort(v: number | null | undefined) {
+  if (v == null) return null;
+  if (!Number.isInteger(v) || v < 1 || v > 240) throw userError(t('Invalid duration'));
   return v;
 }
 
@@ -534,8 +551,8 @@ export function createCareTask(input: CareInput, owner?: number | null) {
   const info = db
     .prepare(
       `INSERT INTO care_tasks (name, template, interval_n, interval_unit, next_due, last_done, lead_days, location_id, product_id, consume_qty, assignee_user_id, note,
-         category, visibility, owner_user_id, anchor, as_needed, checklist, doer_key, rotation, due_time, duration_min, place)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         category, visibility, owner_user_id, anchor, as_needed, checklist, doer_key, rotation, due_time, duration_min, place, effort_min, kids_ok)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       name,
@@ -561,6 +578,8 @@ export function createCareTask(input: CareInput, owner?: number | null) {
       nextDue ? cleanTime(input.due_time) : null,
       nextDue && input.due_time ? cleanDuration(input.duration_min) : null,
       cleanPlace(input.place),
+      cleanEffort(input.effort_min),
+      input.kids_ok && visibility !== 'private' ? 1 : 0,
     );
   emit('care');
   return careView(getCareTask(Number(info.lastInsertRowid))!);
@@ -596,6 +615,10 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
   if (input.due_time !== undefined) next.due_time = cleanTime(input.due_time);
   if (input.duration_min !== undefined) next.duration_min = cleanDuration(input.duration_min);
   if (input.place !== undefined) next.place = cleanPlace(input.place);
+  if (input.effort_min !== undefined) next.effort_min = cleanEffort(input.effort_min);
+  if (input.kids_ok !== undefined) next.kids_ok = input.kids_ok ? 1 : 0;
+  // a private task is nobody else's – children neither
+  if (next.visibility === 'private') next.kids_ok = 0;
   if (next.as_needed) {
     next.interval_n = null;
     next.interval_unit = null;
@@ -613,7 +636,7 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
   db.prepare(
     `UPDATE care_tasks SET name = ?, interval_n = ?, interval_unit = ?, next_due = ?, last_done = ?, lead_days = ?, location_id = ?, product_id = ?,
        consume_qty = ?, assignee_user_id = ?, note = ?, archived = ?, category = ?, visibility = ?, owner_user_id = ?, anchor = ?, as_needed = ?,
-       checklist = ?, doer_key = ?, rotation = ?, due_time = ?, duration_min = ?, place = ?, updated_at = datetime('now') WHERE id = ?`,
+       checklist = ?, doer_key = ?, rotation = ?, due_time = ?, duration_min = ?, place = ?, effort_min = ?, kids_ok = ?, updated_at = datetime('now') WHERE id = ?`,
   ).run(
     next.name.trim().slice(0, 120),
     next.interval_n,
@@ -638,6 +661,8 @@ export function updateCareTask(id: number, input: CareInput & { archived?: boole
     next.due_time,
     next.duration_min,
     next.place,
+    next.effort_min ?? null,
+    next.kids_ok ?? 0,
     id,
   );
   emit('care');

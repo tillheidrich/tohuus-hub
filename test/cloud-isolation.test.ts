@@ -256,7 +256,7 @@ describe('cloud isolation', () => {
     // q-money: money lists and the expense attachment
     for (const r of ['/api/money/lists', '/api/money/lists/1', '/api/spend/expenses/1', '/api/spend/expenses/1/attachment']) expect(seen, r).toContain(r);
     for (const r of ['/api/wishes/lists', '/api/wishes/lists/1', '/api/wishes/items/1']) expect(seen, r).toContain(r);
-    for (const r of ['/api/care', '/api/care/due', '/api/care/1', '/api/care/1/ics', '/api/blick', '/api/list/extras', '/api/review']) expect(seen, r).toContain(r);
+    for (const r of ['/api/care', '/api/care/due', '/api/care/1', '/api/care/1/ics', '/api/blick', '/api/list/extras', '/api/review', '/api/tasks/next']) expect(seen, r).toContain(r);
     // Hausinfo GET routes are part of the walk; A sees its cards, nobody ever gets a code value from a GET
     for (const r of ['/api/house-guide', '/api/house-guide/templates', '/api/house-guide/links/:id', '/api/house-guide/codes/:id/views', '/api/house-guide/log', '/api/guest/:token/house', '/api/facts'])
       expect(routes, r).toContain(r);

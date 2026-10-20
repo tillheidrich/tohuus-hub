@@ -365,6 +365,33 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['aufgaben', 'sprechen', 'benachrichtigungen'],
       },
       {
+        slug: 'eine-sache', pair: 'one-thing-at-a-time', group: 'home', title: 'Eine Sache nach der anderen',
+        desc: '„Jetzt“ zeigt immer nur die nächste Aufgabe. Erst wenn sie erledigt ist, kommt die nächste: auf Heute mit „Nur eins“ und auf dem Kinder-Tablet.',
+        sections: [
+          ['Worum es geht', p('Eine lange Liste kann lähmen. „Jetzt“ nimmt dir das Sortieren ab: ToHuus zeigt eine einzige Aufgabe als große Karte mit „Fertig“. Danach kommt die nächste. Das hilft bei ADHS, an vollen Tagen und Kindern sowieso. ToHuus ist kein Gesundheits- oder Therapieangebot.')],
+          ['Welche Aufgabe zuerst kommt', p('Die Reihenfolge ist immer gleich, du musst nichts sortieren:'), ul(
+            'Zuerst, was schon länger dran wäre.',
+            'Dann, was heute fällig ist, mit Uhrzeit nach der Uhrzeit.',
+            'Dann, was du mit „Mach ich“ für heute zugesagt hast.',
+            'Dann, was bald dran ist und bei dir liegt, auch wenn du an der Reihe bist.',
+            'Zuletzt, was bald dran ist und noch niemand übernommen hat.',
+          ), p('Was jemand anderes macht oder sich vorgenommen hat, bleibt bei dieser Person. Private Aufgaben anderer siehst du nie.')],
+          ['Nur eins auf Heute', p('Tippe in „Aufgaben heute“ auf <b>Nur eins</b>. Dann zeigt Heute nur noch die nächste Aufgabe:'), ul(
+            '<b>Fertig</b> hakt sie ab, für 10 Sekunden kannst du es rückgängig machen.',
+            '<b>Später</b> schiebt sie ans Ende, nur für diesen Besuch. Am Termin ändert sich nichts.',
+            '<b>+4 weitere</b> zeigt wieder alle Aufgaben.',
+          ), p('Einkauf und die anderen Karten auf Heute bleiben, wie sie sind. Die Einstellung gilt nur für dich und ist auf dem iPhone und im Browser gleich.')],
+          ['Timer', p('Mit <b>Los</b> startet ein Countdown. Er dauert so lange, wie bei der Aufgabe unter „Dauert etwa“ steht, sonst so lange wie dein eingestellter Timer. Am Ende gibt es keinen Alarm, nur einen leisen Hinweis. Auf dem iPhone siehst du den Countdown auch auf dem Sperrbildschirm und in der Dynamic Island, solange er läuft.')],
+          ['Auf dem Kinder-Tablet', p('Das Kinder-Tablet zeigt unter „Zu tun“ eine große Karte mit Bild, Titel und einem großen „Fertig“. Darunter steht nur „noch 3 danach“, keine Liste. Nach „Fertig“ gibt es kurz ein „Super, geschafft!“, dann kommt die nächste. Sind alle erledigt, wird es ruhig.'), ul(
+            'Das Kind sieht nur seine eigenen Aufgaben und solche, bei denen ihr „Kinder dürfen das machen“ eingeschaltet habt.',
+            'Private Aufgaben stehen nie auf dem Tablet.',
+            'Unter Einstellungen › Kinder könnt ihr pro Kind auf „Als Liste“ umstellen.',
+          )],
+          ['Was es nicht gibt', p('Keine Punkte, keine Streaks, keine Ranglisten. Gezählt wird nichts.')],
+        ],
+        related: ['kopf-voll', 'aufgaben', 'wer-sieht-was'],
+      },
+      {
         slug: 'sprechen', pair: 'speak', group: 'ai', title: 'Der Assistent',
         desc: 'Was der Assistent kann, was er einträgt und wie du es zurücknimmst.',
         sections: [
@@ -984,6 +1011,33 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           )],
         ],
         related: ['tasks', 'speak', 'getting-started'],
+      },
+      {
+        slug: 'one-thing-at-a-time', pair: 'eine-sache', group: 'home', title: 'One thing at a time',
+        desc: '“Now” only ever shows the next task. The next one comes once it is done: on Today with “Just one” and on the kid tablet.',
+        sections: [
+          ['What it is about', p('A long list can freeze you. “Now” does the sorting for you: ToHuus shows a single task as one big card with “Done”. Then the next one comes. It helps with ADHD, on full days and with kids anyway. ToHuus is not a health or therapy service.')],
+          ['Which task comes first', p('The order is always the same, you sort nothing:'), ul(
+            'First, what could have been done a while ago.',
+            'Then what is due today, those with a time by their time.',
+            'Then what you said you’d do today (“I’ll do it”).',
+            'Then what is coming up and is yours, also when it is your turn.',
+            'Last, what is coming up and nobody has taken on yet.',
+          ), p('What someone else does or said they’d do stays with them. You never see other people’s private tasks.')],
+          ['Just one on Today', p('Tap <b>Just one</b> in “Tasks today”. Today then only shows the next task:'), ul(
+            '<b>Done</b> ticks it off, you can undo it for 10 seconds.',
+            '<b>Later</b> moves it to the end, only for this visit. Nothing about its date changes.',
+            '<b>+4 more</b> shows all tasks again.',
+          ), p('Shopping and the other cards on Today stay as they are. The setting is just for you and the same on the iPhone and in the browser.')],
+          ['Timer', p('<b>Go</b> starts a countdown. It lasts as long as the task’s “Takes about”, otherwise as long as your own timer setting. There is no alarm at the end, only a quiet note. On the iPhone you also see the countdown on the lock screen and in the Dynamic Island while it runs.')],
+          ['On the kid tablet', p('Under “To do” the kid tablet shows one big card with a picture, the title and a big “Done”. Below it only “3 more after this”, no list. After “Done” there is a short “Great, done!”, then the next one. Once everything is done, it gets quiet.'), ul(
+            'A child only sees their own tasks and those where you switched on “Kids may do it”.',
+            'Private tasks never show on the tablet.',
+            'Under Settings › Kids you can switch each child to “As a list”.',
+          )],
+          ['What there isn’t', p('No points, no streaks, no rankings. Nothing is counted.')],
+        ],
+        related: ['a-lot-on-your-mind', 'tasks', 'who-sees-what'],
       },
       {
         slug: 'house-info', pair: 'hausinfo', group: 'people', title: 'House info for guests and babysitters',

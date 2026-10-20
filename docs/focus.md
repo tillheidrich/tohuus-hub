@@ -32,7 +32,7 @@ Home Assistant, exports or widgets. Guests and guest links can't use the focus r
 
 | Method | Path | |
 |---|---|---|
-| GET/PUT | `/api/focus/prefs` | `{ gentle, todayMax (1–10 \| null), bundleHour (0–23 \| null), timerMin (1–60) }` |
+| GET/PUT | `/api/focus/prefs` | `{ gentle, todayMax (1–10 \| null), bundleHour (0–23 \| null), timerMin (1–60), oneThing }` – `oneThing`: „Nur eins“ on Heute ([now.md](now.md)) |
 | POST | `/api/care/:id/steps/suggest` | `{ steps: string[], source: 'ai' \| 'builtin' }` – saves nothing |
 | POST | `/api/focus/steps` | `{ name, note? }` → same, for a task that doesn't exist yet |
 | POST | `/api/care/fresh-start` | `{ per_day?: 1–5 }` → `{ moved, until, tasks: [{ id, next_due }] }` |
