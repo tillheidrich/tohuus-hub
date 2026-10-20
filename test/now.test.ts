@@ -128,6 +128,75 @@ describe('order', () => {
   });
 });
 
+describe('coming up: at most 3 days ahead', () => {
+  it('a task in 4 days stays out even with a long lead time, one in 2 days comes', async () => {
+    const { AHEAD_CAP } = await import('../server/lib/next-task');
+    expect(AHEAD_CAP).toBe(3);
+    const in2 = (await mira.post('/api/care', { category: 'house', name: 'Keller fegen', next_due: day(2), lead_days: 7 })).json.id;
+    const in3 = (await mira.post('/api/care', { category: 'house', name: 'Fahrrad ölen', next_due: day(3), lead_days: 7, doer_key: `u${miraId}` })).json.id;
+    const in4 = (await mira.post('/api/care', { category: 'house', name: 'Dachrinne prüfen', next_due: day(4), lead_days: 7 })).json.id;
+    const in4mine = (await mira.post('/api/care', { category: 'house', name: 'Reifen prüfen', next_due: day(4), lead_days: 7, doer_key: `u${miraId}` })).json.id;
+    try {
+      const q = (await mira.get('/api/tasks/next')).json.queue as { id: number; level: string }[];
+      const got = q.map((x) => x.id);
+      expect(got).toContain(in2);
+      expect(got).toContain(in3);
+      expect(got).not.toContain(in4);
+      expect(got).not.toContain(in4mine);
+      expect(q.find((x) => x.id === in2)?.level).toBe('open');
+      expect(q.find((x) => x.id === in3)?.level).toBe('mine');
+    } finally {
+      for (const id of [in2, in3, in4, in4mine]) await mira.req('DELETE', `/api/care/${id}`);
+    }
+  });
+
+  it('still never beyond the task\'s own lead time', async () => {
+    const id = (await mira.post('/api/care', { category: 'house', name: 'Regal abstauben', next_due: day(2), lead_days: 1 })).json.id;
+    try {
+      expect((await mira.get('/api/tasks/next')).json.queue.map((x: any) => x.id)).not.toContain(id);
+    } finally {
+      await mira.req('DELETE', `/api/care/${id}`);
+    }
+  });
+});
+
+describe('queue (one order for "Nur eins", /fokus and the kid tablet)', () => {
+  const LEVELS = ['overdue', 'today', 'promised', 'mine', 'open'];
+  it('next is the head of the queue, after the rest, levels never go back – the same rule as the library', async () => {
+    const r = await mira.get('/api/tasks/next');
+    const q = r.json.queue as { id: number; level: string; note: string | null; checklist: unknown[]; effort_min: number | null }[];
+    expect(r.json.next.id).toBe(q[0].id);
+    expect(r.json.after).toBe(q.length - 1);
+    expect(q.length).toBeLessThanOrEqual(50);
+    const lv = q.map((x) => LEVELS.indexOf(x.level));
+    expect(lv).toEqual([...lv].sort((a, b) => a - b));
+    // what /fokus needs comes along with every card
+    for (const x of q) {
+      expect(Array.isArray(x.checklist)).toBe(true);
+      expect('note' in x && 'effort_min' in x).toBe(true);
+    }
+    const { nextTasks } = await import('../server/lib/next-task');
+    expect(nextTasks({ kind: 'user', userId: miraId, self: true }).queue.map((x) => x.id)).toEqual(q.map((x) => x.id));
+  });
+
+  it('nobody ever gets someone else\'s private task in a queue', async () => {
+    const all = [
+      await sam.get('/api/tasks/next'),
+      await sam.get(`/api/tasks/next?for=user:${miraId}`),
+      await mira.get(`/api/tasks/next?for=user:${samId}`),
+      await mira.get(`/api/tasks/next?for=user:${miraId}`),
+      await mira.get(`/api/tasks/next?for=kid:${kidId}`),
+    ];
+    for (const r of all) expect(r.status).toBe(200);
+    expect(order(all[0])).not.toContain('miraPrivate');
+    expect(order(all[1])).not.toContain('miraPrivate');
+    expect(order(all[2])).not.toContain('samPrivate');
+    expect(order(all[3])).not.toContain('samPrivate');
+    expect(order(all[3])).toContain('miraPrivate');
+    expect(all[4].json.queue.every((x: any) => !x.private)).toBe(true);
+  });
+});
+
 describe('rights', () => {
   it('another member never sees my private task – not even asking for me', async () => {
     const own = await sam.get('/api/tasks/next');

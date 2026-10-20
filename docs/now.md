@@ -4,8 +4,8 @@
 Live Activity `ios/Shared/TaskTimerActivity.swift` + `ios/ToHuusWidget/TaskTimerActivityWidget.swift` · help `eine-sache`*
 
 Till has ADHD; ToHuus has to work without a good day. „Jetzt“ shows **one task at a time** – the next one only after
-this one is done. Nobody sorts anything: the server decides the order, the same way every time. It builds on
-„Eins nach dem anderen“ (`docs/focus.md`, `/fokus`), which keeps its own small-steps view.
+this one is done. Nobody sorts anything: the server decides the order, the same way every time. „Eins nach dem
+anderen“ (`docs/focus.md`, `/fokus`) uses the same queue and the same card and adds its small-steps view.
 
 No points, no streaks, no ranking, nothing counted. „Später“ is local and changes no data.
 
@@ -23,7 +23,8 @@ that may wait while someone is away (`waits`).
 | 3 | `mine` | coming up and mine: doer / my turn / I keep it in mind / my private task / promised by me for later |
 | 4 | `open` | coming up and nobody has it |
 
-„Coming up“ = state `soon` (within the task's own `lead_days`), never more than 7 days ahead (like Heute › Demnächst).
+„Coming up“ = state `soon` (within the task's own `lead_days`), never more than **3 days** ahead (`AHEAD_CAP`; was 7
+until 20 Oct 2026 – less pressure, „Nur eins“ shouldn't reach far into the future). Heute › Demnächst is not affected.
 Within a level: `next_due`, then `due_time`, then `created_at`, then `id`. When everything is done the queue is empty
 – a calm „Alles geschafft“, not tomorrow's things.
 
@@ -54,6 +55,9 @@ Migrations: `tasks-now` (`care_tasks.effort_min`, `care_tasks.kids_ok`), `kids-n
   next task as a card: big **Fertig** (toast with undo for 10 s), **Später** (to the end of the queue for this
   visit only – module/static memory, nothing stored), **Los – n Min.** (timer), „+4 weitere“ leaves the mode.
   Shopping and the other Heute cards stay. A tip on the card (≥ 3 open tasks, dismissable per device) offers it.
+- **Eins nach dem anderen** (web `FocusPage` in `Focus.tsx`, iOS `FocusView`): the same `queue`, the same card
+  (`numbered`: „Schritt 2 von 4“ big, „Geschafft“ ticks one step), „Später“ shared with „Nur eins“ (web `useNowQueue`,
+  iOS `NowLater`), the ring timer starting with `effort_min`, „Zu groß? Kleiner machen“.
 - **Kinder-Tablet** (web `Kids.tsx` `KidNow`, iOS `KidModeView` + `KidNowPanel`): a tab „Zu tun“ – first when there is
   something to do. Big card (emoji, title, who), very big „Fertig“, below only „noch 3 danach“ (dots for children who
   can't read yet; tapping reads it aloud), timer only when the task has `effort_min`. After „Fertig“ a short
@@ -72,6 +76,8 @@ Migrations: `tasks-now` (`care_tasks.effort_min`, `care_tasks.kids_ok`), `kids-n
 ## Tests
 
 `test/now.test.ts`: the order (all five levels, time within today, ties), leaving out others' tasks, far dates and
-„when needed“; rights (other members never see private tasks, also not via `for=user:`; children only own + `kids_ok`;
+„when needed“; the 3-day cap (in 2 and 3 days yes, in 4 days no – also with 7 days lead – and never beyond the
+task's own lead); the queue (`next` = head, `after`, levels never go back, same as the library, the fields /fokus
+needs; no private task of someone else in any queue); rights (other members never see private tasks, also not via `for=user:`; children only own + `kids_ok`;
 `kids_ok` refused on private tasks); done → next, undo → back; kid tablet done/undo and its limits; `task_view`
 admin-only; `effort_min` validation; `oneThing` personal. `test/cloud-isolation.test.ts` covers `/api/tasks/next`.

@@ -5,6 +5,7 @@
  * - NowCard: the card itself (Heute › "Nur eins" and the kid tablet).
  * - NowTimer: the countdown.
  * - OneThingToday: Heute's task area when "Nur eins" is on – "Später" moves a task to the end for this visit only.
+ * - useNowQueue: the server's order plus "Später" – shared by "Nur eins" and "Eins nach dem anderen" (/fokus, Focus.tsx).
  */
 import { ArrowCounterClockwise, Check, Play, Stop } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
@@ -17,6 +18,7 @@ export interface NowTask {
   id: number;
   name: string;
   emoji: string;
+  note?: string | null;
   due_time: string | null;
   level: 'overdue' | 'today' | 'promised' | 'mine' | 'open';
   effort_min: number | null;
@@ -87,7 +89,11 @@ export function NowTimer({ minutes, label, onRunning }: { minutes: number; label
 const levelText = (x: NowTask) =>
   x.level === 'overdue' ? t('could be done') : x.level === 'today' ? (x.due_time ? t('today {time}', { time: timeLabel(x.due_time) }) : t('today')) : x.level === 'promised' ? t('you said you’d do it') : t('coming up');
 
-/** One big card: picture, title, who – a big "Fertig", the timer and a calm footer. */
+/**
+ * One big card: picture, title, who – a big "Fertig", the timer and a calm footer.
+ * `numbered` (Eins nach dem anderen): the open step big with "Schritt 2 von 4" – or the note when there are no steps;
+ * `doneLabel` then says what the button does (one step, not the whole task).
+ */
 export function NowCard({
   task,
   onDone,
@@ -96,6 +102,8 @@ export function NowCard({
   footer,
   extra,
   showLevel = true,
+  numbered = false,
+  doneLabel,
 }: {
   task: NowTask;
   onDone: () => void;
@@ -104,16 +112,31 @@ export function NowCard({
   footer?: React.ReactNode;
   extra?: React.ReactNode;
   showLevel?: boolean;
+  numbered?: boolean;
+  doneLabel?: string;
 }) {
-  const steps = task.checklist?.filter((c) => !c.done) ?? [];
+  const all = task.checklist ?? [];
+  const steps = all.filter((c) => !c.done);
+  const at = all.findIndex((c) => !c.done);
   return (
     <div className="now-card" aria-live="polite">
       <div className="now-emoji" aria-hidden="true">{task.emoji}</div>
       <h3 className="now-title">{task.name}</h3>
       <div className="now-meta">{[showLevel ? levelText(task) : null, task.place, task.doer?.name].filter(Boolean).join(' · ')}</div>
-      {steps.length > 0 && <p className="now-step">{t('Next step: {text}', { text: steps[0].text })}</p>}
+      {numbered ? (
+        at >= 0 ? (
+          <>
+            <div className="eyebrow">{t('Step {n} of {total}', { n: at + 1, total: all.length })}</div>
+            <p className="focus-step">{all[at].text}</p>
+          </>
+        ) : (
+          task.note && <p className="muted" style={{ margin: 0 }}>{task.note}</p>
+        )
+      ) : (
+        steps.length > 0 && <p className="now-step">{t('Next step: {text}', { text: steps[0].text })}</p>
+      )}
       <button className="btn primary now-done" disabled={busy} onClick={onDone} aria-label={t('Done: {name}', { name: task.name })}>
-        <Check size={22} weight="bold" /> {t('Done')}
+        <Check size={22} weight="bold" /> {doneLabel ?? t('Done')}
       </button>
       {extra}
       {timerMin ? <NowTimer key={task.id} minutes={timerMin} label={task.name} /> : null}
@@ -126,14 +149,35 @@ export function NowCard({
 let later: number[] = [];
 const ordered = (queue: NowTask[]) => [...queue.filter((x) => !later.includes(x.id)), ...later.map((id) => queue.find((x) => x.id === id)).filter((x): x is NowTask => Boolean(x))];
 
+/**
+ * The server's order (GET /tasks/next) with this visit's "Später" applied – nobody sorts again in the client.
+ * Shared by "Nur eins" (Heute) and "Eins nach dem anderen" (/fokus): "Später" in one is "Später" in the other.
+ */
+export function useNowQueue() {
+  const q = useApi<NowQueue>(['care', 'next'], '/tasks/next');
+  const [, bump] = useState(0);
+  return {
+    q,
+    list: ordered(q.data?.queue ?? []),
+    isLater: (id: number) => later.includes(id),
+    /** to the end of the queue, for this visit only */
+    later: (id: number) => {
+      later = [...later.filter((x) => x !== id), id];
+      bump((n) => n + 1);
+    },
+    /** done: no longer "later" */
+    forget: (id: number) => {
+      later = later.filter((x) => x !== id);
+    },
+  };
+}
+
 /** Heute with "Nur eins": the next task as one card; "+4 weitere" leaves the mode. */
 export function OneThingToday() {
-  const q = useApi<NowQueue>(['care', 'next'], '/tasks/next');
+  const { q, list, later: putLater, forget } = useNowQueue();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
-  const [, bump] = useState(0);
   const [cheer, setCheer] = useState(false);
-  const list = ordered(q.data?.queue ?? []);
   const task = list[0];
   const leave = async () => {
     try {
@@ -148,7 +192,7 @@ export function OneThingToday() {
     setBusy(true);
     try {
       const r = await post<{ task: { next_due: string | null }; log_id?: number }>(`/care/${task.id}/done`, {});
-      later = later.filter((x) => x !== task.id);
+      forget(task.id);
       setCheer(true);
       setTimeout(() => setCheer(false), 1600);
       invalidate('care');
@@ -184,10 +228,7 @@ export function OneThingToday() {
               <button
                 className="btn ghost"
                 disabled={busy}
-                onClick={() => {
-                  later = [...later.filter((x) => x !== task.id), task.id];
-                  bump((n) => n + 1);
-                }}
+                onClick={() => putLater(task.id)}
               >
                 <ArrowCounterClockwise size={15} /> {t('Later')}
               </button>

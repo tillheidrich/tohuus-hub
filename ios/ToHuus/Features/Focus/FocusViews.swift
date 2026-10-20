@@ -165,31 +165,36 @@ struct FocusTimerView: View {
 
 // MARK: - Eins nach dem anderen
 
-/// One task, its next small step, a visible timer (web: FocusPage, /fokus).
+/// One task at a time in the server's "Jetzt" order (GET /api/tasks/next, docs/now.md – no sorting here), on the same
+/// card as Heute › "Nur eins": its next small step big, "Später" (this app session only, shared with "Nur eins"),
+/// "Zu groß? Kleiner machen" and the timer, which starts with the task's own minutes (effort_min) or the default.
+/// (web: FocusPage, /fokus)
 struct FocusView: View {
     let api: APIClient
     var taskId: Int?
-    @State private var data: CareData?
+    @State private var data: NowQueue?
+    /// the task opened with "Focus on this" when it isn't in the queue (e.g. weeks ahead)
+    @State private var single: NowTask?
     @State private var prefs: FocusPrefs?
-    @State private var skipped: [Int] = []
     @State private var busy = false
     @State private var toast: ToastMessage?
     @State private var error: String?
+    /// "Später" (NowLater) changed – redraw
+    @State private var bump = 0
+    /// the pinned task is let go once it's done or put off (a recurring one comes back with a new date)
+    @State private var unpinned = false
 
-    private var queue: [CareTask] {
-        guard let data else { return [] }
-        let me = data.me
-        return data.tasks
-            .filter { ($0.state == "overdue" || $0.state == "today") && ($0.isPrivate || $0.doerKey == "u\(me ?? -1)" || $0.assigneeUserId == me || ($0.doerKey == nil && $0.assigneeUserId == nil)) }
-            .sorted { ($0.nextDue ?? "", $0.id) < ($1.nextDue ?? "", $1.id) }
+    private var list: [NowTask] {
+        _ = bump
+        return NowLater.ordered(data?.queue ?? [])
     }
 
-    /// the task opened with "Focus on this" – let go once it's done (a recurring one comes back with a new date)
-    @State private var pinnedDone = false
-
-    private var current: CareTask? {
-        if let taskId, !pinnedDone, !skipped.contains(taskId), let t = data?.tasks.first(where: { $0.id == taskId }) { return t }
-        return queue.first { !skipped.contains($0.id) } ?? queue.first
+    private var current: NowTask? {
+        if let taskId, !unpinned {
+            if let t = list.first(where: { $0.id == taskId }) { return t }
+            if let single { return single }
+        }
+        return list.first
     }
 
     var body: some View {
@@ -199,35 +204,27 @@ struct FocusView: View {
                 if data == nil && error == nil {
                     HStack { Spacer(); ProgressView(); Spacer() }
                 } else if let t = current {
-                    let items = t.checklist ?? []
-                    let step = items.firstIndex { !$0.done }
-                    Text(t.name).font(.title2.weight(.semibold))
-                    if let step {
-                        Text(LF("Step %d of %d", step + 1, items.count)).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
-                        Text(items[step].text).font(.title3.weight(.semibold))
-                    } else if let n = t.note, !n.isEmpty {
-                        Text(n).foregroundStyle(Theme.ink2)
-                    }
-                    FocusTimerView(minutes: prefs?.timerMin ?? FocusFlags.timerMin, label: t.name)
-                        .id(t.id)
-                        .frame(maxWidth: .infinity)
-                    Button { Task { await doneStep(t) } } label: { Label(L("Done it"), systemImage: "checkmark") }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(busy)
-                    AdaptiveButtonRow { _ in
-                        Button(L("Later")) {
-                            skipped.removeAll { $0 == t.id }
-                            skipped.append(t.id)
-                            // everything skipped once: start the round again
-                            if queue.allSatisfy({ skipped.contains($0.id) }) { skipped = [t.id] }
+                    NowCardView(task: t, busy: busy, timerMin: nil, numbered: true, doneLabel: L("Done it"), onDone: { Task { await doneStep(t) } }) {
+                        AdaptiveButtonRow { _ in
+                            if list.contains(where: { $0.id != t.id }) {
+                                Button(L("Later")) {
+                                    NowLater.add(t.id)
+                                    if t.id == taskId { unpinned = true }
+                                    bump += 1
+                                }
+                                .buttonStyle(SecondaryButtonStyle())
+                            }
+                            Button { Task { await smaller(t) } } label: { Label(L("Too big? Make it smaller"), systemImage: "sparkles") }
+                                .buttonStyle(SecondaryButtonStyle())
                         }
-                            .buttonStyle(SecondaryButtonStyle())
-                        Button { Task { await smaller(t) } } label: { Label(L("Too big? Make it smaller"), systemImage: "sparkles") }
-                            .buttonStyle(SecondaryButtonStyle())
-                    }
-                    .disabled(busy)
-                    if let next = queue.first(where: { $0.id != t.id && !skipped.contains($0.id) }) ?? queue.first(where: { $0.id != t.id }) {
-                        Text(LF("After this: %@", next.name)).font(.caption).foregroundStyle(Theme.ink3)
+                        .disabled(busy)
+                    } footer: {
+                        FocusTimerView(minutes: t.effortMin ?? data?.timerMin ?? prefs?.timerMin ?? FocusFlags.timerMin, label: t.name)
+                            .id(t.id)
+                            .frame(maxWidth: .infinity)
+                        if let next = list.first(where: { $0.id != t.id }) {
+                            Text(LF("After this: %@", next.name)).font(.caption).foregroundStyle(Theme.ink3)
+                        }
                     }
                 } else {
                     EmptyStateView(systemImage: "checkmark.circle", title: L("Nothing is waiting for you."), message: L("Enjoy the quiet."))
@@ -245,36 +242,42 @@ struct FocusView: View {
 
     private func load() async {
         do {
-            data = try await api.care()
+            let q = try await api.nextTasks()
+            data = q
+            if let taskId, !unpinned, !q.queue.contains(where: { $0.id == taskId }) {
+                let c = try? await api.careTask(taskId)
+                single = c.map { NowTask(id: $0.id, name: $0.name, emoji: nil, note: $0.note, dueTime: $0.dueTime, level: "mine", effortMin: $0.effortMin, doer: $0.doer, checklist: $0.checklist, place: $0.place) }
+            } else { single = nil }
             error = nil
         } catch { self.error = APIError.from(error).localizedDescription }
         if prefs == nil, let p = try? await api.focusPrefs() { prefs = p; FocusFlags.apply(p) }
     }
 
-    private func doneStep(_ t: CareTask) async {
+    private func doneStep(_ t: NowTask) async {
         busy = true
         defer { busy = false }
         do {
             var items = t.checklist ?? []
+            var last = true
             if let i = items.firstIndex(where: { !$0.done }) {
                 items[i].done = true
                 try await api.saveCareTask(id: t.id, ["checklist": items.map { ["text": $0.text, "done": $0.done] as [String: Any] }])
-                if items.allSatisfy(\.done) {
-                    _ = try await api.careDone(t.id)
-                    if t.id == taskId { pinnedDone = true }
-                }
-                toast = ToastMessage(text: items.allSatisfy(\.done) ? L("Done. Good.") : L("One step done."))
+                last = items.allSatisfy(\.done)
+                if last { _ = try await api.careDone(t.id) }
             } else {
                 _ = try await api.careDone(t.id)
-                if t.id == taskId { pinnedDone = true }
-                toast = ToastMessage(text: L("Done. Good."))
             }
+            if last {
+                NowLater.forget(t.id)
+                if t.id == taskId { unpinned = true }
+            }
+            toast = ToastMessage(text: last ? L("Done. Good.") : L("One step done."))
             Haptics.success()
             await load()
         } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
 
-    private func smaller(_ t: CareTask) async {
+    private func smaller(_ t: NowTask) async {
         busy = true
         defer { busy = false }
         do {

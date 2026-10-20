@@ -12,10 +12,13 @@ No tracking, no streaks, no statistics, no points.
   message), otherwise – or when anything fails – built-in steps for common chores (bathroom, kitchen, laundry,
   vacuuming, bed linen, fridge, bins, tidying, shopping, windows) and a generic five-step fallback. Nothing is saved
   until the client saves the checklist; proposed steps are merged, duplicates skipped.
-- **Eins nach dem anderen** (web `/fokus`, iOS Aufgaben › Eins nach dem anderen) – one task at a time: overdue and
-  today, the ones I keep in mind / do / own privately and the ones nobody took on first. Shows the next unticked step,
-  a visible timer and three buttons: *Geschafft* (ticks the step, the last step completes the task), *Später*
-  (next one, local only), *Zu groß? Kleiner machen* (adds proposed steps).
+- **Eins nach dem anderen** (web `/fokus`, iOS Aufgaben › Eins nach dem anderen) – one task at a time in the same
+  order as „Nur eins“ (since 20 Oct 2026: `GET /api/tasks/next`, the server's „Jetzt“ queue, `docs/now.md` – the client
+  sorts nothing), on the same card (web `NowCard`, iOS `NowCardView`, `numbered`). Shows the next unticked step big
+  („Schritt 2 von 4“, else the note), the timer (starts with the task's `effort_min`, else the personal default) and
+  three buttons: *Geschafft* (ticks the step, the last step completes the task), *Später* (to the end for this app
+  session only – shared with „Nur eins“, nothing stored), *Zu groß? Kleiner machen* (adds proposed steps).
+  „Focus on this“ (`?task=<id>`) puts that task first; a task outside the queue is loaded with `GET /api/care/:id`.
 - **Sichtbarer Timer** – 5/10/15/25 minutes ("Einfach anfangen"), a ring, a gentle signal at the end (sound and
   vibration on the web, a local notification on iOS when the app is in the background). Not stored anywhere.
 - **Sanfter Modus** (personal) – no red for due things, no "x days overdue" ("wäre dran"), no attention counter on the

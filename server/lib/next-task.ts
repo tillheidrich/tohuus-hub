@@ -9,7 +9,7 @@
  * Within a level: due date, then time, then when the task was made, then id.
  *
  * Only tasks that are this person's or nobody's: a task someone else does, keeps in mind or promised is theirs.
- * "Coming up" = within the task's own lead time, never more than 7 days ahead (like Heute › Demnächst).
+ * "Coming up" = within the task's own lead time, never more than 3 days ahead (AHEAD_CAP).
  * Tasks that may wait while someone is away and "when needed" tasks are left out.
  * Private tasks of others never – and for anyone but the owner asking for themselves, no private task at all.
  * Children (kid profiles, key k<id>) see their own tasks and open household tasks parents marked "kids may do it";
@@ -23,8 +23,12 @@ import { localDay } from './catalog.js';
 
 export type NowLevel = 'overdue' | 'today' | 'promised' | 'mine' | 'open';
 const LEVELS: NowLevel[] = ['overdue', 'today', 'promised', 'mine', 'open'];
-/** "coming up" never reaches further than this (care tasks have 7 days lead by default, passports 90) */
-const AHEAD_CAP = 7;
+/**
+ * "Coming up" never reaches further than this many days, whatever the task's own lead time (care tasks have 7 days
+ * by default, passports 90). 3, not 7 (20 Oct 2026): less pressure – "Nur eins" and "Eins nach dem anderen" are about
+ * now and the next few days, not about next week. Heute › Demnächst is not affected.
+ */
+export const AHEAD_CAP = 3;
 
 /** who asks: a member (by user id) or a child profile */
 export type NowFor = { kind: 'user'; userId: number; self: boolean } | { kind: 'kid'; kidId: number };
@@ -85,7 +89,7 @@ function isMine(x: CareView, who: NowFor) {
 /** nobody has it: no doer, nobody keeps it in mind, nobody promised it */
 const isOpen = (x: CareView) => !x.doer && x.assignee_user_id == null && !x.promise;
 
-/** within its lead time and at most a week ahead */
+/** within its lead time and at most AHEAD_CAP days ahead */
 const comingUp = (x: CareView) => x.state === 'soon' && x.days != null && x.days <= Math.min(AHEAD_CAP, Math.max(1, x.lead_days));
 
 /** The level of a task for this person, or null when it isn't theirs to do now. */
@@ -146,6 +150,8 @@ function card(x: CareView, level: NowLevel): NowCard {
 /**
  * The queue for one person: `next` is the one to do now, `after` how many come after it (the kid card says
  * "noch 3 danach", no list), `queue` the whole order (max 50) so "Später" can work without asking again.
+ * Every client that shows tasks one at a time ("Nur eins" on Heute, "Eins nach dem anderen" /fokus, the kid tablet)
+ * takes this order as it is – none of them sorts again.
  */
 export function nextTasks(who: NowFor, today = localDay(0), opts: { mineOnly?: boolean } = {}) {
   // a member asking for themselves sees their own private tasks; asking for someone else or a child: none at all

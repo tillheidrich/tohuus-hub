@@ -15,6 +15,7 @@ struct NowTask: Decodable, Sendable, Identifiable, Hashable {
     var id: Int
     var name: String
     var emoji: String?
+    var note: String?
     var dueTime: String?
     /// overdue | today | promised | mine | open
     var level: String?
@@ -50,6 +51,23 @@ extension TaskTime {
         guard let start = start(task) else { return false }
         return start.addingTimeInterval(TimeInterval((task.durationMin ?? 60) * 60)) <= now
     }
+}
+
+// MARK: - "Später"
+
+/// "Später" for this app session only (nothing is stored) – shared by Heute › "Nur eins" and "Eins nach dem anderen":
+/// the server's order stays as it is, later tasks just move to the end.
+@MainActor
+enum NowLater {
+    static var ids: [Int] = []
+    static func ordered(_ q: [NowTask]) -> [NowTask] {
+        q.filter { !ids.contains($0.id) } + ids.compactMap { id in q.first { $0.id == id } }
+    }
+    static func add(_ id: Int) {
+        ids.removeAll { $0 == id }
+        ids.append(id)
+    }
+    static func forget(_ id: Int) { ids.removeAll { $0 == id } }
 }
 
 // MARK: - Live Activity
@@ -175,13 +193,17 @@ struct NowTimerView: View {
 
 // MARK: - the card
 
-/// One big card (Heute › "Nur eins" and the kid tablet).
+/// One big card (Heute › "Nur eins", "Eins nach dem anderen" and the kid tablet).
+/// `numbered` (Eins nach dem anderen): the open step big with "Schritt 2 von 4" – or the note when there are no
+/// steps; `doneLabel` then says what the button does (one step, not the whole task).
 struct NowCardView<Extra: View, Footer: View>: View {
     let task: NowTask
     var busy = false
     var timerMin: Int?
     var big = false
     var showLevel = true
+    var numbered = false
+    var doneLabel: String?
     var tint: Color = Theme.primary
     let onDone: () -> Void
     @ViewBuilder var extra: () -> Extra
@@ -210,11 +232,19 @@ struct NowCardView<Extra: View, Footer: View>: View {
                 .foregroundStyle(Theme.ink)
                 .accessibilityAddTraits(.isHeader)
             if !meta.isEmpty { Text(meta).font(big ? .title3 : .subheadline).foregroundStyle(Theme.ink2).multilineTextAlignment(.center) }
-            if let step = task.checklist?.first(where: { !$0.done }) {
+            if numbered {
+                let items = task.checklist ?? []
+                if let i = items.firstIndex(where: { !$0.done }) {
+                    Text(LF("Step %d of %d", i + 1, items.count)).font(.caption.weight(.semibold)).foregroundStyle(Theme.ink3)
+                    Text(items[i].text).font(.title3.weight(.semibold)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
+                } else if let n = task.note, !n.isEmpty {
+                    Text(n).font(.subheadline).foregroundStyle(Theme.ink2).multilineTextAlignment(.center)
+                }
+            } else if let step = task.checklist?.first(where: { !$0.done }) {
                 Text(LF("Next step: %@", step.text)).font(.subheadline).foregroundStyle(Theme.ink2).multilineTextAlignment(.center)
             }
             Button(action: onDone) {
-                Label(L("Done"), systemImage: "checkmark")
+                Label(doneLabel ?? L("Done"), systemImage: "checkmark")
                     .font(big ? .title.weight(.bold) : .title3.weight(.bold))
                     .frame(maxWidth: big ? 420 : 320, minHeight: big ? 88 : 56)
                     .foregroundStyle(Theme.onPrimary)
@@ -246,14 +276,12 @@ struct OneThingTodayView: View {
     @State private var busy = false
     @State private var cheer = false
     @State private var toast: ToastMessage?
-    /// "Später" – for this app session only
-    @MainActor static var later: [Int] = []
+    /// "Später" (NowLater) changed – redraw
     @State private var bump = 0
 
     private var list: [NowTask] {
-        let q = data?.queue ?? []
         _ = bump
-        return q.filter { !Self.later.contains($0.id) } + Self.later.compactMap { id in q.first { $0.id == id } }
+        return NowLater.ordered(data?.queue ?? [])
     }
 
     var body: some View {
@@ -265,8 +293,7 @@ struct OneThingTodayView: View {
                 NowCardView(task: t, busy: busy, timerMin: t.effortMin ?? data?.timerMin ?? FocusFlags.timerMin, onDone: { Task { await done(t) } }) {
                     if list.count > 1 {
                         Button {
-                            Self.later.removeAll { $0 == t.id }
-                            Self.later.append(t.id)
+                            NowLater.add(t.id)
                             bump += 1
                         } label: { Label(L("Later"), systemImage: "arrow.uturn.down") }
                             .buttonStyle(.borderless)
@@ -307,7 +334,7 @@ struct OneThingTodayView: View {
         do {
             let r = try await api.careDone(t.id)
             TaskTimerLive.end()
-            Self.later.removeAll { $0 == t.id }
+            NowLater.forget(t.id)
             Haptics.success()
             withAnimation { cheer = true }
             UIAccessibility.post(notification: .announcement, argument: L("Nicely done."))

@@ -1,17 +1,18 @@
 /**
  * Für Köpfe, in denen viel los ist (server: lib/focus.ts, docs/focus.md, iOS: Features/Focus).
  * - Sanfter Modus (personal): no red, no counters, "wäre dran" instead of "überfällig", fewer things on Heute.
- * - Eins nach dem anderen (/fokus): one task, its next small step, a visible timer. "Geschafft", "Später",
- *   "Zu groß? Kleiner machen".
+ * - Eins nach dem anderen (/fokus): one task in the server's "Jetzt" order (docs/now.md, same card as "Nur eins"),
+ *   its next small step, a visible timer. "Geschafft", "Später" (this visit only), "Zu groß? Kleiner machen".
  * - Kleine Schritte: propose steps for a task (AI if allowed, else built-in) – the person keeps what helps.
  * - Neu anfangen: overdue things move to a fresh start, a few per day. No tracking, no streaks.
  */
 import { ArrowRight, Check, Pause, Play, Sparkle } from '@phosphor-icons/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { get, invalidate, patch, post, put, useApi } from '../api';
 import { t } from '../i18n';
 import { Empty, Seg, Sheet, Skeleton, Toggle, useToast } from '../ui';
+import { NowCard, useNowQueue, type NowTask } from './Now';
 
 export interface FocusPrefs {
   gentle: boolean;
@@ -212,51 +213,59 @@ export function FocusTimer({ minutes, label }: { minutes: number; label?: string
 
 // ------------------------------------------------------------------ "Eins nach dem anderen"
 
-/** The order: overdue and today, mine and nobody's first; one at a time. */
-function queueOf(tasks: Task[], me: number | null) {
-  const mineOrFree = (x: Task) => x.visibility === 'private' || x.doer_key === `u${me}` || x.assignee_user_id === me || (!x.doer_key && x.assignee_user_id == null);
-  return tasks
-    .filter((x) => (x.state === 'overdue' || x.state === 'today') && mineOrFree(x))
-    .sort((a, b) => (a.next_due ?? '').localeCompare(b.next_due ?? '') || a.id - b.id);
-}
+/** a task opened with "Focus on this" that isn't in the queue (e.g. weeks ahead) – shown as the same card */
+const asNow = (x: Task & { due_time?: string | null; effort_min?: number | null; place?: string | null }): NowTask => ({
+  id: x.id,
+  name: x.name,
+  emoji: '✨',
+  note: x.note,
+  due_time: x.due_time ?? null,
+  level: 'mine',
+  effort_min: x.effort_min ?? null,
+  doer: null,
+  checklist: x.checklist,
+  place: x.place ?? null,
+});
 
+/**
+ * /fokus: the same order as "Nur eins" (server lib/next-task.ts via useNowQueue – no sorting here), one task at a
+ * time on the shared NowCard, with its next small step big, "Später" (this visit only), "Zu groß? Kleiner machen"
+ * and the timer, which starts with the task's own minutes (effort_min) or the person's default.
+ */
 export function FocusPage() {
-  const q = useApi<{ tasks: Task[]; me: number | null }>('care', '/care');
+  const { q, list, later, forget } = useNowQueue();
   const prefs = useFocusPrefs();
   const nav = useNavigate();
   const toast = useToast();
   const [sp] = useSearchParams();
-  const [skipped, setSkipped] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
-  const queue = useMemo(() => queueOf(q.data?.tasks ?? [], q.data?.me ?? null), [q.data]);
   const wanted = Number(sp.get('task')) || null;
-  const pinned = wanted ? (q.data?.tasks ?? []).find((x) => x.id === wanted) : undefined;
-  const rest = queue.filter((x) => !skipped.includes(x.id) && x.id !== pinned?.id);
-  const task = pinned && !skipped.includes(pinned.id) ? pinned : (rest[0] ?? queue.find((x) => x.id !== pinned?.id));
-  const step = task?.checklist?.findIndex((c) => !c.done) ?? -1;
+  const inQueue = wanted ? list.find((x) => x.id === wanted) : undefined;
+  const single = useApi<Task>(['care', 'one', String(wanted)], wanted && q.data && !inQueue ? `/care/${wanted}` : null);
+  const pinned = inQueue ?? (wanted && single.data ? asNow(single.data) : undefined);
+  const task = pinned ?? list[0];
+  const after = list.find((x) => x.id !== task?.id);
 
-  if (q.isLoading) return <Skeleton n={2} h={120} />;
+  if (q.isLoading || (wanted && !inQueue && single.isLoading)) return <Skeleton n={2} h={120} />;
 
-  // "Später": next one; once everything was skipped, start the round again (only this one stays skipped)
-  const later = () =>
-    task &&
-    setSkipped((s) => {
-      const next = [...s.filter((x) => x !== task.id), task.id];
-      return queue.every((x) => next.includes(x.id)) ? [task.id] : next;
-    });
+  const unpin = () => wanted && nav('/fokus', { replace: true });
   const doneStep = async () => {
     if (!task) return;
     setBusy(true);
     try {
+      const items = task.checklist ?? [];
+      const step = items.findIndex((c) => !c.done);
+      let last = true;
       if (step >= 0) {
-        const checklist = task.checklist.map((c, i) => (i === step ? { ...c, done: true } : c));
+        const checklist = items.map((c, i) => (i === step ? { ...c, done: true } : c));
         await patch(`/care/${task.id}`, { checklist });
-        if (checklist.every((c) => c.done)) await post(`/care/${task.id}/done`, {});
+        last = checklist.every((c) => c.done);
+        if (last) await post(`/care/${task.id}/done`, {});
       } else await post(`/care/${task.id}/done`, {});
+      if (last) forget(task.id);
       invalidate('care');
-      const last = step < 0 || task.checklist.filter((c) => !c.done).length === 1;
       toast({ text: last ? t('Done. Good.') : t('One step done.') });
-      if (last && wanted) nav('/fokus', { replace: true });
+      if (last) unpin();
     } catch (e) {
       toast({ text: (e as Error).message, error: true });
     } finally {
@@ -267,7 +276,7 @@ export function FocusPage() {
     if (!task) return;
     setBusy(true);
     try {
-      const r = await suggestSteps(task);
+      const r = await suggestSteps({ id: task.id, name: task.name, note: task.note });
       await patch(`/care/${task.id}`, { checklist: mergeSteps(task.checklist ?? [], r.steps) });
       invalidate('care');
     } catch (e) {
@@ -281,8 +290,7 @@ export function FocusPage() {
     <div className="rise focus-page">
       <header className="page-head">
         <div>
-          <div className="eyebrow">{t('One thing at a time')}</div>
-          <h1>{task ? task.name : t('Nothing right now')}</h1>
+          <h1>{t('One thing at a time')}</h1>
         </div>
         <div className="actions">
           <button className="btn sm" onClick={() => nav('/aufgaben')}>
@@ -297,28 +305,40 @@ export function FocusPage() {
           </Empty>
         </div>
       ) : (
-        <div className="card stack focus-card">
-          {step >= 0 ? (
-            <>
-              <div className="eyebrow">{t('Step {n} of {total}', { n: step + 1, total: task.checklist.length })}</div>
-              <p className="focus-step">{task.checklist[step].text}</p>
-            </>
-          ) : (
-            task.note && <p className="muted">{task.note}</p>
-          )}
-          <FocusTimer key={task.id} minutes={prefs?.timerMin ?? 5} label={task.name} />
-          <div className="focus-actions">
-            <button className="btn primary big" disabled={busy} onClick={doneStep}>
-              <Check size={18} weight="bold" /> {t('Done it')}
-            </button>
-            <button className="btn" disabled={busy} onClick={later}>
-              {t('Later')}
-            </button>
-            <button className="btn ghost" disabled={busy} onClick={smaller}>
-              <Sparkle size={15} /> {t('Too big? Make it smaller')}
-            </button>
-          </div>
-          {queue.length > 1 && <p className="small muted">{t('After this: {name}', { name: (rest.find((x) => x.id !== task.id) ?? queue.find((x) => x.id !== task.id))?.name ?? '' })}</p>}
+        <div style={{ maxWidth: 560 }}>
+          <NowCard
+            task={task}
+            busy={busy}
+            onDone={doneStep}
+            numbered
+            doneLabel={t('Done it')}
+            timerMin={null}
+            extra={
+              <div className="focus-actions" style={{ justifyContent: 'center' }}>
+                {(list.length > 1 || (pinned && list.length > 0)) && (
+                  <button
+                    className="btn"
+                    disabled={busy}
+                    onClick={() => {
+                      later(task.id);
+                      unpin();
+                    }}
+                  >
+                    {t('Later')}
+                  </button>
+                )}
+                <button className="btn ghost" disabled={busy} onClick={smaller}>
+                  <Sparkle size={15} /> {t('Too big? Make it smaller')}
+                </button>
+              </div>
+            }
+            footer={
+              <>
+                <FocusTimer key={task.id} minutes={task.effort_min ?? q.data?.timer_min ?? prefs?.timerMin ?? 5} label={task.name} />
+                {after && <p className="small muted" style={{ margin: 0 }}>{t('After this: {name}', { name: after.name })}</p>}
+              </>
+            }
+          />
         </div>
       )}
     </div>
