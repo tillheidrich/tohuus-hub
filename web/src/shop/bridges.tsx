@@ -16,7 +16,7 @@ interface Pw {
   last_used_at: string | null;
 }
 
-/** Settings › My account: "Liste in der Erinnerungen-App". */
+/** Settings › Me › Sign-in & security: "Liste in der Erinnerungen-App". */
 export function CalDavCard() {
   const q = useApi<Pw[]>(['settings', 'caldav'], '/caldav/passwords');
   const [made, setMade] = useState<{ username: string; password: string; url: string; server: string } | null>(null);

@@ -25,10 +25,10 @@ struct GuestLinksView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(L("Guests would like something?")).font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
-                        Text(L("That runs through Treats: share the link there – guests wish for something, you bring it."))
+                        Text(L("That runs through “Bring me something”: share the link there – guests wish for something, you bring it."))
                             .font(.subheadline).foregroundStyle(Theme.ink2).fixedSize(horizontal: false, vertical: true)
                     }
-                    NavigationLink { TreatsView(api: api) } label: { Label(L("Open Treats"), systemImage: "hand.raised") }
+                    NavigationLink { TreatsView(api: api) } label: { Label(L("Open “Bring me something”"), systemImage: "hand.raised") }
                 }
             }
             Section {

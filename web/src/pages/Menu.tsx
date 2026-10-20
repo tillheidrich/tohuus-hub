@@ -95,7 +95,7 @@ export function MenuSettingsCard() {
   return (
     <div className="card pad stack" style={{ marginTop: 22 }}>
       <div>
-        <h3 style={{ margin: 0 }}>{t('Treats & guests')}</h3>
+        <h3 style={{ margin: 0 }}>{t('Bring me something & guests')}</h3>
         <p className="small muted" style={{ margin: '4px 0 0' }}>
           {m.data ? t('{n} things on the menu – tea, ice cream, snacks and whatever else you offer each other and your guests.', { n: m.data.count }) : t('Drinks, coffee, snacks and whatever else you offer.')}
         </p>
@@ -104,7 +104,7 @@ export function MenuSettingsCard() {
         <button className="btn" onClick={() => nav('/bestellen/karte')}>
           <PencilSimple size={16} /> {t('Edit menu')}
         </button>
-        <button className="btn ghost" onClick={() => nav('/bestellen')}>{t('Open Treats')}</button>
+        <button className="btn ghost" onClick={() => nav('/bestellen')}>{t('Open “Bring me something”')}</button>
       </div>
     </div>
   );
@@ -202,7 +202,7 @@ export function MenuEditor({ me }: { me: Me }) {
         <div>
           <div className="eyebrow">
             <button className="linkish menu-back" onClick={() => nav('/bestellen')}>
-              <ArrowLeft size={14} /> {t('Treats')}
+              <ArrowLeft size={14} /> {t('Bring me something')}
             </button>
           </div>
           <h1>{t('The menu')}</h1>

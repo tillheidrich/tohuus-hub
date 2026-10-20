@@ -387,7 +387,7 @@ struct CareView: View {
                     if dueNow.count >= 3 && data.me != nil {
                         TaskTodayLink(api: api, tasks: dueNow) { Task { await load() } }
                     }
-                    NavigationLink { FocusView(api: api) } label: { Label(L("One thing at a time"), systemImage: "scope") }
+                    NavigationLink { FocusView(api: api) } label: { Label(L("Just one"), systemImage: "scope") }
                     FreshStartButton(api: api, overdue: overdue) { text in
                         toast = ToastMessage(text: text)
                         Task { await load() }

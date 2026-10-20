@@ -81,7 +81,7 @@ export const cook: Record<string, string> = {
   great: 'super',
   'What did you use up?': 'Was ist dabei aufgebraucht worden?',
   '{n} {unit} left · −1': 'noch {n} {unit} · −1',
-  "Only tick what's really gone – everything else stays in stock.": 'Nur abhaken, was wirklich weg ist – der Rest bleibt im Bestand.',
+  "Only tick what's really gone – everything else stays in stock.": 'Nur abhaken, was wirklich weg ist – der Rest bleibt im Vorrat.',
   'Log it': 'Eintragen',
   'Delete recipe?': 'Rezept löschen?',
   'Edit recipe': 'Rezept bearbeiten',

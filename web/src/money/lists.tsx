@@ -86,11 +86,11 @@ export function MoneyListsCard({ onOpen, onNew }: { onOpen: (id: number) => void
           {t('Splitting')}
         </h2>
         <button className="btn sm" onClick={onNew}>
-          <Plus size={15} /> {t('New money list')}
+          <Plus size={15} /> {t('New split')}
         </button>
       </div>
       {lists.length === 0 ? (
-        <p className="meta" style={{ margin: 0 }}>{t('Pizza evening, barbecue, a weekend away: put the costs on a money list and see who gives whom how much.')}</p>
+        <p className="meta" style={{ margin: 0 }}>{t('Pizza evening, barbecue, a weekend away: put the costs on a split and see who gives whom how much.')}</p>
       ) : (
         <ul className="hrows">
           {[...open, ...(showDone ? done : [])].map((l) => (
@@ -183,11 +183,11 @@ export function NewMoneyListSheet({ open, onClose, onCreated, preset }: { open: 
     <Sheet
       open
       onClose={onClose}
-      title={t('New money list')}
+      title={t('New split')}
       footer={
         <div className="shop-foot mq-foot">
           <button className="btn primary block" disabled={!ok || busy} onClick={create}>
-            {t('Create money list')}
+            {t('Create split')}
           </button>
         </div>
       }
@@ -399,7 +399,7 @@ export function MoneyListSheet({ id, onClose }: { id: number | null; onClose: ()
   };
   const members = meta.data?.members ?? [];
   return (
-    <Sheet open onClose={onClose} title={L?.title ?? t('Money list')} wide>
+    <Sheet open onClose={onClose} title={L?.title ?? t('Split')} wide>
       {!L ? (
         <Skeleton n={3} h={56} />
       ) : (
@@ -588,8 +588,8 @@ export function MoneyListSheet({ id, onClose }: { id: number | null; onClose: ()
             <button
               className="btn ghost danger sm"
               onClick={() => {
-                if (!window.confirm(t('Delete this money list?'))) return;
-                void run(() => del(base), t('Money list deleted')).then(onClose);
+                if (!window.confirm(t('Delete this split?'))) return;
+                void run(() => del(base), t('Split deleted')).then(onClose);
               }}
             >
               <Trash size={15} /> {t('Delete list')}

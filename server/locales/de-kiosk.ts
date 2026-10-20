@@ -38,6 +38,6 @@ export const de_kiosk: Record<string, string> = {
   'offline – retrying': 'offline – versuche es weiter',
   'live': 'live',
   'This display link is no longer valid.': 'Dieser Display-Link ist nicht mehr gültig.',
-  'Create a new link under Settings › Displays.': 'Lege unter Einstellungen › Displays einen neuen Link an.',
+  'Create a new link under Settings › Connections & devices › Displays & family tablet.': 'Lege unter Einstellungen › Verbindungen & Geräte › Displays & Familien-Tablet einen neuen Link an.',
   'as of {time}': 'Stand {time}',
 };

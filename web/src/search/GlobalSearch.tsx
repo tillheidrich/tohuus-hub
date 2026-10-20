@@ -8,9 +8,9 @@ import { MagnifyingGlass, X } from '@phosphor-icons/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { get, post, invalidate } from '../api';
-import { t } from '../i18n';
-import { moreGroups, TABS } from '../nav';
+import { lang, t } from '../i18n';
 import { PAGES, rowPath, visibleRows } from '../settings/registry';
+import { fnTitle, foldText, functionsFor } from './functions';
 import { guestAllows } from '../people/access';
 import { useToast } from '../ui';
 
@@ -30,21 +30,6 @@ interface ServerGroups {
   house?: { id: number; title: string }[];
   people?: { key: string; name: string }[];
   wishes?: { key: string; id: number; title: string; list_id: number; sub: string | null }[];
-}
-
-/** functions and settings – label, where, and the words people search for */
-function registry(): { label: string; to: string; words: string }[] {
-  // the settings rows come from settings/registry.ts (every row of the six pages, with their words) – see `functions`
-  return [
-    { label: t('QR labels'), to: '/etiketten', words: 'etiketten qr drucken aufkleber' },
-    { label: t('Mental load check'), to: '/denkarbeit', words: 'mental load denkarbeit unsichtbare arbeit karten wer denkt an was fair verteilen' },
-    { label: t('People I look after'), to: '/fuer-wen', words: 'pflege angehörige pflegen eltern oma opa mutter vater heim pflegeheim arzttermin kümmern für wen ich da bin' },
-    { label: t('On my mind'), to: '/kopf', words: 'im kopf gedanken nebenbei erledigt dran gedacht gesehen mental load denke an privat' },
-    { label: t('Week in review'), to: '/woche', words: 'woche wochenrückblick rückblick geschafft letzte woche week review' },
-    { label: t('One thing at a time'), to: '/fokus', words: 'fokus konzentration adhs ads timer eins nach dem anderen anfangen' },
-    { label: t('Settings'), to: '/einstellungen', words: 'einstellungen optionen konfiguration settings' },
-    { label: t('Help'), to: '/hilfe', words: 'hilfe frage support' },
-  ];
 }
 
 export function GlobalSearch({ guest, admin, cloud, modules, onClose }: { guest?: string; admin: boolean; cloud: boolean; modules?: Record<string, boolean>; onClose: () => void }) {
@@ -74,9 +59,10 @@ export function GlobalSearch({ guest, admin, cloud, modules, onClose }: { guest?
 
   const functions = useMemo(() => {
     const all = [
-      ...TABS.map((x) => ({ label: x.label(), to: x.to, words: '' })),
-      ...moreGroups({ guest, admin, cloud, modules }).flatMap((g) => g.items.map((i) => ({ label: i.label, to: i.to, words: g.title }))),
-      ...registry().filter((x) => guestAllows(guest as never, x.to.split('?')[0])),
+      // the shared function register (shared/functions.json) – the iPhone search reads the same file
+      ...functionsFor({ guest: Boolean(guest), admin, modules, platform: 'web' })
+        .filter((f) => f.web && guestAllows(guest as never, f.web.split('?')[0]))
+        .map((f) => ({ label: fnTitle(f, lang()), to: f.web!, words: `${f.title.de} ${f.title.en} ${f.words.de} ${f.words.en}` })),
       // every row of Einstellungen (Ich, Haushalt, Bereiche & Orte, Mitteilungen & Kalender, Verbindungen & Geräte, Daten, Abo & Konto)
       ...(guestAllows(guest as never, '/einstellungen')
         ? visibleRows({ guest: Boolean(guest), user: !guest, admin, cloud, modules }).map((r) => ({
@@ -94,7 +80,9 @@ export function GlobalSearch({ guest, admin, cloud, modules, onClose }: { guest?
     const n = q.trim().toLowerCase();
     if (!n) return [] as { title: string; hits: Hit[] }[];
     const out: { title: string; hits: Hit[] }[] = [];
-    const fn = functions.filter((x) => `${x.label} ${x.words}`.toLowerCase().includes(n)).slice(0, 6);
+    // every typed word in the title or the words, German or English, umlauts folded (same as the iPhone)
+    const terms = foldText(n).split(/\s+/).filter(Boolean);
+    const fn = functions.filter((x) => { const hay = foldText(`${x.label} ${x.words}`); return terms.every((w) => hay.includes(w)); }).slice(0, 6);
     if (fn.length) out.push({ title: t('Functions & settings'), hits: fn.map((x) => ({ key: `f${x.to}${x.label}`, title: x.label, to: x.to })) });
     if (server.list?.length) out.push({ title: t('On the list'), hits: server.list.map((x) => ({ key: `l${x.id}`, title: x.text, sub: x.list, to: '/einkauf' })) });
     if (server.products?.length)

@@ -196,7 +196,7 @@ struct StartView: View {
                 .buttonStyle(.bordered)
             }
             .font(.subheadline.weight(.semibold))
-            Text(L("Everything is included on your own server. The QR code is in the web app under Settings › My account."))
+            Text(L("Everything is included on your own server. The QR code is in the web app under Settings › Me › Sign-in & security."))
                 .font(.caption).foregroundStyle(Theme.ink3).multilineTextAlignment(.center)
         }
         .padding(.top, Theme.Space.s2)
@@ -224,7 +224,7 @@ struct StartView: View {
             if text.contains("."), AppModel.normalise(text) != nil, !text.lowercased().hasPrefix("tohuus:") {
                 path.append(.ownServer(text))
             } else {
-                error = L("This QR code isn’t from ToHuus. In the web app: Settings › My account › “Connect the iPhone app”.")
+                error = L("This QR code isn’t from ToHuus. In the web app: Settings › Me › Sign-in & security › “Connect the iPhone app”.")
             }
             return
         }
@@ -654,7 +654,7 @@ struct SignUpView: View {
     private var codeHint: String? {
         switch StartCode(betaCode) {
         case .invite: return L("That’s an invitation into a household – no access code needed. Go back and tap “I have an invitation”.")
-        case .gift: return L("That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Plan.")
+        case .gift: return L("That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Data, plan & account › Plan & storage.")
         case .connect: return L("That’s a link to connect the app with a server. Go back and use “Scan QR code”.")
         default: return nil
         }

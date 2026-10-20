@@ -86,7 +86,7 @@ export async function alertNewDevice(userId: number, ua: string | null, method: 
   const route = notifySettings().events['auth.new_device'] ?? { email: true, push: true };
   const when = new Date().toLocaleString(locale(), { timeZone: config.timezone, dateStyle: 'medium', timeStyle: 'short' });
   const title = t('New sign-in for {name}', { name: u.name });
-  const message = t('{device} · {method} · {time}. Was that you? If not, open Settings › My account and sign that device out.', {
+  const message = t('{device} · {method} · {time}. Was that you? If not, open Settings › Me › Sign-in & security and sign that device out.', {
     device: deviceLabel(ua),
     method: methodLabel(method),
     time: when,

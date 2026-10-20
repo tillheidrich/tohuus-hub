@@ -52,7 +52,7 @@ export const TABS: Tab[] = [
       warm(['shopping', 'store', 0, 'list', 0, 0], '/shop/list');
     },
   },
-  { key: '/kochen', to: '/kochen', label: () => t('Cook'), icon: ChefHat, prefetch: () => load.cook() },
+  { key: '/kochen', to: '/kochen', label: () => t('Cooking'), icon: ChefHat, prefetch: () => load.cook() },
   {
     key: '/aufgaben',
     to: '/aufgaben',
@@ -93,7 +93,7 @@ export const NAV_SLOTS = BAR_LIMIT - 1;
 /** the extra areas – only in the bar by an own choice; otherwise they keep their usual row (Mehr, the doors) */
 const EXTRA_TABS: Tab[] = [
   { key: '/wissen', to: '/wissen', label: () => t('Knowledge'), icon: Brain },
-  { key: '/bestellen', to: '/bestellen', label: () => t('Treats'), icon: HandHeart },
+  { key: '/bestellen', to: '/bestellen', label: () => t('Bring me something'), icon: HandHeart },
   { key: '/einkauf/wuensche', to: '/einkauf/wuensche', label: () => t('Wishes'), icon: Gift },
   { key: '/hausinfo', to: '/hausinfo', label: () => t('House info'), icon: Info },
 ];
@@ -228,10 +228,10 @@ export function moreGroups(opts: {
         // Permanent guests never see wish lists.
         ...(opts.guest ? [] : [{ to: '/einkauf/wuensche', label: t('Wish lists & gifts'), icon: 'Gift' }]),
         // Haushaltswissen (18 Oct 2026): first row of Haushalt, its own symbol; guests see what is shared with them
-        { to: '/wissen', label: t('What ToHuus remembers'), icon: 'Brain' },
+        { to: '/wissen', label: t('Household knowledge'), icon: 'Brain' },
         { to: '/einstellungen/haushalt/leute', label: t('People'), icon: 'UsersThree' },
         { to: '/bar', label: t('Guests'), icon: 'Martini' },
-        { to: '/bestellen', label: t('Treats'), icon: 'HandHeart' },
+        { to: '/bestellen', label: t('Bring me something'), icon: 'HandHeart' },
         // permanent guests: what members find on top of Aufgaben and Vorrat, and their handover
         ...(opts.guest
           ? [

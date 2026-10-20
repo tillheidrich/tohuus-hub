@@ -78,7 +78,7 @@ async function household(email: string) {
   const me = await c.get('/api/cloud/me');
   const id = (me.json.household?.id ?? me.json.activeHousehold?.id ?? me.json.memberships?.[0]?.household?.id ?? me.json.memberships?.[0]?.id) as string;
   accounts.accountsDb().prepare(`UPDATE accounts SET verified_at = datetime('now') WHERE email = ?`).run(email);
-  // the person agreed to AI once (Settings › Access & AI)
+  // the person agreed to AI once (Settings › Connections & devices › AI)
   const policy = await import('../server/lib/ai-policy');
   const { db } = await import('../server/db');
   inHh(id, () => {

@@ -11,8 +11,8 @@ export const imports: Record<string, string> = {
   Text: 'Text',
   Receipt: 'Kassenbon',
   'Cupboard / freezer': 'Schrank / Truhe',
-  'No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus Hub” – you’ll find the connection under Settings › Access.':
-    'Auf diesem Server ist kein Bildmodell eingerichtet. Schick das Foto an Claude oder ChatGPT und sag „trag das in ToHuus Hub ein“ – die Verbindung findest du unter Einstellungen › Zugänge.',
+  'No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus Hub” – you’ll find the connection under Settings › Connections & devices › AI assistants & access.':
+    'Auf diesem Server ist kein Bildmodell eingerichtet. Schick das Foto an Claude oder ChatGPT und sag „trag das in ToHuus Hub ein“ – die Verbindung findest du unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge.',
   'Reading …': 'Lese …',
   'Take or choose a photo': 'Foto aufnehmen oder wählen',
   'Drop a PDF here or choose one': 'PDF hier ablegen oder wählen',

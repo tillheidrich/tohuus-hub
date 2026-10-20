@@ -24,7 +24,7 @@ export const places: Record<string, string> = {
   Freezing: 'Gefroren',
   'Which one?': 'Welcher?',
   'Not assigned to a place yet': 'Noch keinem Ort zugewiesen',
-  // Settings › Places
+  // Settings › Areas & places › Places & categories
   'Rooms, shelves and devices where things are kept – only the ones you really have.': 'Räume, Regale und Geräte, in denen etwas liegt – nur die, die ihr wirklich habt.',
   View: 'Ansicht',
   'As a list': 'Als Liste',
@@ -71,7 +71,7 @@ export const places: Record<string, string> = {
   'You have not picked any places – skip this step, or go back and pick some.': 'Ihr habt keine Orte gewählt – überspringt diesen Schritt oder geht zurück und wählt welche.',
   'Own, e.g. top shelf, Jonas’ compartment': 'Eigenes, z. B. oberes Regal, Fach von Jonas',
   'You can add or change anything at any time.': 'Du kannst jederzeit etwas hinzufügen oder ändern.',
-  'Settings › Places: rename, sort, nest, archive – and set what is chilled or frozen.': 'Einstellungen › Orte: umbenennen, sortieren, verschachteln, archivieren – und festlegen, was gekühlt oder gefroren ist.',
+  'Settings › Areas & places › Places & categories: rename, sort, nest, archive – and set what is chilled or frozen.': 'Einstellungen › Bereiche & Orte › Orte & Kategorien: umbenennen, sortieren, verschachteln, archivieren – und festlegen, was gekühlt oder gefroren ist.',
   'Shared lists only work when everyone can add to them. Each flatmate gets a personal link and picks their own password.':
     'Gemeinsame Listen funktionieren nur, wenn alle etwas eintragen können. Jede Mitbewohnerin und jeder Mitbewohner bekommt einen eigenen Link und wählt ein eigenes Passwort.',
   'Shared lists only work when everyone can add to them. Everyone gets a personal link and picks their own password.':

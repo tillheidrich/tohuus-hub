@@ -14,7 +14,7 @@ export function FavouritesPage() {
             <ArrowLeft size={18} />
           </button>
           <div>
-            <div className="eyebrow">{t('Cook')}</div>
+            <div className="eyebrow">{t('Cooking')}</div>
             <h1>{t('Favourites')}</h1>
           </div>
         </div>

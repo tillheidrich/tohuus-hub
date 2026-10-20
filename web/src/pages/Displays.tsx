@@ -1,5 +1,5 @@
 /**
- * Settings › Displays: read-only kitchen / hallway screens and e-ink frames.
+ * Settings › Connections & devices › Displays & family tablet: read-only kitchen / hallway screens and e-ink frames.
  * The display link is shown once (with QR); afterwards only "last seen" and a new link.
  */
 import { ArrowsClockwise, Copy, Image as ImageIcon, Monitor, PencilSimple, Plus, Trash } from '@phosphor-icons/react';

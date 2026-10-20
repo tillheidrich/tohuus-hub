@@ -1,5 +1,5 @@
 /**
- * Settings › Data & reset in ToHuus Cloud: a wipe only ever touches the own household (B keeps everything, never sees
+ * Settings › Data, plan & account › Data & reset in ToHuus Cloud: a wipe only ever touches the own household (B keeps everything, never sees
  * A's log or snapshot), the full copy before "everything" lands in A's own backup folder, and deleting / undoing
  * works in the read-only state after the trial while other writes do not.
  */

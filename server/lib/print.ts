@@ -302,7 +302,7 @@ function printerError(e: Error & { code?: string }, p: Printer) {
 /** Render, encode and send a ticket to a printer. Throws a friendly error (status 502) when the printer is unreachable. */
 export async function printTicket(spec: TicketSpec, opts: { printer?: Printer | null; actor?: string | null; autoKey?: string | null } = {}) {
   const p = opts.printer ?? defaultPrinter();
-  if (!p) throw Object.assign(new Error(t('No printer set up yet. Add one under Settings › Printers & tickets.')), { status: 409 });
+  if (!p) throw Object.assign(new Error(t('No printer set up yet. Add one under Settings › Connections & devices › Printers.')), { status: 409 });
   const ticket = await buildTicket(spec, p.paper, opts.actor ?? undefined);
   const bytes = await escposFor(ticket, p);
   try {
@@ -435,7 +435,7 @@ export async function sendTicket(spec: TicketSpec, channel: SendChannel, opts: {
     }
   }
   logJob({ kind: spec.type, ref: spec.id != null ? String(spec.id) : null, target: channel, ok, actor: opts.actor });
-  if (!ok) throw Object.assign(new Error(t('Sending via {channel} didn’t work. Check the channel under Settings › Notifications.', { channel: channelLabel(channel) })), { status: 502 });
+  if (!ok) throw Object.assign(new Error(t('Sending via {channel} didn’t work. Check the channel under Settings › Notifications & calendar.', { channel: channelLabel(channel) })), { status: 502 });
   return { ok: true as const, channel, title: ticket.title };
 }
 

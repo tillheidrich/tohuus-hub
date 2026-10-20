@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Settings › Displays (web: pages/Displays.tsx): read-only kitchen / hallway screens and e-ink frames. A display link
+/// Settings › Connections & devices › Displays & family tablet (web: pages/Displays.tsx): read-only kitchen / hallway screens and e-ink frames. A display link
 /// is shown once (with QR, image URL and Home Assistant YAML); afterwards only "last seen" and a new link.
 /// API: GET/POST /api/displays, PATCH/DELETE /api/displays/:id, POST /api/displays/:id/rotate (docs/kiosk.md).
 struct DisplaysView: View {

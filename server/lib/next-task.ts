@@ -25,7 +25,7 @@ export type NowLevel = 'overdue' | 'today' | 'promised' | 'mine' | 'open';
 const LEVELS: NowLevel[] = ['overdue', 'today', 'promised', 'mine', 'open'];
 /**
  * "Coming up" never reaches further than this many days, whatever the task's own lead time (care tasks have 7 days
- * by default, passports 90). 3, not 7 (20 Oct 2026): less pressure – "Nur eins" and "Eins nach dem anderen" are about
+ * by default, passports 90). 3, not 7 (20 Oct 2026): less pressure – "Nur eins" (Heute and /fokus) is about
  * now and the next few days, not about next week. Heute › Demnächst is not affected.
  */
 export const AHEAD_CAP = 3;
@@ -150,7 +150,7 @@ function card(x: CareView, level: NowLevel): NowCard {
 /**
  * The queue for one person: `next` is the one to do now, `after` how many come after it (the kid card says
  * "noch 3 danach", no list), `queue` the whole order (max 50) so "Später" can work without asking again.
- * Every client that shows tasks one at a time ("Nur eins" on Heute, "Eins nach dem anderen" /fokus, the kid tablet)
+ * Every client that shows tasks one at a time ("Nur eins" on Heute and /fokus, the kid tablet)
  * takes this order as it is – none of them sorts again.
  */
 export function nextTasks(who: NowFor, today = localDay(0), opts: { mineOnly?: boolean } = {}) {

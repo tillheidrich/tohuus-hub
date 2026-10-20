@@ -108,9 +108,9 @@ export async function grantHardship(id: number, plan: GiftPlan, days: number | n
     paragraphs: g
       ? [
           `${row.name ? `Hallo ${row.name}, ` : ''}schön, dass ihr ToHuus nutzen wollt. Hier ist euer Code – bezahlt von Menschen mit einem Abo.`,
-          `Einlösen: auf ${config.baseUrl.replace(/^https?:\/\//, '')} im Browser anmelden, dann Einstellungen › Abo › „Code einlösen“.`,
+          `Einlösen: auf ${config.baseUrl.replace(/^https?:\/\//, '')} im Browser anmelden, dann Einstellungen › Daten, Abo & Konto › Abo & Speicher › „Code einlösen“.`,
         ]
-      : [`${row.name ? `Hi ${row.name}, ` : ''}we’re glad you want to use ToHuus. Here is your code – paid for by people with a subscription.`, 'Redeem it on the web: sign in, then Settings › Plan › “Redeem code”.'],
+      : [`${row.name ? `Hi ${row.name}, ` : ''}we’re glad you want to use ToHuus. Here is your code – paid for by people with a subscription.`, 'Redeem it on the web: sign in, then Settings › Data, plan & account › Plan & storage › “Redeem code”.'],
     rows: [
       { label: g ? 'Code' : 'Code', value: code.code },
       { label: g ? 'Plan' : 'Plan', value: plan === 'plus' ? 'Plus' : 'Haushalt' },

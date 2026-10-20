@@ -1,5 +1,5 @@
 /**
- * Settings › My account › "iPhone-App verbinden": a one-time QR code (POST /api/auth/app/pair) that the iPhone app
+ * Settings › Me › Sign-in & security › "iPhone-App verbinden": a one-time QR code (POST /api/auth/app/pair) that the iPhone app
  * scans (or the camera opens as tohuus://connect) – no address or password to type. Works with ToHuus Cloud and a
  * self-hosted server alike. Server: routes/app-pair.ts.
  */

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Mehr › Connections: everything ToHuus talks to outside the app – Home Assistant, displays, printers & tickets,
 /// Telegram/Gotify/Matrix, receipts by e-mail, Cookidoo. One place instead of the web's tabs
-/// (Settings › Home Assistant, Displays, Printers & tickets, Access & AI). Permanent guests never get here.
+/// (Settings › Connections & devices › Home Assistant, Displays, Printers, Access & AI). Permanent guests never get here.
 struct IntegrationsHubView: View {
     let api: APIClient
     @Environment(AppModel.self) private var app
@@ -27,7 +27,7 @@ struct IntegrationsHubView: View {
                     row(L("Displays"), L("Kitchen and hallway screens, e-ink frames"), "display", displays.map { $0 == 1 ? L("1 display") : LF("%d displays", $0) })
                 }
                 NavigationLink { PrintersView(api: api) } label: {
-                    row(L("Printers & tickets"), L("Shopping slips, week plan and notes on paper"), "printer", printerBadge)
+                    row(L("Printers"), L("Shopping slips, week plan and notes on paper"), "printer", printerBadge)
                 }
             } header: {
                 Text(L("Screens & paper"))

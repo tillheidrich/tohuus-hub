@@ -18,7 +18,7 @@ export const de_ha2: Record<string, string> = {
   'Needs the ToHuus Hub integration in Home Assistant.': 'Braucht die ToHuus-Hub-Integration in Home Assistant.',
   'Unknown tag': 'Unbekannter Tag',
   'Tag actions are switched off': 'Tag-Aktionen sind ausgeschaltet',
-  'This tag has no action yet – choose one in ToHuus Hub › Settings › Home Assistant.': 'Dieser Tag hat noch keine Aktion – wähl eine in ToHuus Hub › Einstellungen › Home Assistant.',
+  'This tag has no action yet – choose one in ToHuus Hub › Settings › Connections & devices › Home Assistant.': 'Dieser Tag hat noch keine Aktion – wähl eine in ToHuus Hub › Einstellungen › Verbindungen & Geräte › Home Assistant.',
   'NFC tag': 'NFC-Tag',
   'Deleting calendar events needs the ToHuus Hub integration': 'Kalendereinträge löschen geht nur mit der ToHuus-Hub-Integration',
   'Home Assistant Assist': 'Home Assistant Assist',

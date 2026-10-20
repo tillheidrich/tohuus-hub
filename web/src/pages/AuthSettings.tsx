@@ -1,5 +1,5 @@
 /**
- * Settings › My account (everyone) and sign-in settings for admins. Area: auth.
+ * Settings › Me › Sign-in & security (everyone) and sign-in settings for admins. Area: auth.
  * Passkeys, e-mail address, password, two-step sign-in, PIN for shared devices, SSO link, devices.
  */
 import {
@@ -738,7 +738,7 @@ export function SignInAdmin({ me }: { me: Me }) {
             <Seg value={p.passwordFor} onChange={(v) => setP({ passwordFor: v })} options={[['all', t('Everyone')], ['admins', t('Admins only')]]} />
           </div>
           {row(t('Require two-step sign-in for admins'), t('Admins signing in with a password also need a code. Set it up for yourself first.'), p.requireTotpAdmins, 'requireTotpAdmins')}
-          {row(t('PIN switch on shared devices'), t('Mark a tablet as shared under My account; members with a PIN can switch there.'), p.pinSwitch, 'pinSwitch')}
+          {row(t('PIN switch on shared devices'), t('Mark a tablet as shared under Settings › Me › Sign-in & security; members with a PIN can switch there.'), p.pinSwitch, 'pinSwitch')}
           {row(t('“New sign-in” alerts'), t('A member gets a push and an e-mail when their account is used on a new device.'), p.newDeviceAlerts, 'newDeviceAlerts')}
         </div>
       </section>

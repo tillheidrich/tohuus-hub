@@ -41,7 +41,7 @@ export function register(s: McpServer, actorName: string) {
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     },
     async ({ printer, ...spec }) => {
-      if (!listPrinters().length) return text({ error: 'No printer is set up yet (Settings › Printers & tickets).' });
+      if (!listPrinters().length) return text({ error: 'No printer is set up yet (Settings › Connections & devices › Printers).' });
       if (NEEDS_ID.has(spec.type) && !spec.id) return text({ error: `Ticket type "${spec.type}" needs an id.` });
       if (rateLimited(`mcp-print:${actorName}`, 30, 60 * 60_000)) return text({ error: 'Too many prints in the last hour – try again later.' });
       const p = findPrinter(printer ?? null);

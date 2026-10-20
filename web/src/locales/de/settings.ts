@@ -90,7 +90,7 @@ export const settings: Record<string, string> = {
   'Open Home Assistant settings': 'Home Assistant öffnen',
   'Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Connections & devices › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.':
     'Sprachbefehle für den Babysitter (Licht, Rollos, Musik, nie Schlösser oder Kameras): Einstellungen › Verbindungen & Geräte › Home Assistant › Sprachbefehle. Sie stehen auf Babysitter- und Haushüter-Links; pro Link kannst du sie abschalten.',
-  'Treats › “Edit menu” (also in Settings › Areas & places).': 'Bring mir was › „Karte bearbeiten“ (auch unter Einstellungen › Bereiche & Orte).',
+  'Bring me something › “Edit menu” (also in Settings › Areas & places).': 'Bring mir was › „Karte bearbeiten“ (auch unter Einstellungen › Bereiche & Orte).',
   'Settings › Household › Who lives here?: tap a person for a photo (crop it square, or take one), an animal or initials, and what they like, don’t like and are allergic to.':
     'Einstellungen › Haushalt › Wer wohnt hier?: Tipp eine Person an, für ein Foto (quadratisch zuschneiden oder neu aufnehmen), ein Tier oder Initialen, und was sie mag, nicht mag und nicht verträgt.',
   'iPhone: iOS doesn’t offer the share menu to web apps. Settings › Connections & devices › Share from other apps › “Create a key for the iPhone shortcut” – the steps are shown right there.':

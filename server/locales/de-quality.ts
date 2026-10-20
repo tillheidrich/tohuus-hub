@@ -29,7 +29,7 @@ export const de_quality: Record<string, string> = {
   'Nothing to take over – read the receipt with AI first.': 'Noch nichts zum Übernehmen – lass den Bon erst mit KI lesen.',
   'Nothing to undo.': 'Da gibt es nichts rückgängig zu machen.',
   'The photo of this receipt is not stored. Choose it once more.': 'Das Foto von diesem Bon ist nicht gespeichert. Wähl es bitte noch einmal aus.',
-  'AI is switched off for you or this household. You can switch it on in Settings › With or without AI.':
-    'KI ist für dich oder diesen Haushalt aus. Du kannst sie unter Einstellungen › Mit oder ohne KI einschalten.',
+  'AI is switched off for you or this household. You can switch it on in Settings › Connections & devices › AI.':
+    'KI ist für dich oder diesen Haushalt aus. Du kannst sie unter Einstellungen › Verbindungen & Geräte › KI einschalten.',
   'The AI found no receipt lines on the photo. A sharper photo in good light helps.': 'Die KI hat auf dem Foto keine Bonzeilen gefunden. Ein schärferes Foto bei gutem Licht hilft.',
 };

@@ -589,7 +589,7 @@ ${d.display.widgets.includes('clock') ? `<div><div class="time" id="time">${esc(
 }
 
 export function invalidHtml(language: string) {
-  return `<!doctype html><html lang="${esc(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(t('Display'))}</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#f6f3ed;color:#121715;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px}h1{font-size:28px;margin:0 0 8px}p{color:#5e6965;font-size:18px;margin:0}</style></head><body><div><h1>${esc(t('This display link is no longer valid.'))}</h1><p>${esc(t('Create a new link under Settings › Displays.'))}</p></div></body></html>`;
+  return `<!doctype html><html lang="${esc(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(t('Display'))}</title><style>body{font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:#f6f3ed;color:#121715;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px}h1{font-size:28px;margin:0 0 8px}p{color:#5e6965;font-size:18px;margin:0}</style></head><body><div><h1>${esc(t('This display link is no longer valid.'))}</h1><p>${esc(t('Create a new link under Settings › Connections & devices › Displays & family tablet.'))}</p></div></body></html>`;
 }
 
 /**

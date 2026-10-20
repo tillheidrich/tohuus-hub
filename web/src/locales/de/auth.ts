@@ -138,7 +138,7 @@ export const auth: Record<string, string> = {
   'Require two-step sign-in for admins': 'Zwei-Schritt-Anmeldung für Admins verlangen',
   'Admins signing in with a password also need a code. Set it up for yourself first.': 'Admins brauchen beim Passwort zusätzlich einen Code. Richte ihn zuerst für dich selbst ein.',
   'PIN switch on shared devices': 'PIN-Wechsel auf gemeinsamen Geräten',
-  'Mark a tablet as shared under My account; members with a PIN can switch there.': 'Markier ein Tablet unter „Mein Konto“ als gemeinsam; Mitglieder mit PIN können dort wechseln.',
+  'Mark a tablet as shared under Settings › Me › Sign-in & security; members with a PIN can switch there.': 'Markier ein Tablet unter Einstellungen › Ich › Anmeldung & Sicherheit als gemeinsam; Mitglieder mit PIN können dort wechseln.',
   '“New sign-in” alerts': 'Hinweis bei neuer Anmeldung',
   'A member gets a push and an e-mail when their account is used on a new device.': 'Ein Mitglied bekommt eine Push-Nachricht und eine E-Mail, wenn sein Konto auf einem neuen Gerät benutzt wird.',
   'How members sign in': 'So melden sich die Mitglieder an',
@@ -186,8 +186,8 @@ export const auth: Record<string, string> = {
   'The sign-in took too long or was started in another browser. Please try again.': 'Die Anmeldung hat zu lange gedauert oder wurde in einem anderen Browser gestartet. Bitte versuch es noch einmal.',
   'The sign-in was cancelled at the provider.': 'Die Anmeldung wurde beim Anbieter abgebrochen.',
   'Single sign-on didn’t work. Please try again or use another way.': 'Single Sign-on hat nicht geklappt. Versuch es noch einmal oder nimm einen anderen Weg.',
-  'This account doesn’t belong to anyone in the household yet. Sign in another way and link it under Settings › My account – or ask an admin.':
-    'Dieses Konto gehört noch zu niemandem im Haushalt. Melde dich anders an und verknüpf es unter Einstellungen › Mein Konto – oder frag einen Admin.',
+  'This account doesn’t belong to anyone in the household yet. Sign in another way and link it under Settings › Me › Sign-in & security – or ask an admin.':
+    'Dieses Konto gehört noch zu niemandem im Haushalt. Melde dich anders an und verknüpf es unter Einstellungen › Ich › Anmeldung & Sicherheit – oder frag einen Admin.',
   'Link account': 'Verknüpfen',
   'Clear PIN': 'PIN löschen',
   'Single sign-on is not set up.': 'Single Sign-on ist nicht eingerichtet.',
@@ -206,8 +206,8 @@ export const auth: Record<string, string> = {
   'I have an access code or an invitation': 'Ich habe einen Zugangscode oder eine Einladung',
   'Access code or invitation link': 'Zugangscode oder Einladungslink',
   'Paste what was in the message – a code like TOHU-… or a link.': 'Füg ein, was in der Nachricht stand: einen Code wie TOHU-… oder einen Link.',
-  'This is a gift code for a plan, not an access code. Create your account or sign in first – then an admin of the household redeems it in the browser under Settings › Plan.':
-    'Das ist ein Geschenkcode für ein Abo, kein Zugangscode. Leg zuerst dein Konto an oder melde dich an. Danach löst ihn jemand mit Verwaltungsrechten im Browser unter Einstellungen › Abo ein.',
+  'This is a gift code for a plan, not an access code. Create your account or sign in first – then an admin of the household redeems it in the browser under Settings › Data, plan & account › Plan & storage.':
+    'Das ist ein Geschenkcode für ein Abo, kein Zugangscode. Leg zuerst dein Konto an oder melde dich an. Danach löst ihn jemand mit Verwaltungsrechten im Browser unter Einstellungen › Daten, Abo & Konto › Abo & Speicher ein.',
   'This link is for the iPhone app. Open it on the iPhone, or scan the QR code with the app.': 'Dieser Link ist für die iPhone-App. Öffne ihn auf dem iPhone oder scanne den QR-Code mit der App.',
   'That’s the address of ToHuus, not an invitation. To get in: create an account (with your access code) or sign in.':
     'Das ist die Adresse von ToHuus, keine Einladung. So kommst du rein: Konto anlegen (mit deinem Zugangscode) oder anmelden.',

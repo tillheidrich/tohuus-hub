@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Settings › Notifications › Channels (web: pages/Channels.tsx): Telegram (two-way: linked chats, one-time links with
+/// Settings › Notifications & calendar › For the whole household (web: pages/Channels.tsx): Telegram (two-way: linked chats, one-time links with
 /// QR), Gotify and Matrix. Routing per event stays in "What goes where?" (HouseholdNotifyView).
 /// API: GET /api/channels, PUT /api/channels/telegram|gotify|matrix, POST /api/channels/telegram/pair,
 /// PATCH/DELETE /api/channels/telegram/chats/:id, POST /api/channels/:name/test (docs/channels.md).

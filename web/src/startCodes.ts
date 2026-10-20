@@ -5,9 +5,9 @@
  *
  *   access   access code for a new account (beta gate, server/lib/beta.ts: "TOHU-XXXX-XXXX", or any short code
  *            the operator chose) → sign-up with the code filled in
- *   gift     plan code ("GIFT-XXXX-XXXX", server/lib/gifts.ts) → redeemed after sign-in on the web, Settings › Abo
+ *   gift     plan code ("GIFT-XXXX-XXXX", server/lib/gifts.ts) → redeemed after sign-in on the web, Settings › Data, plan & account › Plan & storage
  *   invite   invitation into a household (https://…/einladung/<token>, or the bare token) → /einladung/<token>
- *   connect  tohuus://connect?server=…&code=… (web: Settings › My account › Connect the iPhone app) → for the app
+ *   connect  tohuus://connect?server=…&code=… (web: Settings › Me › Sign-in & security › Connect the iPhone app) → for the app
  *   address  just a web address (e.g. the cloud's own) – nothing to open, only explain
  */
 export type StartCode =

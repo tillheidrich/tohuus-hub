@@ -3,7 +3,7 @@ import { t } from './i18n';
 import { displayAmounts } from './region';
 
 /**
- * Ingredient or step text with amounts shown in the household's units (Settings › Household › Region).
+ * Ingredient or step text with amounts shown in the household's units (Settings › Household › Region & currency).
  * The stored text is never changed; the original stays reachable as a tooltip and for screen readers.
  */
 export function Amounts({ text, style, className }: { text: string; style?: CSSProperties; className?: string }) {

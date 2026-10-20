@@ -36,7 +36,7 @@ export const web2: Record<string, string> = {
   'eBon, PDF, delivery': 'eBon, PDF, Lieferung',
   'Photo of the list': 'Foto vom Zettel',
   'paper receipt or note': 'Papierbon oder Einkaufszettel',
-  'Just speak': 'Einfach sprechen',
+  'Just say it': 'Einfach sagen',
   '“Milk is out”': '„Milch ist alle“',
   'Just type it': 'Einfach tippen',
   '“milk, bread, coffee”': '„Milch, Brot, Kaffee“',
@@ -179,7 +179,7 @@ export const web2: Record<string, string> = {
   'Delete account for good': 'Konto endgültig löschen',
   // Integration 12.10. (echte Endpunkte)
   'Forgotten: {text}': 'Vergessen: {text}',
-  'What ToHuus remembers': 'Was ToHuus sich merkt',
+  'Household knowledge': 'Haushaltswissen',
   'Things you asked ToHuus to remember – for example “we don’t eat pork” or “Mira shops on Saturdays”. Delete anything at any time.':
     'Was ToHuus sich für euch merken soll – zum Beispiel „Wir essen kein Schwein“ oder „Mira kauft samstags ein“. Du kannst alles jederzeit löschen.',
   'e.g. We shop at Aldi on Saturdays': 'z. B. Samstags kaufen wir bei Aldi ein',
@@ -204,7 +204,7 @@ export const web2: Record<string, string> = {
   'This month is further back than your plan remembers. “Haushalt” keeps the full history.': 'Dieser Monat liegt weiter zurück, als euer Abo sich merkt. „Haushalt“ behält den ganzen Verlauf.',
   'Receipt photos': 'Bon-Fotos',
   '{used} of {max} today': '{used} von {max} heute',
-  Remembers: 'Merkt sich',
+  Remembers: 'Verlauf',
   '{n} days back': '{n} Tage zurück',
   'I can only do the simple things this month: lists, “… is out”, what you bought. Everything else again from the 1st.':
     'Diesen Monat geht nur noch das Einfache: Listen, „… ist alle“, was ihr gekauft habt. Alles andere ab dem 1. wieder.',

@@ -16,11 +16,11 @@ export type Modules = Record<ModuleKey, boolean>;
 const ITEMS: { key: ModuleKey | 'shopping'; label: string; hint: string; icon: ReactNode }[] = [
   { key: 'shopping', label: 'Shopping', hint: 'The shared list – always on.', icon: <Basket size={22} /> },
   { key: 'stock', label: 'Pantry', hint: 'What is at home and what should be eaten soon.', icon: <Package size={22} /> },
-  { key: 'cook', label: 'Cook', hint: 'Recipes, ideas from what you have, a week plan if you like.', icon: <ChefHat size={22} /> },
+  { key: 'cook', label: 'Cooking', hint: 'Recipes, ideas from what you have, a week plan if you like.', icon: <ChefHat size={22} /> },
   { key: 'money', label: 'Money', hint: 'What food and household cost, from your receipts.', icon: <Coins size={22} /> },
-  { key: 'treats', label: 'Treats', hint: 'Wishes from the sofa: tea, a snack, a drink. Guests too, with a link.', icon: <HandHeart size={22} /> },
+  { key: 'treats', label: 'Bring me something', hint: 'Wishes from the sofa: tea, a snack, a drink. Guests too, with a link.', icon: <HandHeart size={22} /> },
   { key: 'homeinfo', label: 'Home info', hint: 'Care tasks and things to know about the home.', icon: <Wrench size={22} /> },
-  { key: 'knowledge', label: 'What ToHuus remembers', hint: 'Sizes, measurements, numbers. So nobody has to ask you.', icon: <Brain size={22} /> },
+  { key: 'knowledge', label: 'Household knowledge', hint: 'Sizes, measurements, numbers. So nobody has to ask you.', icon: <Brain size={22} /> },
   { key: 'guests', label: 'Guests', hint: 'Links for visitors, babysitter and grandparents, house info for guests.', icon: <Confetti size={22} /> },
   { key: 'ha', label: 'Home Assistant', hint: 'Only if you run Home Assistant.', icon: <House size={22} /> },
 ];

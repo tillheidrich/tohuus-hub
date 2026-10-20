@@ -286,11 +286,11 @@ private struct FirstRunModules: View {
 
     static let items: [(key: String, symbol: String, label: String, hint: String)] = [
         ("stock", "cabinet", L("Pantry"), L("What is at home and what should be eaten soon.")),
-        ("cook", "fork.knife", L("Cook"), L("Recipes, ideas from what you have, a week plan if you like.")),
+        ("cook", "fork.knife", L("Cooking"), L("Recipes, ideas from what you have, a week plan if you like.")),
         ("money", "eurosign.circle", L("Money"), L("What food and household cost, from your receipts.")),
-        ("treats", "heart", L("Treats"), L("Wishes from the sofa: tea, a snack, a drink.")),
+        ("treats", "heart", L("Bring me something"), L("Wishes from the sofa: tea, a snack, a drink.")),
         ("homeinfo", "wrench.and.screwdriver", L("Home info"), L("Care tasks and things to know about the home.")),
-        ("knowledge", "brain", L("What ToHuus remembers"), L("Sizes, measurements, numbers. So nobody has to ask you.")),
+        ("knowledge", "brain", L("Household knowledge"), L("Sizes, measurements, numbers. So nobody has to ask you.")),
         ("guests", "person.2", L("Guests"), L("Guest links and orders from guests.")),
         ("ha", "house.circle", "Home Assistant", L("Only if you run Home Assistant.")),
     ]
@@ -636,7 +636,7 @@ private struct FirstRunInvite: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s4) {
             StepHeader(title: L("Who else does the shopping?"), lead: lead)
-            Text(L("Bonus: under “Treats” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it."))
+            Text(L("Bonus: under “Bring me something” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it."))
                 .font(.footnote).foregroundStyle(Theme.ink3)
                 .fixedSize(horizontal: false, vertical: true)
             if let link {

@@ -155,7 +155,7 @@ extension APIClient {
 
     func catalogRecipe(_ id: Int) async throws -> CatalogRecipeFull { try await get("api/cloud-recipes/\(id)") }
 
-    // recipe photos (Settings › Recipes on the web)
+    // recipe photos (Settings › Areas & places › Recipes & imports on the web)
     func recipePhotoStatus() async throws -> RecipePhotoStatus { try await get("api/recipes/import/images") }
     func retryRecipePhotos() async throws -> Int {
         try await send("POST", "api/recipes/import/images/retry", json: [:], as: JSONValue.self)["queued"]?.int ?? 0

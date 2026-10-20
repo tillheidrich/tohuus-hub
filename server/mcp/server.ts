@@ -658,7 +658,7 @@ export async function handleMcp(req: Request, res: Response) {
     }
   }
   if (!actorName) return unauthorized(res, bearer ? 'invalid_token' : undefined);
-  // the household switched MCP off for its own assistants (Settings › Access & AI) – ai-policy.ts
+  // the household switched MCP off for its own assistants (Settings › Connections & devices › AI) – ai-policy.ts
   if (!mcpOn()) {
     res.status(403).json({ jsonrpc: '2.0', error: { code: -32003, message: 'MCP access is switched off for this household' }, id: null });
     return;

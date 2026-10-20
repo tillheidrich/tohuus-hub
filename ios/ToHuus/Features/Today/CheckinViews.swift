@@ -247,7 +247,7 @@ struct CalmCard: View {
     }
 }
 
-/// Settings › Notifications: the personal switch for the evening question (PUT /api/checkin/settings).
+/// Settings › Notifications & calendar: the personal switch for the evening question (PUT /api/checkin/settings).
 struct CheckinSettingSection: View {
     let api: APIClient
     @State private var on: Bool?

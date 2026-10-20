@@ -1,4 +1,4 @@
-/** Geldlisten: split costs of an occasion (docs/money.md › "Geldlisten"). Members only – never permanent guests. */
+/** Geldlisten: split costs of an occasion (docs/money.md › "Abrechnungen"). Members only – never permanent guests. */
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../lib/auth.js';

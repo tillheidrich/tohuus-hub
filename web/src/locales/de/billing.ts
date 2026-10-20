@@ -12,7 +12,7 @@ export const billing: Record<string, string> = {
   'With Haushalt or Plus you can carry on, or you run ToHuus on your own server. Until then you can look at everything and export it.':
     'Mit Haushalt oder Plus geht es weiter, oder ihr betreibt ToHuus auf eurem eigenen Server. Bis dahin könnt ihr alles ansehen und exportieren.',
   'Ticking off the shopping list still works until {date}.': 'Abhaken auf der Einkaufsliste geht noch bis zum {date}.',
-  // Settings › Abo & Speicher (pages/Billing.tsx)
+  // Settings › Data, plan & account › Plan & storage & Speicher (pages/Billing.tsx)
   'Read-only – the trial is over': 'Nur lesen, die Testphase ist vorbei',
   'Your trial is over. With Haushalt or Plus you can carry on – or run ToHuus on your own server. Everything stays visible and you can export it.':
     'Eure Testphase ist vorbei. Mit Haushalt oder Plus geht es weiter, oder ihr betreibt ToHuus selbst. Alles bleibt sichtbar und ihr könnt es exportieren.',
@@ -27,7 +27,7 @@ export const billing: Record<string, string> = {
   '{n} tasks done': '{n} Aufgaben erledigt',
   '{n} times cooked from a recipe': '{n}-mal nach Rezept gekocht',
   '{n} questions to the assistant': '{n} Fragen an den Assistenten',
-  '{n} things ToHuus remembers for you': '{n} Dinge, die ToHuus sich für euch merkt',
+  '{n} things ToHuus remembers for you': '{n} Sachen, die ToHuus sich für euch merkt',
   // operator › Umsatz (pages/operator/Revenue.tsx)
   Revenue: 'Umsatz',
   'Active subscriptions': 'Aktive Abos',

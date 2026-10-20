@@ -1,6 +1,6 @@
 /**
  * Area tour: the guided tour with coach marks on the real UI, the "start empty / explore with demo data"
- * choice on a fresh instance, the demo banner, and "Remove demo data" / "Start over" in Settings › Data.
+ * choice on a fresh instance, the demo banner, and "Remove demo data" / "Start over" in Settings › Data, plan & account › Data & reset.
  * Copy is brand-neutral ("the app") so it fits ToHuus Hub and Fredirando alike.
  */
 import { ArrowLeft, ArrowRight, Compass, Flask, House, Sparkle, Trash, X } from '@phosphor-icons/react';
@@ -81,7 +81,7 @@ function steps(form: HouseholdForm = 'family', mods?: Record<string, boolean>): 
       route: '/',
       targets: ['.tabbar', '.sidebar .nav-group'],
       title: t('Your bar, the way you need it'),
-      body: t('Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More.'),
+      body: t('Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there, like “Bring me something” or Knowledge. Everything else is under More.'),
     },
     {
       id: 'ahead',
@@ -362,7 +362,7 @@ function TourOverlay({ start, mods, onStep, onClose }: { start: number; mods?: R
 /**
  * Asked once after a household is created (web onboarding; the iPhone app asks the same after sign-up):
  * "Möchtest du Beispieldaten, um ToHuus kennenzulernen?" – Ja loads the marked sample household, Nein starts empty.
- * Either way it can be changed later in Settings › Data.
+ * Either way it can be changed later in Settings › Data, plan & account › Data & reset.
  */
 export function StartChoice({ onDone }: { onDone: (choice: 'empty' | 'demo') => void }) {
   const [busy, setBusy] = useState<'empty' | 'demo' | null>(null);
@@ -447,10 +447,10 @@ export function TourButton() {
   );
 }
 
-// ================================================================== Settings › Data: data & reset
+// ================================================================== Settings › Data, plan & account › Data & reset: data & reset
 
 /**
- * Settings › Data: sample data, clearing areas or everything, my private entries and the 7-day restore
+ * Settings › Data, plan & account › Data & reset: sample data, clearing areas or everything, my private entries and the 7-day restore
  * (DataWipe.tsx; replaces the former "Start over" card). Shown to every member – admins get the whole set.
  */
 export function DataReset(_: { admin: boolean }) {

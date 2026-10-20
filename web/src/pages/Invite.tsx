@@ -170,7 +170,7 @@ export function Invite() {
           <div className="stack" role="status">
             <div className="eyebrow">{t('Invitation')}</div>
             <h1 style={{ margin: 0 }}>{t('You’re in, {name}!', { name: name.trim() })}</h1>
-            {done.passkeyFailed && <p className="muted">{t('The passkey wasn’t saved. You can add one any time under Settings › My account – until then this device stays signed in.')}</p>}
+            {done.passkeyFailed && <p className="muted">{t('The passkey wasn’t saved. You can add one any time under Settings › Me › Sign-in & security – until then this device stays signed in.')}</p>}
             {done.verify && <p className="muted">{t('We sent a confirmation link to {email}. Open it once – after that you can sign in with an e-mail link.', { email: done.verify })}</p>}
             <button className="btn primary lg" onClick={() => location.replace('/')}>
               {t('Open {household}', { household: d.household || b.name })} <ArrowRight size={18} weight="bold" />

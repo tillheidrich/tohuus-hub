@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "Unser Haushalt" (Mehr → Personen, the web's Settings › Members): everyone with their picture, likes and allergies;
+/// "Unser Haushalt" (Mehr → Personen, the web's Settings › Household › Who lives here?): everyone with their picture, likes and allergies;
 /// admins add children and permanent guests, invite, set guest access, send sign-in links, switch member ⇄ guest and
 /// remove people; kids & kid tablets; how people sign in (self-hosted); what ToHuus remembers.
 /// Web: pages/Settings.tsx (members tab) → people/People.tsx, DataSettings.tsx Members, AuthSettings.tsx SignInAdmin,
@@ -93,7 +93,7 @@ struct HouseholdView: View {
                 } header: { Text(L("Sign-in")) }
             }
             Section {
-                NavigationLink { KnowledgeView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "brain") }
+                NavigationLink { KnowledgeView(api: api) } label: { Label(L("Household knowledge"), systemImage: "brain") }
             } footer: {
                 if !isAdmin && loaded { Text(L("Only admins can invite people or change who belongs to the household.")) }
             }

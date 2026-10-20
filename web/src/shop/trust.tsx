@@ -211,7 +211,7 @@ export const inStoreRecently = () => {
 };
 
 
-/** Settings › My account: the same two choices as on the list. */
+/** Settings › Me › Sign-in & security: the same two choices as on the list. */
 export function MyListViewCard() {
   const cur = useListPrefs();
   const toast = useToast();

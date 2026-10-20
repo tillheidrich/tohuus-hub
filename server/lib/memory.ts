@@ -2,7 +2,7 @@
  * What ToHuus "merkt sich" about a household beyond lists and receipts: small facts, preferences and routines
  * ("Wir kaufen Brot beim Bäcker", "Samstags wird gegrillt", "Mira trinkt Hafermilch"). Written by people, by the
  * assistant when someone asks it to remember something, or derived. Every row can be read and deleted
- * (GET/DELETE /api/memory); the word "Gedächtnis" stays internal.
+ * (GET/DELETE /api/memory); the old word for it stays internal (glossary: Haushaltswissen).
  *
  * Rows that touch health, religion, politics and similar (Art. 9 GDPR) are flagged `sensitive` by a word list and
  * never go to a model unless the household switched on `ai.health_share`.

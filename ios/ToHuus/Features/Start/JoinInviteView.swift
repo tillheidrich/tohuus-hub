@@ -140,7 +140,7 @@ struct JoinInviteView: View {
             return
         case .gift:
             // own plan codes are never redeemed in the app (App Store 3.1.1, docs/cloud.md › plan codes)
-            hint = L("That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Plan.")
+            hint = L("That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Data, plan & account › Plan & storage.")
             return
         case .connect(let c):
             busy = true

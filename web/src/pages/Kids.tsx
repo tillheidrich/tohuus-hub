@@ -494,7 +494,7 @@ function ExitPad({ token, hasPin, onClose, onDone }: { token: string; hasPin: bo
             </div>
           </>
         ) : (
-          <p className="small" style={{ margin: 0 }}>{t('No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Members › Kids.')}</p>
+          <p className="small" style={{ margin: 0 }}>{t('No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Household › Who lives here?.')}</p>
         )}
       </div>
     </div>

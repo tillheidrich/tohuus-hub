@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Rezepte-Werkzeuge (web: Settings › Recipes, RecipeImports.tsx + RecipePhotos.tsx): recipe photos (state, load
+/// Rezepte-Werkzeuge (web: Settings › Areas & places › Recipes & imports, RecipeImports.tsx + RecipePhotos.tsx): recipe photos (state, load
 /// again on the server, or load them through this phone when the server can't reach the photo site), "Import with any
 /// AI", the open recipe database, recipe packages and other apps, and the JSON export.
 struct RecipeToolsView: View {

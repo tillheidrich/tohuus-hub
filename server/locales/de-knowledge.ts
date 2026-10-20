@@ -1,4 +1,4 @@
-/** German strings of Haushaltswissen ("Was ToHuus sich merkt" as cards, server/lib/knowledge.ts, docs/knowledge.md). */
+/** German strings of Haushaltswissen ("Haushaltswissen" as cards, server/lib/knowledge.ts, docs/knowledge.md). */
 export const de_knowledge: Record<string, string> = {
   'This no longer exists.': 'Das gibt es nicht mehr.',
   'Only people who live here can change this.': 'Das können nur die ändern, die hier wohnen.',
@@ -10,8 +10,8 @@ export const de_knowledge: Record<string, string> = {
   'This is not a photo.': 'Das ist kein Foto.',
   Measurements: 'Maß',
   Phone: 'Telefon',
-  'That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.':
-    'Das klingt nach Gesundheit. Trag es bitte in der App unter „Was ToHuus sich merkt“ ein, dort fragt ToHuus einmal, ob es das speichern darf.',
+  'That sounds like health information. Please add it in the app under Household knowledge; ToHuus asks there once whether it may store it.':
+    'Das klingt nach Gesundheit. Trag es bitte in der App unter „Haushaltswissen“ ein, dort fragt ToHuus einmal, ob es das speichern darf.',
   'Visible to the whole household: {text}': 'Für den ganzen Haushalt sichtbar: {text}',
   'Only for you now: {text}': 'Jetzt nur für dich: {text}',
   'Entry deleted: {text}': 'Gelöscht: {text}',

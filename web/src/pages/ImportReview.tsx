@@ -638,7 +638,7 @@ function RereadSheet({ open, imp, rec, onClose }: { open: boolean; imp: any; rec
           <div className="small">
             {rec.ai.paused || rec.ai.left === 0
               ? t('No AI readings left for today. Tomorrow it works again – or add the missing row yourself.')
-              : t('AI is off for you or this household. If you want it, switch it on in Settings › With or without AI.')}
+              : t('AI is off for you or this household. If you want it, switch it on in Settings › Connections & devices › AI.')}
           </div>
           {!rec.ai.paused && rec.ai.left !== 0 && (
             <button className="btn" onClick={() => nav('/einstellungen/verbindungen/ki')}>

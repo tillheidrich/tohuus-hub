@@ -26,7 +26,7 @@ struct StocktakeSheet: View {
                 }
                 if vision == false {
                     Section {
-                        Label(L("No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus” – you’ll find the connection under Settings › Access."),
+                        Label(L("No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus” – you’ll find the connection under Settings › Connections & devices › AI assistants & access."),
                               systemImage: "cpu")
                             .font(.subheadline).foregroundStyle(Theme.ink2)
                     }

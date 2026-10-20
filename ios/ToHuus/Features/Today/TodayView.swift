@@ -426,7 +426,7 @@ struct TodayView: View {
     // MARK: 1 · Fällig
 
     private func dueCard(_ items: [RhythmItem]) -> some View {
-        Card(title: L("Due"), systemImage: TodayCardKey.rhythm.symbol) {
+        Card(title: L("Needed again soon"), systemImage: TodayCardKey.rhythm.symbol) {
             if items.isEmpty {
                 TodayEntryLevels(shareReceipt: { showReceipt = true }, photoOfList: { showPaperList = true })
             } else {
@@ -585,7 +585,7 @@ struct TodayView: View {
         Button {
             path.append(Push.treats)
         } label: {
-            Card(title: L("Treats"), systemImage: TodayCardKey.orders.symbol) {
+            Card(title: L("Bring me something"), systemImage: TodayCardKey.orders.symbol) {
                 VStack(alignment: .leading, spacing: Theme.Space.s2) {
                     ForEach(model.treatsForMe.prefix(3)) { o in
                         orderRow(o.forUserId != nil ? LF("%@ asks you", o.guestName ?? "") : LF("%@ would love something", o.guestName ?? ""),

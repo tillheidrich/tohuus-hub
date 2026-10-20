@@ -48,7 +48,7 @@ export function noticeDue(endsAt: string, now = Date.now()): TrialNotice | null 
 
 const localHour = (now: number) => Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hour12: false, timeZone: config.timezone }).format(new Date(now))) % 24;
 
-/** Household: e-mail for the event "billing.trial" not switched off in Settings › Notifications. */
+/** Household: e-mail for the event "billing.trial" not switched off in Settings › Notifications & calendar. */
 function householdAllowsMail(): boolean {
   const s = getSetting<{ events?: Record<string, { email?: boolean }> }>('notify', {});
   return s?.events?.['billing.trial']?.email !== false;
@@ -67,7 +67,7 @@ function texts(kind: TrialNotice, endsAt: string, lang: string) {
       push: t('Your trial ends on {date}. After that ToHuus carries on with Free, nothing is charged.', { date }),
       paragraphs: [
         t('Your 14 days of Plus end on {date}. After that you carry on with ToHuus Free. Nothing is charged and nothing is deleted.', { date }),
-        t('If you want to keep AI, the full history and the week plan from your pantry, you can choose Haushalt or Plus in the app under Settings › Subscription.'),
+        t('If you want to keep AI, the full history and the week plan from your pantry, you can choose Haushalt or Plus in the app under Settings › Data, plan & account › Plan & storage.'),
       ],
     };
   return {
@@ -89,7 +89,7 @@ function readonlyTexts(kind: TrialNotice, date: string) {
       push: t('Your trial ends on {date}. After that you can still look at and export everything, nothing is charged.', { date }),
       paragraphs: [
         t('Your 14 days of Plus end on {date}. Nothing is charged and nothing is deleted.', { date }),
-        t('Without a plan you can still look at your lists, tasks and recipes and export everything. To keep using ToHuus, choose Haushalt or Plus in the app under Settings › Subscription. One plan covers the whole household.'),
+        t('Without a plan you can still look at your lists, tasks and recipes and export everything. To keep using ToHuus, choose Haushalt or Plus in the app under Settings › Data, plan & account › Plan & storage. One plan covers the whole household.'),
       ],
     };
   return {
@@ -143,7 +143,7 @@ export async function sendTrialNotices(now = Date.now()): Promise<number> {
                   eyebrow: t('Trial'),
                   paragraphs: tx.paragraphs,
                   button: { url: `${config.baseUrl}/einstellungen/daten/abo`, label: t('See the plans') },
-                  reason: t('You get this because you are an admin of this household. Switch it off in Settings › Plan & storage.'),
+                  reason: t('You get this because you are an admin of this household. Switch it off in Settings › Data, plan & account › Plan & storage.'),
                   unsubscribeUrl: unsubscribeUrl(a.user_id),
                 });
                 got = true;

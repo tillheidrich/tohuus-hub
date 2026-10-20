@@ -1,4 +1,4 @@
-/** Invitations into the household: Settings › Members (admin) and the public landing page /einladung/<token>. */
+/** Invitations into the household: Settings › Household › Who lives here? (admin) and the public landing page /einladung/<token>. */
 import { Router } from 'express';
 import { z } from 'zod';
 import { t } from '../i18n.js';
@@ -100,7 +100,7 @@ pub.post('/invite/:token', (req, res) => {
       }
     }
     emit('settings');
-    // passkey / SSO: the browser finishes the setup while signed in (Settings › My account flows)
+    // passkey / SSO: the browser finishes the setup while signed in (Settings › Me › Sign-in & security flows)
     res.json({ ok: true, name: u.name, method: u.method, verify_sent: verifySent, sso_url: u.method === 'sso' ? '/api/auth/oidc/start?link=1' : null });
   } catch (e) {
     fail(res, e);

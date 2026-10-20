@@ -105,7 +105,7 @@ struct OwnServerView: View {
                     Label(L("How to run ToHuus yourself"), systemImage: "questionmark.circle")
                 }
             } footer: {
-                Text(L("In the web app: Settings › My account › “Connect the iPhone app”. The QR code brings address and sign-in along."))
+                Text(L("In the web app: Settings › Me › Sign-in & security › “Connect the iPhone app”. The QR code brings address and sign-in along."))
             }
         }
     }
@@ -249,7 +249,7 @@ struct OwnServerView: View {
             } header: {
                 Text(L("Without a password"))
             } footer: {
-                Text(L("The code is in the web app under Settings › My account › “Connect the iPhone app”. It works once and for 10 minutes."))
+                Text(L("The code is in the web app under Settings › Me › Sign-in & security › “Connect the iPhone app”. It works once and for 10 minutes."))
             }
         } else {
             Section {
@@ -313,7 +313,7 @@ struct OwnServerView: View {
                 address = text
                 await check()
             } else {
-                error = L("This QR code isn’t from ToHuus. In the web app: Settings › My account › “Connect the iPhone app”.")
+                error = L("This QR code isn’t from ToHuus. In the web app: Settings › Me › Sign-in & security › “Connect the iPhone app”.")
                 failure = server == nil ? error : nil
             }
             return

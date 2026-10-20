@@ -1,7 +1,7 @@
 /**
  * Error log (docs/error-log.md): server errors (every 500 with its reference code) and errors the apps report
  * (web crash card, uncaught errors, iPhone/Watch API and decoding errors) in one place, so a "Referenz 219017d1"
- * from a screenshot can be looked up – back office › Fehler (cloud) or Settings › Daten (self-hosted admins),
+ * from a screenshot can be looked up – back office › Fehler (cloud) or Settings › Data, plan & account (self-hosted admins),
  * also as a download.
  *
  * Privacy: no request bodies, no list or receipt content. Messages and stacks are cut short and scrubbed of e-mail

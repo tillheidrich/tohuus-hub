@@ -4,7 +4,7 @@
  * Placeholders: t('{n} items', { n: 3 }). Plural: t(n === 1 ? 'one item' : '{n} items', { n }).
  * Add a language: list it in server/languages.ts, create web/src/locales/<code>/ fragments and register them below.
  */
-import { LANGUAGES, isLang, localeOf, toLang, type Lang } from '../../server/languages';
+import { LANGUAGES, isLang, localeOf, pickLang, type Lang } from '../../server/languages';
 
 export type { Lang };
 /** Supported languages with their native names – for language pickers (Settings, onboarding). */
@@ -26,6 +26,15 @@ export function loadDict(l: Lang = current): Promise<void> {
 }
 export const dictReady = (l: Lang = current) => Boolean(DICTS[l]);
 
+/** The browser's first supported language, German when none fits (self-hosted first start: Paket D). */
+export function browserLang(): Lang {
+  try {
+    return pickLang(navigator.languages?.length ? navigator.languages : [navigator.language]);
+  } catch {
+    return 'de';
+  }
+}
+
 let current: Lang = (() => {
   try {
     const l = localStorage.getItem('sw.lang');
@@ -33,12 +42,12 @@ let current: Lang = (() => {
   } catch {
     /* ignore */
   }
-  return toLang(navigator.language);
+  return browserLang();
 })();
 document.documentElement.lang = current;
 
 export function setLang(l: string | undefined | null) {
-  const next: Lang = isLang(l) ? l : 'en';
+  const next: Lang = isLang(l) ? l : browserLang();
   if (next === current) return false;
   current = next;
   document.documentElement.lang = next;

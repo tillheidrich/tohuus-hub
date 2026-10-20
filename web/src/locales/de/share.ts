@@ -18,8 +18,8 @@ export const share: Record<string, string> = {
     'Teile eine WhatsApp-Liste, einen Rezeptlink oder ein Bonfoto aus einer anderen App – oder kopiere eine Liste und füge sie hier ein.',
   'Import as receipt': 'Als Bon einlesen',
   'Save as recipe': 'Als Rezept speichern',
-  'Reading photos needs a vision model (Settings → Access & AI). PDFs from REWE and most supermarkets work without one.':
-    'Fotos lesen braucht ein Bildmodell (Einstellungen → Zugänge & KI). PDFs von REWE und den meisten Supermärkten gehen auch ohne.',
+  'Reading photos needs a vision model (Settings › Connections & devices › AI). PDFs from REWE and most supermarkets work without one.':
+    'Fotos lesen braucht ein Bildmodell (Einstellungen › Verbindungen & Geräte › KI). PDFs von REWE und den meisten Supermärkten gehen auch ohne.',
   'Import recipe': 'Rezept übernehmen',
   'To the shopping list': 'Auf die Einkaufsliste',
   'Edit text': 'Text bearbeiten',
@@ -97,14 +97,14 @@ export const share: Record<string, string> = {
   'Track these {n} things': 'Diese {n} Sachen verfolgen',
   'Everything is tracked again – nothing was lost': 'Alles wird wieder verfolgt – nichts ist verloren gegangen',
   'Only what runs out is tracked now': 'Jetzt wird nur verfolgt, was ausgeht',
-  'What should be tracked?': 'Was soll verfolgt werden?',
+  'What should be tracked?': 'Vorrat: was verfolgen?',
   'Starting small helps: track only the things that regularly run out. You can switch to everything at any time – nothing is deleted.':
     'Klein anfangen hilft: Verfolge nur, was regelmäßig ausgeht. Du kannst jederzeit auf alles umstellen – es wird nichts gelöscht.',
   'Couldn’t load the setting.': 'Die Einstellung konnte nicht geladen werden.',
   'Only admins can change this.': 'Das können nur Admins ändern.',
   'Only what runs out': 'Nur was ausgeht',
   '{n} things are tracked. Everything else is simply not counted and never warned about.': '{n} Sachen werden verfolgt. Alles andere wird einfach nicht gezählt und nie angemahnt.',
-  'Everything in stock is tracked, with warnings when it runs low or should be used.': 'Alles im Bestand wird verfolgt, mit Hinweisen, wenn es knapp wird oder bald weg muss.',
+  'Everything in stock is tracked, with warnings when it runs low or should be used.': 'Alles im Vorrat wird verfolgt, mit Hinweisen, wenn es knapp wird oder bald weg muss.',
   'Choose what runs out': 'Auswählen, was ausgeht',
   'What runs out at your place?': 'Was geht bei euch aus?',
   'Saving the list doesn’t change the mode. Switch to “Only what runs out” above when you’re ready.': 'Speichern ändert den Modus nicht. Stell oben auf „Nur was ausgeht“ um, wenn du so weit bist.',
@@ -127,8 +127,8 @@ export const share: Record<string, string> = {
     'Android und Computer: Installiere die App einmal. Dann wählst du sie im Teilen-Menü jeder App – eine Liste kommt mit einem Tipp auf die Einkaufsliste, ein Rezeptlink zu den Rezepten, ein Foto oder PDF in die Importe.',
   'Chat messages are cleaned up by themselves: times, names, bullets and check boxes disappear, “2 milk, bread and tape” becomes three items.':
     'Chatnachrichten werden von selbst aufgeräumt: Uhrzeiten, Namen, Aufzählungszeichen und Kästchen verschwinden, aus „2 Milch, Brot und Paketband“ werden drei Einträge.',
-  'iPhone: iOS doesn’t offer the share menu to web apps. Settings › My account › “Create a key for the iPhone shortcut” – the steps are shown right there.':
-    'iPhone: iOS bietet Web-Apps das Teilen-Menü nicht an. Einstellungen › Mein Konto › „Schlüssel für den iPhone-Kurzbefehl erstellen“ – die Schritte stehen direkt dort.',
+  'iPhone: iOS doesn’t offer the share menu to web apps. Settings › Connections & devices › Share from other apps › “Create a key for the iPhone shortcut” – the steps are shown right there.':
+    'iPhone: iOS bietet Web-Apps das Teilen-Menü nicht an. Einstellungen › Verbindungen & Geräte › Teilen aus anderen Apps › „Schlüssel für den iPhone-Kurzbefehl erstellen“ – die Schritte stehen direkt dort.',
   'Copied a list? The paste button next to the input field on the shopping list takes it in one tap.': 'Liste kopiert? Der Einfügen-Knopf neben dem Eingabefeld der Einkaufsliste übernimmt sie mit einem Tipp.',
   'Set up sharing': 'Teilen einrichten',
   'Discreet and private items': 'Diskrete und private Einträge',
@@ -142,7 +142,7 @@ export const share: Record<string, string> = {
   'Real names never reach Home Assistant, Telegram, displays, printed lists, guest links or AI assistants.': 'Echte Namen landen nie in Home Assistant, Telegram, auf Displays, gedruckten Listen, Gastlinks oder bei KI-Assistenten.',
   'Open the shopping list': 'Einkaufsliste öffnen',
   'The calmest way to start: only the things that regularly run out are tracked.': 'Der ruhigste Einstieg: Verfolgt wird nur, was regelmäßig ausgeht.',
-  'Settings › Household › “What should be tracked?” › “Only what runs out”, then tap your staples.': 'Einstellungen › Haushalt › „Was soll verfolgt werden?“ › „Nur was ausgeht“, dann deine Grundsachen antippen.',
+  'Settings › Areas & places › Pantry: what to track? › “Only what runs out”, then tap your staples.': 'Einstellungen › Bereiche & Orte › Vorrat: was verfolgen? › „Nur was ausgeht“, dann deine Grundsachen antippen.',
   'Everything else is simply not counted – no warnings, no reminders. Receipts still come in as before.': 'Alles andere wird einfach nicht gezählt – keine Warnungen, keine Erinnerungen. Bons kommen weiter wie gewohnt rein.',
   'Bought something on two different days? Today suggests tracking it too.': 'An zwei verschiedenen Tagen gekauft? „Heute“ schlägt vor, es auch zu verfolgen.',
   'Switch to “Everything” at any time – nothing is deleted.': 'Jederzeit auf „Alles“ umstellen – es wird nichts gelöscht.',

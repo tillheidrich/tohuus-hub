@@ -1,5 +1,5 @@
 /**
- * Retail: receipt inbox (status card on Imports, settings card under Access & AI), the best-before /
+ * Retail: receipt inbox (status card on Imports, settings card under Settings › Connections & devices › AI assistants & access), the best-before /
  * use-by choice in the product form, and the estimated value line in the monthly waste card.
  */
 import { ArrowClockwise, CheckCircle, Copy, EnvelopeSimple, WarningCircle } from '@phosphor-icons/react';
@@ -90,7 +90,7 @@ export function InboxStatusCard({ admin }: { admin: boolean }) {
           <span className="thumb" style={{ width: 40, height: 40 }}><EnvelopeSimple size={20} /></span>
           <div className="grow">
             <b>{t('Receipts by e-mail')}</b>
-            <div className="small muted">{t('Connect a mailbox once – eBons and pickup notices then arrive here by themselves. Settings › Access & AI › Receipt inbox.')}</div>
+            <div className="small muted">{t('Connect a mailbox once – eBons and pickup notices then arrive here by themselves. Settings › Connections & devices › Receipts by e-mail.')}</div>
           </div>
         </div>
       </div>
@@ -138,7 +138,7 @@ const PRESETS: [string, string][] = [
   ['Posteo', 'posteo.de'],
 ];
 
-/** Settings › Access & AI (admins). */
+/** Settings › Connections & devices › AI (admins). */
 export function InboxSettingsCard() {
   const q = useApi<InboxInfo>(INBOX_KEY, '/retail/inbox');
   const toast = useToast();

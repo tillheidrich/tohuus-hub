@@ -248,7 +248,7 @@ kid.post('/:token/exit', async (req, res) => {
     return;
   }
   if (!(await checkExitPin(k, pin))) {
-    res.status(403).json({ error: k.pin_hash ? t('Wrong PIN') : t('No PIN set – remove this tablet under Settings › Members › Kids.') });
+    res.status(403).json({ error: k.pin_hash ? t('Wrong PIN') : t('No PIN set – remove this tablet under Settings › Household › Who lives here?.') });
     return;
   }
   res.json({ ok: true });

@@ -128,7 +128,7 @@ enum InviteLevels {
         case "stock": return L("+ Stock")
         case "recipes": return L("+ Recipes")
         case "family": return L("Like family")
-        default: return L("Treats & shopping list")
+        default: return L("Bring me something & shopping list")
         }
     }
     static func help(_ k: String) -> String {

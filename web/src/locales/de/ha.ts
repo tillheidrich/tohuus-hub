@@ -1,4 +1,4 @@
-// German strings for the Home Assistant area (Settings › Access & AI, Help)
+// German strings for the Home Assistant area (Settings › Connections & devices › AI, Help)
 export const ha: Record<string, string> = {
   "The ToHuus Hub integration puts your shopping list, meal plan and care tasks into Home Assistant: a to-do list for Assist and voice, calendars, sensors for dashboards, actions and events for automations.": "Die ToHuus-Hub-Integration bringt Einkaufsliste, Wochenplan und Pflege-Aufgaben in Home Assistant: eine To-do-Liste für Assist und Sprachbefehle, Kalender, Sensoren fürs Dashboard, Aktionen und Ereignisse für Automationen.",
   "Recommended": "Empfohlen",
@@ -18,17 +18,17 @@ export const ha: Record<string, string> = {
   "Without the integration: YAML package (fallback)": "Ohne Integration: YAML-Paket (Notlösung)",
   "For setups without HACS: REST sensors, a rest_command and an actionable phone push. Save it as packages/tohuus.yaml in Home Assistant and restart.": "Für Installationen ohne HACS: REST-Sensoren, ein rest_command und eine Handy-Push mit Aktionstaste. Als packages/tohuus.yaml in Home Assistant speichern und neu starten.",
   "Copy YAML": "YAML kopieren",
-  "Adjust the webhook ID and notify service in the YAML, and enter the same webhook URL under “Notifications”.": "Passe Webhook-ID und Benachrichtigungsdienst im YAML an und trage dieselbe Webhook-URL unter „Benachrichtigungen“ ein.",
+  "Adjust the webhook ID and notify service in the YAML, and enter the same webhook URL under “Notifications & calendar”.": "Passe Webhook-ID und Mitteilungsdienst im YAML an und trage dieselbe Webhook-URL unter „Mitteilungen & Kalender“ ein.",
   "Loading…": "Lädt …",
   "A real integration: shopping list as a to-do list for Assist, meal plan and care tasks as calendars, sensors for dashboards, actions and events for automations.": "Eine echte Integration: Einkaufsliste als To-do-Liste für Assist, Wochenplan und Pflege-Aufgaben als Kalender, Sensoren fürs Dashboard, Aktionen und Ereignisse für Automationen.",
   "Install “ToHuus Hub” from HACS (custom repository github.com/tillheidrich/tohuus-hub-ha) and restart Home Assistant.": "Installiere „ToHuus Hub“ über HACS (benutzerdefiniertes Repository github.com/tillheidrich/tohuus-hub-ha) und starte Home Assistant neu.",
-  "Settings › Access & AI › New access › “Home Assistant” – copy the token.": "Einstellungen › Zugänge & KI › Neuer Zugang › „Home Assistant“ – Token kopieren.",
+  "Settings › Connections & devices › AI assistants & access › “Home Assistant” – copy the token.": "Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge › „Home Assistant“ – Token kopieren.",
   "In Home Assistant add the ToHuus Hub integration and paste this address and the token.": "Füge in Home Assistant die ToHuus-Hub-Integration hinzu und gib diese Adresse und den Token ein.",
   "Without HACS: the same access also gives you a YAML package as a fallback.": "Ohne HACS: Derselbe Zugang liefert auch ein YAML-Paket als Notlösung.",
   "Home Assistant is connected": "Home Assistant ist verbunden",
   "Enter this code in Home Assistant when you add the ToHuus Hub integration:": "Gib diesen Code in Home Assistant ein, wenn du die ToHuus-Hub-Integration hinzufügst:",
   "Code for Home Assistant": "Code für Home Assistant",
-  "Valid for {min}:{sec} more. Use it once; it gives Home Assistant its own access, which you can revoke under Access & AI.": "Gilt noch {min}:{sec}. Einmal verwendbar. Home Assistant bekommt damit einen eigenen Zugang, den du unter Zugänge & KI widerrufen kannst.",
+  "Valid for {min}:{sec} more. Use it once; it gives Home Assistant its own access, which you can revoke under Settings › Connections & devices › AI assistants & access.": "Gilt noch {min}:{sec}. Einmal verwendbar. Home Assistant bekommt damit einen eigenen Zugang, den du unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge widerrufen kannst.",
   "New code": "Neuer Code",
   "Connect Home Assistant": "Home Assistant verbinden",
   "Tap “Connect Home Assistant” below. You get a short code.": "Tipp unten auf „Home Assistant verbinden“. Du bekommst einen kurzen Code.",

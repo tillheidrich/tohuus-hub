@@ -18,6 +18,7 @@ export const home: Record<string, string> = {
   'Pick a few from the suggestions below – one tap each. You can adjust the interval later.':
     'Wähl unten ein paar Vorschläge aus – je ein Tipp. Das Intervall kannst du später anpassen.',
   Due: 'Fällig',
+  'Needed again soon': 'Bald wieder nötig',
   Later: 'Später',
   'Add in one tap': 'Mit einem Tipp hinzufügen',
   Hide: 'Ausblenden',
@@ -53,7 +54,7 @@ export const home: Record<string, string> = {
     'Hier gilt ein festes Datum. Wie lautet das neue – zum Beispiel das Ablaufdatum des neuen Passes?',
   'New date': 'Neues Datum',
   'No new date': 'Kein neues Datum',
-  '{name}: {n} in stock': '{name}: {n} im Bestand',
+  '{name}: {n} in stock': '{name}: {n} im Vorrat',
   '{name} takes care of it': '{name} kümmert sich darum',
   '{n} more': '{n} weitere',
   'Could not load': 'Konnte nicht geladen werden',
@@ -65,7 +66,7 @@ export const home: Record<string, string> = {
   '1 day before': '1 Tag vorher',
   '{n} days before': '{n} Tage vorher',
   Note: 'Notiz',
-  'Uses {n} each time · {stock} in stock': 'Verbraucht jedes Mal {n} · {stock} im Bestand',
+  'Uses {n} each time · {stock} in stock': 'Verbraucht jedes Mal {n} · {stock} im Vorrat',
   'I’ll take care of it': 'Ich kümmere mich',
   'So nobody else has to keep it in mind.': 'Damit sonst niemand daran denken muss.',
   History: 'Verlauf',
@@ -93,7 +94,7 @@ export const home: Record<string, string> = {
   'Uses up a product (optional)': 'Verbraucht ein Produkt (optional)',
   'Choose product': 'Produkt wählen',
   '“Done” takes it from stock and puts it on the shopping list when none is left for next time.':
-    '„Erledigt“ bucht es aus dem Bestand und setzt es auf die Einkaufsliste, wenn fürs nächste Mal keins mehr da ist.',
+    '„Erledigt“ bucht es aus dem Vorrat und setzt es auf die Einkaufsliste, wenn fürs nächste Mal keins mehr da ist.',
   'Where (optional)': 'Wo (optional)',
   'e.g. contract number, notice period, filter type': 'z. B. Vertragsnummer, Kündigungsfrist, Filtertyp',
   Delete: 'Löschen',
@@ -197,7 +198,7 @@ export const home: Record<string, string> = {
   '1 thing in here': '1 Sache hier drin',
   '{n} things in here': '{n} Sachen hier drin',
   'Nothing stored here': 'Hier ist nichts eingelagert',
-  'Takes one {name} from stock ({n} left).': 'Nimmt ein {name} aus dem Bestand ({n} übrig).',
+  'Takes one {name} from stock ({n} left).': 'Nimmt ein {name} aus dem Vorrat ({n} übrig).',
   'Last done: {date}': 'Zuletzt erledigt: {date}',
   'Not done yet': 'Noch nie erledigt',
 };

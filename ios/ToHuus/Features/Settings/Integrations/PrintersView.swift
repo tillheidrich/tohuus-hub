@@ -96,7 +96,7 @@ struct TicketSpec: Identifiable, Hashable, Sendable {
     }
 }
 
-/// Settings › Printers & tickets (web: Bons.tsx PrintSettings): make a ticket (shopping slip, week plan, fridge note),
+/// Settings › Connections & devices › Printers (web: Bons.tsx PrintSettings): make a ticket (shopping slip, week plan, fridge note),
 /// network thermal printers (ESC/POS, usually port 9100), defaults and what was printed or sent lately.
 /// API: GET /api/print/info, POST/PATCH/DELETE /api/print/printers[/:id], POST /api/print/printers/:id/test,
 /// PUT /api/print/settings (docs/print.md).
@@ -170,7 +170,7 @@ struct PrintersView: View {
             }
         }
         .themedList()
-        .navigationTitle(L("Printers & tickets"))
+        .navigationTitle(L("Printers"))
         .toolbar {
             if admin {
                 ToolbarItem(placement: .primaryAction) {

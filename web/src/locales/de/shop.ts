@@ -15,7 +15,7 @@ export const shop: Record<string, string> = {
   'Someone is shopping right now. Open the store view to finish.': 'Gerade kauft jemand ein. Zum Abschließen die Laden-Ansicht öffnen.',
   'Done shopping': 'Einkauf fertig',
   'Putting away …': 'Wird eingeräumt …',
-  'Put into stock': 'In den Bestand buchen',
+  'Put into stock': 'In den Vorrat buchen',
   'Done – 1 product put away': 'Fertig – 1 Produkt eingeräumt',
   'Done – {n} products put away': 'Fertig – {n} Produkte eingeräumt',
   'No connection – try again when you’re back online': 'Keine Verbindung – versuch es nochmal, wenn du wieder online bist',
@@ -80,11 +80,11 @@ export const shop: Record<string, string> = {
   Push: 'Push',
   'Push on this device': 'Push auf diesem Gerät',
   'Notifications straight from ToHuus Hub, no extra app. Buttons like “Add to list” or “Accept” work right from the notification.':
-    'Benachrichtigungen direkt von ToHuus Hub, ohne Extra-App. Knöpfe wie „Auf die Liste“ oder „Annehmen“ funktionieren direkt in der Mitteilung.',
+    'Mitteilungen direkt von ToHuus Hub, ohne Extra-App. Knöpfe wie „Auf die Liste“ oder „Annehmen“ funktionieren direkt in der Mitteilung.',
   'On iPhone and iPad: install the app first': 'Auf iPhone und iPad: erst die App installieren',
   'Open ToHuus Hub in Safari, tap Share › “Add to Home Screen”, open it from the home screen and switch push on here. Apple only allows push for installed web apps (iOS 16.4 or newer).':
     'Öffne ToHuus Hub in Safari, tippe auf Teilen › „Zum Home-Bildschirm“, starte es vom Home-Bildschirm und schalte Push hier ein. Apple erlaubt Push nur für installierte Web-Apps (ab iOS 16.4).',
-  'This browser can’t receive push notifications.': 'Dieser Browser kann keine Push-Benachrichtigungen empfangen.',
+  'This browser can’t receive push notifications.': 'Dieser Browser kann keine Push-Mitteilungen empfangen.',
   'Notifications are blocked for this site. Allow them in the browser settings.':
     'Mitteilungen sind für diese Seite blockiert. Erlaube sie in den Browser-Einstellungen.',
   'Push is on for this device': 'Push ist auf diesem Gerät an',

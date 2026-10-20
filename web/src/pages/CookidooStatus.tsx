@@ -1,4 +1,4 @@
-/** Settings › Access & AI › Cookidoo: which way the Cookidoo week arrives, and when it last did. */
+/** Settings › Connections & devices › AI › Cookidoo: which way the Cookidoo week arrives, and when it last did. */
 import { CheckCircle, Info } from '@phosphor-icons/react';
 import { relTime, useApi } from '../api';
 import { t } from '../i18n';

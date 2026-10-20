@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings › Data & reset (web: DataWipe.tsx, server: routes/wipe.ts, docs/data-and-reset.md):
+/// Settings › Data, plan & account › Data & reset (web: DataWipe.tsx, server: routes/wipe.ts, docs/data-and-reset.md):
 /// remove the sample data, clear one area, clear everything but keep the household, delete my own private entries.
 /// Every deletion can be undone for 10 seconds and restored for 7 days in "Deleted lately".
 /// API: GET /api/data/wipe, POST /api/data/wipe, POST /api/data/wipe/:id/restore | /final.

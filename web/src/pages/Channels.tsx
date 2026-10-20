@@ -1,5 +1,5 @@
 /**
- * Settings › Notifications › Channels: Telegram (two-way, linked chats), Gotify and Matrix.
+ * Settings › Notifications & calendar › For the whole household: Telegram (two-way, linked chats), Gotify and Matrix.
  * Routing per event stays in the "What goes where?" matrix; `useChannelColumns` adds the columns for channels in use.
  */
 import { ArrowSquareOut, BellSimpleRinging, CaretDown, ChatsTeardrop, Copy, LinkSimple, PaperPlaneTilt, Trash, UsersThree } from '@phosphor-icons/react';

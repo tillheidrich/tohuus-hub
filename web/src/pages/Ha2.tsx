@@ -1,5 +1,5 @@
 /**
- * Settings › Home Assistant: "What does Home Assistant already do for you?" – per topic HA leads, ToHuus leads or
+ * Settings › Connections & devices › Home Assistant: "What does Home Assistant already do for you?" – per topic HA leads, ToHuus leads or
  * both ways; presence, notifications through the HA app, NFC tags. Plus the voice-command guide for the
  * babysitter page (admin side) and the guest-page section (GuestVoice).
  */
@@ -110,8 +110,8 @@ export function Ha2Settings({ admin }: { admin: boolean }) {
             {d.transport === 'integration'
               ? t('Connected through the ToHuus Hub integration{v} · last contact {when}', { v: d.integration.version ? ` ${d.integration.version}` : '', when: when(d.integration.seen) })
               : d.transport === 'rest'
-                ? t('Connected with the Home Assistant address and token (Access & AI)')
-                : t('Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Access & AI.')}
+                ? t('Connected with the Home Assistant address and token (AI assistants & access)')
+                : t('Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Settings › Connections & devices › AI assistants & access.')}
           </span>
         </div>
         {admin && (
@@ -364,7 +364,7 @@ function NotifyCard({ d, admin, onSave }: { d: any; admin: boolean; onSave: (b: 
           ))}
         </div>
       )}
-      <div className="help">{t('Which messages go out at all is still set under Notifications.')}</div>
+      <div className="help">{t('Which messages go out at all is still set under Notifications & calendar.')}</div>
     </div>
   );
 }
@@ -438,7 +438,7 @@ function TagsCard({ d, admin, onSave }: { d: any; admin: boolean; onSave: (b: an
           ))}
         </div>
       )}
-      {enabled && tags.length > 0 && targets.length === 0 && <div className="help">{t('Print a QR label for a product or care task first (More › QR labels) – tags use the same actions.')}</div>}
+      {enabled && tags.length > 0 && targets.length === 0 && <div className="help">{t('Print a QR label for a product or care task first (Settings › Connections & devices › QR labels) – tags use the same actions.')}</div>}
     </div>
   );
 }

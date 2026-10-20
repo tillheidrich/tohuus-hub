@@ -844,7 +844,7 @@ function ReminderSheet({ open, wish, eventDate, onClose }: { open: boolean; wish
       }
     >
       <div className="stack">
-        <p className="small muted">{t('Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications.')}</p>
+        <p className="small muted">{t('Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications & calendar.')}</p>
         <div className="chips wrap" role="group" aria-label={t('When')}>
           {options.map(([d, label]) => (
             <button key={d} type="button" className={`chip ${day === d ? 'on' : ''}`} aria-pressed={day === d} onClick={() => setDay(d)}>

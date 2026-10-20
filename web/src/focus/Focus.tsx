@@ -290,7 +290,7 @@ export function FocusPage() {
     <div className="rise focus-page">
       <header className="page-head">
         <div>
-          <h1>{t('One thing at a time')}</h1>
+          <h1>{t('Just one')}</h1>
         </div>
         <div className="actions">
           <button className="btn sm" onClick={() => nav('/aufgaben')}>

@@ -18,7 +18,7 @@ export const houseguide: Record<string, string> = {
   'Nobody has looked at a code yet.': 'Noch hat niemand einen Code angesehen.',
   'via link': 'über Link',
   'Codes are never sent to the assistant, AI, Home Assistant, displays or notifications, and they stay out of the export unless you tick them.':
-    'Codes gehen nie an den Assistenten, an KI, Home Assistant, Displays oder Benachrichtigungen und bleiben beim Export draußen, außer du hakst sie an.',
+    'Codes gehen nie an den Assistenten, an KI, Home Assistant, Displays oder Mitteilungen und bleiben beim Export draußen, außer du hakst sie an.',
   'Group by': 'Ordnen nach',
   'By room': 'Nach Raum',
   'By kind': 'Nach Art',

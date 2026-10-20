@@ -63,7 +63,7 @@ struct InboxStatusCard: View {
     private func sheets(_ v: some View) -> some View {
         v.sheet(isPresented: $showSettings, onDismiss: { store.touch("inbox") }) {
             NavigationStack {
-                // Settings › Access & AI › receipt inbox (Settings/Integrations, same screen as in Settings)
+                // Settings › Connections & devices › AI › receipt inbox (Settings/Integrations, same screen as in Settings)
                 MailInboxView(api: store.api)
                     .toolbar { ToolbarItem(placement: .cancellationAction) { Button(L("Close")) { showSettings = false } } }
             }

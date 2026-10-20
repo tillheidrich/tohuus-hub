@@ -17,10 +17,10 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Sharing receipts](https://tohuus.heidrich-digital.de/help/receipts.html): E-receipts, PDF, photos and text: how receipts get into ToHuus and what happens to them.
 - [Tasks](https://tohuus.heidrich-digital.de/help/tasks.html): What needs doing at home, once or again and again, who does it and who keeps what in mind.
 - [When your head is full](https://tohuus.heidrich-digital.de/help/a-lot-on-your-mind.html): Small steps, one thing at a time, a visible timer and gentle mode: for heads with a lot going on.
-- [One thing at a time](https://tohuus.heidrich-digital.de/help/one-thing-at-a-time.html): “Now” only ever shows the next task. The next one comes once it is done: on Today with “Just one” and on the kid tablet.
+- [Just one](https://tohuus.heidrich-digital.de/help/one-thing-at-a-time.html): “Now” only ever shows the next task. The next one comes once it is done: on Today with “Just one” and on the kid tablet.
 - [House info for guests and babysitters](https://tohuus.heidrich-digital.de/help/house-info.html): From the guest Wi-Fi to the coffee machine: cards with everything someone looking after your home needs to know, and a link without an account.
 - [The assistant](https://tohuus.heidrich-digital.de/help/speak.html): What the assistant does, what it adds and how to undo it.
-- [With or without AI](https://tohuus.heidrich-digital.de/help/ai-on-or-off.html): What works without AI, what it adds, and how to switch it off for the household, yourself or a child.
+- [AI on or off](https://tohuus.heidrich-digital.de/help/ai-on-or-off.html): What works without AI, what it adds, and how to switch it off for the household, yourself or a child.
 - [The ToHuus recipe pack](https://tohuus.heidrich-digital.de/help/recipe-pack.html): Many recipes at once: the format, a prompt for your own AI and the way back out.
 - [Connect Home Assistant](https://tohuus.heidrich-digital.de/help/home-assistant.html): Step by step with HACS and a code from the app, for ToHuus Cloud and your own server.
 - [Connect Claude or ChatGPT](https://tohuus.heidrich-digital.de/help/connect-claude-chatgpt.html): Connect your household to the AI assistant you already use, through MCP.
@@ -32,9 +32,10 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [How ToHuus works](https://tohuus.heidrich-digital.de/help/how-tohuus-works.html): One place for the household: how ToHuus remembers what is missing, what is coming up and what you know.
 - [Home knowledge](https://tohuus.heidrich-digital.de/help/household-knowledge.html): Sizes, measurements, meter readings and whatever else you know about your home: add it, find it, bring it in, save it as a file.
 - [Your bar](https://tohuus.heidrich-digital.de/help/your-bar.html): Everyone chooses which areas sit in the bar at the bottom.
+- [Wish lists](https://tohuus.heidrich-digital.de/help/wish-lists.html): Wish lists for birthdays, Christmas and yourself, with a link for guests and without anyone spoiling the surprise.
 - [Bring me something](https://tohuus.heidrich-digital.de/help/bring-me-something.html): Ask for a little something at home, and whoever can brings it.
 - [Fair AI limits](https://tohuus.heidrich-digital.de/help/ai-limits.html): How many messages the assistant has a month, what happens then and what keeps working without AI.
-- [What ToHuus remembers](https://tohuus.heidrich-digital.de/help/what-tohuus-remembers.html): Buying rhythm, suggestions, “We still have it”, why you need no stock, and where home knowledge lives.
+- [Household knowledge](https://tohuus.heidrich-digital.de/help/what-tohuus-remembers.html): Buying rhythm, suggestions, “We still have it”, why you need no stock, and where home knowledge lives.
 - [Cooking with what is at home](https://tohuus.heidrich-digital.de/help/cooking.html): Ideas from what you have, the week plan, servings and your house version.
 - [Recipes from links, social media and photos](https://tohuus.heidrich-digital.de/help/importing-recipes.html): Bring in recipes from websites, posts, photos and other apps.
 - [Cookidoo, Monsieur Cuisine and other kitchen machines](https://tohuus.heidrich-digital.de/help/kitchen-machines.html): How recipes from Cookidoo, Monsieur Cuisine, Cookit and other kitchen machine apps work alongside ToHuus.
@@ -58,26 +59,26 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [So funktioniert ToHuus](https://tohuus.heidrich-digital.de/hilfe/so-funktioniert-tohuus.html): Ein Ort für den Haushalt: wie ToHuus sich merkt, was fehlt, was ansteht und was ihr wisst, und wie du alles findest.
 - [Die Einkaufsliste](https://tohuus.heidrich-digital.de/hilfe/einkaufsliste.html): Eine Liste für alle, Schnelleingabe, „Ich hol’s“ und der Modus für den Laden.
 - [Gemeinsam einkaufen](https://tohuus.heidrich-digital.de/hilfe/gemeinsam-einkaufen.html): Live auf allen Handys, ergänzen, während jemand im Laden steht, und zu zweit losziehen.
-- [Was ToHuus sich merkt](https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html): Kaufrhythmus, Vorschläge, „Haben wir noch“, warum kein Vorrat nötig ist und wo das Haushaltswissen steht.
+- [Der Kaufrhythmus](https://tohuus.heidrich-digital.de/hilfe/merkt-sich.html): Kaufrhythmus, Vorschläge, „Haben wir noch“, warum kein Vorrat nötig ist und wo das Haushaltswissen steht.
 - [Kassenbons einlesen](https://tohuus.heidrich-digital.de/hilfe/kassenbons.html): REWE eBon, PDF, Foto und Text: wie Bons zu ToHuus kommen und was damit passiert.
-- [Vorrat (freiwillig)](https://tohuus.heidrich-digital.de/hilfe/vorrat.html): Wer mag, führt Bestand. Nötig ist das für ToHuus nicht.
+- [Vorrat (freiwillig)](https://tohuus.heidrich-digital.de/hilfe/vorrat.html): Wer mag, zählt seinen Vorrat. Nötig ist das für ToHuus nicht.
 - [Kochen mit dem, was da ist](https://tohuus.heidrich-digital.de/hilfe/kochen.html): Ideen aus dem Vorhandenen, der Wochenplan, Portionen und eure Hausversion.
 - [Rezepte per Link, Social Media und Foto](https://tohuus.heidrich-digital.de/hilfe/rezepte-importieren.html): Rezepte von Webseiten, aus Posts, von Fotos und aus anderen Apps übernehmen.
 - [Das ToHuus-Rezeptpaket](https://tohuus.heidrich-digital.de/hilfe/rezeptpaket.html): Viele Rezepte auf einmal: das Format, ein Prompt für deine eigene KI und der Weg zurück.
 - [Cookidoo, Monsieur Cuisine und andere Küchenmaschinen](https://tohuus.heidrich-digital.de/hilfe/cookidoo.html): Wie Rezepte aus Cookidoo, Monsieur Cuisine, Cookit und anderen Küchenmaschinen-Apps neben ToHuus funktionieren.
 - [Geld: Lebensmittel und Haushalt](https://tohuus.heidrich-digital.de/hilfe/geld.html): Was ein Monat gekostet hat, wo, wofür, und was teurer geworden ist.
 - [Aufgaben](https://tohuus.heidrich-digital.de/hilfe/aufgaben.html): Was zu Hause zu tun ist, einmal oder immer wieder, wer es macht und wer was im Blick hat.
-- [Wenn der Kopf voll ist](https://tohuus.heidrich-digital.de/hilfe/kopf-voll.html): Kleine Schritte, eins nach dem anderen, ein sichtbarer Timer und der sanfte Modus: für Köpfe, in denen viel los ist.
-- [Eine Sache nach der anderen](https://tohuus.heidrich-digital.de/hilfe/eine-sache.html): „Jetzt“ zeigt immer nur die nächste Aufgabe. Erst wenn sie erledigt ist, kommt die nächste: auf Heute mit „Nur eins“ und auf dem Kinder-Tablet.
+- [Wenn der Kopf voll ist](https://tohuus.heidrich-digital.de/hilfe/kopf-voll.html): Kleine Schritte, immer nur eins, ein sichtbarer Timer und der sanfte Modus: für Köpfe, in denen viel los ist.
+- [Nur eins](https://tohuus.heidrich-digital.de/hilfe/eine-sache.html): „Jetzt“ zeigt immer nur die nächste Aufgabe. Erst wenn sie erledigt ist, kommt die nächste: auf Heute mit „Nur eins“ und auf dem Kinder-Tablet.
 - [Der Assistent](https://tohuus.heidrich-digital.de/hilfe/sprechen.html): Was der Assistent kann, was er einträgt und wie du es zurücknimmst.
-- [Mit oder ohne KI](https://tohuus.heidrich-digital.de/hilfe/ki-an-oder-aus.html): Was ohne KI geht, was sie dazu bringt, und wie du sie für Haushalt, dich oder Kinder abschaltest.
+- [KI an oder aus](https://tohuus.heidrich-digital.de/hilfe/ki-an-oder-aus.html): Was ohne KI geht, was sie dazu bringt, und wie du sie für Haushalt, dich oder Kinder abschaltest.
 - [Hausinfo für Gäste und Babysitter](https://tohuus.heidrich-digital.de/hilfe/hausinfo.html): Vom Gäste-WLAN bis zur Kaffeemaschine: Karten mit allem, was jemand wissen muss, der bei euch aufpasst oder zu Besuch ist.
 - [Codes sicher teilen](https://tohuus.heidrich-digital.de/hilfe/hausinfo-codes.html): Türcode, WLAN, Alarmanlage: wie ToHuus Codes behandelt.
 - [Der Babysitter-Link](https://tohuus.heidrich-digital.de/hilfe/babysitter.html): Ein Link ohne Konto: Hausinfo, wo was ist und eine Notiz, auch offline und zum Ausdrucken.
 - [Gäste und Rechte](https://tohuus.heidrich-digital.de/hilfe/gaeste.html): Gast-Links ohne Konto und feste Gäste mit eigenen Stufen.
 - [Haushalt teilen](https://tohuus.heidrich-digital.de/hilfe/haushalt-teilen.html): Mitglieder einladen, Kinder anlegen und einen zweiten Haushalt mitversorgen.
 - [Wer sieht was?](https://tohuus.heidrich-digital.de/hilfe/wer-sieht-was.html): Was gemeinsam ist, was privat bleibt und was nur du siehst.
-- [Benachrichtigungen](https://tohuus.heidrich-digital.de/hilfe/benachrichtigungen.html): Wann ToHuus sich meldet, wie du es einstellst und wie es ruhig bleibt.
+- [Mitteilungen](https://tohuus.heidrich-digital.de/hilfe/benachrichtigungen.html): Wann ToHuus sich meldet, wie du es einstellst und wie es ruhig bleibt.
 - [Home Assistant verbinden](https://tohuus.heidrich-digital.de/hilfe/home-assistant.html): Schritt für Schritt über HACS, mit Code aus der App, für ToHuus Cloud und eigenen Server.
 - [Mit Claude oder ChatGPT verbinden](https://tohuus.heidrich-digital.de/hilfe/claude-chatgpt.html): Deinen Haushalt über MCP mit dem KI-Assistenten verbinden, den du schon nutzt.
 - [Erinnerungen und Kalender](https://tohuus.heidrich-digital.de/hilfe/erinnerungen-spiegeln.html): Einkaufslisten, Aufgaben und Termine in Apple Erinnerungen, Apple Kalender, Nextcloud, Google Kalender oder Outlook.
@@ -90,6 +91,7 @@ ToHuus is one place for the household: what is missing, what is coming up, what 
 - [Haushaltswissen](https://tohuus.heidrich-digital.de/hilfe/haushaltswissen.html): Größen, Maße, Zählerstände und was ihr sonst übers Zuhause wisst: eintragen, finden, übernehmen und als Datei sichern.
 - [Deine Leiste](https://tohuus.heidrich-digital.de/hilfe/deine-leiste.html): Welche Bereiche unten in der Leiste stehen, stellt jede Person für sich ein.
 - [Bring mir was](https://tohuus.heidrich-digital.de/hilfe/bring-mir-was.html): Sich zu Hause eine Kleinigkeit wünschen, und wer kann, bringt sie.
+- [Wunschlisten](https://tohuus.heidrich-digital.de/hilfe/wunschlisten.html): Wunschlisten für Geburtstage, Weihnachten und dich selbst, mit Link für Gäste und ohne dass jemand die Überraschung verrät.
 - [Faire KI-Grenzen](https://tohuus.heidrich-digital.de/hilfe/ki-grenzen.html): Wie viele Nachrichten der Assistent im Monat hat, was danach passiert und was ohne KI weiterläuft.
 - [Gut zu wissen](https://tohuus.heidrich-digital.de/hilfe/gut-zu-wissen.html): Kurze Hinweise rund um Einkauf, Lagern, Kochen und das Zuhause, jeweils mit Quelle.
 - [Häufige Fragen](https://tohuus.heidrich-digital.de/hilfe/fragen.html): Kurze Antworten auf das, was oft gefragt wird.

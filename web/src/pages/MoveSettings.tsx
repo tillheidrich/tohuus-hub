@@ -77,14 +77,14 @@ export function MoveInCard({ admin }: { admin: boolean }) {
       <h2 id="move-in-h" style={{ margin: 0 }}>{t('Bring a household from your own server')}</h2>
       {d.state === 'done' && d.summary ? (
         <p className="small" style={{ margin: 0 }}>
-          {t('Done: {rows} entries, {images} photos, {files} receipt files. {people} people without a sign-in yet – invite them under Members.', { rows: d.summary.rows, images: d.summary.images, files: d.summary.files, people: d.summary.people.created })}
+          {t('Done: {rows} entries, {images} photos, {files} receipt files. {people} people without a sign-in yet – invite them under Settings › Household › Who lives here?', { rows: d.summary.rows, images: d.summary.images, files: d.summary.files, people: d.summary.people.created })}
         </p>
       ) : running ? (
         <p className="small" role="status" style={{ margin: 0 }}>{t('Moving in … {p} %', { p: Math.round(d.progress * 100) })}</p>
       ) : (
         <>
           <p className="small muted" style={{ margin: 0 }}>
-            {t('On your own server: Settings › Data › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household.')}
+            {t('On your own server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household.')}
           </p>
           {d.state === 'failed' && <p className="small" style={{ margin: 0, color: 'var(--danger)' }}>{d.error}</p>}
           <div className="field">

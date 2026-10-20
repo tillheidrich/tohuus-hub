@@ -95,14 +95,14 @@ enum TodayCardKey: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .rhythm: return L("Due")
+        case .rhythm: return L("Needed again soon")
         case .tasks: return L("Tasks today")
         case .list: return L("List")
         case .still: return L("Still at home – use soon")
         case .cook: return L("Cook today?")
         case .money: return L("Money")
         case .pulse: return L("One question for the week")
-        case .orders: return L("Treats")
+        case .orders: return L("Bring me something")
         }
     }
 
@@ -192,7 +192,7 @@ struct TodayEntryLevels: View {
         }
         tile("camera", L("Photo of the list"), L("paper receipt or note"), action: photoOfList)
         if app.aiOn {
-            tile("sparkles", L("Just speak"), L("“Milk is out”")) { app.showAssistant = true }
+            tile("sparkles", L("Just say it"), L("“Milk is out”")) { app.showAssistant = true }
         } else {
             tile("textformat", L("Just type it"), L("“milk, bread, coffee”")) { app.requestAdd() }
         }

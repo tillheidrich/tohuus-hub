@@ -24,7 +24,7 @@ export const tour: Record<string, string> = {
     'Bon hochladen, und der Vorrat bucht sich selbst. Die Ausgaben zeigen, wohin das Geld geht – ganz ohne Haushaltsbuch.',
   'Settings and connections': 'Einstellungen und Verbindungen',
   'Members, places and push live in Settings. Telegram, Home Assistant or your AI assistant can be connected there – all optional.':
-    'Mitglieder, Orte und Push findest du in den Einstellungen. Dort lassen sich auch Telegram, Home Assistant oder dein KI-Assistent verbinden – alles freiwillig.',
+    'Leute, Orte und Mitteilungen findest du in den Einstellungen. Dort lassen sich auch Telegram, Home Assistant oder dein KI-Assistent verbinden – alles freiwillig.',
   'That’s the tour': 'Das war die Tour',
   'You can take it again any time under Help. Start small: one shopping list and the things that run out most often.':
     'Du kannst sie jederzeit unter Hilfe wiederholen. Fang klein an: eine Einkaufsliste und die Sachen, die am häufigsten ausgehen.',
@@ -54,7 +54,7 @@ export const tour: Record<string, string> = {
   Continue: 'Fortsetzen',
   'Start again': 'Von vorn',
   'Start the tour': 'Tour starten',
-  // Settings › Data
+  // Settings › Data, plan & account › Data & reset
   'Could not load the data overview.': 'Die Datenübersicht konnte nicht geladen werden.',
   'Demo data removed – {n} things you used stay': 'Beispieldaten entfernt – {n} Sachen, die ihr benutzt habt, bleiben',
   'Demo data removed': 'Beispieldaten entfernt',
@@ -71,7 +71,7 @@ export const tour: Record<string, string> = {
     'Das entfernt {p} Beispielprodukte und {r} Beispielrezepte mit Vorrat, Verlauf und Listeneinträgen. Mitglieder, Orte, Einstellungen und alles, was du selbst angelegt hast, bleiben.',
   'Also remove demo things you have used': 'Auch benutzte Beispielsachen entfernen',
   '{n} demo products or recipes were used since (stock changed, cooked or planned). By default they stay, because they are probably yours now.':
-    '{n} Beispielprodukte oder -Rezepte wurden inzwischen benutzt (Bestand geändert, gekocht oder eingeplant). Sie bleiben standardmäßig, weil sie jetzt vermutlich eure sind.',
+    '{n} Beispielprodukte oder -Rezepte wurden inzwischen benutzt (Vorrat geändert, gekocht oder eingeplant). Sie bleiben standardmäßig, weil sie jetzt vermutlich eure sind.',
   'Removing …': 'Wird entfernt …',
   DELETE: 'LÖSCHEN',
   'Pick what to clear. A backup is made first, so you can go back.': 'Wähl aus, was geleert werden soll. Vorher wird eine Sicherung gemacht, du kannst also zurück.',
@@ -86,8 +86,8 @@ export const tour: Record<string, string> = {
   'Start over …': 'Neu anfangen …',
   'All clear': 'Alles leer',
   'Done – off you go.': 'Erledigt – los geht’s.',
-  'A backup was saved first: {name}. To undo, restore it under Settings › Data & backups › Backups.':
-    'Vorher wurde eine Sicherung gespeichert: {name}. Zum Rückgängigmachen spielst du sie unter Einstellungen › Daten & Sicherung › Sicherungen wieder ein.',
+  'A backup was saved first: {name}. To undo, restore it under Settings › Data, plan & account › Data & backups › Backups.':
+    'Vorher wurde eine Sicherung gespeichert: {name}. Zum Rückgängigmachen spielst du sie unter Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Sicherungen wieder ein.',
   'This clears all household data ({n} entries). Members, logins, settings and integrations stay.':
     'Das leert alle Haushaltsdaten ({n} Einträge). Mitglieder, Anmeldungen, Einstellungen und Integrationen bleiben.',
   'This clears {what} ({n} entries).': 'Das leert {what} ({n} Einträge).',
@@ -97,7 +97,7 @@ export const tour: Record<string, string> = {
   'Backing up and clearing …': 'Sicherung und Leeren läuft …',
   'Clear now': 'Jetzt leeren',
   'Stock & products': 'Vorrat & Produkte',
-  'Products, stock, history, barcodes': 'Produkte, Bestand, Verlauf, Barcodes',
+  'Products, stock, history, barcodes': 'Produkte, Vorrat, Verlauf, Barcodes',
   'Recipes & plan': 'Rezepte & Plan',
   'Recipes, cooking history, week plan, swap rules': 'Rezepte, Kochverlauf, Wochenplan, Tauschregeln',
   'Shopping & orders': 'Einkauf & Bestellungen',
@@ -105,12 +105,12 @@ export const tour: Record<string, string> = {
   'Receipts & spending': 'Kassenbons & Ausgaben',
   'Imported receipts, expenses, tags': 'Importierte Bons, Ausgaben, Schlagwörter',
   'Everything household data': 'Alle Haushaltsdaten',
-  'All of the above plus care tasks, notifications and other household entries': 'Alles oben plus Pflegeaufgaben, Benachrichtigungen und übrige Haushaltseinträge',
+  'All of the above plus care tasks, notifications and other household entries': 'Alles oben plus Pflegeaufgaben, Mitteilungen und übrige Haushaltseinträge',
   '“Remove demo data” deletes only what the demo added. “Start over” clears the areas you pick – after an automatic backup.':
     '„Beispieldaten entfernen“ löscht nur, was die Beispiele angelegt haben. „Neu anfangen“ leert die Bereiche, die du auswählst – nach einer automatischen Sicherung.',
   // tour 18 Oct 2026 (six pages)
   'Your bar, the way you need it': 'Deine Leiste, so wie du sie brauchst',
-  'Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More.': 'Unten stehen Heute, Einkauf, Kochen und Aufgaben. Halt die Leiste lange gedrückt (oder Einstellungen › Deine Leiste) und leg selbst fest, was dort steht, zum Beispiel Bring mir was oder Wissen. Alles andere findest du unter Mehr.',
+  'Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there, like “Bring me something” or Knowledge. Everything else is under More.': 'Unten stehen Heute, Einkauf, Kochen und Aufgaben. Halt die Leiste lange gedrückt (oder Einstellungen › Ich › Deine Leiste) und leg selbst fest, was dort steht, zum Beispiel Bring mir was oder Wissen. Alles andere findest du unter Mehr.',
   'Coming up: thought of in time': 'Demnächst: rechtzeitig dran gedacht',
   'Under Today you see what is due in the next few days. The bin shows up the evening before, because that’s when it has to go out.': 'Unter Heute siehst du, was in den nächsten Tagen ansteht. Die Tonne kommt schon am Vorabend, denn dann muss sie raus.',
   'Ticked off by mistake?': 'Aus Versehen abgehakt?',
@@ -121,16 +121,16 @@ export const tour: Record<string, string> = {
   '“Mira has the dentist on Tuesday at 3” goes into Tasks with the date, “Mika now wears shoe size 29” into Knowledge, “milk is out” onto the list. It tells you what it did, and everything can be undone.': '„Mira hat Dienstag um 15 Uhr Zahnarzt“ landet mit Datum bei den Aufgaben, „Mika hat jetzt Schuhgröße 29“ im Wissen, „Milch ist alle“ auf der Liste. Er sagt dir, was er gemacht hat, und alles lässt sich rückgängig machen.',
   'Ill on the sofa or your hands full? Ask for a tea in two taps, and someone at home says “I’ll bring it”. Guests too, with a link.': 'Liegst du krank auf dem Sofa oder hast gerade die Hände voll? Wünsch dir mit zwei Tipps einen Tee, und jemand zu Hause sagt „Ich bring’s“. Gäste auch, per Link.',
   'You can take it again any time under Help. Everything else, from house info to settings, is under More.': 'Die Tour findest du jederzeit wieder unter Hilfe. Alles andere, von der Hausinfo bis zu den Einstellungen, steht unter Mehr.',
-  // Settings › Data & reset (DataWipe.tsx)
+  // Settings › Data, plan & account › Data & reset (DataWipe.tsx)
   'Data & reset': 'Daten & Zurücksetzen',
   'Clear single areas or everything and start again. What you delete can be restored for {days} days – after that it is gone for good, photos and PDFs included.': 'Leer einzelne Bereiche oder alles und fang neu an. Was du löschst, kannst du {days} Tage lang wiederherstellen – danach ist es endgültig weg, auch Fotos und PDFs.',
   'You can delete your own private entries here. Clearing whole areas is up to the admins.': 'Hier kannst du deine eigenen privaten Einträge löschen. Ganze Bereiche leeren nur die Admins.',
   'Download an export first': 'Vorher einen Export herunterladen',
   'Sample data is still here': 'Die Beispieldaten sind noch da',
-  '{p} sample products and {r} sample recipes, with their stock, history and list entries. Removing them only deletes what the samples added – nothing you entered yourself.': '{p} Beispielprodukte und {r} Beispielrezepte, mit Bestand, Verlauf und Listeneinträgen. Entfernen löscht nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast.',
+  '{p} sample products and {r} sample recipes, with their stock, history and list entries. Removing them only deletes what the samples added – nothing you entered yourself.': '{p} Beispielprodukte und {r} Beispielrezepte, mit Vorrat, Verlauf und Listeneinträgen. Entfernen löscht nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast.',
   'Members, places, settings and everything you added yourself stay.': 'Mitglieder, Orte, Einstellungen und alles, was du selbst angelegt hast, bleiben.',
   'Also remove sample things you have used': 'Auch benutzte Beispielsachen entfernen',
-  '{n} sample products or recipes were used since (stock changed, cooked or planned). By default they stay, because they are probably yours now.': '{n} Beispielprodukte oder -rezepte habt ihr inzwischen benutzt (Bestand geändert, gekocht oder geplant). Die bleiben erst mal, weil sie wohl eure sind.',
+  '{n} sample products or recipes were used since (stock changed, cooked or planned). By default they stay, because they are probably yours now.': '{n} Beispielprodukte oder -rezepte habt ihr inzwischen benutzt (Vorrat geändert, gekocht oder geplant). Die bleiben erst mal, weil sie wohl eure sind.',
   'Look around with sample data': 'Mit Beispieldaten umschauen',
   'Load sample data': 'Beispieldaten laden',
   'Sample data loaded – it is marked and can be removed any time.': 'Beispieldaten geladen – sie sind markiert und lassen sich jederzeit entfernen.',
@@ -143,7 +143,7 @@ export const tour: Record<string, string> = {
   'Household knowledge': 'Haushaltswissen',
   'Wishes & Bring me something': 'Wünsche & Bring mir was',
   'Shopping lists and their entries, where-to-buy notes on products, purchase rhythm and suggestions': 'Einkaufslisten und Einträge, Läden an den Produkten („Wo kaufen?“), Kauf-Rhythmus und Vorschläge',
-  'Products, stock and its history, barcodes, receipt names, leftover boxes': 'Produkte, Bestand und Verlauf, Barcodes, Bon-Namen, Reste-Boxen',
+  'Products, stock and its history, barcodes, receipt names, leftover boxes': 'Produkte, Vorrat und Verlauf, Barcodes, Bon-Namen, Reste-Boxen',
   'Places stay unless you pick them.': 'Orte bleiben, wenn du sie nicht mit auswählst.',
   'Receipts with their photos and PDFs, expenses, budgets, splits': 'Bons mit Fotos und PDFs, Ausgaben, Budgets, Aufteilungen',
   'Recipes (or keep them), week plan, cooking history, votes': 'Rezepte (oder du behältst sie), Wochenplan, Kochverlauf, Abstimmungen',

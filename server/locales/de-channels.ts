@@ -62,12 +62,12 @@ export const de_channels: Record<string, string> = {
   Receipt: 'Bon',
   'Photos need a vision model in ToHuus Hub (VISION_* settings). PDFs work without one.': 'Für Fotos braucht ToHuus Hub ein Bildmodell (VISION_*-Einstellungen). PDFs klappen auch ohne.',
   'I can read receipts as photos or PDFs.': 'Ich kann Kassenbons als Foto oder PDF lesen.',
-  'This link has expired or was already used. Create a new one in ToHuus Hub under Settings › Notifications.':
-    'Dieser Link ist abgelaufen oder wurde schon benutzt. Leg in ToHuus Hub unter Einstellungen › Benachrichtigungen einen neuen an.',
+  'This link has expired or was already used. Create a new one in ToHuus Hub under Settings › Notifications & calendar.':
+    'Dieser Link ist abgelaufen oder wurde schon benutzt. Leg in ToHuus Hub unter Einstellungen › Mitteilungen & Kalender einen neuen an.',
   'Hi {name}! This chat is now connected to ToHuus Hub.': 'Hallo {name}! Dieser Chat ist jetzt mit ToHuus Hub verbunden.',
   'This group is now connected to ToHuus Hub.': 'Diese Gruppe ist jetzt mit ToHuus Hub verbunden.',
-  'Hello! This chat isn’t connected to a household yet. In ToHuus Hub, open Settings › Notifications › Telegram and tap “Link my Telegram”.':
-    'Hallo! Dieser Chat ist noch mit keinem Haushalt verbunden. Öffne in ToHuus Hub Einstellungen › Benachrichtigungen › Telegram und tippe auf „Mein Telegram verbinden“.',
+  'Hello! This chat isn’t connected to a household yet. In ToHuus Hub, open Settings › Notifications & calendar › For the whole household › Telegram and tap “Link my Telegram”.':
+    'Hallo! Dieser Chat ist noch mit keinem Haushalt verbunden. Öffne in ToHuus Hub Einstellungen › Mitteilungen & Kalender › Für den ganzen Haushalt › Telegram und tippe auf „Mein Telegram verbinden“.',
   'This chat isn’t connected to ToHuus Hub.': 'Dieser Chat ist nicht mit ToHuus Hub verbunden.',
   'This chat is no longer connected to ToHuus Hub.': 'Dieser Chat ist nicht mehr mit ToHuus Hub verbunden.',
   'That was a lot at once – give me a minute.': 'Das war gerade viel auf einmal – gib mir eine Minute.',

@@ -8,5 +8,5 @@ export const de_kids: Record<string, string> = {
   'This kid tablet is no longer paired.': 'Dieses Kinder-Tablet ist nicht mehr verbunden.',
   'Too many tries – wait a few minutes.': 'Zu viele Versuche – warte ein paar Minuten.',
   'Wrong PIN': 'Falsche PIN',
-  'No PIN set – remove this tablet under Settings › Members › Kids.': 'Keine PIN gesetzt – entferne das Tablet unter Einstellungen › Mitglieder › Kinder.',
+  'No PIN set – remove this tablet under Settings › Household › Who lives here?.': 'Keine PIN gesetzt – entferne das Tablet unter Einstellungen › Haushalt › Wer wohnt hier?.',
 };

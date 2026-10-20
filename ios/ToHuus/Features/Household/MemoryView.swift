@@ -55,7 +55,7 @@ struct MemoryView: View {
             }
         }
         .themedList()
-        .navigationTitle(L("What ToHuus remembers"))
+        .navigationTitle(L("Household knowledge"))
         .task { await load() }
         .refreshable { await load() }
         .alert(L("Save health information?"), isPresented: $askConsent) {

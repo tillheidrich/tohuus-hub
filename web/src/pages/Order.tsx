@@ -1,5 +1,5 @@
 /**
- * „Bring mir was“ (formerly „Verwöhnen“) / "Treats" / „Ompyssling“ – doing each other a good turn.
+ * „Bring mir was“ (formerly „Verwöhnen“) / "Bring me something" / „Ompyssling“ – doing each other a good turn.
  *
  * One „Bring mir was“ (Till, 18 Oct 2026: „führe das beides zusammen“): someone stuck with bedtime, a sick partner,
  * someone working late asks for "vanilla ice cream, please" from the sofa or bed – and guests wish for something
@@ -47,7 +47,7 @@ export function Order({ me }: { me: Me }) {
       <header className="page-head">
         <div>
           <div className="eyebrow">{single ? t('Visitors, babysitters, grandparents') : t('Do each other a good turn')}</div>
-          <h1>{t('Treats')}</h1>
+          <h1>{t('Bring me something')}</h1>
         </div>
         {!houseGuest && (
           <div className="actions">

@@ -26,10 +26,10 @@ export function Bar() {
         <div className="row between wrap" style={{ gap: 10 }}>
           <div style={{ flex: '1 1 240px' }}>
             <b>{t('Guests would like something?')}</b>
-            <p className="small muted" style={{ margin: '4px 0 0' }}>{t('That runs through Treats: share the link there – guests wish for something, you bring it.')}</p>
+            <p className="small muted" style={{ margin: '4px 0 0' }}>{t('That runs through “Bring me something”: share the link there – guests wish for something, you bring it.')}</p>
           </div>
           <button className="btn sm" onClick={() => nav('/bestellen')}>
-            <HandHeart size={16} /> {t('Open Treats')}
+            <HandHeart size={16} /> {t('Open “Bring me something”')}
           </button>
         </div>
       </section>
@@ -104,7 +104,7 @@ export function Links() {
           </div>
           <div className="list">
             {[
-              ['bar', t('Bring me something'), t('Wishes from your menu for guests – they land in Treats')],
+              ['bar', t('Bring me something'), t('Wishes from your menu for guests – they land in “Bring me something”')],
               ['stock', t('Where is what?'), t('Search with room and exact spot – no quantities. Ideal for babysitters.')],
               ['shopping', t('Shopping list'), t('Add things to the list')],
             ].map(([k, label, d]) => (

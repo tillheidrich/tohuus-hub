@@ -85,8 +85,8 @@ const EVENT_EYEBROW: Partial<Record<NotifyEvent, string>> = {
   'stock.empty': 'Stock',
   'stock.expiring': 'Use soon',
   'import.review': 'Receipts',
-  'order.new': 'Treats',
-  'order.status': 'Treats',
+  'order.new': 'Bring me something',
+  'order.status': 'Bring me something',
   'shopping.added': 'Shopping list',
   'digest.daily': 'Daily overview',
   'care.due': 'Care',
@@ -307,7 +307,7 @@ export async function notify(input: NotifyInput): Promise<{ channels: string[]; 
         title: input.title,
         paragraphs: [input.message],
         button: { url, label: t('Open in ToHuus Hub') },
-        reason: t('You get this because e-mail is switched on for this event under Settings › Notifications.'),
+        reason: t('You get this because e-mail is switched on for this event under Settings › Notifications & calendar.'),
         ...input.mail,
       })
         .then((): [string, boolean] => ['email', true])

@@ -299,7 +299,7 @@ function KidForm({ kid, onClose }: { kid: Kid | null; onClose: () => void }) {
         </div>
         <div className="field">
           <label>{t('Tasks on the tablet')}</label>
-          <Seg value={f.task_view} onChange={(v) => setF({ ...f, task_view: v })} options={[['now', t('One at a time')], ['list', t('As a list')]]} />
+          <Seg value={f.task_view} onChange={(v) => setF({ ...f, task_view: v })} options={[['now', t('Just one')], ['list', t('As a list')]]} />
           <div className="help">{f.task_view === 'now' ? t('One big card with “Done” – then the next one. Calmer for most kids.') : t('All of today’s tasks at once.')}</div>
         </div>
         <div className="field">

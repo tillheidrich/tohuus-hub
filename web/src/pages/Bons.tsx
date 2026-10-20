@@ -1,6 +1,6 @@
 /**
  * "Bons": receipt-style tickets – preview, print on a thermal printer, share as an image, send as a digital
- * receipt (Telegram, Matrix, Gotify, e-mail), print from the browser; plus Settings › Printers & tickets.
+ * receipt (Telegram, Matrix, Gotify, e-mail), print from the browser; plus Settings › Connections & devices › Printers.
  */
 import { Bluetooth, CalendarBlank, Check, DownloadSimple, Note, PaperPlaneTilt, PencilSimple, Plus, Printer, Receipt, ShareNetwork, ShoppingCart, Trash, Warning } from '@phosphor-icons/react';
 import { useEffect, useMemo, useState } from 'react';
@@ -312,7 +312,7 @@ async function printBluetooth(spec: BonSpec, paper: Paper): Promise<string> {
   }
 }
 
-// ---------------------------------------------------------------- Settings › Printers & tickets
+// ---------------------------------------------------------------- Settings › Connections & devices › Printers
 
 const darknessLabel = (d: number) => ({ '-2': t('very light'), '-1': t('lighter'), '0': t('normal'), '1': t('darker'), '2': t('very dark') })[String(d)] ?? t('normal');
 const autoOrdersLabel = (a: PrinterRow['auto_orders']) => ({ off: t('off'), all: t('always') })[a] ?? t('off');

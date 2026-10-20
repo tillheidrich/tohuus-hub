@@ -27,7 +27,7 @@ export const mind: Record<string, string> = {
   'Nothing right now – or nothing written down.': 'Gerade nichts – oder nichts aufgeschrieben.',
   'With the others': 'Bei den anderen',
   'Never to the assistant, Home Assistant or notifications. Done things stay here two weeks and count in your weekly review.':
-    'Nie an den Assistenten, Home Assistant oder Benachrichtigungen. Erledigtes bleibt zwei Wochen hier und zählt in deinem Wochenrückblick.',
+    'Nie an den Assistenten, Home Assistant oder Mitteilungen. Erledigtes bleibt zwei Wochen hier und zählt in deinem Wochenrückblick.',
   '{n} on your mind': '{n} im Kopf',
   'Too small for a list, still work: what you carry around and did on the side.': 'Zu klein für eine Liste, trotzdem Arbeit: was du im Kopf hast und nebenbei erledigt hast.',
   // away: what happens at home
@@ -44,7 +44,7 @@ export const mind: Record<string, string> = {
   'May wait': 'Darf warten',
   'What for?': 'Wofür?',
   'Stays in the household: the assistant, Home Assistant and notifications only ever say “away”.':
-    'Bleibt im Haushalt: Assistent, Home Assistant und Benachrichtigungen sagen immer nur „weg“.',
+    'Bleibt im Haushalt: Assistent, Home Assistant und Mitteilungen sagen immer nur „weg“.',
   'It changes what happens at home – e.g. what may wait.': 'Das ändert, was zu Hause passiert – z. B. was warten darf.',
   '{name} takes it while {who} is away': '{name} übernimmt, solange {who} weg ist',
   'may wait until {date}': 'darf warten bis {date}',

@@ -54,7 +54,7 @@ export function register(s: McpServer, _actorName: string) {
     'who_is_home',
     {
       title: 'Who is home (Home Assistant)',
-      description: 'Who is at home right now according to Home Assistant\'s people (person entities), mapped to household members, and whether everyone is away. Empty when presence is switched off in Settings › Home Assistant.',
+      description: 'Who is at home right now according to Home Assistant\'s people (person entities), mapped to household members, and whether everyone is away. Empty when presence is switched off in Settings › Connections & devices › Home Assistant.',
       inputSchema: {},
       annotations: RO,
     },

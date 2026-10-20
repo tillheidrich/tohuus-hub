@@ -96,7 +96,7 @@ const STEPS: { re: RegExp; de: string[]; en: string[] }[] = [
   },
   {
     re: /(aufräumen|aufraeumen|tidy|ordnung|chaos)/i,
-    de: ['Einen Korb holen', 'Müll einsammeln', 'Geschirr in die Küche', 'Wäsche in den Korb', 'Alles andere in den Korb', 'Korb ausräumen – ein Ding nach dem anderen'],
+    de: ['Einen Korb holen', 'Müll einsammeln', 'Geschirr in die Küche', 'Wäsche in den Korb', 'Alles andere in den Korb', 'Korb ausräumen, immer nur eine Sache'],
     en: ['Get a basket', 'Collect rubbish', 'Dishes to the kitchen', 'Clothes into the laundry', 'Everything else into the basket', 'Empty the basket – one thing at a time'],
   },
   {

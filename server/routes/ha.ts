@@ -111,7 +111,7 @@ r.post('/ha/package.yaml', (req, res) => {
   const base = config.baseUrl;
   res.type('text/yaml').send(`# ToHuus Hub ↔ Home Assistant
 # ${t('Include as a package (packages/tohuus.yaml) or copy the sections into configuration.yaml.')}
-# ${t('Token: create one in ToHuus Hub → Settings → Access → “Home Assistant”.')}
+# ${t('Token: create one in ToHuus Hub › Settings › Connections & devices › AI assistants & access › “Home Assistant”.')}
 
 rest:
   - resource: ${base}/api/ha/summary

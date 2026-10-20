@@ -235,7 +235,7 @@ r.post('/imports/:id/reread-ai', upload.array('files', 8), async (req, res) => {
   const textOnly = !src.images?.length && !src.pdfFile;
   if (!src.images?.length && !src.pdfFile && (!src.text?.trim() || meta0.source === 'ocr-device' || meta0.source === 'ocr'))
     return void res.status(422).json({ error: t('The photo of this receipt is not stored. Choose it once more.'), code: 'photo.missing' });
-  if (!visionAvailable()) return void res.status(403).json({ error: t('AI is switched off for you or this household. You can switch it on in Settings › With or without AI.'), code: 'ai.off' });
+  if (!visionAvailable()) return void res.status(403).json({ error: t('AI is switched off for you or this household. You can switch it on in Settings › Connections & devices › AI.'), code: 'ai.off' });
   let read;
   try {
     read = await aiReadSource(src, { shop: imp.shop, total: imp.total });

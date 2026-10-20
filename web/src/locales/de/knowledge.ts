@@ -1,6 +1,6 @@
 // Haushaltswissen „Was ToHuus sich merkt“ (18 Oct 2026, pages/Knowledge.tsx, docs/knowledge.md)
 export const knowledge: Record<string, string> = {
-  'Your household memory': 'Euer Haushaltsgedächtnis',
+  'Your household knowledge': 'Euer Haushaltswissen',
   'Write it to ToHuus, then nobody has to ask you. And you don’t have to remember it yourself.': 'Schreib es ToHuus, dann muss dich keiner mehr fragen. Und du musst es dir nicht selbst merken.',
   'What the household shares with guests: sizes, numbers, how things work.': 'Was der Haushalt mit Gästen teilt: Größen, Nummern, wie was funktioniert.',
   'Add yourself': 'Selbst eintragen',

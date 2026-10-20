@@ -1,7 +1,7 @@
 /** German server strings for package D: Sign in with Apple, sample data (area: auth, tour). */
 export const de_account: Record<string, string> = {
-  'This is part of Plus. You can switch any time under Settings › Subscription.': 'Das gehört zu Plus. Du kannst jederzeit unter Einstellungen › Abo wechseln.',
-  'This is part of the Household plan or Plus. You can switch any time under Settings › Subscription.': 'Das gehört zu Haushalt oder Plus. Du kannst jederzeit unter Einstellungen › Abo wechseln.',
+  'This is part of Plus. You can switch any time under Settings › Data, plan & account › Plan & storage.': 'Das gehört zu Plus. Du kannst jederzeit unter Einstellungen › Daten, Abo & Konto › Abo & Speicher wechseln.',
+  'This is part of the Household plan or Plus. You can switch any time under Settings › Data, plan & account › Plan & storage.': 'Das gehört zu Haushalt oder Plus. Du kannst jederzeit unter Einstellungen › Daten, Abo & Konto › Abo & Speicher wechseln.',
   'Sign in with Apple didn’t work. Please try again.': 'Die Anmeldung mit Apple hat nicht geklappt. Versuch es bitte noch einmal.',
   'Apple can’t be reached right now. Please try again in a moment.': 'Apple ist gerade nicht erreichbar. Versuch es gleich noch einmal.',
   'There is already an account with this address. Please sign in with your password or an e-mail link first.':

@@ -53,7 +53,7 @@ struct KnowledgeView: View {
                 Text(guest ? L("What the household shares with guests: sizes, numbers, how things work.")
                            : L("Write it to ToHuus, then nobody has to ask you. And you don’t have to remember it yourself."))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
-            } header: { Text(L("Your household memory")) }
+            } header: { Text(L("Your household knowledge")) }
             if !guest { sayField }
             if let answer { answerSection(answer) }
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
@@ -457,7 +457,7 @@ struct KnowledgeEditor: View {
             Form {
                 if plain {
                     Section {
-                        TextField(L("What ToHuus remembers"), text: $text, axis: .vertical).lineLimit(1...4)
+                        TextField(L("Household knowledge"), text: $text, axis: .vertical).lineLimit(1...4)
                     } footer: { if isNew { Text(L("Saved as a line, or fill in the fields below to make it a card.")) } }
                 }
                 Section {
@@ -681,7 +681,7 @@ struct KnowledgeSection: View {
                 Button { editing = KnowledgeDraft(subject: name, subjectRef: ref) } label: { Label(L("Add"), systemImage: "plus") }
             }
             NavigationLink { KnowledgeView(api: api, ref: ref) } label: { Text(L("Show all")) }
-        } header: { Label(L("What ToHuus remembers"), systemImage: "brain") }
+        } header: { Label(L("Household knowledge"), systemImage: "brain") }
         .task { await load() }
         .sheet(item: $editing) { d in
             KnowledgeEditor(api: api, draft: d, subjects: subjects) { _, _ in Task { await load() } }

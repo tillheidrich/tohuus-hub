@@ -16,8 +16,8 @@ export const de_people: Record<string, string> = {
   'Please enter an e-mail address.': 'Bitte gib eine E-Mail-Adresse ein.',
   'Hi {name}, {by} sent you a link to {household}. Tap the button to sign in – the link works once and for {hours} hours.':
     'Hallo {name}, {by} hat dir einen Link zu {household} geschickt. Tipp auf den Button, um dich anzumelden – der Link funktioniert einmal und {hours} Stunden lang.',
-  'Afterwards you can add a passkey under Settings › My account, then you won’t need a link any more.':
-    'Danach kannst du unter Einstellungen › Mein Konto einen Passkey hinzufügen – dann brauchst du keinen Link mehr.',
+  'Afterwards you can add a passkey under Settings › Me › Sign-in & security, then you won’t need a link any more.':
+    'Danach kannst du unter Einstellungen › Ich › Anmeldung & Sicherheit einen Passkey hinzufügen – dann brauchst du keinen Link mehr.',
   'everyone liked it': 'allen hat’s geschmeckt',
   'loved by {names}': '{names} liebt es',
   '{name} is allergic: {allergen}': 'Achtung, {name} ist allergisch: {allergen}',

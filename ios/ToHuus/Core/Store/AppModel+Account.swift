@@ -69,7 +69,7 @@ extension AppModel {
         try await removeSampleDataUndoable().kept
     }
 
-    /// Same, plus the id that undoes it (Settings › Data & reset keeps it restorable for 7 days).
+    /// Same, plus the id that undoes it (Settings › Data, plan & account › Data & reset keeps it restorable for 7 days).
     func removeSampleDataUndoable() async throws -> (kept: Int, wipeId: Int?) {
         guard let api else { return (0, nil) }
         let r = try await api.removeSampleData()
@@ -79,7 +79,7 @@ extension AppModel {
         return ((r.kept?.products ?? 0) + (r.kept?.recipes ?? 0), r.wipe?.id)
     }
 
-    /// Undo a deletion from Settings › Data & reset (or removing the samples).
+    /// Undo a deletion from Settings › Data, plan & account › Data & reset (or removing the samples).
     func restoreWipe(_ id: Int) async throws {
         guard let api else { return }
         _ = try await api.ixRawSend("POST", "api/data/wipe/\(id)/restore", timeout: 120)

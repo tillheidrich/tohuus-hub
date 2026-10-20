@@ -12,7 +12,7 @@ export function register(s: McpServer, _actorName: string) {
       title: 'Household data overview',
       description:
         'Read-only overview of what is stored in this household: row counts per area (stock & products, recipes & plan, shopping & orders, receipts & spending, other household data, places), which tables are always kept (members, logins, settings, integrations), whether demo data is still present and the latest backup. ' +
-        'There is deliberately no tool to delete data – removing demo data or starting over is done by an admin in the app under Settings › Data & backups, with an automatic backup first.',
+        'There is deliberately no tool to delete data – removing demo data or starting over is done by an admin in the app under Settings › Data, plan & account › Data & reset, with an automatic backup first.',
       inputSchema: {},
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
@@ -24,7 +24,7 @@ export function register(s: McpServer, _actorName: string) {
         counts: o.counts,
         always_kept: o.kept,
         demo_data: o.demo.rows
-          ? { present: true, demo_products: o.demo.products, demo_recipes: o.demo.recipes, used_since: o.demo.used, how_to_remove: 'Settings › Data & backups › Remove demo data (admin)' }
+          ? { present: true, demo_products: o.demo.products, demo_recipes: o.demo.recipes, used_since: o.demo.used, how_to_remove: 'Settings › Data, plan & account › Data & reset › Remove demo data (admin)' }
           : { present: false },
         last_backup: last ? { name: last.name, kind: last.kind, day: last.day } : null,
       });

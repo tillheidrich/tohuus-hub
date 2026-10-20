@@ -7,7 +7,7 @@
  *   GET  /oauth/authorize                               sign-in if needed, choose household, consent (server page)
  *   POST /oauth/authorize                               the consent form (same origin only)
  *   POST /oauth/token                                   authorization_code (PKCE) and refresh_token (rotating)
- *   GET  /api/oauth/connections, DELETE /api/oauth/connections/:id   own connections in Settings › Access & AI
+ *   GET  /api/oauth/connections, DELETE /api/oauth/connections/:id   own connections in Settings › Connections & devices › AI assistants & access
  */
 import express, { Router, type Request, type Response } from 'express';
 import { config } from '../config.js';
@@ -231,7 +231,7 @@ function consent(res: Response, p: AuthzParams, list: Choice[]) {
     res,
     200,
     t('Connect {client} with ToHuus?', { client: p.client.name }),
-    `<p>${esc(t('{client} wants to use your household on your behalf. You can end this at any time in Settings › Access & AI.', { client: p.client.name }))}</p>
+    `<p>${esc(t('{client} wants to use your household on your behalf. You can end this at any time in Settings › Connections & devices › AI assistants & access.', { client: p.client.name }))}</p>
 <form method="post" action="/oauth/authorize">${hidden(p)}${homes}
 <fieldset><legend>${esc(t('What may it do?'))}</legend>
 <label class="opt"><input type="radio" name="access" value="read"${wantsWrite ? '' : ' checked'}><span><b>${esc(t('Read'))}</b><br><span class="muted">${esc(t('See the list, what is at home, recipes and spending.'))}</span></span></label>

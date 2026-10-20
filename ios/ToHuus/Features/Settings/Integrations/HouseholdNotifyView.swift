@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Settings › Notifications › "For the whole household" (web: Settings.tsx `Notify`): the shared channels (Home
+/// Settings › Notifications & calendar › "For the whole household" (web: Settings.tsx `Notify`): the shared channels (Home
 /// Assistant webhook, ntfy, another webhook, household e-mail), digest hour, best-before warning, auto shopping list,
 /// the routing matrix "What goes where?" (admins change it), a test and the log of what was sent.
 /// GET/PATCH /api/settings › notify, POST /api/settings/test-notification, GET /api/notifications, GET /api/channels.
@@ -109,7 +109,7 @@ struct HouseholdNotifyView: View {
             Text(L("Shared channels"))
         } footer: {
             Text(admin
-                 ? L("ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “Access & AI”.")
+                 ? L("ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “AI assistants & access”.")
                  : L("Only admins can change this."))
         }
     }

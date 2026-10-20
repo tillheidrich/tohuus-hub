@@ -14,7 +14,7 @@ export function register(s: McpServer, actorName: string) {
       title: 'Send a message to the household',
       description:
         'Sends a short text to the household\'s own configured channels (Telegram chats linked in ToHuus Hub, Gotify, Matrix room) – e.g. "Dinner is at 7" or a reminder. ' +
-        'It cannot message anyone else: there are no recipient addresses, only the channels set up under Settings › Notifications. ' +
+        'It cannot message anyone else: there are no recipient addresses, only the channels set up under Settings › Notifications & calendar. ' +
         'Optionally limit it to one member (their linked Telegram chat only) or to certain channels. Returns which channels delivered it.',
       inputSchema: {
         text: z.string().min(1).max(2000).describe('the message, plain text'),
@@ -25,7 +25,7 @@ export function register(s: McpServer, actorName: string) {
     },
     async ({ text: body, member, channels }) => {
       const available = configuredChannels();
-      if (!available.length) return text({ error: 'No household channel is set up (Settings › Notifications › Channels).', configured: [] });
+      if (!available.length) return text({ error: 'No household channel is set up (Settings › Notifications & calendar › For the whole household).', configured: [] });
       if (rateLimited(`mcp-hhmsg:${actorName}`, 20, 60 * 60_000)) return text({ error: 'Too many messages in the last hour – try again later.' });
       let memberId: number | undefined;
       if (member) {

@@ -116,7 +116,7 @@ struct AppearanceSettingsView: View {
                         Toggle(isOn: Binding(get: { i.userChoice == true }, set: { v in Task { await saveHousehold(["userChoice": v]) } })) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(L("Let everyone choose for themselves"))
-                                Text(L("Members can then pick light or dark in “My account”.")).font(.caption).foregroundStyle(Theme.ink3)
+                                Text(L("Then everyone picks light or dark under Settings › Me › Appearance & readability.")).font(.caption).foregroundStyle(Theme.ink3)
                             }
                         }
                         .tint(Theme.primary)

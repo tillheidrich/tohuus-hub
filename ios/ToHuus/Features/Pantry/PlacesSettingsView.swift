@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings › Places (web: pages/PlacesSettings.tsx PlacesSettings + CategorySettings, server: routes/places.ts and
+/// Settings › Areas & places › Places & categories (web: pages/PlacesSettings.tsx PlacesSettings + CategorySettings, server: routes/places.ts and
 /// routes/core.ts /categories). The places as a tree: order (drag or "Move up/down"), icon, name, climate, inside
 /// which place, owner (shared flats), directions, archive, delete – plus the categories (where new products go and how
 /// they're counted) and who lives here. Members see everything; only admins change it (the server checks too).

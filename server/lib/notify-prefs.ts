@@ -42,7 +42,7 @@ export const PERSON_EVENTS = [
   { key: 'stock.expiring', label: '“Still at home” runs out soon', module: 'stock', on: false },
   { key: 'import.review', label: 'A receipt was recognised', module: 'money', on: false },
   { key: 'plan.reminder', label: 'Reminder for the week plan', module: 'cook', on: false },
-  { key: 'order.new', label: 'A wish (Treats)', module: 'treats', on: true },
+  { key: 'order.new', label: 'A wish (Bring me something)', module: 'treats', on: true },
   { key: 'budget.warning', label: 'Budget hint', module: 'money', on: false },
   // since 13 Oct 2026 every event is the person's own choice; calm defaults: on only what asks something of you
   { key: 'stock.low', label: 'Something is running low', module: 'stock', on: false },
@@ -227,7 +227,7 @@ export async function sendPersonalDigests(opts: { force?: boolean } = {}) {
       title: t('What happened at home'),
       sections: [{ title: t('{n} things', { n: items.length }), items: items.map((i) => `${i.title} – ${i.body}`) }],
       button: { url: config.baseUrl, label: t('Open in ToHuus Hub') },
-      reason: t('You get this because you chose the e-mail summary under Settings › Notifications.'),
+      reason: t('You get this because you chose the e-mail summary under Settings › Notifications & calendar.'),
       unsubscribeUrl: unsubscribeUrl(uid),
     })
       .then(() => {

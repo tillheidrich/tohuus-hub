@@ -38,7 +38,7 @@ export const wish: Record<string, string> = {
   'Chosen people': 'Ausgewählte',
   'Nobody else with an own account yet.': 'Noch niemand sonst hat einen eigenen Zugang.',
   'Everyone else doesn’t see this list – not on Today, not in notifications, not via the assistant, Home Assistant or exports. Guests never see it.':
-    'Alle anderen sehen diese Liste nicht – nicht unter Heute, nicht in Benachrichtigungen, nicht über den Assistenten, Home Assistant oder Exporte. Gäste sehen sie nie.',
+    'Alle anderen sehen diese Liste nicht – nicht unter Heute, nicht in Mitteilungen, nicht über den Assistenten, Home Assistant oder Exporte. Gäste sehen sie nie.',
   'This is on a private list. Who sees it is set for the whole list.': 'Das steht auf einer privaten Liste. Wer es sieht, legst du für die ganze Liste fest.',
   '{name} shared this list with you. Only {name} can change who sees it.': '{name} hat die Liste mit dir geteilt. Nur {name} kann ändern, wer sie sieht.',
   'List removed – open items moved to the shopping list and stay private': 'Liste entfernt – offene Einträge stehen jetzt auf der Einkaufsliste und bleiben privat',
@@ -171,7 +171,7 @@ export const wish: Record<string, string> = {
   "ToHuus reminds you on {day}": "ToHuus erinnert dich am {day}",
   "Reminder removed": "Erinnerung entfernt",
   "Remind me on {day}": "Am {day} erinnern",
-  "Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications.": "Die Erinnerung bekommst nur du, auf deinen eigenen Geräten. Abschalten kannst du sie unter Einstellungen › Mitteilungen.",
+  "Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications & calendar.": "Die Erinnerung bekommst nur du, auf deinen eigenen Geräten. Abschalten kannst du sie unter Einstellungen › Mitteilungen.",
   "suggested": "Vorschlag",
   "Or a day of your own": "Oder ein eigener Tag",
   "Remove reminder": "Erinnerung entfernen",

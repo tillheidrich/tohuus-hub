@@ -7,7 +7,7 @@
  *    every cloud household gets at least that plan (`planOf` in plans.ts). Switching it off falls back to what each
  *    household has on its own (trial, code, App Store, Free) – nothing is deleted.
  * 2. **Plan codes** – the operator creates codes in the back office (plan Haushalt or Plus, for N days or for good,
- *    optional number of uses and last day). An admin of a household redeems one **on the web** (Settings › Abo ›
+ *    optional number of uses and last day). An admin of a household redeems one **on the web** (Settings › Data, plan & account › Plan & storage ›
  *    "Code einlösen"). App Store Review Guideline 3.1.1 does not allow an iOS app to unlock features with its own
  *    codes, so the iPhone app has no field for it – it only shows the plan the household has (3.1.3(b)).
  *

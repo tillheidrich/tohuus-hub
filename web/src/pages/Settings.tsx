@@ -255,7 +255,7 @@ function Notify({ admin }: { admin: boolean }) {
         <div className="field">
           <label>{t('Home Assistant – webhook URL')}</label>
           <input className="input" value={n.haWebhookUrl} onChange={(e) => setN({ ...n, haWebhookUrl: e.target.value })} placeholder="https://ha.example.de/api/webhook/tohuus_…" disabled={!admin} />
-          <div className="help">{t('ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “Access & AI”.')}</div>
+          <div className="help">{t('ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “AI assistants & access”.')}</div>
         </div>
         <div className="field">
           <label>{t('ntfy topic (optional)')}</label>

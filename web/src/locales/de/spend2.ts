@@ -106,7 +106,7 @@ export const spend2: Record<string, string> = {
   Store: 'Laden',
   'Own expense': 'Eigene Ausgabe',
   'These stay visible in the lists, greyed out, and are summed separately. Products and stock are not changed.':
-    'Sie bleiben ausgegraut in den Listen sichtbar und werden getrennt summiert. Produkte und Bestand bleiben unverändert.',
+    'Sie bleiben ausgegraut in den Listen sichtbar und werden getrennt summiert. Produkte und Vorrat bleiben unverändert.',
   'Everything counts': 'Alles zählt',
   'Open a receipt line, a receipt, a category or a store to leave it out – e.g. things bought for work or as a gift.':
     'Öffne eine Bonzeile, einen Bon, eine Kategorie oder einen Laden, um ihn herauszunehmen – z. B. Einkäufe für die Arbeit oder Geschenke.',

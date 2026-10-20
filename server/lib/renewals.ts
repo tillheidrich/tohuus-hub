@@ -73,7 +73,7 @@ export function reminderWanted(userId: number | null | undefined): boolean {
   try {
     const row = db.prepare(`SELECT value FROM user_prefs WHERE user_id = ? AND key = 'billing.reminder'`).get(userId) as { value: string } | undefined;
     if (row && JSON.parse(row.value) === false) return false;
-    // "no mails from ToHuus" (Settings › Notifications or the unsubscribe link) covers the reminder too
+    // "no mails from ToHuus" (Settings › Notifications & calendar or the unsubscribe link) covers the reminder too
     const n = db.prepare(`SELECT value FROM user_prefs WHERE user_id = ? AND key = 'notify'`).get(userId) as { value: string } | undefined;
     return !(n && (JSON.parse(n.value) as { mailOff?: boolean }).mailOff === true);
   } catch {
@@ -81,7 +81,7 @@ export function reminderWanted(userId: number | null | undefined): boolean {
   }
 }
 
-/** Household: e-mail for the event "billing.renewal" not switched off in Settings › Notifications. */
+/** Household: e-mail for the event "billing.renewal" not switched off in Settings › Notifications & calendar. */
 function householdAllows(): boolean {
   const s = getSetting<{ events?: Record<string, { email?: boolean }> }>('notify', {});
   return s?.events?.['billing.renewal']?.email !== false;
@@ -128,7 +128,7 @@ export async function sendRenewalReminders(now = Date.now()): Promise<number> {
                 t('Nothing to do if you want to keep it. To end or change it: in the App Store under your Apple account › Subscriptions.'),
               ],
               button: { url: APPLE_MANAGE_URL, label: t('Manage subscription') },
-              reason: t('You get this because you are an admin of this household. Switch it off in Settings › Plan & storage.'),
+              reason: t('You get this because you are an admin of this household. Switch it off in Settings › Data, plan & account › Plan & storage.'),
               unsubscribeUrl: unsubscribeUrl(a.user_id),
             }),
           );

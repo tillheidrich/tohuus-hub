@@ -34,7 +34,7 @@ enum AppArea: String, CaseIterable, Hashable, Identifiable {
         case .cooking: return L("Cooking")
         case .money: return L("Money")
         case .knowledge: return L("Knowledge")
-        case .orders: return L("Treats")
+        case .orders: return L("Bring me something")
         case .wishes: return L("Wishes")
         case .houseinfo: return L("House info")
         case .more: return L("More")

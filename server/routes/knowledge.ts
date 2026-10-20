@@ -1,5 +1,5 @@
 /**
- * Haushaltswissen – "Was ToHuus sich merkt" as cards (server/lib/knowledge.ts, docs/knowledge.md).
+ * Haushaltswissen – "Haushaltswissen" as cards (server/lib/knowledge.ts, docs/knowledge.md).
  *   GET    /api/knowledge?q=&ref=&subject=&property=   { entries, groups, subjects }  (guests: only "für Gäste")
  *   GET    /api/knowledge/:id                           one entry (with its history, newest first)
  *   GET    /api/knowledge/:id/history                   { history }

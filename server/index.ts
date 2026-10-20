@@ -262,7 +262,7 @@ app.use('/api', recipes2Routes);
 app.use('/api', qualityRoutes);
 app.use('/api', peopleRoutes);
 app.use('/api', tourRoutes);
-// Settings › Data & reset: clear areas / everything / sample data, 7-day restore (lib/wipe.ts)
+// Settings › Data, plan & account › Data & reset: clear areas / everything / sample data, 7-day restore (lib/wipe.ts)
 app.use('/api', wipeRoutes);
 app.use('/api', ha2Routes);
 app.use('/api', menuRoutes);

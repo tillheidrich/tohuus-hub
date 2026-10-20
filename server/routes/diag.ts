@@ -4,7 +4,7 @@
  *   POST /api/diag/errors   { source: 'web'|'ios'|'watch', errors: [{ message, stack?, kind?, route?, status?, appVersion?, platform? }] }
  *                           – the apps report what went wrong; signed in or not (a crash on the sign-in page counts too),
  *                           rate-limited per address, at most 20 per call.
- *   GET  /api/diag/errors?source=&q=&days=&format=json|csv   – self-hosted admins (Settings › Daten), download with format
+ *   GET  /api/diag/errors?source=&q=&days=&format=json|csv   – self-hosted admins (Settings › Data, plan & account), download with format
  *   GET  /api/operator/errors?…                                – ToHuus Cloud operators (back office › Fehler), see operator-admin.ts
  */
 import { Router, type Request, type Response } from 'express';

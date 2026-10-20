@@ -488,7 +488,7 @@ export function HouseGuidePage({ me }: { me: Me }) {
           {/* Haushaltswissen: sizes, measurements and numbers live there (pages/Knowledge.tsx) */}
           {me.modules?.knowledge !== false && (
             <Link className="btn ghost" to="/wissen">
-              <Brain size={16} /> {t('What ToHuus remembers')}
+              <Brain size={16} /> {t('Household knowledge')}
             </Link>
           )}
           {!empty && (

@@ -77,7 +77,7 @@ struct SignInAdminView: View {
             }
             .padding(.vertical, 4)
             policyToggle(L("Require two-step sign-in for admins"), L("Admins signing in with a password also need a code. Set it up for yourself first."), p.requireTotpAdmins == true, key: "requireTotpAdmins")
-            policyToggle(L("PIN switch on shared devices"), L("Mark a tablet as shared under My account; members with a PIN can switch there."), p.pinSwitch == true, key: "pinSwitch")
+            policyToggle(L("PIN switch on shared devices"), L("Mark a tablet as shared under Settings › Me › Sign-in & security; members with a PIN can switch there."), p.pinSwitch == true, key: "pinSwitch")
             policyToggle(L("“New sign-in” alerts"), L("A member gets a push and an e-mail when their account is used on a new device."), p.newDeviceAlerts == true, key: "newDeviceAlerts")
         } header: { Text(L("Ways to sign in")) }
     }

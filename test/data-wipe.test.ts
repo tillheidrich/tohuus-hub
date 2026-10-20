@@ -1,5 +1,5 @@
 /**
- * Settings › Data & reset (lib/wipe.ts): each area clears exactly its own rows, the rest of the household (other
+ * Settings › Data, plan & account › Data & reset (lib/wipe.ts): each area clears exactly its own rows, the rest of the household (other
  * areas, members, settings, logins, other members' private entries) stays; every deletion can be restored for 7 days
  * and is final afterwards (files too); members only delete their own private entries; no tokens, guests or kids.
  */

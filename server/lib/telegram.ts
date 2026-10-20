@@ -520,7 +520,7 @@ async function onStart(m: TgMessage, code: string | undefined) {
   if (code) {
     if (rateLimited(`tg-pair:${chatId}`, 8, 10 * 60_000)) return;
     const p = consumePairing(code);
-    if (!p) return send(chatId, esc(t('This link has expired or was already used. Create a new one in ToHuus Hub under Settings › Notifications.')));
+    if (!p) return send(chatId, esc(t('This link has expired or was already used. Create a new one in ToHuus Hub under Settings › Notifications & calendar.')));
     const title = m.chat.title ?? [m.from?.first_name, m.from?.username ? `@${m.from.username}` : null].filter(Boolean).join(' ');
     db.prepare(
       `INSERT INTO channel_chats (channel, chat_id, kind, title, user_id, tg_user_id, last_seen_at) VALUES ('telegram', ?, ?, ?, ?, ?, ?)
@@ -538,7 +538,7 @@ async function onStart(m: TgMessage, code: string | undefined) {
 
 function notLinked(chatId: string) {
   if (rateLimited(`tg-unknown:${chatId}`, 3, 30 * 60_000)) return;
-  return send(chatId, esc(t('Hello! This chat isn’t connected to a household yet. In ToHuus Hub, open Settings › Notifications › Telegram and tap “Link my Telegram”.')));
+  return send(chatId, esc(t('Hello! This chat isn’t connected to a household yet. In ToHuus Hub, open Settings › Notifications & calendar › For the whole household › Telegram and tap “Link my Telegram”.')));
 }
 
 async function onMessage(m: TgMessage) {

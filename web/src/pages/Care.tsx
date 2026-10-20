@@ -415,7 +415,7 @@ export function Care() {
         </div>
         <div className="actions">
           <button className="btn sm" onClick={() => nav('/fokus')}>
-            {t('One thing at a time')}
+            {t('Just one')}
           </button>
           <FreshStartButton overdue={tasks.filter((x) => x.state === 'overdue').length} />
           {dueNow.length >= 3 && (

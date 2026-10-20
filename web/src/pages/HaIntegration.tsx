@@ -1,4 +1,4 @@
-/** Settings › Access & AI: Home Assistant – the HACS integration first (paired by code), the YAML package as fallback. */
+/** Settings › Connections & devices › AI: Home Assistant – the HACS integration first (paired by code), the YAML package as fallback. */
 import { ArrowSquareOut, CheckCircle, Copy, House, Link } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { api, post } from '../api';
@@ -83,7 +83,7 @@ export function HaPairBlock() {
         <div className="small muted">{t('Enter this code in Home Assistant when you add the ToHuus Hub integration:')}</div>
         <div className="ha-pair-code mono" aria-label={t('Code for Home Assistant')}>{code.code}</div>
         <div className="small muted">
-          {t('Valid for {min}:{sec} more. Use it once; it gives Home Assistant its own access, which you can revoke under Access & AI.', {
+          {t('Valid for {min}:{sec} more. Use it once; it gives Home Assistant its own access, which you can revoke under Settings › Connections & devices › AI assistants & access.', {
             min: String(Math.floor(left / 60)),
             sec: String(left % 60).padStart(2, '0'),
           })}
@@ -175,7 +175,7 @@ export function HaCreated({ base, yaml }: { base: string; yaml: string }) {
             <>
               <div className="codebox">{yaml}</div>
               <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(yaml)}><Copy size={14} /> {t('Copy YAML')}</button>
-              <div className="help">{t('Adjust the webhook ID and notify service in the YAML, and enter the same webhook URL under “Notifications”.')}</div>
+              <div className="help">{t('Adjust the webhook ID and notify service in the YAML, and enter the same webhook URL under “Notifications & calendar”.')}</div>
             </>
           ) : (
             <div className="small muted">{t('Loading…')}</div>

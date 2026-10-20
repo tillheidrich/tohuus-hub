@@ -20,7 +20,7 @@ export function register(s: McpServer, _actorName: string) {
         hints: {
           prices: 'Send prices as plain numbers with a decimal point (3.49), in the household currency.',
           receipts: 'Discount lines (Clubcard Price, Nectar, coupons, BOGO, Rabatt, Medlemspris) belong to the item above; deposits (Pant, BOTTLE DEP, CRV, Pfand) are deposit=true; tax/VAT/moms lines are not items.',
-          change: 'An admin changes the region in the app under Settings › Household › Region.',
+          change: 'An admin changes the region in the app under Settings › Household › Region & currency.',
         },
       }),
   );

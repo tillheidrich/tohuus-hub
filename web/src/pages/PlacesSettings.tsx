@@ -1,5 +1,5 @@
 /**
- * Settings › Places (area: home): the places as a tree – order (arrows, drag on desktop), parent, climate,
+ * Settings › Areas & places › Places & categories (area: home): the places as a tree – order (arrows, drag on desktop), parent, climate,
  * icon, owner, archive – plus categories. And the household card: who lives here and how.
  * "As a list" is the full, always usable view; "as a home" hands the same data to the illustration
  * (HomeArt from the design system) with a simple room-by-room fallback.

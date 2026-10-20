@@ -9,8 +9,8 @@ export const de_auth: Record<string, string> = {
   Invitation: 'Einladung',
   'Sign-in': 'Anmeldung',
   'New sign-in for {name}': 'Neue Anmeldung bei {name}',
-  '{device} · {method} · {time}. Was that you? If not, open Settings › My account and sign that device out.':
-    '{device} · {method} · {time}. Warst du das? Falls nicht: Einstellungen › Mein Konto öffnen und das Gerät abmelden.',
+  '{device} · {method} · {time}. Was that you? If not, open Settings › Me › Sign-in & security and sign that device out.':
+    '{device} · {method} · {time}. Warst du das? Falls nicht: Einstellungen › Ich › Anmeldung & Sicherheit öffnen und das Gerät abmelden.',
   'Check my devices': 'Meine Geräte ansehen',
   'Shared device': 'Gemeinsames Gerät',
   'This device is not set up as a shared family device.': 'Dieses Gerät ist nicht als gemeinsames Familiengerät eingerichtet.',
@@ -57,8 +57,8 @@ export const de_auth: Record<string, string> = {
   'Passwords are switched off in this household. Please sign in another way.': 'Passwörter sind in diesem Haushalt abgeschaltet. Bitte melde dich anders an.',
   'Enter the code from your authenticator app.': 'Gib den Code aus deiner Authenticator-App ein.',
   'That code didn’t work.': 'Der Code hat nicht gepasst.',
-  'Admins need two-step sign-in for passwords here. Sign in with a passkey, an e-mail link or SSO and set it up under Settings › My account.':
-    'Admins brauchen hier für Passwörter die Zwei-Schritt-Anmeldung. Melde dich mit Passkey, E-Mail-Link oder SSO an und richte sie unter Einstellungen › Mein Konto ein.',
+  'Admins need two-step sign-in for passwords here. Sign in with a passkey, an e-mail link or SSO and set it up under Settings › Me › Sign-in & security.':
+    'Admins brauchen hier für Passwörter die Zwei-Schritt-Anmeldung. Melde dich mit Passkey, E-Mail-Link oder SSO an und richte sie unter Einstellungen › Ich › Anmeldung & Sicherheit ein.',
   'Passkeys are switched off in this household.': 'Passkeys sind in diesem Haushalt abgeschaltet.',
   'Your current password is not right.': 'Dein aktuelles Passwort stimmt nicht.',
   'Please pick a PIN that is harder to guess.': 'Bitte nimm eine PIN, die schwerer zu erraten ist.',

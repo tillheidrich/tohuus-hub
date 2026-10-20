@@ -184,7 +184,7 @@ struct AISettingsView: View {
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
         }
         .themedList()
-        .navigationTitle(L("With or without AI"))
+        .navigationTitle(L("AI"))
         .task {
             await app.loadAIState()
             await load()
@@ -296,7 +296,7 @@ struct AIConsentView: View {
                     Image(systemName: "sparkles").font(.largeTitle).foregroundStyle(Theme.primary).accessibilityHidden(true)
                     Text(L("Use AI? You decide.")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
                     Text(Self.explanation(app.aiProcessor)).foregroundStyle(Theme.ink2)
-                    Text(L("You can change this any time under More › With or without AI.")).font(.footnote).foregroundStyle(Theme.ink3)
+                    Text(L("You can change this any time under Settings › Connections & devices › AI.")).font(.footnote).foregroundStyle(Theme.ink3)
                     Button {
                         busy = true
                         Task { await app.setAIConsent(true); busy = false; dismiss() }

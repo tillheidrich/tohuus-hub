@@ -65,7 +65,7 @@ export function HouseholdAppearanceCard({ admin }: { admin: boolean }) {
         <div className="row between ap-allow">
           <div className="grow">
             <b>{t('Let everyone choose for themselves')}</b>
-            <div className="small muted">{t('Members can then pick light or dark in “My account”.')}</div>
+            <div className="small muted">{t('Then everyone picks light or dark under Settings › Me › Appearance & readability.')}</div>
           </div>
           <Toggle on={a.data.userChoice} label={t('Let everyone choose for themselves')} onChange={(v) => save({ userChoice: v })} />
         </div>
@@ -74,7 +74,7 @@ export function HouseholdAppearanceCard({ admin }: { admin: boolean }) {
   );
 }
 
-/** Settings › My account: the personal choice, only while the household allows it */
+/** Settings › Me › Sign-in & security: the personal choice, only while the household allows it */
 export function MyAppearanceCard() {
   const a = useApi<Appearance>('appearance', '/appearance');
   const toast = useToast();

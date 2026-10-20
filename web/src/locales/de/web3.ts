@@ -16,8 +16,8 @@ export const web3: Record<string, string> = {
   'Beta gift switched off': 'Beta-Geschenk ausgeschaltet',
   'Every household now has {plan}': 'Jeder Haushalt hat jetzt {plan}',
   'New gift codes': 'Neue Geschenkcodes',
-  'For after the beta, e.g. a year of Plus or Plus for good for the people who tested. An admin of the household redeems the code on the web (Settings › Plan). The iPhone app has no code field – Apple does not allow unlocking features with own codes there; it shows the plan the household has.':
-    'Für nach der Beta, z. B. ein Jahr Plus oder Plus für immer für alle, die getestet haben. Eine Admin-Person des Haushalts löst den Code im Web ein (Einstellungen › Abo). Die iPhone-App hat kein Code-Feld – Apple erlaubt dort keine eigenen Freischaltcodes; sie zeigt einfach den Plan des Haushalts.',
+  'For after the beta, e.g. a year of Plus or Plus for good for the people who tested. An admin of the household redeems the code on the web (Settings › Data, plan & account › Plan & storage). The iPhone app has no code field – Apple does not allow unlocking features with own codes there; it shows the plan the household has.':
+    'Für nach der Beta, z. B. ein Jahr Plus oder Plus für immer für alle, die getestet haben. Eine Admin-Person des Haushalts löst den Code im Web ein (Einstellungen › Daten, Abo & Konto › Abo & Speicher). Die iPhone-App hat kein Code-Feld – Apple erlaubt dort keine eigenen Freischaltcodes; sie zeigt einfach den Plan des Haushalts.',
   'How long': 'Wie lange',
   'for good': 'für immer',
   'for a number of days': 'für eine Anzahl Tage',
@@ -195,7 +195,7 @@ export const web3: Record<string, string> = {
   "My budgets": "Meine Budgets",
   "Only you see these budgets. They count what belongs to you: your own entries and the lines assigned to you. Notes go to your devices only.": "Diese Budgets siehst nur du. Sie zählen, was dir gehört: deine eigenen Einträge und die Posten, die dir zugeordnet sind. Hinweise kommen nur auf deine Geräte.",
   "Shared by the household: everyone sees them. For a budget just for you, switch to “Just mine” first.": "Gemeinsam für den Haushalt: alle sehen sie. Für ein Budget nur für dich wechsle zuerst zu „Nur meins“.",
-  "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.": "Foto, PDF oder eBon: ToHuus sieht, was ihr gekauft habt und was es gekostet hat. Budgets pro Woche, Monat oder Jahr, für den Haushalt oder nur für dich, und Geldlisten zum Aufteilen, etwa für den Pizzaabend.",
+  "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and splits for a pizza night.": "Foto, PDF oder eBon: ToHuus sieht, was ihr gekauft habt und was es gekostet hat. Budgets pro Woche, Monat oder Jahr, für den Haushalt oder nur für dich, und Abrechnungen zum Teilen, etwa für den Pizzaabend.",
   "Wish lists with photo, links and price. Who reserved what stays hidden from the person it is for. Private lists only you can see.": "Wunschlisten mit Foto, Links und Preis. Wer was reserviert hat, sieht die beschenkte Person nie. Private Listen siehst nur du.",
   "Stuck on the sofa or putting the kids to bed? Ask for a little something in two taps, someone at home says “I’ll bring it”. Guests can ask through a link.": "Festgesessen auf dem Sofa oder beim Zubettbringen? Wünsch dir mit zwei Tipps eine Kleinigkeit, jemand von euch sagt „Ich bring’s“. Gäste wünschen sich etwas über einen Link.",
   "More: house info, trips and how it works": "Mehr: Hausinfo, Urlaub und wie es funktioniert",
@@ -233,8 +233,8 @@ export const web3: Record<string, string> = {
   'A month': 'Ein Monat',
   'A year': 'Ein Jahr',
   'Lifetime': 'Für immer',
-  'Free licences for people who are interested: a month, a year or for good. Create one code per household and send it. An admin of the household redeems it on the web (Settings › Plan); it then works on every device, the iPhone included. The iPhone app has no code field – Apple does not allow unlocking features with own codes there.':
-    'Kostenlose Lizenzen für Interessierte: ein Monat, ein Jahr oder für immer. Leg einen Code pro Haushalt an und schick ihn los. Eine Admin-Person des Haushalts löst ihn im Web ein (Einstellungen › Abo); danach gilt er auf allen Geräten, auch auf dem iPhone. Die iPhone-App hat kein Code-Feld – Apple erlaubt dort keine eigenen Freischaltcodes.',
+  'Free licences for people who are interested: a month, a year or for good. Create one code per household and send it. An admin of the household redeems it on the web (Settings › Data, plan & account › Plan & storage); it then works on every device, the iPhone included. The iPhone app has no code field – Apple does not allow unlocking features with own codes there.':
+    'Kostenlose Lizenzen für Interessierte: ein Monat, ein Jahr oder für immer. Leg einen Code pro Haushalt an und schick ihn los. Eine Admin-Person des Haushalts löst ihn im Web ein (Einstellungen › Daten, Abo & Konto › Abo & Speicher); danach gilt er auf allen Geräten, auch auf dem iPhone. Die iPhone-App hat kein Code-Feld – Apple erlaubt dort keine eigenen Freischaltcodes.',
   'e.g. Mira, met at the market': 'z. B. Mira, vom Markt',
   'While this is on, every household in ToHuus Cloud gets this plan – nobody pays, nothing is bought. Switch it off and each household has what it has on its own again (trial, code, App Store, Free). Nothing is deleted.':
     'Solange das an ist, bekommt jeder Haushalt in der ToHuus Cloud diesen Plan – niemand zahlt, nichts wird gekauft. Schaltest du es aus, hat jeder Haushalt wieder, was er selbst hat (Testzeit, Code, App Store, Free). Gelöscht wird nichts.',

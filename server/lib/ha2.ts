@@ -991,7 +991,7 @@ export function handleTag(input: { tag_id: string; name?: string | null; device?
   emit('settings');
   if (!ha2Settings().tags.enabled) return { ok: false, message: t('Tag actions are switched off') };
   const tag = db.prepare('SELECT * FROM ha2_tags WHERE tag_id = ?').get(tagId) as TagRow;
-  if (!tag.code || !tag.action) return { ok: false, message: t('This tag has no action yet – choose one in ToHuus Hub › Settings › Home Assistant.') };
+  if (!tag.code || !tag.action) return { ok: false, message: t('This tag has no action yet – choose one in ToHuus Hub › Settings › Connections & devices › Home Assistant.') };
   return runQuickAction(tag.code, tag.action as TagAction, input.user ? `${input.user} (NFC)` : t('NFC tag'));
 }
 

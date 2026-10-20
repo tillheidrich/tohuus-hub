@@ -1,5 +1,5 @@
 /**
- * Settings › Household › Region: where the household shops. Decides currency, number format, units,
+ * Settings › Household › Region & currency: where the household shops. Decides currency, number format, units,
  * first day of the week, Open Food Facts country, store-mode presets and which receipts are read.
  * Separate from the UI language.
  */

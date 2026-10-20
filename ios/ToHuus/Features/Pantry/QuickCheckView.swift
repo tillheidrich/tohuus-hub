@@ -92,7 +92,7 @@ enum PlaceIcon {
         case "sparkles": return "sparkles"
         case "wine", "cup-soda": return "wineglass"
         case "door", "door-open": return "door.left.hand.open"
-        // the rest of web/src/pages/PlacesSettings.tsx PLACE_ICONS (the icon picker in Settings › Places)
+        // the rest of web/src/pages/PlacesSettings.tsx PLACE_ICONS (the icon picker in Settings › Areas & places › Places & categories)
         case "chest-freezer": return "snowflake.circle"
         case "shelf": return "books.vertical"
         case "drawer": return "tray.2"

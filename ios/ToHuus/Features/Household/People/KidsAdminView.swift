@@ -413,7 +413,7 @@ struct KidFormSheet: View {
                 }
                 Section {
                     Picker(L("Tasks on the tablet"), selection: $taskView) {
-                        Text(L("One at a time")).tag("now")
+                        Text(L("Just one")).tag("now")
                         Text(L("As a list")).tag("list")
                     }
                     .pickerStyle(.segmented)

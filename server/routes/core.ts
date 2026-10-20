@@ -4,6 +4,7 @@ import { itemIsExtra } from '../lib/extras.js';
 import multer from 'multer';
 import { z } from 'zod';
 import { config, smtpEnabled } from '../config.js';
+import { adoptRequestLang } from '../lib/instance-lang.js';
 import { visionAvailable, visionModel } from '../lib/vision.js';
 import { appearanceFor } from '../lib/appearance.js';
 import { navFor } from '../lib/nav-prefs.js';
@@ -87,6 +88,8 @@ r.get('/me', (req, res) => {
     res.status(401).json({ error: 'unauthorized' });
     return;
   }
+  // self-hosted: the first admin who opens the app fixes the household language from the browser (Paket D)
+  adoptRequestLang(req, actor.kind === 'user' && actor.role === 'admin');
   res.json({
     actor,
     household: getSetting('household.name', t('Our home')),

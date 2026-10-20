@@ -118,7 +118,7 @@ function MyTrip({ trip }: { trip: Trip }) {
   );
 }
 
-/** Settings › Notifications: the same switch outside a trip. */
+/** Settings › Notifications & calendar: the same switch outside a trip. */
 export function TripPrivacyRow() {
   const priv = useApi<{ private: boolean }>(['shopping', 'trip-privacy'], '/shop/trips/privacy');
   const set = async (v: boolean) => {

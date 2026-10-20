@@ -1,5 +1,5 @@
 /**
- * Settings › Members › "Invite someone" (wave 6): name and e-mail optional, member / admin or a guest level,
+ * Settings › Household › Who lives here? › "Invite someone" (wave 6): name and e-mail optional, member / admin or a guest level,
  * an optional note. With SMTP the branded invitation mail goes out; without (or additionally) the link can be
  * copied, shown as QR code or shared (share sheet, WhatsApp). Open invitations can be sent again, renewed or
  * withdrawn. Works the same for one person, a couple, a family or a shared flat.
@@ -41,7 +41,7 @@ export interface InviteLink {
 type Access = 'member' | 'admin' | 'guest';
 const LEVELS = () =>
   [
-    ['order', t('Treats & shopping list')],
+    ['order', t('Bring me something & shopping list')],
     ['stock', t('+ Stock')],
     ['recipes', t('+ Recipes')],
     ['family', t('Like family')],

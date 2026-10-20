@@ -10,6 +10,7 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { brand, db, lang } from '../db.js';
+import { requestLang } from '../lib/instance-lang.js';
 import { t } from '../i18n.js';
 import { NAME_MAX, PASSWORD_MIN, hashPassword, rateLimited, rateLimitedGlobal, requireAdmin, requireAuth, resolveActor, sha256, verifyPassword } from '../lib/auth.js';
 import { passwordChangedMailLocal, revokeMemberCredentials, revokedCount } from '../lib/credential-revoke.js';
@@ -110,7 +111,8 @@ pub.get(
         })
       : [];
     return {
-      language: lang(),
+      // self-hosted before anyone chose a language: the browser's, else German (lib/instance-lang.ts)
+      language: requestLang(req),
       brand: brand(),
       showNames,
       users,
@@ -139,7 +141,7 @@ pub.post(
       if (rateLimited(`totp:${u.id}`, 5, 5 * 60_000)) throw new AuthError(429, t('Too many attempts. Please wait a few minutes.'));
       if (!checkSecondFactor(u.id, code)) throw new AuthError(401, t('That code didn’t work.'), { needCode: true });
     } else if (p.requireTotpAdmins && u.role === 'admin') {
-      throw new AuthError(403, t('Admins need two-step sign-in for passwords here. Sign in with a passkey, an e-mail link or SSO and set it up under Settings › My account.'));
+      throw new AuthError(403, t('Admins need two-step sign-in for passwords here. Sign in with a passkey, an e-mail link or SSO and set it up under Settings › Me › Sign-in & security.'));
     }
     startSession(req, res, u.id, 'password');
     return { ok: true };

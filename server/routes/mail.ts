@@ -50,7 +50,7 @@ function unsubPage(title: string, text: string, form: string) {
 }
 function withUnsub(req: express.Request, res: express.Response, fn: (userId: number) => void) {
   const tok = readUnsubscribeToken(String(req.params.token ?? ''));
-  if (!tok) return void res.status(404).type('html').send(unsubPage(t('Link not valid'), t('This link does not work (any more). You can change your mails in ToHuus under Settings › Notifications.'), ''));
+  if (!tok) return void res.status(404).type('html').send(unsubPage(t('Link not valid'), t('This link does not work (any more). You can change your mails in ToHuus under Settings › Notifications & calendar.'), ''));
   try {
     // cloud: never open (and so create) a household database for an id that has no household
     if (config.multiTenant && !getHousehold(tok.householdId)) throw new Error('gone');
@@ -59,7 +59,7 @@ function withUnsub(req: express.Request, res: express.Response, fn: (userId: num
       fn(tok.userId);
     });
   } catch {
-    res.status(404).type('html').send(unsubPage(t('Link not valid'), t('This link does not work (any more). You can change your mails in ToHuus under Settings › Notifications.'), ''));
+    res.status(404).type('html').send(unsubPage(t('Link not valid'), t('This link does not work (any more). You can change your mails in ToHuus under Settings › Notifications & calendar.'), ''));
   }
 }
 pub.get('/mail/unsubscribe/:token', (req, res) =>
@@ -70,7 +70,7 @@ pub.get('/mail/unsubscribe/:token', (req, res) =>
       .set('Cache-Control', 'no-store')
       .send(
         off
-          ? unsubPage(t('Mails are off'), t('You get no summaries or reminders from ToHuus by mail. You can switch them on again in Settings › Notifications.'), '')
+          ? unsubPage(t('Mails are off'), t('You get no summaries or reminders from ToHuus by mail. You can switch them on again in Settings › Notifications & calendar.'), '')
           : unsubPage(
               t('No more mails from ToHuus?'),
               t('Summaries and reminders stop. Sign-in links and security notices still come, they are part of your account.'),
@@ -82,7 +82,7 @@ pub.get('/mail/unsubscribe/:token', (req, res) =>
 pub.post('/mail/unsubscribe/:token', express.urlencoded({ extended: false }), (req, res) =>
   withUnsub(req, res, (uid) => {
     setPersonPrefs(uid, { mailOff: true });
-    res.type('html').set('Cache-Control', 'no-store').send(unsubPage(t('Done – no more mails'), t('You get no summaries or reminders from ToHuus by mail. You can switch them on again in Settings › Notifications.'), ''));
+    res.type('html').set('Cache-Control', 'no-store').send(unsubPage(t('Done – no more mails'), t('You get no summaries or reminders from ToHuus by mail. You can switch them on again in Settings › Notifications & calendar.'), ''));
   }),
 );
 

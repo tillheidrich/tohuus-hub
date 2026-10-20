@@ -250,7 +250,7 @@ export function accessFromToken(token: string | null | undefined): OAuthAccess |
   return { grantId: g.id, userId: g.user_id, userName: g.user_name, clientName: g.client_name, scopes: String(g.scopes).split(' ') as Scope[] };
 }
 
-// ------------------------------------------------------------------ connections (Settings › Access & AI)
+// ------------------------------------------------------------------ connections (Settings › Connections & devices › AI)
 
 export function connectionsOf(userId: number) {
   return (

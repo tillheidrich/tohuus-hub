@@ -21,7 +21,7 @@ export const account: Record<string, string> = {
   'You can change this later in the settings.': 'Das kannst du später in den Einstellungen ändern.',
   // tags and the reminder
   Sample: 'Beispiel',
-  'Sample data – remove it under Settings › Data': 'Beispieldaten – entfernen unter Einstellungen › Daten',
+  'Sample data – remove it under Settings › Data, plan & account › Data & reset': 'Beispieldaten – entfernen unter Einstellungen › Daten, Abo & Konto › Daten & Zurücksetzen',
   'Sample data': 'Beispieldaten',
   'Sample data removed – {n} things you used stay': 'Beispieldaten entfernt – {n} Sachen, die ihr benutzt habt, bleiben',
   'Sample data removed': 'Beispieldaten entfernt',

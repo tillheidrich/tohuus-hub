@@ -83,7 +83,7 @@ export const FEATURE_PLAN: Record<Feature, 'haushalt' | 'plus'> = {
 export function planError(feature: Feature) {
   const plan = FEATURE_PLAN[feature];
   const err = new UsageLimitError(
-    plan === 'plus' ? t('This is part of Plus. You can switch any time under Settings › Subscription.') : t('This is part of the Household plan or Plus. You can switch any time under Settings › Subscription.'),
+    plan === 'plus' ? t('This is part of Plus. You can switch any time under Settings › Data, plan & account › Plan & storage.') : t('This is part of the Household plan or Plus. You can switch any time under Settings › Data, plan & account › Plan & storage.'),
     402,
     'plan',
   );

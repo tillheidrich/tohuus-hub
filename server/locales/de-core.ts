@@ -2,8 +2,8 @@
 export const de_core: Record<string, string> = {
   // AI switches (ai.ts, ai-policy.ts)
   'AI was switched off by your parents.': 'KI wurde von deinen Eltern ausgeschaltet.',
-  'You switched AI off for yourself (Settings › Access & AI).': 'Du hast KI für dich ausgeschaltet (Einstellungen › Zugang & KI).',
-  'AI is switched off for this household (Settings › Access & AI).': 'KI ist in diesem Haushalt ausgeschaltet (Einstellungen › Zugang & KI).',
+  'You switched AI off for yourself (Settings › Connections & devices › AI).': 'Du hast KI für dich ausgeschaltet (Einstellungen › Verbindungen & Geräte › KI).',
+  'AI is switched off for this household (Settings › Connections & devices › AI).': 'KI ist in diesem Haushalt ausgeschaltet (Einstellungen › Verbindungen & Geräte › KI).',
   'AI is off – I understand simple sentences like “milk is out and 2 peppers”.': 'KI ist aus – ich verstehe einfache Sätze wie „Milch ist alle und 2 Paprika“.',
 
   // text recognition (ocr.ts, receipt-read.ts)
@@ -33,8 +33,8 @@ export const de_core: Record<string, string> = {
   'Guests and children cannot connect assistants, and the household may have switched MCP access off. Ask an adult of your household.':
     'Gäste und Kinder können keine Assistenten verbinden, und vielleicht ist der MCP-Zugriff im Haushalt ausgeschaltet. Frag einen Erwachsenen aus eurem Haushalt.',
   'Household: {name}': 'Haushalt: {name}',
-  'If this was not you, end the connection in Settings › Access & AI and change your password.':
-    'Warst du das nicht? Dann beende die Verbindung unter Einstellungen › Zugang & KI und ändere dein Passwort.',
+  'If this was not you, end the connection in Settings › Connections & devices › AI assistants & access and change your password.':
+    'Warst du das nicht? Dann beende die Verbindung unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge und ändere dein Passwort.',
   'New connection': 'Neue Verbindung',
   'Not possible with this account': 'Mit diesem Konto nicht möglich',
   'Off unless you tick it. Even then only if your household allows sharing health data with AI.':
@@ -47,8 +47,8 @@ export const de_core: Record<string, string> = {
   'Which household?': 'Welcher Haushalt?',
   '{client} can now use your household on your behalf.': '{client} kann jetzt in deinem Namen auf euren Haushalt zugreifen.',
   '{client} is now connected to ToHuus': '{client} ist jetzt mit ToHuus verbunden',
-  '{client} wants to use your household on your behalf. You can end this at any time in Settings › Access & AI.':
-    '{client} möchte in deinem Namen auf euren Haushalt zugreifen. Du kannst das jederzeit unter Einstellungen › Zugang & KI beenden.',
+  '{client} wants to use your household on your behalf. You can end this at any time in Settings › Connections & devices › AI assistants & access.':
+    '{client} möchte in deinem Namen auf euren Haushalt zugreifen. Du kannst das jederzeit unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge beenden.',
 
   // account mails and cloud account errors (routes/cloud.ts) – all of a mail in one language
   'Sign in to ToHuus': 'Bei ToHuus anmelden',
@@ -70,7 +70,7 @@ export const de_core: Record<string, string> = {
   'Please confirm your e-mail address first.': 'Bitte bestätige zuerst deine E-Mail-Adresse.',
   'The current password is wrong.': 'Das aktuelle Passwort stimmt nicht.',
   'In ToHuus Cloud people join by invitation.': 'In ToHuus Cloud kommen Leute per Einladung dazu.',
-  'Everyone changes their own password under My account.': 'Jede Person ändert ihr Passwort selbst unter Mein Konto.',
+  'Everyone changes their own password under Settings › Me › Sign-in & security.': 'Jede Person ändert ihr Passwort selbst unter Einstellungen › Ich › Anmeldung & Sicherheit.',
   Admin: 'Admin',
   Passkey: 'Passkey',
   'Your ToHuus account is deleted': 'Dein ToHuus-Konto ist gelöscht',
@@ -97,8 +97,8 @@ export const de_core: Record<string, string> = {
   'Nothing to do if you want to keep it. To end or change it: in the App Store under your Apple account › Subscriptions.':
     'Wenn du es behalten willst, musst du nichts tun. Kündigen oder ändern: im App Store unter deinem Apple-Account › Abonnements.',
   'Manage subscription': 'Abo verwalten',
-  'You get this because you are an admin of this household. Switch it off in Settings › Plan & storage.':
-    'Du bekommst das, weil du Admin dieses Haushalts bist. Abschalten unter Einstellungen › Abo & Speicher.',
+  'You get this because you are an admin of this household. Switch it off in Settings › Data, plan & account › Plan & storage.':
+    'Du bekommst das, weil du Admin dieses Haushalts bist. Abschalten unter Einstellungen › Daten, Abo & Konto › Abo & Speicher.',
   '{name} brings it': '{name} bringt es mit',
   'Stays on the list – {name} can’t bring it': 'Bleibt auf der Liste – {name} kann es nicht mitbringen',
   // short videos (images.ts)

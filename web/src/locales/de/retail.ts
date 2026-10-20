@@ -8,7 +8,7 @@ export const retail: Record<string, string> = {
   'Check now': 'Jetzt prüfen',
   'Checked every 10 minutes.': 'Wird alle 10 Minuten geprüft.',
   'Checking …': 'Prüfe …',
-  'Connect a mailbox once – eBons and pickup notices then arrive here by themselves. Settings › Access & AI › Receipt inbox.': 'Einmal ein Postfach verbinden – eBons und Abholavise landen dann von selbst hier. Einstellungen › Zugänge & KI › Bon-Postfach.',
+  'Connect a mailbox once – eBons and pickup notices then arrive here by themselves. Settings › Connections & devices › Receipts by e-mail.': 'Einmal ein Postfach verbinden – eBons und Abholavise landen dann von selbst hier. Einstellungen › Verbindungen & Geräte › Bons per E-Mail.',
   'Copy address': 'Adresse kopieren',
   'Encryption': 'Verschlüsselung',
   'Folder': 'Ordner',

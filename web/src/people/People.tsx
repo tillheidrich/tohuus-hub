@@ -1,5 +1,5 @@
 /**
- * People (area: people): the household at a glance in Settings › Members, one sheet per person
+ * People (area: people): the household at a glance in Settings › Household › Who lives here?, one sheet per person
  * (picture, likes/dislikes/allergies, guest access, login link), the picture editor with square crop,
  * and "my picture & taste" in My account.
  */
@@ -59,7 +59,7 @@ export const PERSON_COLORS = ['#3d5a80', '#b5553a', '#2f7d5b', '#7a4f8f', '#a83f
 
 /** English source text; shown via t() */
 export const LEVELS: { key: GuestLevel; title: string; text: string }[] = [
-  { key: 'order', title: 'Treats & shopping list', text: 'Can ask for treats from the menu and use the shopping list. Sees nothing else.' },
+  { key: 'order', title: 'Bring me something & shopping list', text: 'Can ask for treats from the menu and use the shopping list. Sees nothing else.' },
   { key: 'stock', title: '+ Stock & where is what', text: 'Also sees what is in the house and where things are, and can take things out.' },
   { key: 'recipes', title: '+ Recipes & week plan', text: 'Also sees recipes, the week plan and what to eat, and can rate dishes.' },
   { key: 'family', title: 'Like family', text: 'Everything day to day – but no settings, members, spending or receipts.' },

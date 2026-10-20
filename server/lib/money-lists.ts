@@ -146,7 +146,7 @@ export function canSeeList(row: Pick<ListRow, 'visibility' | 'owner_id' | 'share
 
 function listRow(id: number, viewer: number | null): ListRow {
   const row = db.prepare('SELECT * FROM money_lists WHERE id = ?').get(id) as ListRow | undefined;
-  if (!row || !canSeeList(row, viewer)) throw new MoneyListError(t('Money list not found'), 404);
+  if (!row || !canSeeList(row, viewer)) throw new MoneyListError(t('Split not found'), 404);
   return row;
 }
 
@@ -497,7 +497,7 @@ const cleanShare = (xs: number[] | undefined, owner: number | null) => [...new S
 export function createMoneyList(input: CreateInput, viewer: number | null) {
   if (!viewer) throw new MoneyListError(t('Only members with an account can do this.'), 403);
   const src = input.from ? draftsFrom(input.from, viewer) : { drafts: [] as Draft[], label: null };
-  const title = (input.title?.trim() || src.label || t('Money list')).slice(0, 80);
+  const title = (input.title?.trim() || src.label || t('Split')).slice(0, 80);
   const people = cleanPeople(input.people, input.count);
   // a list from a selection where lines belong to someone: split by person
   const mode: Mode = input.mode ?? (src.drafts.some((d) => d.for_user) ? 'items' : 'equal');
@@ -553,7 +553,7 @@ export function deleteMoneyList(id: number, viewer: number | null) {
 /** Replace the people (keeps ids that are passed back; costs of removed people lose their payer/owner). */
 export function setPeople(id: number, input: PersonInput[], viewer: number | null) {
   listRow(id, viewer);
-  if (!input.length) throw new MoneyListError(t('A money list needs at least one person'));
+  if (!input.length) throw new MoneyListError(t('A split needs at least one person'));
   const people = cleanPeople(input, undefined);
   const cur = new Set(peopleOf(id).map((p) => p.id));
   db.transaction(() => {

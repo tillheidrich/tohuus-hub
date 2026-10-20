@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 import CoreImage
 
-// Shared helpers for Settings › Notifications, Connections and Data (docs/ios-native-integrations.md).
+// Shared helpers for Settings › Notifications & calendar, Connections and Data (docs/ios-native-integrations.md).
 
 /// A key with its (already localised) label – for ForEach without tuples.
 struct IxPair: Identifiable, Hashable, Sendable {

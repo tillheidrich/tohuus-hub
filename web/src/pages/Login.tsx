@@ -42,7 +42,7 @@ const SSO_ERRORS: Record<string, string> = {
   sso_state: 'The sign-in took too long or was started in another browser. Please try again.',
   sso_provider: 'The sign-in was cancelled at the provider.',
   sso_failed: 'Single sign-on didn’t work. Please try again or use another way.',
-  sso_no_member: 'This account doesn’t belong to anyone in the household yet. Sign in another way and link it under Settings › My account – or ask an admin.',
+  sso_no_member: 'This account doesn’t belong to anyone in the household yet. Sign in another way and link it under Settings › Me › Sign-in & security – or ask an admin.',
   sso_disabled: 'Single sign-on is not set up.',
   sso_taken: 'This account is already linked to another member.',
 };

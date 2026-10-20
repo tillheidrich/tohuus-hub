@@ -35,8 +35,8 @@ export const fixes: Record<string, string> = {
   'Next time you get a sign-in link by e-mail.': 'Beim nächsten Mal bekommst du einen Anmeldelink per E-Mail.',
   'Use the account you already have.': 'Mit dem Konto, das du schon hast.',
   'You’re in, {name}!': 'Du bist drin, {name}!',
-  'The passkey wasn’t saved. You can add one any time under Settings › My account – until then this device stays signed in.':
-    'Der Passkey wurde nicht gespeichert. Du kannst jederzeit unter Einstellungen › Mein Konto einen anlegen – bis dahin bleibt dieses Gerät angemeldet.',
+  'The passkey wasn’t saved. You can add one any time under Settings › Me › Sign-in & security – until then this device stays signed in.':
+    'Der Passkey wurde nicht gespeichert. Du kannst jederzeit unter Einstellungen › Ich › Anmeldung & Sicherheit einen anlegen – bis dahin bleibt dieses Gerät angemeldet.',
   'We sent a confirmation link to {email}. Open it once – after that you can sign in with an e-mail link.':
     'Wir haben einen Bestätigungslink an {email} geschickt. Öffne ihn einmal – danach kannst du dich per E-Mail-Link anmelden.',
   'Open {household}': '{household} öffnen',

@@ -13,7 +13,7 @@ import { classifyStartCode, type StartCode } from '../startCodes';
 export function startCodeHint(c: StartCode): string {
   switch (c.kind) {
     case 'gift':
-      return t('This is a gift code for a plan, not an access code. Create your account or sign in first – then an admin of the household redeems it in the browser under Settings › Plan.');
+      return t('This is a gift code for a plan, not an access code. Create your account or sign in first – then an admin of the household redeems it in the browser under Settings › Data, plan & account › Plan & storage.');
     case 'connect':
       return t('This link is for the iPhone app. Open it on the iPhone, or scan the QR code with the app.');
     case 'address':

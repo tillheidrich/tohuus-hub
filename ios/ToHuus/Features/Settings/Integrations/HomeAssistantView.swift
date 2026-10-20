@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// Settings › Home Assistant (web: pages/Ha2.tsx + HaIntegration.tsx): connect the HACS integration with a code, then
+/// Settings › Connections & devices › Home Assistant (web: pages/Ha2.tsx + HaIntegration.tsx): connect the HACS integration with a code, then
 /// per topic who leads (shopping list, meal plan, care tasks), who is home, notifications through the HA app, NFC tags
 /// and the voice-command guide. Home Assistant itself runs elsewhere – this screen only configures.
 /// API: GET /api/ha2, PATCH /api/ha2/settings, POST /api/ha2/detect|sync|apply-proposals, GET/PATCH/DELETE
@@ -75,9 +75,9 @@ struct HomeAssistantView: View {
                 let v = d["integration"]?["version"]?.string.map { " \($0)" } ?? ""
                 IxStatusLine(text: LF("Connected through the ToHuus Hub integration%@ · last contact %@", v, Self.when(d["integration"]?["seen"]?.string)), ok: true)
             } else if transport == "rest" {
-                IxStatusLine(text: L("Connected with the Home Assistant address and token (Access & AI)"), ok: true)
+                IxStatusLine(text: L("Connected with the Home Assistant address and token (AI assistants & access)"), ok: true)
             } else {
-                IxStatusLine(text: L("Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Access & AI."), ok: nil)
+                IxStatusLine(text: L("Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Settings › Connections & devices › AI assistants & access."), ok: nil)
             }
             if let n = d["pending_ops"]?.int, n > 0 {
                 Text(LF("%d changes waiting for Home Assistant", n)).font(.footnote).foregroundStyle(Theme.ink3)
@@ -235,7 +235,7 @@ struct HomeAssistantView: View {
         } header: {
             Text(L("Notifications through the Home Assistant app"))
         } footer: {
-            Text(L("If your household already gets its messages from the Home Assistant app, ToHuus Hub can use it instead of the browser push – per person. Which messages go out at all is still set under Notifications."))
+            Text(L("If your household already gets its messages from the Home Assistant app, ToHuus Hub can use it instead of the browser push – per person. Which messages go out at all is still set under Notifications & calendar."))
         }
     }
 
@@ -294,7 +294,7 @@ struct HomeAssistantView: View {
                     }
                 }
                 if !list.isEmpty && targets.isEmpty {
-                    Text(L("Print a QR label for a product or care task first (More › QR labels) – tags use the same actions."))
+                    Text(L("Print a QR label for a product or care task first (Settings › Connections & devices › QR labels) – tags use the same actions."))
                         .font(.footnote).foregroundStyle(Theme.ink3)
                 }
             }
@@ -552,7 +552,7 @@ struct HaIntegrationSetup: View {
                         .accessibilityLabel(L("Code for Home Assistant"))
                         .accessibilityValue(code.map { String($0) }.joined(separator: " "))
                     let left = max(0, Int(expires.timeIntervalSince(now)))
-                    Text(LF("Valid for %@ more. Use it once; it gives Home Assistant its own access, which you can revoke under Access & AI.", String(format: "%d:%02d", left / 60, left % 60)))
+                    Text(LF("Valid for %@ more. Use it once; it gives Home Assistant its own access, which you can revoke under Settings › Connections & devices › AI assistants & access.", String(format: "%d:%02d", left / 60, left % 60)))
                         .font(.footnote).foregroundStyle(Theme.ink3)
                     HStack {
                         Button { IxClipboard.copy(code) } label: { Label(L("Copy"), systemImage: "doc.on.doc") }

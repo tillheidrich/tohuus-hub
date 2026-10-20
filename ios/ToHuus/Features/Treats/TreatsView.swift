@@ -63,7 +63,7 @@ struct TreatsView: View {
         .canvasBackground()
         // an answered request changes in place ("I'll bring it" → on its way), the cart bar slides in
         .motion(value: (requests + mine).map { "\($0.id):\($0.status)" } + ["\(count)"])
-        .navigationTitle(L("Treats"))
+        .navigationTitle(L("Bring me something"))
         .onAppear { app.screenContext = "guests" }
         .onDisappear { if app.screenContext == "guests" { app.screenContext = nil } }
         .navigationBarTitleDisplayMode(.inline)

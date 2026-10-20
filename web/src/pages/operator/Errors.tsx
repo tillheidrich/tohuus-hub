@@ -1,4 +1,4 @@
-// Error log (server/lib/errorlog.ts, docs/error-log.md): back office › Fehler, and Settings › Daten on self-hosted
+// Error log (server/lib/errorlog.ts, docs/error-log.md): back office › Fehler, and Settings › Data, plan & account on self-hosted
 // servers. Search a reference from a screenshot ("Code 219017d1"), filter by source, download as CSV or JSON.
 import { DownloadSimple } from '@phosphor-icons/react';
 import { useState } from 'react';

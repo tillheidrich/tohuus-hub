@@ -90,7 +90,7 @@ export function contextHint(ctx: ScreenContext | null | undefined, de: boolean):
       'Screen: wish lists. What is on the lists: wish_lists. Add a wish or link only when the person wants it now (wish_add, else their own Merkliste). You never see who reserved or already bought something – reveal nothing, guess nothing.',
     ],
     knowledge: [
-      'Bildschirm: Was ToHuus sich merkt (Karten: Gegenstand · Eigenschaft: Wert). Neuer oder korrigierter Wert: remember oder knowledge_change set (der alte Wert bleibt im Verlauf). Löschen, für alle sichtbar oder privat machen nur nach Ja (knowledge_change). Nie Codes oder Passwörter speichern, die gehören in Hausinfo › Codes.',
+      'Bildschirm: Haushaltswissen (Karten: Gegenstand · Eigenschaft: Wert). Neuer oder korrigierter Wert: remember oder knowledge_change set (der alte Wert bleibt im Verlauf). Löschen, für alle sichtbar oder privat machen nur nach Ja (knowledge_change). Nie Codes oder Passwörter speichern, die gehören in Hausinfo › Codes.',
       'Screen: what ToHuus remembers (cards: subject · property: value). New or corrected value: remember or knowledge_change set (the old value stays in the history). Delete, share with everyone or make private only after a yes (knowledge_change). Never store codes or passwords, they belong in Hausinfo › Codes.',
     ],
     guests: [

@@ -1,5 +1,5 @@
 /**
- * Settings › Members (invites, login screen privacy) and Settings › Data & backups
+ * Settings › Household › Who lives here? (invites, login screen privacy) and Settings › Data, plan & account › Data & backups
  * (snapshots, restore, off-site copy). Area: data.
  */
 import {
@@ -49,7 +49,7 @@ export function Members({ me, admin }: { me: Me; admin: boolean }) {
     <div className="stack" style={{ gap: 22 }}>
       <section>
         <div className="row between" style={{ marginBottom: 10 }}>
-          <h2 style={{ margin: 0 }}>{t('Members')}</h2>
+          <h2 style={{ margin: 0 }}>{t('People')}</h2>
           <button className="btn primary" onClick={() => setInviteOpen(true)}>
             <UserPlus size={16} /> {t('Invite someone')}
           </button>

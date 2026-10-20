@@ -1,5 +1,5 @@
 /**
- * Optional mails can be switched off: Settings › Notifications ("Mails from ToHuus") and the signed one-click link in
+ * Optional mails can be switched off: Settings › Notifications & calendar ("Mails from ToHuus") and the signed one-click link in
  * every summary mail (List-Unsubscribe / List-Unsubscribe-Post). GET only shows a page, POST switches off.
  */
 import fs from 'node:fs';

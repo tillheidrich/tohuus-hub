@@ -137,16 +137,16 @@ export function Help() {
     {
       id: 'treats',
       icon: <HandHeart size={20} />,
-      title: t('Treats: doing each other a good turn'),
+      title: t('Bring me something: doing each other a good turn'),
       lead: t('Stuck on the sofa, in bed or with bedtime? Ask for a little something – someone at home brings it.'),
       steps: [
-        t('Treats › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey.'),
+        t('Bring me something › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey.'),
         t('“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can.'),
         t('The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Mira is bringing it”.'),
         t('Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what.'),
         t('Guests too: “Invite guests” shares a link or QR code. Guests wish for something without an app, and it lands in the same list as “Guest: name”, with the same buttons.'),
       ],
-      link: { label: t('Open Treats'), to: '/bestellen' },
+      link: { label: t('Open “Bring me something”'), to: '/bestellen' },
     },
     {
       id: 'guests',
@@ -156,7 +156,7 @@ export function Help() {
       steps: [
         t('Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note.'),
         t('Share the link or show the QR code. Give it an end date or revoke it at any time.'),
-        t('Wishes from guests are answered in Treats – the link for that is shared there under “Invite guests”.'),
+        t('Wishes from guests are answered in “Bring me something” – the link for that is shared there under “Invite guests”.'),
         t('Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Connections & devices › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.'),
       ],
       link: { label: t('Open guests'), to: '/bar' },
@@ -167,7 +167,7 @@ export function Help() {
       title: t('The menu: tea, ice cream, snacks'),
       lead: t('Everything people can ask for lives in one menu – things from your stock and things that are simply there, like tap water or tea.'),
       steps: [
-        t('Treats › “Edit menu” (also in Settings › Areas & places).'),
+        t('Bring me something › “Edit menu” (also in Settings › Areas & places).'),
         t('“Add from stock”: crisps, cola, ice cream – they show “all gone” (or disappear) when they run out, and serving books them out.'),
         t('“Menu-only item”: tap water, coffee, cappuccino – never counted. Link up to three ingredients from stock (milk, coffee): when one runs low it says “maybe not”.'),
         t('Choices like size, milk or sugar: single or several, required or optional, with a preselected default.'),

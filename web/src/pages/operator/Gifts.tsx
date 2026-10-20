@@ -68,7 +68,7 @@ export function OperatorGifts() {
 
       <Section title={t('New gift codes')}>
         <p className="small muted">
-          {t('Free licences for people who are interested: a month, a year or for good. Create one code per household and send it. An admin of the household redeems it on the web (Settings › Plan); it then works on every device, the iPhone included. The iPhone app has no code field – Apple does not allow unlocking features with own codes there.')}
+          {t('Free licences for people who are interested: a month, a year or for good. Create one code per household and send it. An admin of the household redeems it on the web (Settings › Data, plan & account › Plan & storage); it then works on every device, the iPhone included. The iPhone app has no code field – Apple does not allow unlocking features with own codes there.')}
         </p>
         <form
           className="op-form"

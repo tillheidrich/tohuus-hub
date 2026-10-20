@@ -1,4 +1,4 @@
-// Settings › Access & AI: the AI switches (household, me, children) and MCP for the household's own assistants.
+// Settings › Connections & devices › AI: the AI switches (household, me, children) and MCP for the household's own assistants.
 // Server: server/routes/ai-settings.ts, server/lib/ai-policy.ts.
 import { Copy, Lock, Plug, Trash } from '@phosphor-icons/react';
 import { del, invalidate, patch, put, relTime, useApi } from '../api';

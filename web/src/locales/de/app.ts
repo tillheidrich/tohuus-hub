@@ -61,7 +61,7 @@ export const app: Record<string, string> = {
 
   // App shell — navigation
   Today: 'Heute',
-  Stock: 'Bestand',
+  Stock: 'Vorrat',
   Shopping: 'Einkauf',
   Cook: 'Kochen',
   'Where’s what?': 'Wo ist was?',

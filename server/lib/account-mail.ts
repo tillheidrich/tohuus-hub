@@ -45,7 +45,7 @@ export async function notifyNewConnection(userId: number, client: string, scopes
       subject: t('{client} is now connected to ToHuus', { client }),
       title: t('New connection'),
       eyebrow: t('Your account'),
-      paragraphs: [t('{client} can now use your household on your behalf.', { client }), t('If this was not you, end the connection in Settings › Access & AI and change your password.')],
+      paragraphs: [t('{client} can now use your household on your behalf.', { client }), t('If this was not you, end the connection in Settings › Connections & devices › AI assistants & access and change your password.')],
       rows: [{ label: t('Allowed'), value: scopes.filter((s) => s !== 'mcp:read' || !scopes.includes('mcp:write')).map((s) => t(SCOPE_LABEL[s] ?? s)).join(', ') }],
       button: { url: `${config.baseUrl}/einstellungen/verbindungen/assistent`, label: t('Open settings') },
     }),

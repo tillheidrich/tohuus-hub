@@ -33,7 +33,7 @@ export const kids: Record<string, string> = {
   "Enter the PIN to leave kid mode on this tablet.": "PIN eingeben, um den Kindermodus auf diesem Tablet zu verlassen.",
   "{n} digits entered": "{n} Ziffern eingegeben",
   "OK": "OK",
-  "No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Members › Kids.": "Für dieses Profil ist keine PIN gesetzt. Um den Kindermodus zu beenden, entferne das Tablet in der App unter Einstellungen › Mitglieder › Kinder.",
+  "No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Household › Who lives here?.": "Für dieses Profil ist keine PIN gesetzt. Um den Kindermodus zu beenden, entferne das Tablet in der App unter Einstellungen › Haushalt › Wer wohnt hier?.",
   "Approved – it’s on the order board": "Erlaubt – steht jetzt bei den Bestellungen",
   "{name} sees “maybe later”": "{name} sieht „Vielleicht später“",
   "Kids’ wishes": "Wünsche der Kinder",

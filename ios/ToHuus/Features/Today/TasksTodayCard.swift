@@ -34,7 +34,7 @@ struct TasksTodayCard: View {
                     HStack(spacing: Theme.Space.s3) {
                         TaskRing(done: doneToday, total: total)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(open.isEmpty ? L("All done for today.") : FocusFlags.gentle ? L("One thing at a time is enough.") : LF("%d of %d done today", doneToday, total))
+                            Text(open.isEmpty ? L("All done for today.") : FocusFlags.gentle ? L("Just one is enough.") : LF("%d of %d done today", doneToday, total))
                                 .font(.subheadline.weight(.semibold))
                             Text(open.isEmpty ? L("Nothing else is due.") : L("Tick off what’s done – the next date sets itself."))
                                 .font(.caption).foregroundStyle(Theme.ink3)
@@ -79,7 +79,7 @@ struct TasksTodayCard: View {
                     }
                     if open.count > max {
                         if FocusFlags.gentle {
-                            NavigationLink { FocusView(api: api) } label: { Label(L("One thing at a time"), systemImage: "scope").font(.caption) }
+                            NavigationLink { FocusView(api: api) } label: { Label(L("Just one"), systemImage: "scope").font(.caption) }
                         } else {
                             Text(LF("%d more", open.count - max)).font(.caption).foregroundStyle(Theme.ink3)
                         }

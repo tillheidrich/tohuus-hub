@@ -80,7 +80,7 @@ struct MyAccountView: View {
             }
         }
         .themedList()
-        .navigationTitle(L("My account"))
+        .navigationTitle(L("Sign-in & security"))
         .task { await load() }
         .refreshable { await load() }
         .toast($toast)
@@ -252,7 +252,7 @@ struct MyAccountView: View {
             if canCreate {
                 Text(L("Sign in with Face ID or Touch ID – nothing to type, nothing to phish. Swipe to rename or remove."))
             } else {
-                Text(LF("Apple lets the app create passkeys only for ToHuus Cloud. For %@ add one in Safari under My account › Passkeys. Swipe to rename or remove.", api.baseURL.host() ?? L("this server")))
+                Text(LF("Apple lets the app create passkeys only for ToHuus Cloud. For %@ add one in Safari under Settings › Me › Sign-in & security. Swipe to rename or remove.", api.baseURL.host() ?? L("this server")))
             }
         }
     }

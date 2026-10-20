@@ -1,6 +1,6 @@
 export const de_fresh: Record<string, string> = {
   'Location not found': 'Ort nicht gefunden',
-  'Stock entry not found': 'Bestandseintrag nicht gefunden',
+  'Stock entry not found': 'Vorratseintrag nicht gefunden',
   'Nothing unopened left': 'Nichts Ungeöffnetes mehr da',
   'There is no freezer location yet – add one in Settings.': 'Es gibt noch kein Gefrierfach als Ort – leg ihn in den Einstellungen an.',
   'There is no fridge location yet – add one in Settings.': 'Es gibt noch keinen Kühlschrank als Ort – leg ihn in den Einstellungen an.',
@@ -11,7 +11,7 @@ export const de_fresh: Record<string, string> = {
   portions: 'Portionen',
   'Invalid month': 'Ungültiger Monat',
   'Estimates from past purchases and usage. Stock is never changed automatically.':
-    'Schätzung aus bisherigen Einkäufen und Verbrauch. Der Bestand wird nie automatisch geändert.',
+    'Schätzung aus bisherigen Einkäufen und Verbrauch. Der Vorrat wird nie automatisch geändert.',
   '{name} ended up in the bin {n} times lately – maybe buy a smaller pack.':
     '{name} ist zuletzt {n}-mal im Müll gelandet – vielleicht eine kleinere Packung kaufen.',
   'Most of it went past its date. Opened things at the front and a one-minute check per place help.':

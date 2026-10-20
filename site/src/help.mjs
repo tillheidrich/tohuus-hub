@@ -70,7 +70,7 @@ export function helpCopy(k) {
             'Ladet die anderen ein (siehe <a href="haushalt-teilen.html">Haushalt teilen</a>).',
             'Tragt unter Aufgaben ein, was immer wieder ansteht, etwa Bad putzen oder Müll rausbringen, wenn ihr mögt (siehe <a href="aufgaben.html">Aufgaben</a>).',
             'Schreibt ein paar Sachen ins Haushaltswissen, die sonst nur einer weiß, etwa die Schuhgrößen der Kinder. Steht das schon in einer Notiz, fügt ihr den Text einfach ein (siehe <a href="haushaltswissen.html">Haushaltswissen</a>).',
-          ), p('Pflegen müsst ihr nichts. Nach ein paar Wochen kennt ToHuus euren Rhythmus und schlägt vor, was wieder fällig ist.')],
+          ), p('Pflegen müsst ihr nichts. Nach ein paar Wochen kennt ToHuus euren Rhythmus und schlägt vor, was bald wieder nötig ist.')],
         ],
         related: ['so-funktioniert-tohuus', 'einkaufsliste', 'aufgaben'],
       },
@@ -89,13 +89,13 @@ export function helpCopy(k) {
             'Jeder Bon und jedes Häkchen auf der Liste zählt als Einkauf. Daraus sieht ToHuus, wie oft ihr etwas kauft, zum Beispiel Haferflocken etwa alle 20 Tage. Einen Vorrat müsst ihr dafür nicht führen.',
           )],
           ['Vorschläge statt Automatik', p(
-            'Ist etwas wieder fällig, erscheint es als Vorschlag mit seinem Grund, etwa „merkt sich: alle ~9 Tage“. Erst wenn du tippst, kommt es auf die Liste. ToHuus schreibt nie still etwas auf eure Liste.',
+            'Ist etwas bald wieder nötig, erscheint es als Vorschlag mit seinem Grund, etwa „merkt sich: alle ~9 Tage“. Erst wenn du tippst, kommt es auf die Liste. ToHuus schreibt nie still etwas auf eure Liste.',
             '„Haben wir noch“ schiebt einen Vorschlag auf. Lehnt ihr ihn zweimal ab, fragt ToHuus nicht mehr, bis ihr das Produkt wieder kauft.',
           )],
           ['Jede Zeile hat einen Absender', p(
             'Auf der Liste steht bei jedem Eintrag, woher er kommt: wer ihn wann eingetragen hat, „merkt sich“, „aus dem Wochenplan“, „vom Assistenten“ oder „über Home Assistant“. Was der Assistent einträgt, lässt sich zurücknehmen.',
           )],
-          ['Das Gedächtnis eures Haushalts', p(
+          ['Das Wissen eures Haushalts', p(
             'Größen, Maße, Zählerstände und was sonst nur einer im Kopf hat, stehen im <a href="haushaltswissen.html">Haushaltswissen</a> als Karten. Ab dann fragt ihr ToHuus statt dieser einen Person, und zu pflegen gibt es nichts. Notizen und Listen holt ihr per Einfügen oder als Datei herein, sichern geht genauso.',
             'Das hilft auch der KI: Ein Assistent kann nur mit dem arbeiten, was er über euch weiß. Mit dem Haushaltswissen antwortet er, ohne zu raten, der Assistent in ToHuus genauso wie Claude oder ChatGPT über <a href="claude-chatgpt.html">MCP</a>.',
           )],
@@ -159,7 +159,7 @@ export function helpCopy(k) {
         related: ['einkaufsliste', 'benachrichtigungen', 'haushalt-teilen'],
       },
       {
-        slug: 'merkt-sich', pair: 'what-tohuus-remembers', group: 'shop', title: 'Was ToHuus sich merkt',
+        slug: 'merkt-sich', pair: 'what-tohuus-remembers', group: 'shop', title: 'Der Kaufrhythmus',
         desc: 'Kaufrhythmus, Vorschläge, „Haben wir noch“, warum kein Vorrat nötig ist und wo das Haushaltswissen steht.',
         sections: [
           ['Zwei Arten, sich etwas zu merken', p('ToHuus merkt sich, wie oft ihr etwas kauft, darum geht es auf dieser Seite. Und es merkt sich, was ihr übers Zuhause wisst, etwa Größen, Maße und Zählerstände. Das steht in der App unter „Wissen“, mehr dazu unter <a href="haushaltswissen.html">Haushaltswissen</a>.')],
@@ -167,7 +167,7 @@ export function helpCopy(k) {
             'Ab drei Käufen eines Produkts schätzt ToHuus, wie oft ihr es kauft. Je mehr Käufe, desto sicherer die Schätzung. Lücken wie ein Urlaub werden ausgelassen.',
           )],
           ['Wann ein Vorschlag kommt', p(
-            'Wenn ein Produkt wieder fällig ist, nicht schon auf der Liste steht und ihr es nicht gerade zweimal abgelehnt habt. Führt ihr für ein Produkt Vorrat und ist genug da, kommt kein Vorschlag.',
+            'Wenn ein Produkt bald wieder nötig ist, nicht schon auf der Liste steht und ihr es nicht gerade zweimal abgelehnt habt. Führt ihr für ein Produkt Vorrat und ist genug da, kommt kein Vorschlag.',
           )],
           ['Was nie auftaucht', p('Diskrete und private Einträge erscheinen nie als Vorschlag.')],
           ['Wie weit zurück', p('Mit Haushalt und Plus bleibt die ganze Geschichte, selbst gehostet sowieso. Ohne Abo könnt ihr sie weiter ansehen und exportieren.')],
@@ -200,12 +200,12 @@ export function helpCopy(k) {
       },
       {
         slug: 'vorrat', pair: 'stock', group: 'home', title: 'Vorrat (freiwillig)',
-        desc: 'Wer mag, führt Bestand. Nötig ist das für ToHuus nicht.',
+        desc: 'Wer mag, zählt seinen Vorrat. Nötig ist das für ToHuus nicht.',
         sections: [
-          ['Freiwillig', p('ToHuus braucht keinen Vorrat, um zu wissen, was fehlt. Der Rhythmus kommt aus Bons und Häkchen. Wer trotzdem Bestand führen will, findet den Vorrat als eigenen Bereich unten in der Leiste. Wer ihn nicht braucht, schaltet ihn unter „Was nutzt ihr?“ ab.')],
+          ['Freiwillig', p('ToHuus braucht keinen Vorrat, um zu wissen, was fehlt. Der Rhythmus kommt aus Bons und Häkchen. Wer trotzdem Vorrat zählen will, findet den Vorrat als eigenen Bereich unten in der Leiste. Wer ihn nicht braucht, schaltet ihn unter „Was nutzt ihr?“ ab.')],
           ['Nur was ausgeht', p('Statt alles zu zählen, kannst du nur die Sachen verfolgen, die regelmäßig ausgehen. Umstellen geht jederzeit, ohne dass Daten verloren gehen.')],
           ['Zählen oder Füllstand', p('Pro Produkt: gezählt, als Füllstand (voll, halb, wenig, leer) oder gar nicht. Dazu Mindesthaltbarkeit pro Packung, geöffnet und eingefroren.')],
-          ['Ab wann etwas knapp ist', p('Das legst du pro Produkt selbst fest. Beim Zählen mit „Mindestens vorrätig“: Fällt der Bestand darunter, gilt es als knapp und kommt auf Wunsch auf die Liste. Beim Füllstand wählst du „Knapp ab wenig“ oder schon „ab halb“. Ob du dazu eine Mitteilung bekommst, stellst du unter Benachrichtigungen für dich selbst ein.')],
+          ['Ab wann etwas knapp ist', p('Das legst du pro Produkt selbst fest. Beim Zählen mit „Mindestens vorrätig“: Fällt der Vorrat darunter, gilt es als knapp und kommt auf Wunsch auf die Liste. Beim Füllstand wählst du „Knapp ab wenig“ oder schon „ab halb“. Ob du dazu eine Mitteilung bekommst, stellst du unter Mitteilungen für dich selbst ein.')],
           ['Schnell abgleichen', p('Der Schnell-Abgleich geht einen Ort durch, ein Tipp pro Produkt: stimmt, weniger, leer, weg. Barcodes scannst du mit der Kamera.')],
           ['Orte', p('Ihr legt fest, welche Orte es bei euch gibt. Keller, Gefriertruhe oder Vorratskammer setzt ToHuus nicht voraus.')],
         ],
@@ -232,7 +232,7 @@ export function helpCopy(k) {
           )],
           ['Per Foto oder Text', p('Bis zu sechs Fotos pro Rezept, etwa Vorder- und Rückseite einer Rezeptkarte oder eine Kochbuchseite. Fotos und eingefügter Text werden mit KI gelesen; ist sie aus, tippst du das Rezept ein oder nimmst ein <a href="rezeptpaket.html">Rezeptpaket</a> von deiner eigenen KI.')],
           ['Aus Küchenmaschinen-Apps', p('Cookidoo, Monsieur Cuisine, Cookit und ähnliche Apps zeigen ihre Rezepte nur mit Anmeldung. In der ToHuus Cloud bestätigst du deshalb Name und Zutaten selbst, am einfachsten per eingefügtem Text. Mehr unter <a href="cookidoo.html">Cookidoo, Monsieur Cuisine und andere Küchenmaschinen</a>.')],
-          ['Aus anderen Apps', p('Unter Einstellungen › Rezepte nimmt ToHuus Exporte von Mealie, Tandoor, Paprika, Nextcloud Kochbuch, KitchenOwl und als CSV. Du siehst vorher eine Vorschau und wählst aus.')],
+          ['Aus anderen Apps', p('Unter Einstellungen › Bereiche & Orte › Rezepte & Importe nimmt ToHuus Exporte von Mealie, Tandoor, Paprika, Nextcloud Kochbuch, KitchenOwl und als CSV. Du siehst vorher eine Vorschau und wählst aus.')],
           ['Nur eigene Inhalte', tip('Übernimm Rezepte für dich und deinen Haushalt. Fremde Rezepte gehören ihren Urhebern: zum Kochen speichern ja, weiterverbreiten nein.')],
         ],
         related: ['rezeptpaket', 'kochen', 'cookidoo'],
@@ -281,7 +281,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
           ['Welche Apps', p('Das gilt für Cookidoo (Thermomix), Monsieur Cuisine, Home Connect mit dem Bosch Cookit, Kenwood World, die Companion-Apps von Tefal, Moulinex und Krups, Magimix Cook Expert, den KitchenAid Cook Processor, Cecotec Mambo und Philips NutriU. Offene Rezeptseiten wie Kitchen Stories oder Ninja Kitchen übernimmst du ganz normal per Link.')],
           ['In der ToHuus Cloud', p('ToHuus greift nicht auf dein Konto bei diesen Apps zu und ruft selbst nichts von dort ab, auch keine Fotos. Ein Rezept teilst du mit ToHuus oder fügst den Link ein, dann bestätigst du Name und Zutaten. Die Schritte kannst du dazuschreiben oder aus deinen eigenen Screenshots lesen lassen. Alles bleibt privat in eurem Haushalt.')],
           ['Text einfügen', p('Am schnellsten geht es so: In der App das ganze Rezept kopieren, in ToHuus unter „Text einfügen“ einsetzen und „Mit KI lesen“ tippen. ToHuus sortiert es in Name, Zutaten und Schritte, du schaust drüber und speicherst. Ist die KI aus, sortiert ToHuus nach Zeilen: Zeilen mit Mengen werden Zutaten, der Rest Schritte.')],
-          ['Viele auf einmal, mit Fotos', p('Hast du eine eigene KI wie Claude oder ChatGPT per MCP verbunden, kann sie Rezepte mit Schritten und Fotos in einem Rutsch speichern, auch hunderte. Oder du lädst ein <a href="rezeptpaket.html">Rezeptpaket</a> mit Fotos hoch, auf dem iPhone direkt aus der Dateien-App. Fotos, die nur als Link ankommen, lädt dein eigenes Gerät: im Browser unter Einstellungen › Rezepte › Rezeptfotos mit „Fotos über diesen Browser laden“.')],
+          ['Viele auf einmal, mit Fotos', p('Hast du eine eigene KI wie Claude oder ChatGPT per MCP verbunden, kann sie Rezepte mit Schritten und Fotos in einem Rutsch speichern, auch hunderte. Oder du lädst ein <a href="rezeptpaket.html">Rezeptpaket</a> mit Fotos hoch, auf dem iPhone direkt aus der Dateien-App. Fotos, die nur als Link ankommen, lädt dein eigenes Gerät: im Browser unter Einstellungen › Bereiche & Orte › Rezepte & Importe › Rezeptfotos mit „Fotos über diesen Browser laden“.')],
           ['Selbst gehostet mit Home Assistant', p('Selbst gehostet liest ToHuus öffentliche Rezeptseiten dieser Apps wie jede andere Rezeptseite. Nutzt ihr die offizielle Cookidoo-Integration in Home Assistant, holt die ToHuus-Integration eure Cookidoo-Woche in den Wochenplan. Details unter <a href="home-assistant.html">Home Assistant</a>.')],
           ['Eigene Geräterezepte', p('Rezepte mit Geräteschritten (Zeit, Temperatur, Stufe, Linkslauf) kannst du über ein <a href="rezeptpaket.html">Rezeptpaket</a> übernehmen, etwa aus Fotos deines eigenen Kochbuchs. Das klappt für den Thermomix genauso wie für Monsieur Cuisine oder Cookit.')],
         ],
@@ -337,11 +337,11 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
       },
       {
         slug: 'kopf-voll', pair: 'a-lot-on-your-mind', group: 'home', title: 'Wenn der Kopf voll ist',
-        desc: 'Kleine Schritte, eins nach dem anderen, ein sichtbarer Timer und der sanfte Modus: für Köpfe, in denen viel los ist.',
+        desc: 'Kleine Schritte, immer nur eins, ein sichtbarer Timer und der sanfte Modus: für Köpfe, in denen viel los ist.',
         sections: [
           ['Für wen', p('Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste. Diese Funktionen sind dafür gebaut, und sie helfen allen im Haushalt. Niemand muss erklären, warum er sie nutzt. ToHuus ist kein Gesundheits- oder Therapieangebot und ersetzt keine Beratung.')],
           ['Kleine Schritte', p('Jede Aufgabe lässt sich in kleine Schritte teilen, die du einzeln abhakst. „In kleine Schritte teilen“ schlägt welche vor: mit KI, wenn euer Haushalt KI erlaubt, sonst aus fertigen Schritten für häufige Aufgaben wie Bad putzen, Küche, Wäsche, Staubsaugen oder Bett beziehen. Du kannst jeden Vorschlag ändern oder löschen. Ist die Aufgabe erledigt, stehen die Schritte beim nächsten Mal wieder offen da.')],
-          ['Eins nach dem anderen', p('Die Fokusansicht zeigt nur eine Sache: die nächste Aufgabe und darin den nächsten Schritt, groß und ohne Liste drumherum.'), ul(
+          ['Nur eins', p('Die Fokusansicht zeigt nur eine Sache: die nächste Aufgabe und darin den nächsten Schritt, groß und ohne Liste drumherum.'), ul(
             '<b>Geschafft</b>: hakt den Schritt ab und zeigt den nächsten.',
             '<b>Später</b>: legt die Aufgabe zur Seite, ohne Vorwurf.',
             '<b>Zu groß? Kleiner machen</b>: teilt die Aufgabe in kleinere Schritte.',
@@ -365,7 +365,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['aufgaben', 'sprechen', 'benachrichtigungen'],
       },
       {
-        slug: 'eine-sache', pair: 'one-thing-at-a-time', group: 'home', title: 'Eine Sache nach der anderen',
+        slug: 'eine-sache', pair: 'one-thing-at-a-time', group: 'home', title: 'Nur eins',
         desc: '„Jetzt“ zeigt immer nur die nächste Aufgabe. Erst wenn sie erledigt ist, kommt die nächste: auf Heute mit „Nur eins“ und auf dem Kinder-Tablet.',
         sections: [
           ['Worum es geht', p('Eine lange Liste kann lähmen. „Jetzt“ nimmt dir das Sortieren ab: ToHuus zeigt eine einzige Aufgabe als große Karte mit „Fertig“. Danach kommt die nächste. Das hilft bei ADHS, an vollen Tagen und Kindern sowieso. ToHuus ist kein Gesundheits- oder Therapieangebot.')],
@@ -395,7 +395,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'sprechen', pair: 'speak', group: 'ai', title: 'Der Assistent',
         desc: 'Was der Assistent kann, was er einträgt und wie du es zurücknimmst.',
         sections: [
-          ['Sprechen oder tippen', p('Der runde Knopf mit dem Funkeln unten rechts ist der Assistent, er ist auf jeder Seite. Schreib, was los ist, oder tipp auf das Mikrofon und sag es: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt Milch auf die Liste und fragt nach, was es Sonntag geben soll.')],
+          ['Sagen oder tippen', p('Der runde Knopf mit dem Funkeln unten rechts ist der Assistent, er ist auf jeder Seite. Schreib, was los ist, oder tipp auf das Mikrofon und sag es: „Milch ist alle, und wir brauchen was für Sonntag.“ Der Assistent setzt Milch auf die Liste und fragt nach, was es Sonntag geben soll.')],
           ['Was er kann', ul(
             'Auf die Liste setzen, abhaken, streichen.',
             'Sagen, was noch da ist und was fällig ist.',
@@ -417,14 +417,14 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['ki-an-oder-aus', 'ki-grenzen', 'haushaltswissen'],
       },
       {
-        slug: 'ki-an-oder-aus', pair: 'ai-on-or-off', group: 'ai', title: 'Mit oder ohne KI',
+        slug: 'ki-an-oder-aus', pair: 'ai-on-or-off', group: 'ai', title: 'KI an oder aus',
         desc: 'Was ohne KI geht, was sie dazu bringt, und wie du sie für Haushalt, dich oder Kinder abschaltest.',
         sections: [
           ['Ohne KI', p('Liste, Vorschläge aus dem Kaufrhythmus, Kochplaner, Wochenplan, Geld, PDF-Bons und die häufigen kurzen Sätze im Assistenten funktionieren ganz ohne Sprachmodell.')],
           ['Was die KI dazubringt', p('Fotos von Papierbons und Rezepten lesen, freie Fragen an den Assistenten, gesprochene Sätze in Text umwandeln.')],
-          ['Welches Modell', p('In der ToHuus Cloud geht jede Anfrage an Mistral, einen Anbieter aus Frankreich, vermittelt über OpenRouter (USA), fest eingestellt und ohne Ausweichen auf andere Anbieter. Nichts wird zum Training genutzt. Bevor KI für dich läuft, fragt ToHuus einmal nach deiner Zustimmung; zurückziehen kannst du sie unter Einstellungen › Zugänge & KI. Selbst gehostet nimmst du deinen eigenen Schlüssel oder gar keinen.')],
+          ['Welches Modell', p('In der ToHuus Cloud geht jede Anfrage an Mistral, einen Anbieter aus Frankreich, vermittelt über OpenRouter (USA), fest eingestellt und ohne Ausweichen auf andere Anbieter. Nichts wird zum Training genutzt. Bevor KI für dich läuft, fragt ToHuus einmal nach deiner Zustimmung; zurückziehen kannst du sie unter Einstellungen › Verbindungen & Geräte › KI. Selbst gehostet nimmst du deinen eigenen Schlüssel oder gar keinen.')],
           ['Abschalten', ul(
-            '<b>Für den ganzen Haushalt</b>: Einstellungen › Zugänge & KI, nur Admins.',
+            '<b>Für den ganzen Haushalt</b>: Einstellungen › Verbindungen & Geräte › KI, nur Admins.',
             '<b>Nur für dich</b>: an derselben Stelle. Die anderen sehen deine Einstellung nicht.',
             '<b>Für ein Kind</b>: Eltern schalten die KI pro Kind ab. Auf dem Kinder-Tablet lässt sich das nicht ändern.',
             '<b>KI-Assistenten über MCP</b> (Claude, ChatGPT) haben einen eigenen Schalter.',
@@ -464,7 +464,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Codes liegen getrennt von den Karten. In der Cloud sind sie verschlüsselt, selbst gehostet, wenn du einen Schlüssel für die Datenbank gesetzt hast.',
             'Am Anfang sehen nur die, die hier wohnen, einen Code. Gäste und Links bekommen ihn nur, wenn du ihn freigibst, auf Wunsch bis zu einem Datum.',
             'Ihr seht, wer einen Code wann angezeigt hat. Der Code selbst steht dabei nie im Protokoll.',
-            'Codes gehen nie an den Assistenten oder eine andere KI, nie an KI-Assistenten über MCP, nie an Home Assistant, Displays oder Benachrichtigungen.',
+            'Codes gehen nie an den Assistenten oder eine andere KI, nie an KI-Assistenten über MCP, nie an Home Assistant, Displays oder Mitteilungen.',
           )],
           ['So geht es', p('Codes legst du unter Hausinfo › Codes an. Sie sind verdeckt, bis jemand auf „Zeigen“ tippt, und werden nach einer Minute wieder verdeckt. Beim Gäste-WLAN erscheint dazu ein QR-Code zum Scannen.', 'Steht ein Code im Text einer Karte, weist ToHuus die Karte ab. Codes gehören in den Tresor.')],
           ['Drucken und Export', p('Auf dem A4-Blatt steht statt der Codes „bitte fragen“, außer ein Admin kreuzt „Codes mitdrucken“ an. Auch im Export und beim Umzug in die Cloud sind Codes nur dabei, wenn ein Admin das ausdrücklich ankreuzt.')],
@@ -502,7 +502,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         slug: 'haushalt-teilen', pair: 'sharing-the-household', group: 'people', title: 'Haushalt teilen',
         desc: 'Mitglieder einladen, Kinder anlegen und einen zweiten Haushalt mitversorgen.',
         sections: [
-          ['Mitglieder', p('Unter Einstellungen › Mitglieder erstellst du einen Einladungslink. Wer ihn öffnet, legt sein eigenes Passwort an und ist dabei. Admins dürfen alles einstellen, Mitglieder nutzen den Haushalt im Alltag.')],
+          ['Leute', p('Unter Einstellungen › Haushalt › Wer wohnt hier? erstellst du einen Einladungslink. Wer ihn öffnet, legt sein eigenes Passwort an und ist dabei. Admins dürfen alles einstellen, Mitglieder nutzen den Haushalt im Alltag.')],
           ['Kinder', p('Kinder brauchen kein Konto. Sie bekommen ein Profil mit einem Tier und auf Wunsch ein Kinder-Tablet mit großen Bildern. Wünsche warten auf ein Elternteil.')],
           ['Zwei Haushalte', p('Wer für Eltern oder Großeltern mit einkauft, verbindet die beiden Haushalte und sieht, was dort fehlt. Das gehört zum Tarif Haushalt.')],
           ['Wer zahlt', p('Ein Abo gilt für den ganzen Haushalt. Mitglieder, Kinder, Gäste und verbundene Haushalte zahlen nichts.')],
@@ -521,15 +521,15 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         related: ['einkaufsliste', 'gaeste', 'datenschutz-kurz'],
       },
       {
-        slug: 'benachrichtigungen', pair: 'notifications', group: 'connect', title: 'Benachrichtigungen',
+        slug: 'benachrichtigungen', pair: 'notifications', group: 'connect', title: 'Mitteilungen',
         desc: 'Wann ToHuus sich meldet, wie du es einstellst und wie es ruhig bleibt.',
         sections: [
           ['Auf dem iPhone', p(`In der iPhone-App gibt es Mitteilungen mit Knöpfen wie „Auf die Liste“, „Mach ich“ oder „Geht nicht“. Pro Ereignis schaltest du sie an oder aus, und Ruhezeiten halten die Nacht frei.`)],
-          ['Im Browser', p('Legst du die Web-App auf den Startbildschirm, kann sie Push-Mitteilungen schicken: Einstellungen › Benachrichtigungen › Push auf diesem Gerät.')],
+          ['Im Browser', p('Legst du die Web-App auf den Startbildschirm, kann sie Push-Mitteilungen schicken: Einstellungen › Mitteilungen & Kalender › Push auf diesem Gerät.')],
           ['Wann', p('Zum Beispiel wenn ein Bon auf die Prüfung wartet, etwas ausgeht, ein Budget knapp wird oder sich ein neues Gerät anmeldet. Eine tägliche Übersicht zu einer festen Uhrzeit ist möglich. Im Urlaub bleibt es still.')],
           ['Selbst gehostet', p('Zusätzlich Telegram, ntfy, Gotify, Matrix, E-Mail und beliebige Webhooks.')],
-          ['Home Assistant', p('Mit der Integration gehen ToHuus-Mitteilungen auch an eure Benachrichtigungsdienste in Home Assistant, etwa ans Handy oder an den Fernseher. Siehe <a href="home-assistant.html">Home Assistant</a>.')],
-          ['Mails von ToHuus', p('Die tägliche Zusammenfassung und die Erinnerung vor einer Abo-Verlängerung kommen per Mail. Unter Einstellungen › Benachrichtigungen schaltest du mit „Mails von ToHuus“ alle ab, oder du klickst in einer dieser Mails auf „Diese Mails abbestellen“. Anmeldelinks und Sicherheitshinweise kommen trotzdem, sie gehören zum Konto.')],
+          ['Home Assistant', p('Mit der Integration gehen ToHuus-Mitteilungen auch an eure Mitteilungsdienste in Home Assistant, etwa ans Handy oder an den Fernseher. Siehe <a href="home-assistant.html">Home Assistant</a>.')],
+          ['Mails von ToHuus', p('Die tägliche Zusammenfassung und die Erinnerung vor einer Abo-Verlängerung kommen per Mail. Unter Einstellungen › Mitteilungen & Kalender schaltest du mit „Mails von ToHuus“ alle ab, oder du klickst in einer dieser Mails auf „Diese Mails abbestellen“. Anmeldelinks und Sicherheitshinweise kommen trotzdem, sie gehören zum Konto.')],
           ['Diskret bleibt diskret', p('Diskrete Einträge erscheinen in Mitteilungen nur als Platzhalter, private gar nicht.')],
         ],
         related: ['gemeinsam-einkaufen', 'home-assistant'],
@@ -542,7 +542,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Die Einkaufsliste als To-do-Liste, in beide Richtungen, auch für Assist und Sprachbefehle.',
             'Sensoren: was fällig ist, wie viel auf der Liste steht, was der Monat und die Woche gekostet haben.',
             'Den Wochenplan als Kalender.',
-            'ToHuus-Mitteilungen an eure Benachrichtigungsdienste.',
+            'ToHuus-Mitteilungen an eure Mitteilungsdienste.',
             'Pro Thema die Wahl, wer führt: Home Assistant, ToHuus oder beide.',
           ), p('Home Assistant baut die Verbindung selbst auf (HTTPS und Live-Updates). Bei dir zu Hause muss nichts aus dem Internet erreichbar sein.')],
           ['HACS installieren', p('Falls noch nicht da: HACS nach der Anleitung auf <a href="https://hacs.xyz/docs/use/">hacs.xyz</a> einrichten und Home Assistant neu starten.')],
@@ -551,14 +551,14 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             `Repository <code>tillheidrich/tohuus-hub-ha</code> eintragen, Typ „Integration“, hinzufügen.`,
             'Nach „ToHuus Hub“ suchen, herunterladen und Home Assistant neu starten.',
           )],
-          ['Code in ToHuus holen', p('In ToHuus: Einstellungen › Home Assistant › „Home Assistant verbinden“. Du bekommst einen Code wie <code>ABCD-EFGH</code>. Er gilt 10 Minuten und nur einmal. Das darf nur ein Admin des Haushalts.')],
+          ['Code in ToHuus holen', p('In ToHuus: Einstellungen › Verbindungen & Geräte › Home Assistant › „Home Assistant verbinden“. Du bekommst einen Code wie <code>ABCD-EFGH</code>. Er gilt 10 Minuten und nur einmal. Das darf nur ein Admin des Haushalts.')],
           ['Integration einrichten', ol(
             'In Home Assistant: Einstellungen › Geräte & Dienste › Integration hinzufügen › ToHuus Hub.',
             '<b>ToHuus Cloud</b> wählen und den Code eingeben. Fertig.',
             'Oder <b>Eigener Server</b>: die Adresse, unter der Home Assistant dein ToHuus erreicht (zum Beispiel <code>http://192.168.1.20:8080</code>), und den Code eingeben.',
-          ), p('Home Assistant bekommt damit einen eigenen Zugang. Du findest ihn in ToHuus unter Einstellungen › Zugänge & KI und kannst ihn dort widerrufen. Er kann nur die Home-Assistant-Schnittstelle nutzen, sonst nichts.')],
-          ['Wer führt?', p('Habt ihr schon eine Einkaufsliste in Home Assistant (die eingebaute Liste, Todoist oder eine andere Listen-App) oder einen Kalender für Essen, entscheidet ihr pro Thema, wer führt: beide, Home Assistant oder ToHuus. Einstellen geht in ToHuus unter Einstellungen › Home Assistant oder direkt in Home Assistant über die Auswahl „wer führt“ am Gerät ToHuus Hub.')],
-          ['Mitteilungen', p('In den Optionen der Integration wählst du Benachrichtigungsdienste (Handy, Fernseher, Lautsprecher) und welche Arten von Mitteilungen dorthin gehen. Schickt ToHuus sie schon pro Person über die Companion-App, lass das leer, sonst kommen sie doppelt.')],
+          ), p('Home Assistant bekommt damit einen eigenen Zugang. Du findest ihn in ToHuus unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge und kannst ihn dort widerrufen. Er kann nur die Home-Assistant-Schnittstelle nutzen, sonst nichts.')],
+          ['Wer führt?', p('Habt ihr schon eine Einkaufsliste in Home Assistant (die eingebaute Liste, Todoist oder eine andere Listen-App) oder einen Kalender für Essen, entscheidet ihr pro Thema, wer führt: beide, Home Assistant oder ToHuus. Einstellen geht in ToHuus unter Einstellungen › Verbindungen & Geräte › Home Assistant oder direkt in Home Assistant über die Auswahl „wer führt“ am Gerät ToHuus Hub.')],
+          ['Mitteilungen', p('In den Optionen der Integration wählst du Mitteilungsdienste (Handy, Fernseher, Lautsprecher) und welche Arten von Mitteilungen dorthin gehen. Schickt ToHuus sie schon pro Person über die Companion-App, lass das leer, sonst kommen sie doppelt.')],
           ['Beispiel-Dashboard', p('Im Dashboard › Bearbeiten › Karte hinzufügen › Manuell einfügen:'), k.code('ha-yaml-de', 'YAML', `type: vertical-stack
 cards:
   - type: tile
@@ -579,7 +579,7 @@ cards:
     initial_view: listWeek
     entities:
       - calendar.tohuus_hub_meal_plan`), p('Fertige Dashboards für Küche und Wandtablet liegen im Repository im Ordner <code>dashboards/</code>.')],
-          ['Selbst gehostet', p('Alles oben gilt genauso. Zusätzlich holt die Integration eure Cookidoo-Woche aus der offiziellen Cookidoo-Integration in den Wochenplan, und NFC-Tags lassen sich als Schnellaktion nutzen. Ältere ToHuus-Versionen ohne Code verbindest du mit „Token statt Code“ (Einstellungen › Zugänge & KI › Neuer Zugang › Home Assistant).')],
+          ['Selbst gehostet', p('Alles oben gilt genauso. Zusätzlich holt die Integration eure Cookidoo-Woche aus der offiziellen Cookidoo-Integration in den Wochenplan, und NFC-Tags lassen sich als Schnellaktion nutzen. Ältere ToHuus-Versionen ohne Code verbindest du mit „Token statt Code“ (Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge › Home Assistant).')],
           ['Wenn es hakt', ul(
             '„Dieser Code gilt nicht (mehr)“: Codes gelten 10 Minuten und einmal. Hol dir einen neuen.',
             '„Nicht erreichbar“ beim eigenen Server: Nimm die Adresse, die Home Assistant erreicht. In Docker meint „localhost“ den Container selbst.',
@@ -595,8 +595,8 @@ cards:
           ['Worum es geht', p('Über das offene Protokoll MCP verbindest du Claude, ChatGPT oder einen anderen Assistenten mit deinem Haushalt. Dann kannst du dort zum Beispiel ein Foto vom Kühlschrank schicken und sagen: „Setz auf die Liste, was fehlt.“')],
           ['Die Adresse', k.code('mcp-url', 'MCP', `${k.CLOUD}/mcp`), p('Selbst gehostet ist es die Adresse deines Servers mit <code>/mcp</code> am Ende.')],
           ['Anmelden', p(
-            'Beim Verbinden meldest du dich mit deinem ToHuus-Konto an (OAuth). Du wählst den Haushalt und was der Assistent darf: lesen oder lesen und ändern, Allergien und Kinderdaten nur, wenn du das ankreuzt. Unter Einstellungen › Zugänge & KI siehst du jede Verbindung und kannst sie beenden.',
-            'Für Home Assistant und ältere Apps gibt es weiter einen Zugang mit Schlüssel in der Adresse: Einstellungen › Zugänge & KI › Neuer Zugang › KI-Assistent. Behandle ihn wie ein Passwort.',
+            'Beim Verbinden meldest du dich mit deinem ToHuus-Konto an (OAuth). Du wählst den Haushalt und was der Assistent darf: lesen oder lesen und ändern, Allergien und Kinderdaten nur, wenn du das ankreuzt. Unter Einstellungen › Verbindungen & Geräte › KI siehst du jede Verbindung und kannst sie beenden.',
+            'Für Home Assistant und ältere Apps gibt es weiter einen Zugang mit Schlüssel in der Adresse: Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge › KI-Assistent. Behandle ihn wie ein Passwort.',
           )],
           ['In Claude und ChatGPT', ul(
             'Claude: Einstellungen › Connectors › Eigenen Connector hinzufügen, Adresse einfügen.',
@@ -607,7 +607,7 @@ cards:
             'Diskrete Einträge nur als Platzhalter, private gar nicht.',
             'Allergien und Angaben zu Kindern nur, wenn ein Admin das ausdrücklich erlaubt.',
             'Codes aus der Hausinfo nie.',
-          ), p('Einkäufe, die der Assistent festhält, warten erst in der Prüfung. Ein Admin kann MCP für den ganzen Haushalt abschalten (Einstellungen › Zugänge & KI).')],
+          ), p('Einkäufe, die der Assistent festhält, warten erst in der Prüfung. Ein Admin kann MCP für den ganzen Haushalt abschalten (Einstellungen › Verbindungen & Geräte › KI).')],
           ['Und die KI-Grenzen?', p('Dein eigener Assistent arbeitet mit seinem eigenen Sprachmodell. Von den Nachrichten an den Assistenten in ToHuus geht dabei nichts ab. Warum das Haushaltswissen dabei so viel ausmacht, steht im Beitrag <a href="../ratgeber/ki-braucht-kontext.html">Warum auch die beste KI ohne Kontext nur rät</a>.')],
         ],
         related: ['ki-an-oder-aus', 'haushaltswissen', 'rezeptpaket'],
@@ -625,7 +625,7 @@ cards:
             'Eine wiederkehrende Aufgabe steht als ein Termin am nächsten Datum im Kalender, den Rhythmus behält ToHuus. Was nur für dich ist, steht nur in „Nur für mich“ und „Mein Kalender“ und nur mit deinem eigenen Passwort.',
           )],
           ['Auf dem iPhone einrichten', ol(
-            'In ToHuus: ganz unten unter Aufgaben oder unter Einstellungen › Mein Konto bei „Erinnerungen & Kalender“ auf „Passwort erstellen“ tippen. Server, Benutzername und Passwort werden einmal angezeigt.',
+            'In ToHuus: ganz unten unter Aufgaben oder unter Einstellungen › Mitteilungen & Kalender › Erinnerungen & Kalender auf „Passwort erstellen“ tippen. Server, Benutzername und Passwort werden einmal angezeigt.',
             'Für Erinnerungen: Einstellungen › Apps › Erinnerungen › Accounts › Account hinzufügen › Andere › CalDAV-Account hinzufügen, die drei Angaben eintragen.',
             'Für den Kalender: Einstellungen › Apps › Kalender › Kalenderaccounts › Account hinzufügen › Andere › CalDAV-Account hinzufügen, mit denselben Angaben.',
             'Erinnerungen und Kalender öffnen: Deine ToHuus-Listen und Kalender stehen unter dem neuen Account.',
@@ -639,9 +639,9 @@ cards:
           ['Oder über Home Assistant', ol(
             'In Home Assistant die Integration „CalDAV“ mit deinem Nextcloud-Konto einrichten. Deine Aufgabenlisten erscheinen dort als To-do-Listen.',
             'Die ToHuus-Integration verbinden (siehe <a href="home-assistant.html">Home Assistant</a>).',
-            'In ToHuus unter Einstellungen › Home Assistant bei „Einkaufsliste“ die Nextcloud-Liste wählen und „beide“ einstellen.',
+            'In ToHuus unter Einstellungen › Verbindungen & Geräte › Home Assistant bei „Einkaufsliste“ die Nextcloud-Liste wählen und „beide“ einstellen.',
           )],
-          ['Siri und Kurzbefehle', p('Etwas per Siri auf die Liste setzen geht mit einem persönlichen Schlüssel und einem Kurzbefehl: Einstellungen › Mein Konto › Aus anderen Apps an ToHuus teilen. Der Schlüssel kann nur auf die Liste schreiben.')],
+          ['Siri und Kurzbefehle', p('Etwas per Siri auf die Liste setzen geht mit einem persönlichen Schlüssel und einem Kurzbefehl: Einstellungen › Verbindungen & Geräte › Teilen aus anderen Apps. Der Schlüssel kann nur auf die Liste schreiben.')],
         ],
         related: ['aufgaben', 'home-assistant', 'gemeinsam-einkaufen'],
       },
@@ -650,9 +650,9 @@ cards:
         desc: 'Einen selbst gehosteten Haushalt in die ToHuus Cloud mitnehmen.',
         sections: [
           ['In einem Rutsch', ol(
-            'Auf deinem Server: Einstellungen › Daten › Umzug in die ToHuus Cloud › Umzugsdatei herunterladen. Darin sind Liste, Vorrat, Rezepte, Bons, Rhythmus und Fotos.',
+            'Auf deinem Server: Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Umzug in die ToHuus Cloud › Umzugsdatei herunterladen. Darin sind Liste, Vorrat, Rezepte, Bons, Rhythmus und Fotos.',
             'In der ToHuus Cloud einen neuen Haushalt anlegen.',
-            'Dort: Einstellungen › Daten › Haushalt vom eigenen Server übernehmen, Passwort eingeben, Datei wählen.',
+            'Dort: Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Haushalt vom eigenen Server übernehmen, Passwort eingeben, Datei wählen.',
           ), p('Leute werden über E-Mail oder Namen zugeordnet. Wer noch kein Cloud-Konto hat, steht als Person drin und bekommt eine Einladung von dir.')],
           ['Was nicht mitkommt', ul(
             'Anmeldungen, Geräte, Zugänge und Links: die richtest du in der Cloud neu ein.',
@@ -676,7 +676,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Mit der iPhone-App', p('Die iPhone-App funktioniert auch mit deinem eigenen Server. Sie braucht https mit gültigem Zertifikat, einfaches http geht nur im Heimnetz. Auf dem Startbildschirm der App tippst du auf „Eigener Server“ und gibst die Adresse ein, mit der du ToHuus im Browser öffnest. Dann hast du drei Wege:'), ul(
             '<b>Mit Passwort</b>: Name oder E-Mail und Passwort, dazu der Bestätigungscode, wenn du die Anmeldung in zwei Schritten eingeschaltet hast.',
             '<b>Im Browser anmelden</b>: mit allem, was dein Server anbietet, etwa Passkey, E-Mail-Link oder SSO. Danach fragt eine Seite „ToHuus-App verbinden?“, und du bestätigst.',
-            '<b>Per QR-Code</b>: In der Web-App unter Einstellungen › Mein Konto › „iPhone-App verbinden“ erscheint ein QR-Code. In der App auf „QR-Code scannen“ tippen und darauf halten. Adresse und Passwort musst du dann nicht tippen.',
+            '<b>Per QR-Code</b>: In der Web-App unter Einstellungen › Ich › Anmeldung & Sicherheit › „iPhone-App verbinden“ erscheint ein QR-Code. In der App auf „QR-Code scannen“ tippen und darauf halten. Adresse und Passwort musst du dann nicht tippen.',
           ), p('Auf einem iPhone können mehrere Server und Haushalte angemeldet sein, du wechselst mit einem Tipp. Auf dem eigenen Server ist in der App alles dabei, ohne Tarif und ohne Bezahlen.'), tip('Einen Passkey direkt in der App anlegen geht nur mit der ToHuus Cloud, so regelt Apple das. Auf deinem eigenen Server nimmst du für den Passkey den Weg „Im Browser anmelden“.')],
           ['KI', p('Optional, mit einem Schlüssel für jeden OpenAI-kompatiblen Dienst, etwa Mistral, auch lokal. Ohne Schlüssel läuft alles außer freien Fragen an den Assistenten. Fotos von Papierbons liest dann die Texterkennung auf deinem Server, ohne KI.')],
           ['Sicherungen', p('Jede Nacht eine Sicherung, auf Wunsch zusätzlich auf eine WebDAV-Freigabe wie Nextcloud. Die Datenbank lässt sich mit <code>DB_ENCRYPTION_KEY</code> verschlüsseln.')],
@@ -688,11 +688,11 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         slug: 'daten-export', pair: 'your-data', group: 'account', title: 'Deine Daten mitnehmen',
         desc: 'Export, Rezeptpaket und was beim Löschen passiert.',
         sections: [
-          ['Export', p('Einstellungen › Daten & Sicherung › Export herunterladen gibt eine JSON-Datei mit allen Daten eures Haushalts. Passwörter, Zugänge und Geheimnisse von Integrationen lässt der Export weg. Das dürfen nur Admins.')],
+          ['Export', p('Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Export herunterladen gibt eine JSON-Datei mit allen Daten eures Haushalts. Passwörter, Zugänge und Geheimnisse von Integrationen lässt der Export weg. Das dürfen nur Admins.')],
           ['Rezepte', p('Eure Rezepte mit Fotos gehen als <a href="rezeptpaket.html">Rezeptpaket</a> mit, das andere Apps zum großen Teil lesen können.')],
           ['Haushaltswissen', p('Das Haushaltswissen sicherst du als Markdown, CSV oder JSON, siehe <a href="haushaltswissen.html">Haushaltswissen</a>.')],
           ['Ausgaben', p('Auf der Seite Geld als CSV.')],
-          ['Haushalt löschen', p('In der Cloud wird beim Löschen zuerst der Schlüssel des Haushalts vernichtet. Ab da ist die Datenbank nicht mehr lesbar. Danach werden Dateien und Sicherungen gelöscht. Dein Konto löschst du unter Einstellungen › Mein Konto.')],
+          ['Haushalt löschen', p('In der Cloud wird beim Löschen zuerst der Schlüssel des Haushalts vernichtet. Ab da ist die Datenbank nicht mehr lesbar. Danach werden Dateien und Sicherungen gelöscht. Dein Konto löschst du unter Einstellungen › Ich › Anmeldung & Sicherheit.')],
         ],
         related: ['daten-loeschen', 'datenschutz-kurz', 'umzug-in-die-cloud'],
       },
@@ -700,11 +700,11 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         slug: 'daten-loeschen', pair: 'deleting-data', group: 'account', title: 'Daten löschen und neu anfangen',
         desc: 'Beispieldaten weg, einen Bereich leeren oder alles, und wie du es zurückholst.',
         sections: [
-          ['Wo', p('Einstellungen › Daten & Zurücksetzen, im Browser und auf dem iPhone. Ganze Bereiche löschen nur Admins. Jedes Mitglied kann dort seine eigenen privaten Einträge löschen.')],
+          ['Wo', p('Einstellungen › Daten, Abo & Konto › Daten & Zurücksetzen, im Browser und auf dem iPhone. Ganze Bereiche löschen nur Admins. Jedes Mitglied kann dort seine eigenen privaten Einträge löschen.')],
           ['Beispieldaten entfernen', p('Solange Beispieldaten da sind, steht ein Hinweis auf Heute und ganz oben in Daten & Zurücksetzen. Entfernt wird nur, was die Beispiele angelegt haben. Was du selbst eingetragen hast, bleibt. Beispielsachen, die ihr schon benutzt habt, bleiben auch, außer du wählst sie mit aus.')],
           ['Einen Bereich leeren', ul(
             'Einkauf: Listen und Einträge, die Läden an den Produkten, Kauf-Rhythmus und Vorschläge.',
-            'Vorrat: Produkte, Bestand und Verlauf. Orte und Kategorien bleiben, wenn du sie nicht mit auswählst.',
+            'Vorrat: Produkte, Vorrat und Verlauf. Orte und Kategorien bleiben, wenn du sie nicht mit auswählst.',
             'Geld: Bons mit Fotos und PDFs, Ausgaben, Budgets und Aufteilungen. Hier tippst du zur Sicherheit LÖSCHEN ein.',
             'Kochen: Rezepte, Wochenplan und Kochverlauf. Die Rezepte kannst du behalten.',
             'Aufgaben, Haushaltswissen, Wünsche & Bring mir was, Hausinfo: alles im jeweiligen Bereich.',
@@ -728,7 +728,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Eure Bons werden nicht verkauft und nicht für Marktforschung ausgewertet.',
             'Keine Angebote von außen und keine Affiliate-Links.',
           )],
-          ['KI', p('Nur über Mistral, fest eingestellt. Gesundheitsdaten nur mit eurer ausdrücklichen Erlaubnis. Abschalten geht für den Haushalt, für dich und für Kinder (siehe <a href="ki-an-oder-aus.html">Mit oder ohne KI</a>).')],
+          ['KI', p('Nur über Mistral, fest eingestellt. Gesundheitsdaten nur mit eurer ausdrücklichen Erlaubnis. Abschalten geht für den Haushalt, für dich und für Kinder (siehe <a href="ki-an-oder-aus.html">KI an oder aus</a>).')],
           ['Im Haushalt', p('Gespräche mit dem Assistenten und persönliche Einstellungen sieht nur die jeweilige Person. Diskrete und private Einträge bleiben, was sie sind.')],
           ['Alles im Detail', p('In der <a href="../de/datenschutz.html">Datenschutzerklärung</a>.')],
         ],
@@ -745,7 +745,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Auf dem iPhone: Einstellungen › dein Name › Abonnements.',
             'ToHuus wählen und „Abo kündigen“ tippen.',
           ), p('Das Abo läuft bis zum Ende des bezahlten Zeitraums. Gelöscht wird danach nichts. Ihr könnt alles ansehen und exportieren, Neues eintragen geht wieder mit dem nächsten Abo.')],
-          ['Codes von uns', p('Von uns kannst du auch einen Code bekommen, für einen Monat, ein Jahr oder für immer. Ein Admin eures Haushalts löst ihn im Browser ein, unter Einstellungen › Abo › Code einlösen. Danach gilt er auf jedem Gerät, auch auf dem iPhone. In der iPhone-App selbst geht das nicht.')],
+          ['Codes von uns', p('Von uns kannst du auch einen Code bekommen, für einen Monat, ein Jahr oder für immer. Ein Admin eures Haushalts löst ihn im Browser ein, unter Einstellungen › Daten, Abo & Konto › Abo & Speicher › Code einlösen. Danach gilt er auf jedem Gerät, auch auf dem iPhone. In der iPhone-App selbst geht das nicht.')],
           ['Wenn das Geld gerade nicht reicht', p('Schreib uns über das Formular „Wir können uns das gerade nicht leisten“ bei den <a href="../de/#nicht-leisten">Preisen</a>. Du bekommst eine Lizenz, ohne Begründung. Mit jedem Abo finanzieren andere Haushalte das mit.')],
         ],
         related: ['haushalt-teilen', 'daten-export', 'fragen'],
@@ -757,7 +757,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Was dazugehört', p('Die kleinen Fakten über euer Zuhause, die man selten braucht und dann sofort.'), ul(
             '<b>Personen</b>: Schuh- und Kleidergrößen der Kinder, was jemand mag und was nicht, Unverträglichkeiten und Allergien, die Nummer der Kinderärztin.',
             '<b>Räume</b>: Rollo- und Fenstermaße, welcher Sockel in welche Lampe gehört, wo Hauptwasserhahn und Sicherungskasten sind.',
-            '<b>Dinge</b>: Zählernummern und Zählerstände, Filter für Dunstabzug und Staubsauger, die Reifengröße, wann die Heizung zuletzt gewartet wurde.',
+            '<b>Sachen</b>: Zählernummern und Zählerstände, Filter für Dunstabzug und Staubsauger, die Reifengröße, wann die Heizung zuletzt gewartet wurde.',
             '<b>Regeln</b>: was bei euch in welche Tonne gehört.',
           ), tip('Codes, PIN und WLAN-Schlüssel nimmt ToHuus hier nicht an. Die gehören in die Hausinfo unter Codes (siehe <a href="hausinfo-codes.html">Codes sicher teilen</a>).')],
           ['Warum das hilft', p(
@@ -768,7 +768,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Das Haushaltswissen findest du unter „Mehr“ › Wissen oder in deiner Leiste. Tipp einen Satz wie „Mika Schuhgröße 31“ oder „Rollo Wohnzimmer 120 x 160“, oder sag ihn dem Assistenten. Solche kurzen Sätze versteht ToHuus auch ohne KI. Jede Karte gehört zu einer Person, einem Raum aus „Wo ist was?“, einem Produkt oder einer freien Bezeichnung.',
             'Gibt es zur selben Sache schon eine Karte, bekommt sie den neuen Wert. Im Verlauf stehen die früheren Werte mit Datum, und du kannst einen zurückholen.',
           )],
-          ['Finden', p('Über die Suche, über die Person, den Raum oder das Ding, oder du fragst den Assistenten: „Wie breit ist das Rollo im Bad?“')],
+          ['Finden', p('Über die Suche, über die Person, den Raum oder die Sache, oder du fragst den Assistenten: „Wie breit ist das Rollo im Bad?“')],
           ['Notizen und Listen übernehmen', p(
             'Unter Importieren fügst du Text aus Notizen oder Mails ein oder wählst eine Liste: Excel, Numbers oder Google Tabellen als CSV, oder eine Textdatei. Markdown, etwa aus Obsidian oder Notion, und JSON gehen auch.',
             'Bevor etwas gespeichert wird, siehst du jede erkannte Karte mit „neu“, „neuer Wert“ oder „unverändert“ und hakst an, was übernommen wird. Codes und Passwörter bleiben draußen, Gesundheitsangaben werden privat. „Rückgängig“ nimmt den ganzen Import zurück. Pro Import gehen bis zu 200 Einträge und 512 KB.',
@@ -794,7 +794,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Wünsche und Hausinfo',
           ), p('Der Assistent bleibt der runde Knopf unten rechts. Personen, Urlaub, „Wo ist was?“ und die Einstellungen bleiben unter „Mehr“.')],
           ['So geht es', ol(
-            'Lange auf die Leiste drücken, unter „Mehr“ auf „Leiste anpassen“ tippen oder Einstellungen › Deine Leiste öffnen.',
+            'Lange auf die Leiste drücken, unter „Mehr“ auf „Leiste anpassen“ tippen oder Einstellungen › Ich › Deine Leiste öffnen.',
             'Mit dem grünen Plus holst du einen Bereich dazu, mit dem roten Minus nimmst du ihn raus.',
             'Am Griff ziehst du die Bereiche in die Reihenfolge, die du willst. „Wie am Anfang“ setzt alles zurück.',
           ), p('Im Browser am Computer geht es auch mit einem Rechtsklick auf die Bereiche in der Seitenleiste.')],
@@ -830,7 +830,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Wer mitbearbeiten soll, wählst du unter „Bearbeitet mit“. Die Liste steht bei denen dann unter „Ich bearbeite mit“.',
           ), p('Die Übersicht sortiert sich von allein: Meine Listen, Ich bearbeite mit, Für andere und Zum Schenken, also die Listen der anderen.')],
           ['Wünsche eintragen', p('Mit „Wunsch hinzufügen“ trägst du Titel, Foto, Preis, Menge, Priorität, Shop-Link und eine Notiz ein. Fügst du einen Link ein, schlägt ToHuus einen Titel aus der Adresse vor, auf dem iPhone liest es Titel und Bild der Seite. Ohne Foto bekommt der Wunsch ein passendes Symbol.', 'Ist eine KI eingerichtet und für dich erlaubt, füllt „Foto → KI füllt aus“ Titel, Details und einen sichtbaren Preis aus einem Foto. Das zählt auf euer KI-Guthaben. Ohne KI fehlt der Knopf einfach.', 'Die Reihenfolge änderst du per Ziehen, auf dem iPhone über „Reihenfolge ändern“.')],
-          ['Reservieren und Überraschung', p('Wer schenken will, öffnet einen Wunsch und tippt auf „Wunsch reservieren“. Die anderen sehen dann „Reserviert – Sam“, mit „Noch frei“ blendest du alles Vergebene aus.', 'Steht „Reservierungen bleiben eine Überraschung“ an, sehen du und alle, die mitbearbeiten, nie, ob oder von wem etwas reserviert ist. Das gilt überall: in der App, in der Suche, im Export, über MCP und in Mitteilungen. Bei einer Kinderliste schaltest du es aus, dann siehst du, wer was besorgt. Die Person, für die die Liste ist, sieht Reservierungen nie.')],
+          ['Reservieren und Überraschung', p('Wer schenken will, öffnet einen Wunsch und tippt auf „Wunsch reservieren“. Die anderen sehen dann, dass Sam ihn reserviert hat. Mit „Noch frei“ blendest du alles Vergebene aus.', 'Steht „Reservierungen bleiben eine Überraschung“ an, sehen du und alle, die mitbearbeiten, nie, ob oder von wem etwas reserviert ist. Das gilt überall: in der App, in der Suche, im Export, über MCP und in Mitteilungen. Bei einer Kinderliste schaltest du es aus, dann siehst du, wer was besorgt. Die Person, für die die Liste ist, sieht Reservierungen nie.')],
           ['Du schenkst', p('Unter „Du schenkst“ steht alles, was du reserviert hast, über alle Listen, mit Summe, getrennt nach „Noch zu besorgen“ und „Gekauft“. Das ist dein Geschenke-Einkauf und bleibt getrennt von der gemeinsamen Einkaufsliste, damit nichts die Überraschung verrät.')],
           ['Erinnerungen', p('Bei einem reservierten Wunsch tippst du auf „Erinnern“ und wählst „2 Wochen vorher“, „1 Woche vorher“, „3 Tage vorher“ oder einen eigenen Tag. Hat die Liste ein Datum, schlägt ToHuus 10 Tage vorher vor. Auch eigene Wünsche, die du dir selbst kaufen willst, bekommen so eine Erinnerung.', 'Eine Woche vor dem Anlass bekommst du einmal einen Hinweis, wenn du dort etwas reserviert, aber noch nicht gekauft hast. Beides geht nur an dich, nie an den Haushalt. Abschalten kannst du es unter Einstellungen › Mitteilungen.')],
           ['Teilen mit Gästen', p('Über „Teilen“ erstellst du einen Link für Gäste. Oma, Freunde oder Kollegen öffnen die Liste im Browser und reservieren mit ihrem Namen, ganz ohne Konto. Sie sehen „vergeben“, aber nie, von wem. Einen neuen Link machst oder den alten beendest du an derselben Stelle.', 'Die Liste geht auch als Text, Markdown, Tabelle (CSV) oder zum Drucken raus. Geteilter Text verrät nie, wer etwas reserviert hat, und nennt aus eurem Haushalt nur die Person, der die Liste gehört.')],
@@ -848,7 +848,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             '<b>Haushalt</b>: 100 Nachrichten an den Assistenten im Monat.',
             '<b>Kostenbremse</b>: Dazu hat jeder Haushalt einen festen Höchstbetrag für KI im Monat. Ist er erreicht, etwa nach sehr vielen Bon-Fotos, pausiert die KI auch früher.',
             '<b>Selbst gehostet</b>: keine Grenze von uns.',
-          ), p('Eine Sprachnachricht zählt einmal. Wie viele Nachrichten ihr in diesem Monat schon hattet, steht unter Einstellungen › Abo.')],
+          ), p('Eine Sprachnachricht zählt einmal. Wie viele Nachrichten ihr in diesem Monat schon hattet, steht unter Einstellungen › Daten, Abo & Konto › Abo & Speicher.')],
           ['Was in der Pause weiterläuft', p(
             'Liste, Vorschläge, Aufgaben, Vorrat, Kochplaner, Geld und das Haushaltswissen mit Import und Export. Der Assistent versteht weiter die häufigen kurzen Sätze wie „Milch ist alle und 2 Paprika“, Bon-Fotos liest die Texterkennung, PDF-Bons laufen wie immer. Ein eigener KI-Assistent über <a href="claude-chatgpt.html">MCP</a> zählt nicht mit.',
             'Nachberechnet wird nichts. Im nächsten Monat ist die KI wieder da.',
@@ -879,7 +879,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Gibt es eine kostenlose Version?', p('In der ToHuus Cloud nicht. Jeder neue Haushalt nutzt 14 Tage lang alles, danach geht es mit einem Abo weiter, oder ihr seht und exportiert alles weiter, nur Neues eintragen geht dann nicht. Kostenlos ist ToHuus auf dem eigenen Server (siehe <a href="selbst-hosten.html">Selbst hosten</a>).')],
           ['Ist die KI unbegrenzt?', p('Nein. Die Grenze ist großzügig und steht offen da, siehe <a href="ki-grenzen.html">Faire KI-Grenzen</a>.')],
           ['Funktioniert das ohne REWE?', p('Ja. Papierbons per Foto, PDF-Bons von EDEKA und Kaufland, und wer gar keine Bons sammeln will, hakt einfach auf der Liste ab.')],
-          ['Brauche ich KI?', p('Nein. Siehe <a href="ki-an-oder-aus.html">Mit oder ohne KI</a>.')],
+          ['Brauche ich KI?', p('Nein. Siehe <a href="ki-an-oder-aus.html">KI an oder aus</a>.')],
           ['Gibt es eine Android-App?', p('Nein. Im Browser läuft ToHuus als Web-App, die du auf den Startbildschirm legen kannst.')],
           ['Geht die iPhone-App mit meinem eigenen Server?', p('Ja. Auf dem Startbildschirm der App tippst du auf „Eigener Server“. Wie die Anmeldung geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>.')],
           ['Gibt es ToHuus als iPhone-App?', p(`Ja, <a href="${k.APP_DE}">im App Store</a>, für iPhone, iPad und Apple Watch.`)],
@@ -1008,7 +1008,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Who it is for', p('With ADHD, autism or just a packed week, starting is often the hardest part. These features are built for that, and they help everyone in the household. Nobody has to explain why they use them. ToHuus is not a health or therapy service and does not replace advice.')],
           ['Small steps', p('Every task can be split into small steps you tick off one by one. “Split into small steps” suggests some: with AI if your household allows AI, otherwise from ready-made steps for common chores such as cleaning the bathroom, the kitchen, laundry, hoovering or changing the bed. You can change or delete every suggestion. When the task is done, the steps are open again for next time.')],
-          ['One thing at a time', p('The focus view shows just one thing: the next task and its next step, large and without a list around it.'), ul(
+          ['Just one', p('The focus view shows just one thing: the next task and its next step, large and without a list around it.'), ul(
             '<b>Done</b>: ticks off the step and shows the next one.',
             '<b>Later</b>: puts the task aside, no guilt.',
             '<b>Too big? Make it smaller</b>: splits the task into smaller steps.',
@@ -1032,7 +1032,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         related: ['tasks', 'speak', 'getting-started'],
       },
       {
-        slug: 'one-thing-at-a-time', pair: 'eine-sache', group: 'home', title: 'One thing at a time',
+        slug: 'one-thing-at-a-time', pair: 'eine-sache', group: 'home', title: 'Just one',
         desc: '“Now” only ever shows the next task. The next one comes once it is done: on Today with “Just one” and on the kid tablet.',
         sections: [
           ['What it is about', p('A long list can freeze you. “Now” does the sorting for you: ToHuus shows a single task as one big card with “Done”. Then the next one comes. It helps with ADHD, on full days and with kids anyway. ToHuus is not a health or therapy service.')],
@@ -1103,18 +1103,18 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         related: ['ai-on-or-off', 'ai-limits', 'household-knowledge'],
       },
       {
-        slug: 'ai-on-or-off', pair: 'ki-an-oder-aus', group: 'ai', title: 'With or without AI',
+        slug: 'ai-on-or-off', pair: 'ki-an-oder-aus', group: 'ai', title: 'AI on or off',
         desc: 'What works without AI, what it adds, and how to switch it off for the household, yourself or a child.',
         sections: [
           ['Without AI', p('The list, suggestions from the purchase rhythm, the cook planner, the week plan, money, PDF receipts and the common short sentences in the assistant all work without a language model.')],
           ['What AI adds', p('Reading photos of paper receipts and recipes, open questions to the assistant, turning speech into text.')],
-          ['Which model', p('In ToHuus Cloud every request goes to Mistral, a provider based in France, routed through OpenRouter (USA), pinned with no fallback. Nothing is used for training. Before AI runs for you, ToHuus asks once for your consent; you can withdraw it under Settings › Access & AI. Self-hosted, you bring your own key or none.')],
+          ['Which model', p('In ToHuus Cloud every request goes to Mistral, a provider based in France, routed through OpenRouter (USA), pinned with no fallback. Nothing is used for training. Before AI runs for you, ToHuus asks once for your consent; you can withdraw it under Settings › Connections & devices › AI. Self-hosted, you bring your own key or none.')],
           ['Switching it off', ul(
-            '<b>For the whole household</b>: Settings › Access & AI, admins only.',
+            '<b>For the whole household</b>: Settings › Connections & devices › AI, admins only.',
             '<b>Just for you</b>: same place. The others do not see your choice.',
             '<b>For a child</b>: parents switch AI off per child. It cannot be changed on the kid tablet.',
             '<b>AI assistants via MCP</b> (Claude, ChatGPT) have their own switch.',
-          ), p('In ToHuus Cloud AI only starts after you agreed once; you can withdraw that under Settings › Access & AI. For children it is off until a parent switches it on, and receipts by mail and children only use AI after an admin agreed.', 'While AI is off, not a single request goes to a language model.')],
+          ), p('In ToHuus Cloud AI only starts after you agreed once; you can withdraw that under Settings › Connections & devices › AI. For children it is off until a parent switches it on, and receipts by mail and children only use AI after an admin agreed.', 'While AI is off, not a single request goes to a language model.')],
           ['Health data', p('Allergies and details about children only go to a language model if an admin explicitly switches that on.')],
         ],
         related: ['speak', 'privacy-in-short'],
@@ -1164,12 +1164,12 @@ Keep the recipe's language and do not invent anything.`), p('Check the preview b
             'Enter <code>tillheidrich/tohuus-hub-ha</code>, type “Integration”, add it.',
             'Search for “ToHuus Hub”, download, restart Home Assistant.',
           )],
-          ['Get a code in ToHuus', p('ToHuus: Settings › Home Assistant › “Connect Home Assistant”. You get a code like <code>ABCD-EFGH</code>, valid for 10 minutes and once. Household admins only.')],
+          ['Get a code in ToHuus', p('ToHuus: Settings › Connections & devices › Home Assistant › “Connect Home Assistant”. You get a code like <code>ABCD-EFGH</code>, valid for 10 minutes and once. Household admins only.')],
           ['Set it up', ol(
             'Home Assistant: Settings › Devices & services › Add integration › ToHuus Hub.',
             'Choose <b>ToHuus Cloud</b> and enter the code. Done.',
             'Or <b>Own server</b>: the address Home Assistant reaches your ToHuus at (e.g. <code>http://192.168.1.20:8080</code>) and the code.',
-          ), p('Home Assistant gets its own access, listed in ToHuus under Settings › Access & AI, where you can revoke it. It can only use the Home Assistant interface.')],
+          ), p('Home Assistant gets its own access, listed in ToHuus under Settings › Connections & devices › AI, where you can revoke it. It can only use the Home Assistant interface.')],
           ['Example dashboard', k.code('ha-yaml-en', 'YAML', `type: vertical-stack
 cards:
   - type: tile
@@ -1202,7 +1202,7 @@ cards:
         desc: 'Connect your household to the AI assistant you already use, through MCP.',
         sections: [
           ['The address', k.code('mcp-url-en', 'MCP', `${k.CLOUD}/mcp`), p('Self-hosted, it is your server’s address with <code>/mcp</code> at the end.')],
-          ['Signing in', p('When connecting you sign in with your ToHuus account (OAuth), choose the household and what the assistant may do: read, or read and change; allergies and details about children only if you tick it. Settings › Access & AI lists every connection, and you can end it there.', 'For Home Assistant and older apps there is still an access with a key in the address: Settings › Access & AI › New access › AI assistant. Treat it like a password.')],
+          ['Signing in', p('When connecting you sign in with your ToHuus account (OAuth), choose the household and what the assistant may do: read, or read and change; allergies and details about children only if you tick it. Settings › Connections & devices › AI assistants & access lists every connection, and you can end it there.', 'For Home Assistant and older apps there is still an access with a key in the address: Settings › Connections & devices › AI assistants & access › AI assistant. Treat it like a password.')],
           ['In Claude and ChatGPT', ul('Claude: Settings › Connectors › Add custom connector, paste the address.', 'ChatGPT: Settings › Connectors (developer mode on some plans), paste the address.')],
           ['What the assistant may see', ul(
             'Your household’s list, tasks, stock, recipes, week plan, spending and home knowledge.',
@@ -1227,7 +1227,7 @@ cards:
             'A recurring task shows as one event on its next date; ToHuus keeps the rhythm. What is only for you appears only in “Only for me” and “My calendar”, and only with your own password.',
           )],
           ['Set it up on the iPhone', ol(
-            'In ToHuus: at the bottom of Tasks or under Settings › My account, find “Reminders & Calendar” and tap “Create password”. Server, user name and password are shown once.',
+            'In ToHuus: at the bottom of Tasks or under Settings › Me › Sign-in & security, find “Reminders & Calendar” and tap “Create password”. Server, user name and password are shown once.',
             'For Reminders: Settings › Apps › Reminders › Accounts › Add Account › Other › Add CalDAV Account, and enter the three details.',
             'For Calendar: Settings › Apps › Calendar › Calendar Accounts › Add Account › Other › Add CalDAV Account, with the same details.',
             'Open Reminders and Calendar: your ToHuus lists and calendars are under the new account.',
@@ -1245,7 +1245,7 @@ cards:
         slug: 'move-to-the-cloud', pair: 'umzug-in-die-cloud', group: 'account', title: 'From your own server to the cloud',
         desc: 'Taking a self-hosted household into ToHuus Cloud.',
         sections: [
-          ['In one go', ol('On your server: Settings › Data › Move to ToHuus Cloud › Download move file. It holds list, stock, recipes, receipts, rhythm and photos.', 'In ToHuus Cloud, create a new household.', 'There: Settings › Data › Bring a household from your own server, enter your password, choose the file.'), p('People are matched by e-mail or name; anyone without a cloud account yet appears as a person you can invite.')],
+          ['In one go', ol('On your server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud › Download move file. It holds list, stock, recipes, receipts, rhythm and photos.', 'In ToHuus Cloud, create a new household.', 'There: Settings › Data, plan & account › Data & backups › Bring a household from your own server, enter your password, choose the file.'), p('People are matched by e-mail or name; anyone without a cloud account yet appears as a person you can invite.')],
           ['What stays behind', ul('Sign-ins, devices, accesses and links.', 'Conversations with the assistant and what others marked “only for me”.', 'House info codes, unless you tick “take the codes along”.')],
         ],
         related: ['self-hosting', 'recipe-pack'],
@@ -1262,7 +1262,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['With the iPhone app', p('The iPhone app works with your own server too. It needs https with a valid certificate; plain http only works in your home network. On the app’s start screen tap “Own server” and enter the address you open ToHuus with in the browser. Then there are three ways in:'), ul(
             '<b>Password</b>: name or e-mail and password, plus the code if you switched on two-step sign-in.',
             '<b>Sign in in the browser</b>: with whatever your server offers, such as a passkey, an e-mail link or SSO. A page then asks “Connect the ToHuus app?” and you confirm.',
-            '<b>QR code</b>: in the web app, Settings › My account › “Connect the iPhone app” shows a QR code. In the app tap “Scan QR code” and point it there. No address or password to type.',
+            '<b>QR code</b>: in the web app, Settings › Me › Sign-in & security › “Connect the iPhone app” shows a QR code. In the app tap “Scan QR code” and point it there. No address or password to type.',
           ), p('One iPhone can be signed in to several servers and households; you switch with one tap. On your own server everything in the app is included, no plans, no payments.'), tip('Creating a passkey right in the app only works with ToHuus Cloud; that is Apple’s rule. On your own server, use “Sign in in the browser” for your passkey.')],
           ['AI', p('Optional, with a key for any OpenAI-compatible service, such as Mistral, local ones included. Without a key everything works except open questions to the assistant. Photos of paper receipts are then read by text recognition on your server, without AI.')],
           ['Backups', p('A backup every night, optionally copied to a WebDAV share like Nextcloud. The database can be encrypted with <code>DB_ENCRYPTION_KEY</code>.')],
@@ -1287,7 +1287,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['One subscription per household', p('Household is €3.99 a month or €34.99 a year, Plus €5.99 a month or €59.99 a year. Members, children, guests and connected households never pay. Self-hosted, everything is free.')],
           ['Trying it', p('Every new cloud household gets 14 days of Plus, no payment details needed. Without a plan after that, everything stays visible and exportable, only adding and changing things stops. Ticking off the shopping list keeps working for seven days. Nothing is charged on its own.')],
           ['Paying and cancelling', p('You subscribe in the iPhone app and pay through your Apple ID. To cancel: iPhone Settings › your name › Subscriptions › ToHuus › Cancel subscription. It runs until the end of the paid period. Nothing is deleted after that: you can look at everything and export it, and adding things works again with the next subscription.')],
-          ['Codes from us', p('You can also get a code from us, for a month, a year or for good. An admin of your household redeems it in the browser under Settings › Subscription › Redeem code. After that it works on every device, the iPhone included. It cannot be redeemed inside the iPhone app.')],
+          ['Codes from us', p('You can also get a code from us, for a month, a year or for good. An admin of your household redeems it in the browser under Settings › Data, plan & account › Plan & storage › Redeem code. After that it works on every device, the iPhone included. It cannot be redeemed inside the iPhone app.')],
           ['When money is tight', p('Write to us through the form “We can’t afford this right now” under <a href="../#cant-afford">Pricing</a>. You get a licence, no reasons needed. Every subscription helps pay for it.')],
         ],
         related: ['sharing-the-household', 'your-data', 'faq'],
@@ -1331,7 +1331,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         sections: [
           ['The start', p('The bar starts with Today, Shopping, Cooking, Tasks and Stock. If cooking or stock is switched off, Money moves up. Everything else is under “More”.')],
           ['What you can add', p('Today always stays first. Then up to four areas in your order: Shopping, Cooking, Tasks, Stock, Money, Knowledge, <a href="bring-me-something.html">Bring me something</a>, Wishes or House info. The assistant stays the round button at the bottom right.')],
-          ['How', ol('Touch and hold the bar, tap “Adjust the bar” under “More”, or open Settings › Your bar.', 'The green plus adds an area, the red minus removes it.', 'Drag the handles into the order you like. “Back to the start” resets it.')],
+          ['How', ol('Touch and hold the bar, tap “Adjust the bar” under “More”, or open Settings › Me › Your bar.', 'The green plus adds an area, the red minus removes it.', 'Drag the handles into the order you like. “Back to the start” resets it.')],
           ['Who it is for', p('Your bar is yours, the same on iPhone, iPad and in the browser. The others keep theirs. Regular guests always get the standard bar.')],
         ],
         related: ['getting-started', 'how-tohuus-works'],
@@ -1347,9 +1347,9 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
             'Pick who helps with the list. They find it under “I help with”.',
           ), p('The overview sorts itself: My lists, I help with, For others and To give, the lists of the others.')],
           ['Add wishes', p('“Add a wish” takes a title, photo, price, quantity, priority, shop link and a note. Paste a link and ToHuus suggests a title from the address; on the iPhone it reads title and picture of the page. Without a photo the wish gets a fitting symbol.', 'When AI is set up and allowed for you, “Photo → fill in by AI” reads title, details and a visible price from a photo. It counts towards your AI uses. Without AI the button is simply not there.', 'Drag to change the order; on the iPhone use “Change the order”.')],
-          ['Reserve and surprise', p('Open a wish and tap “Reserve wish”. The others then see “Reserved – Sam”; “Still free” hides what is taken.', 'With “Keep reservations a surprise” on, you and everyone who helps with the list never see whether or by whom something was reserved – in the app, the search, the export, over MCP and in notifications. Switch it off for a child’s list to see who gets what. The person a list is for never sees reservations.')],
+          ['Reserve and surprise', p('Open a wish and tap “Reserve wish”. The others then see that Sam reserved it. “Still free” hides what is taken.', 'With “Keep reservations a surprise” on, you and everyone who helps with the list never see whether or by whom something was reserved: in the app, the search, the export, over MCP and in notifications. Switch it off for a child’s list to see who gets what. The person a list is for never sees reservations.')],
           ['You give', p('“You give” lists everything you reserved, over all lists, with the total, split into “Still to get” and “Bought”. It is your gift shopping and stays apart from the shared shopping list, so nothing gives the surprise away.')],
-          ['Reminders', p('On a wish you reserved, tap “Remind me” and pick 2 weeks, 1 week or 3 days before, or a day of your own. With a date on the list, ToHuus suggests 10 days before. Wishes you want to buy yourself can get a reminder too.', 'A week before the occasion you get one hint if you reserved something there that is not bought yet. Both go only to you, never to the household. Switch them off under Settings › Notifications.')],
+          ['Reminders', p('On a wish you reserved, tap “Remind me” and pick 2 weeks, 1 week or 3 days before, or a day of your own. With a date on the list, ToHuus suggests 10 days before. Wishes you want to buy yourself can get a reminder too.', 'A week before the occasion you get one hint if you reserved something there that is not bought yet. Both go only to you, never to the household. Switch them off under Settings › Notifications & calendar.')],
           ['Share with guests', p('“Share” creates a link for guests. Grandma, friends or colleagues open the list in the browser and reserve with their name, no account needed. They see “taken”, never who. Make a new link or stop the old one in the same place.', 'The list also goes out as text, Markdown, a table (CSV) or for printing. Shared text never says who reserved something and names nobody from your household except the list’s owner.')],
           ['Not the same as', p('<a href="bring-me-something.html">Bring me something</a> is different: there you ask for a small thing at home and someone brings it right away. Kid tablets and permanent guests never see wish lists.')],
         ],
@@ -1360,7 +1360,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         desc: 'Ask for a little something at home, and whoever can brings it.',
         sections: [
           ['What it is for', p('Stuck on the sofa, ill in bed or with a child in your arms: ask for a little something, and someone at home brings it. Guests can do it too, with a link.')],
-          ['How', ol('Open Bring me something, under “More” or in your bar.', 'Tap a tile such as something sweet, something to drink or from the fridge, or write a free wish like tea with honey.', 'Ask one person or everyone.'), p('The others get a notification with “I’ll bring it” or “Can’t right now” and a short reason. You see who is bringing it and can say thanks.')],
+          ['How', ol('Open “Bring me something”, under “More” or in your bar.', 'Tap a tile such as something sweet, something to drink or from the fridge, or write a free wish like tea with honey.', 'Ask one person or everyone.'), p('The others get a notification with “I’ll bring it” or “Can’t right now” and a short reason. You see who is bringing it and can say thanks.')],
           ['Guests can wish for something too', p('Send guests the link: they wish for something, you bring it. In Bring me something, tap “Invite guests” and share a link or show the QR code. Guests need no app and no account. They only see what you put on the menu for guests, never quantities or purchases.', 'Their wish lands in the same list as the wishes from home, with “Guest” and the name in front. You answer with the same buttons, “I’ll bring it” and “Brought it”, and the guest sees on their phone how it is going. This works if you live alone, too.')],
           ['What it does not have', p('No points, no rankings, no tally of who brought what.')],
         ],
@@ -1376,13 +1376,13 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
             '<b>Household</b>: 100 messages to the assistant a month.',
             '<b>Cost cap</b>: every household also has a fixed maximum AI spend per month. If it is reached, for example after a great many receipt photos, AI pauses earlier.',
             '<b>Self-hosted</b>: no limit from us.',
-          ), p('A voice message counts once. Settings › Subscription shows how many messages you have used this month.')],
+          ), p('A voice message counts once. Settings › Data, plan & account › Plan & storage shows how many messages you have used this month.')],
           ['What keeps working', p('The list, suggestions, tasks, stock, the cook planner, money and home knowledge with import and export. The assistant still understands the common short sentences, text recognition reads receipt photos, PDF receipts work as always. Your own AI assistant over MCP does not count.', 'Nothing is charged extra. Next month AI is back.')],
         ],
         related: ['ai-on-or-off', 'speak', 'subscription'],
       },
       {
-        slug: 'what-tohuus-remembers', pair: 'merkt-sich', group: 'shop', title: 'What ToHuus remembers',
+        slug: 'what-tohuus-remembers', pair: 'merkt-sich', group: 'shop', title: 'Household knowledge',
         desc: 'Buying rhythm, suggestions, “We still have it”, why you need no stock, and where home knowledge lives.',
         sections: [
           ['Two kinds of remembering', p('ToHuus remembers how often you buy things, and that is what this page is about. It also remembers what you know about your home, such as sizes, measurements and meter readings. That lives in the app under “Knowledge”, see <a href="household-knowledge.html">Home knowledge</a>.')],
@@ -1412,7 +1412,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['From social media', p('On Instagram, TikTok and the like, the recipe is usually in the caption or only in the video. You can still share the link, and ToHuus takes whatever it can read from the page. If that does not work, take a screenshot of the caption and add it as a photo.')],
           ['From a photo or text', p('Up to six photos per recipe, for example the front and back of a recipe card or a page from a cookbook. Photos and pasted text are read with AI. With AI off, you type the recipe in or use a <a href="recipe-pack.html">recipe pack</a> made by your own AI.')],
           ['From kitchen machine apps', p('Cookidoo, Monsieur Cuisine, Cookit and similar apps only show their recipes after you sign in. In ToHuus Cloud you therefore confirm the name and ingredients yourself, easiest with pasted text. More under <a href="kitchen-machines.html">Cookidoo, Monsieur Cuisine and other kitchen machines</a>.')],
-          ['From other apps', p('Under Settings › Recipes, ToHuus takes exports from Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl and CSV. You see a preview first and choose.')],
+          ['From other apps', p('Under Settings › Areas & places › Recipes & imports, ToHuus takes exports from Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl and CSV. You see a preview first and choose.')],
           ['Only your own content', tip('Bring in recipes for yourself and your household. Other people’s recipes belong to them: saving them to cook is fine, passing them on is not.')],
         ],
         related: ['recipe-pack', 'cooking', 'kitchen-machines'],
@@ -1424,7 +1424,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Which apps', p('This is about Cookidoo (Thermomix), Monsieur Cuisine, Home Connect with the Bosch Cookit, Kenwood World, the companion apps from Tefal, Moulinex and Krups, Magimix Cook Expert, the KitchenAid Cook Processor, Cecotec Mambo and Philips NutriU. Open recipe sites like Kitchen Stories or Ninja Kitchen work with a normal link.')],
           ['In ToHuus Cloud', p('ToHuus does not access your account with these apps and fetches nothing from them itself, photos included. Share a recipe with ToHuus or paste the link, then confirm the name and ingredients. You can add the steps yourself or have them read from your own screenshots. Everything stays private in your household.')],
           ['Paste the text', p('The quickest way: copy the whole recipe in the app, paste it in ToHuus under “Paste text” and tap “Read with AI”. ToHuus sorts it into name, ingredients and steps; you check it and save. With AI off, ToHuus sorts by line: lines with amounts become ingredients, the rest becomes steps.')],
-          ['Many at once, with photos', p('If you have connected your own AI like Claude or ChatGPT over MCP, it can save recipes with steps and photos in one go, even hundreds. Or upload a <a href="recipe-pack.html">recipe pack</a> with photos, on the iPhone straight from the Files app. Photos that only arrive as a link are loaded by your own device: in the browser under Settings › Recipes › Recipe photos with “Load photos through this browser”.')],
+          ['Many at once, with photos', p('If you have connected your own AI like Claude or ChatGPT over MCP, it can save recipes with steps and photos in one go, even hundreds. Or upload a <a href="recipe-pack.html">recipe pack</a> with photos, on the iPhone straight from the Files app. Photos that only arrive as a link are loaded by your own device: in the browser under Settings › Areas & places › Recipes & imports › Recipe photos with “Load photos through this browser”.')],
           ['Self-hosted with Home Assistant', p('Self-hosted, ToHuus reads public recipe pages from these apps like any other recipe page. If you use the official Cookidoo integration in Home Assistant, the ToHuus integration brings your Cookidoo week into the week plan. Details under <a href="home-assistant.html">Home Assistant</a>.')],
           ['Your own appliance recipes', p('Recipes with appliance steps (time, temperature, speed, reverse) come in through a <a href="recipe-pack.html">recipe pack</a>, for example made from photos of your own cookbook. That works for the Thermomix as well as for Monsieur Cuisine or Cookit.')],
         ],
@@ -1446,7 +1446,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'sharing-the-household', pair: 'haushalt-teilen', group: 'people', title: 'Sharing the household',
         desc: 'Invite members, add children and look after a second household.',
         sections: [
-          ['Members', p('Under Settings › Members you create an invite link. Whoever opens it sets their own password and is in. Admins can change every setting, members use the household day to day.')],
+          ['People', p('Under Settings › Household › Who lives here? you create an invite link. Whoever opens it sets their own password and is in. Admins can change every setting, members use the household day to day.')],
           ['Children', p('Children need no account. They get a profile with an animal and, if you like, a kids’ tablet view with big pictures. Their wishes wait for a parent.')],
           ['Two households', p('If you also shop for your parents or grandparents, connect the two households and see what is missing there. That is part of the Household plan.')],
           ['Who pays', p('One subscription covers the whole household. Members, children, guests and connected households pay nothing.')],
@@ -1542,7 +1542,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         desc: 'When ToHuus gets in touch, how to set it up and how it stays quiet.',
         sections: [
           ['On the iPhone', p('The iPhone app sends notifications with buttons like “Add to list”, “I’ll do it” or “Can’t right now”. Switch them on or off per event, and quiet hours keep the night free.')],
-          ['In the browser', p('Add the web app to your home screen and it can send push notifications: Settings › Notifications › Push on this device.')],
+          ['In the browser', p('Add the web app to your home screen and it can send push notifications: Settings › Notifications & calendar › Push on this device.')],
           ['When', p('For example when a receipt waits for a check, something runs out, a budget gets tight or a new device signs in. A daily summary at a fixed time is possible. While you are away it stays quiet.')],
           ['Self-hosted', p('Also Telegram, ntfy, Gotify, Matrix, e-mail and any webhook.')],
           ['Discreet stays discreet', p('Discreet items appear in notifications only as a placeholder, private ones not at all.')],
@@ -1553,10 +1553,10 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'your-data', pair: 'daten-export', group: 'account', title: 'Taking your data with you',
         desc: 'Export, recipe pack, home knowledge as a file and what happens when you delete.',
         sections: [
-          ['Export', p('Settings › Data & backups › Download export gives you a JSON file with all your household’s data. Passwords, access keys and integration secrets are left out. Only admins can do this.')],
+          ['Export', p('Settings › Data, plan & account › Data & backups › Download export gives you a JSON file with all your household’s data. Passwords, access keys and integration secrets are left out. Only admins can do this.')],
           ['Recipes and home knowledge', p('Your recipes with photos go along as a <a href="recipe-pack.html">recipe pack</a>. Home knowledge exports as Markdown, CSV or JSON (see <a href="household-knowledge.html">Home knowledge</a>).')],
           ['Spending', p('On the Money page as CSV.')],
-          ['Deleting the household', p('In the cloud, deleting first destroys the household’s key, so the database can no longer be read. Then files and backups are deleted. You delete your account under Settings › My account.')],
+          ['Deleting the household', p('In the cloud, deleting first destroys the household’s key, so the database can no longer be read. Then files and backups are deleted. You delete your account under Settings › Me › Sign-in & security.')],
         ],
         related: ['deleting-data', 'privacy-in-short', 'move-to-the-cloud'],
       },
@@ -1564,7 +1564,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'deleting-data', pair: 'daten-loeschen', group: 'account', title: 'Deleting data and starting over',
         desc: 'Remove the sample data, clear one area or everything, and how to get it back.',
         sections: [
-          ['Where', p('Settings › Data & reset, in the browser and on the iPhone. Only admins clear whole areas. Every member can delete their own private entries there.')],
+          ['Where', p('Settings › Data, plan & account › Data & reset, in the browser and on the iPhone. Only admins clear whole areas. Every member can delete their own private entries there.')],
           ['Remove the sample data', p('As long as there is sample data, Today shows a hint and Data & reset shows it at the top. Only what the samples added goes. What you entered yourself stays. Sample things you have already used stay too, unless you pick them.')],
           ['Clear one area', ul(
             'Shopping: lists and entries, the stores on products, purchase rhythm and suggestions.',
@@ -1589,7 +1589,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Do I have to type everything in?', p('No. Receipts come in as a PDF or a photo, and what you tick off the list counts as a purchase too. You do not have to keep stock.')],
           ['Is ToHuus just a shopping list?', p('No. The list is where most people start. Then there are tasks with appointments, stock, cooking, money, <a href="household-knowledge.html">home knowledge</a> and the assistant, all in the same household.')],
           ['Is there a free version?', p('Not in ToHuus Cloud. Every new household gets 14 days of everything, then you subscribe, or you keep seeing and exporting everything without adding new things. ToHuus is free on your own server (see <a href="self-hosting.html">Self-hosting</a>).')],
-          ['Do I need AI?', p('No. See <a href="ai-on-or-off.html">With or without AI</a>. In the cloud there is an open monthly limit, see <a href="ai-limits.html">Fair AI limits</a>.')],
+          ['Do I need AI?', p('No. See <a href="ai-on-or-off.html">AI on or off</a>. In the cloud there is an open monthly limit, see <a href="ai-limits.html">Fair AI limits</a>.')],
           ['Is there an Android app?', p('No. In the browser ToHuus runs as a web app you can add to your home screen.')],
           ['Does the iPhone app work with my own server?', p('Yes. On the app’s start screen tap “Own server”. How signing in works is under <a href="self-hosting.html">Self-hosting</a>.')],
           ['Is there an iPhone app?', p(`Yes, <a href="${k.APP_EN}">on the App Store</a>, for iPhone, iPad and Apple Watch.`)],

@@ -1,5 +1,5 @@
 /**
- * Haushaltswissen – "Was ToHuus sich merkt" as cards (18 Oct 2026, docs/knowledge.md, Wiki "Idee nach dem Start:
+ * Haushaltswissen – "Haushaltswissen" as cards (18 Oct 2026, docs/knowledge.md, Wiki "Idee nach dem Start:
  * Alles reinschicken, ToHuus sortiert"). No second table: an entry is a row of `ai_memory` (memory.ts) with
  *   subject (+ subject_ref: a person 'u3'/'k2', a place 'l5', a product 'p7', or none = a free subject like
  *   "Rollo Erdgeschoss"), property, value, note, photo, visibility (household | only me via private_to), guests flag,
@@ -300,13 +300,13 @@ export function createEntry(input: CreateInput, v: KViewer): { entry: Entry; upd
   const note = clean(input.note, 500) || null;
   const origin = input.origin ?? 'app';
   if (!property || !value) {
-    // a plain line, like "Was ToHuus sich merkt" always had
+    // a plain line, like "Haushaltswissen" always had
     const text = clean(input.text ?? input.value, 300);
     if (text.length < 2) throw new KnowledgeError(t('What should ToHuus remember?'));
     noSecrets(text, note);
     const sens = isSensitive(`${text} ${note ?? ''}`);
     if (sens) consentFor(v, input.consent);
-    if (sens && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.'), 409, 'health_person');
+    if (sens && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under Household knowledge; ToHuus asks there once whether it may store it.'), 409, 'health_person');
     const priv = input.visibility === 'me' || (input.visibility === undefined && sens);
     const row = remember({ text, source: 'user', createdBy: v.name, privateTo: priv ? v.userId : null, authorId: v.userId, origin, confirmed: true });
     if (note || (input.guests && !priv && !sens)) db.prepare('UPDATE ai_memory SET note = COALESCE(?, note), guests = ? WHERE id = ?').run(note, input.guests && !priv && !sens ? 1 : 0, row.id);
@@ -318,7 +318,7 @@ export function createEntry(input: CreateInput, v: KViewer): { entry: Entry; upd
   const sens = isSensitive([s.name, property, value, note].filter(Boolean).join(' '));
   if (sens) consentFor(v, input.consent);
   // health information stays private to a person – a household token has no person to keep it for
-  if (sens && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.'), 409, 'health_person');
+  if (sens && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under Household knowledge; ToHuus asks there once whether it may store it.'), 409, 'health_person');
   const priv = input.visibility === 'me' || (input.visibility === undefined && sens);
   const privateTo = priv ? v.userId : null;
   const key = factKey(s.name, property);
@@ -390,7 +390,7 @@ export function updateEntry(id: number, p: PatchInput, v: KViewer): { entry: Ent
   noSecrets(p.subject, p.property, p.value, p.text, p.note);
   const nextText = [p.subject ?? cur.subject, p.property ?? cur.property, p.value ?? cur.value, p.text ?? (cur.structured ? '' : cur.text), p.note !== undefined ? p.note : cur.note].filter(Boolean).join(' ');
   // newly health-related (and visible to the household): the household's consent first
-  if (!r.sensitive && isSensitive(nextText) && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.'), 409, 'health_person');
+  if (!r.sensitive && isSensitive(nextText) && v.userId == null) throw new KnowledgeError(t('That sounds like health information. Please add it in the app under Household knowledge; ToHuus asks there once whether it may store it.'), 409, 'health_person');
   if (!r.sensitive && isSensitive(nextText)) consentFor(v, p.consent);
   db.transaction(() => {
     if (p.visibility) setVisibility(getMemory(id)!, p.visibility, v, p.consent);
@@ -711,7 +711,7 @@ function knowledgeChange(ctx: Ctx, a: any, record: Rec) {
       return { ok: true, id: out.entry.id, now: out.entry.text, private: out.entry.visibility === 'me' };
     } catch (e) {
       const x = e as { code?: string; message?: string };
-      if (x.code === 'health_consent') return { ok: false, hint: t('That sounds like health information. Please add it in the app under What ToHuus remembers; ToHuus asks there once whether it may store it.') };
+      if (x.code === 'health_consent') return { ok: false, hint: t('That sounds like health information. Please add it in the app under Household knowledge; ToHuus asks there once whether it may store it.') };
       return { error: x.message ?? String(e) };
     }
   }

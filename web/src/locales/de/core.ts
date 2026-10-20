@@ -87,11 +87,11 @@ export const core: Record<string, string> = {
   'Take the codes from the house info along (door, alarm, Wi-Fi)': 'Codes aus der Hausinfo mitnehmen (Tür, Alarm, WLAN)',
   'Download move file': 'Umzugsdatei herunterladen',
   'Bring a household from your own server': 'Haushalt vom eigenen Server übernehmen',
-  'Done: {rows} entries, {images} photos, {files} receipt files. {people} people without a sign-in yet – invite them under Members.':
-    'Fertig: {rows} Einträge, {images} Fotos, {files} Bon-Dateien. {people} Personen haben noch keine Anmeldung – lad sie unter Mitglieder ein.',
+  'Done: {rows} entries, {images} photos, {files} receipt files. {people} people without a sign-in yet – invite them under Settings › Household › Who lives here?':
+    'Fertig: {rows} Einträge, {images} Fotos, {files} Bon-Dateien. {people} Personen haben noch keine Anmeldung – lad sie unter Einstellungen › Haushalt › Wer wohnt hier? ein.',
   'Moving in … {p} %': 'Zieht ein … {p} %',
-  'On your own server: Settings › Data › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household.':
-    'Auf deinem eigenen Server: Einstellungen › Daten › Umzug in die ToHuus Cloud. Dann hier die Datei auswählen. Das geht in einem neuen, leeren Haushalt.',
+  'On your own server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household.':
+    'Auf deinem eigenen Server: Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Umzug in die ToHuus Cloud. Dann hier die Datei auswählen. Das geht in einem neuen, leeren Haushalt.',
   'Your password': 'Dein Passwort',
   'Choose move file': 'Umzugsdatei auswählen',
   // subscriptions

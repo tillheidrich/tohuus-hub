@@ -2,7 +2,7 @@
  * Connect the iPhone app to this server without typing a password (both modes, docs/ios-native-start.md):
  *
  *  - `POST /api/auth/app/pair`        signed-in member (web session or app) → one-time code + `tohuus://connect` link
- *                                     (shown as a QR code in the web app under Settings › My account)
+ *                                     (shown as a QR code in the web app under Settings › Me › Sign-in & security)
  *  - `GET  /api/auth/app/pair/start`  the app's "Sign in in the browser" (ASWebAuthenticationSession): signed out → the
  *                                     web sign-in page first (`/?next=…`) – passkey, SSO, e-mail link; signed in → a
  *                                     page "Connect the app?" with one button

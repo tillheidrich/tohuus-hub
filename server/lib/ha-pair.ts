@@ -113,7 +113,7 @@ export function claimPairing(input: { code: string; name?: string | null }, now 
   const code = normalizeCode(input.code);
   const hash = code ? sha256(code) : '';
   const p = hash ? pending.get(hash) : undefined;
-  if (!p || p.expires < now) throw new PairError(404, 'invalid_code', t('This code is not valid (any more). Create a new one in ToHuus under Settings › Home Assistant.'));
+  if (!p || p.expires < now) throw new PairError(404, 'invalid_code', t('This code is not valid (any more). Create a new one in ToHuus under Settings › Connections & devices › Home Assistant.'));
   pending.delete(hash);
   const key = p.household ?? 'local';
   if (activeOf.get(key) === hash) activeOf.delete(key);

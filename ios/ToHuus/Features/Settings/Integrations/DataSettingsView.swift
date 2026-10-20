@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// Settings › Data & backups (web: Settings.tsx `Data`, MoveSettings.tsx, DataWipe.tsx, Billing.tsx "Your data"):
+/// Settings › Data, plan & account › Data & backups (web: Settings.tsx `Data`, MoveSettings.tsx, DataWipe.tsx, Billing.tsx "Your data"):
 /// full export into Files, purchase history CSV, "import without asking", moving a household between your own server
 /// and ToHuus Cloud, backups (own server, BackupsView) and Data & reset (DataWipeView, 7-day restore).
 /// API: GET /api/export.json | /api/cloud/export, POST /api/imports/catalog-csv, PATCH /api/settings {importAutoApply},
@@ -210,7 +210,7 @@ struct MoveInSection: View {
             Section {
                 let state = job["state"]?.string ?? "idle"
                 if state == "done", let s = job["summary"], !s.isNull {
-                    Text(LF("Done: %d entries, %d photos, %d receipt files. %d people without a sign-in yet – invite them under Members.",
+                    Text(LF("Done: %d entries, %d photos, %d receipt files. %d people without a sign-in yet – invite them under Settings › Household › Who lives here?",
                             s["rows"]?.int ?? 0, s["images"]?.int ?? 0, s["files"]?.int ?? 0, s["people"]?["created"]?.int ?? 0))
                 } else if state == "running" {
                     VStack(alignment: .leading) {
@@ -219,7 +219,7 @@ struct MoveInSection: View {
                     }
                     .task { await poll() }
                 } else {
-                    Text(L("On your own server: Settings › Data › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household."))
+                    Text(L("On your own server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household."))
                         .font(.footnote).foregroundStyle(Theme.ink2)
                     if state == "failed", let e = job["error"]?.string { Text(e).foregroundStyle(Theme.empty) }
                     SecureField(L("Your password"), text: $password).textContentType(.password)

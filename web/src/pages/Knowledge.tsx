@@ -154,8 +154,8 @@ export function KnowledgePage({ me }: { me: Me }) {
       <KnowledgeExport open={io === 'export'} onClose={() => setIo(null)} total={total} shownIds={ref || query.trim() ? groups.flatMap((g) => g.entries.map((e) => e.id)) : null} />
       <header className="page-head">
         <div>
-          <div className="eyebrow">{t('Your household memory')}</div>
-          <h1>{t('What ToHuus remembers')}</h1>
+          <div className="eyebrow">{t('Your household knowledge')}</div>
+          <h1>{t('Household knowledge')}</h1>
           <p className="muted">{guest ? t('What the household shares with guests: sizes, numbers, how things work.') : t('Write it to ToHuus, then nobody has to ask you. And you don’t have to remember it yourself.')}</p>
         </div>
         <div className="actions">
@@ -536,7 +536,7 @@ function EntrySheet({ init, subjects, onClose }: { init: Partial<Entry>; subject
       <div className="stack kn-form" style={{ gap: 14 }}>
         {(plain || (isNew && init.text)) && (
           <div className="field" style={{ margin: 0 }}>
-            <label htmlFor="kn-text">{t('What ToHuus remembers')}</label>
+            <label htmlFor="kn-text">{t('Household knowledge')}</label>
             <textarea id="kn-text" className="input" rows={2} maxLength={300} value={text} onChange={(ev) => setText(ev.target.value)} />
             {isNew && <div className="help">{t('Saved as a line, or fill in the fields below to make it a card.')}</div>}
           </div>
@@ -658,7 +658,7 @@ export function KnowledgeFor({ refKey, name, canAdd = true }: { refKey: string; 
     <div className="field kn-for" style={{ margin: 0 }}>
       <label className="row between">
         <span className="row" style={{ gap: 6 }}>
-          <Brain size={16} /> {t('What ToHuus remembers')}
+          <Brain size={16} /> {t('Household knowledge')}
         </span>
         <Link to={`/wissen?ref=${encodeURIComponent(refKey)}`} className="small">
           {t('Show all')}

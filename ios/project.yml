@@ -14,7 +14,7 @@ settings:
     DEVELOPMENT_TEAM: "$(TOHUUS_TEAM_ID)"
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "22"
+    CURRENT_PROJECT_VERSION: "23"
     SWIFT_VERSION: "5.0"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     TARGETED_DEVICE_FAMILY: "1,2"
@@ -29,6 +29,9 @@ targets:
     sources:
       - path: ToHuus
       - path: Shared
+      # Paket D: the shared function register – the web search reads the same file (web/src/search/functions.ts)
+      - path: ../shared/functions.json
+        buildPhase: resources
     dependencies:
       - target: ToHuusShare
         embed: true

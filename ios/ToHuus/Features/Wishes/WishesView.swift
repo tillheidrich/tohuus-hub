@@ -192,6 +192,43 @@ private struct OccasionLine: View {
     }
 }
 
+/// symbol + text for FlowLayout rows inside a List: a `Label` there measures as a narrow, very tall box and loses its
+/// text (FlowLayout asks for the `.unspecified` size) – an HStack measures like plain text.
+private struct IconText: View {
+    let text: String
+    let symbol: String
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+            Image(systemName: symbol).imageScale(.small).accessibilityHidden(true)
+            Text(text)
+        }
+    }
+}
+
+/// A quiet secondary action under the main button of a wish: symbol over a short word, equal width, ≥ 64 pt.
+private struct WishActionTile: View {
+    let title: String
+    let symbol: String
+    var done = false
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: symbol).font(.title3).accessibilityHidden(true)
+                Text(title).font(.footnote.weight(.semibold)).multilineTextAlignment(.center).lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, minHeight: 64)
+            .padding(.vertical, 8).padding(.horizontal, 6)
+            .foregroundStyle(Theme.primaryText)
+            .background(done ? Theme.primarySoft : Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.base))
+            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.base).stroke(done ? Color.clear : Theme.line, lineWidth: Theme.stroke))
+            .contentShape(RoundedRectangle(cornerRadius: Theme.Radius.base))
+        }
+        .buttonStyle(.plain)
+        .disabled(done)
+    }
+}
+
 private struct PriorityBadge: View {
     var body: some View {
         Badge(text: L("High priority"), symbol: "heart.fill", tone: Theme.low, fill: Theme.lowSoft)
@@ -213,10 +250,10 @@ private struct WishStatusLine: View {
             default: return L("Still free")
             }
         }()
-        Label(text, systemImage: wish.status == "open" ? "circle" : wish.status == "bought" ? "checkmark.circle.fill" : "gift")
+        // an HStack, not a Label: in a List row a Label puts the symbol in a wide column of its own
+        IconText(text: text, symbol: wish.status == "open" ? "circle" : wish.status == "bought" ? "checkmark.circle.fill" : "gift")
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(wish.status == "open" || mine ? Theme.primaryText : Theme.ink2)
-            .labelStyle(.titleAndIcon)
     }
 }
 
@@ -234,10 +271,39 @@ private struct ProgressBar: View {
     }
 }
 
+#if DEBUG
+/// Simulator checks (debug builds only), together with `-debugTab wishes`:
+///   -debugWishes new | giving | list:<id>[/wish:<id> | /edit-wish:<id> | /remind:<id> | /new-wish | /share | /edit]
+/// (`-debugWishes YES` still opens the wish lists from Einkauf, ShoppingView). Every part is used once per launch.
+enum WishDebugRoute {
+    private static var used = Set<String>()
+    static var raw: String? {
+        guard let r = UserDefaults.standard.string(forKey: "debugWishes"), r != "YES", !r.isEmpty else { return nil }
+        return r
+    }
+    /// the list id of `list:<id>…`
+    static var listId: Int? {
+        guard let r = raw, r.hasPrefix("list:") else { return nil }
+        return Int(r.dropFirst(5).prefix { $0.isNumber })
+    }
+    /// the part after `list:<id>/`, e.g. "wish:3"
+    static var sub: String? { raw?.split(separator: "/", maxSplits: 1).dropFirst().first.map(String.init) }
+    static func once(_ key: String) -> Bool { used.insert(key).inserted }
+}
+#endif
+
 // MARK: - overview
 
+/// Navigation (fixed 20 Oct 2026, Build 22 bug): a list opens with a view link (`NavigationLink { … }`), never with a
+/// value link. WishesView is pushed into stacks it does not own – Mehr (a view link on top of the Settings path), Heute
+/// (a path of its own), the door in Einkauf (a sheet) –, and a value link appended to such a path popped the view-pushed
+/// overview first, so the tap seemed to do nothing until one went back. Programmatic opens (a new list, debug routes)
+/// use `navigationDestination(item:)`, which belongs to this view and works in every stack.
 struct WishesView: View {
     let api: APIClient
+    @State private var opened: Int?
+    @State private var showGiving = false
+    @State private var appeared = false
     @State private var lists: [WishList] = []
     @State private var giving: Giving?
     @State private var archived = false
@@ -266,7 +332,7 @@ struct WishesView: View {
                 Section(L("Search results")) {
                     if results.isEmpty { Text(L("Nothing found.")).foregroundStyle(Theme.ink3) }
                     ForEach(results) { w in
-                        NavigationLink(value: w.listId) {
+                        NavigationLink { WishListDetailView(api: api, listId: w.listId) } label: {
                             HStack(spacing: 12) {
                                 WishThumb(path: w.photoPath, icon: w.icon, title: w.title, api: api, size: 44)
                                 VStack(alignment: .leading, spacing: 2) {
@@ -283,7 +349,11 @@ struct WishesView: View {
                     Text(L("Wish lists for birthdays, Christmas and everything in between. Who reserved what stays a surprise."))
                         .font(.subheadline).foregroundStyle(Theme.ink2)
                         .listRowBackground(Color.clear)
-                    if let g = giving, g.count > 0, !archived {
+                        .listRowSeparator(.hidden)
+                }
+                // "Du schenkst" as a card of its own (it hung under the intro with a separator and square corners)
+                if let g = giving, g.count > 0, !archived {
+                    Section {
                         NavigationLink { GivingView(api: api) } label: { GivingCard(giving: g) }
                             .listRowBackground(Theme.primarySoft)
                     }
@@ -297,7 +367,8 @@ struct WishesView: View {
                 ForEach(groups) { g in
                     Section {
                         ForEach(g.lists) { l in
-                            NavigationLink(value: l.id) { WishListCard(list: l, api: api) }
+                            NavigationLink { WishListDetailView(api: api, listId: l.id) } label: { WishListCard(list: l, api: api) }
+                                .accessibilityIdentifier("wishes.list.\(l.id)")
                         }
                     } header: {
                         VStack(alignment: .leading, spacing: 2) {
@@ -320,18 +391,38 @@ struct WishesView: View {
         .assistantScreen("wishes")
         .searchable(text: $query, prompt: L("Search all wishes"))
         .task(id: query) { await search() }
-        .navigationDestination(for: Int.self) { id in WishListDetailView(api: api, listId: id) }
+        .navigationDestination(item: $opened) { id in WishListDetailView(api: api, listId: id) }
+        .navigationDestination(isPresented: $showGiving) { GivingView(api: api) }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { creating = true } label: { Label(L("New list"), systemImage: "plus") }
+                    .accessibilityIdentifier("wishes.new")
             }
         }
         .sheet(isPresented: $creating) {
-            WishListEditSheet(api: api, list: nil) { _ in Task { await load() } }
+            // a new list opens right away – the next step is its first wish
+            WishListEditSheet(api: api, list: nil) { l in
+                Task {
+                    await load()
+                    try? await Task.sleep(for: .milliseconds(450))
+                    opened = l.id
+                }
+            }
         }
         .refreshable { await load() }
-        .task { await load() }
-        .onAppear { Task { await load() } }
+        .task {
+            await load()
+            #if DEBUG
+            if let r = WishDebugRoute.raw, WishDebugRoute.once("overview") {
+                if r == "new" { creating = true } else if r == "giving" { showGiving = true } else if let id = WishDebugRoute.listId { opened = id }
+            }
+            #endif
+        }
+        // back from a list: fresh counts (the first appearance loads in .task)
+        .onAppear {
+            if appeared { Task { await load() } }
+            appeared = true
+        }
     }
 
     private func load() async {
@@ -374,12 +465,15 @@ private struct GivingCard: View {
 private struct WishListCard: View {
     let list: WishList
     let api: APIClient
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         let soon = (list.daysUntil ?? -1) >= 0 && (list.daysUntil ?? 99) <= 14
-        HStack(alignment: .center, spacing: 14) {
-            WishThumb(path: list.photos?.first, icon: list.icons?.first ?? "gift", title: list.name, api: api, size: 64)
-                .frame(width: 64, height: 76)
+        let ax = typeSize.isAccessibilitySize
+        let layout = ax ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 14))
+        layout {
+            WishThumb(path: list.photos?.first, icon: list.icons?.first ?? "gift", title: list.name, api: api, size: ax ? 52 : 64)
+                .frame(width: ax ? 52 : 64, height: ax ? 60 : 76)
             VStack(alignment: .leading, spacing: 4) {
                 if let line = wishOccasionLine(occasion: list.occasion, date: list.eventDate, days: list.daysUntil) {
                     OccasionLine(text: line, occasion: list.occasion, soon: soon, font: .footnote.weight(.semibold))
@@ -438,22 +532,28 @@ struct WishListDetailView: View {
     var body: some View {
         List {
             if let l = detail?.list {
-                Section { header(l) }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                if l.reservable, (detail?.items.count ?? 0) > 0 {
-                    Picker(L("Show"), selection: $onlyFree) {
-                        Text(L("All")).tag(false)
-                        Text(l.open.map { LF("Still free (%d)", $0) } ?? L("Still free")).tag(true)
+                // head and "Alle / Noch frei" in one section – as two they stood a screen-third apart
+                Section {
+                    header(l)
+                    if l.reservable, (detail?.items.count ?? 0) > 0 {
+                        Picker(L("Show"), selection: $onlyFree) {
+                            Text(L("All")).tag(false)
+                            Text(l.open.map { LF("Still free (%d)", $0) } ?? L("Still free")).tag(true)
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.top, Theme.Space.s2)
                     }
-                    .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
                 }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 if detail?.items.isEmpty == true {
+                    // the list's own empty state (not the overview's): what a wish can hold, and the one button
                     EmptyStateView(systemImage: "heart", title: archived ? L("Nothing archived") : L("No wishes yet"),
                                    message: archived ? nil : L("With a photo, a shop link and a price. ToHuus suggests a symbol when there is no photo."),
-                                   actionTitle: archived ? nil : L("Add a wish"), action: archived ? nil : { creating = true })
+                                   actionTitle: archived ? nil : L("Add wish"), action: archived ? nil : { creating = true })
                         .listRowBackground(Color.clear)
+                        .accessibilityIdentifier("wishlist.empty")
                 } else if items.isEmpty {
                     Text(L("Everything is taken. Nice!")).foregroundStyle(Theme.ink3).listRowBackground(Color.clear)
                 }
@@ -468,18 +568,23 @@ struct WishListDetailView: View {
                 Section {
                     Button(archived ? L("Back to current wishes") : L("Archived wishes")) { archived.toggle(); Task { await load() } }
                 }
+            } else if error == nil {
+                ProgressView().frame(maxWidth: .infinity, minHeight: 120).listRowBackground(Color.clear)
             }
             if let error { Text(error).foregroundStyle(Theme.empty) }
         }
         .themedList()
+        .accessibilityIdentifier("wishlist.detail")
         .environment(\.editMode, $editMode)
         .motion(value: (detail?.items ?? []).map { "\($0.id):\($0.status)" })
         .navigationTitle(detail?.list.name ?? "")
         .navigationBarTitleDisplayMode(.large)
         .safeAreaInset(edge: .bottom) {
-            if detail != nil && !archived && editMode == .inactive {
+            // an empty list has the button in its empty state – not twice
+            if detail != nil && detail?.items.isEmpty == false && !archived && editMode == .inactive {
                 Button { creating = true } label: {
-                    Label(L("Add a wish"), systemImage: "plus").font(.headline).frame(maxWidth: .infinity, minHeight: 52)
+                    Label(L("Add wish"), systemImage: "plus").font(.headline).lineLimit(1).minimumScaleFactor(0.6)
+                        .frame(maxWidth: .infinity, minHeight: 52)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.primary)
@@ -520,12 +625,28 @@ struct WishListDetailView: View {
                 WishDetailSheet(api: api, wish: w, list: l, changed: { Task { await load() } }, edit: { viewing = nil; DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { editing = w } })
             }
         }
-        .sheet(item: $editing) { w in WishEditSheet(api: api, list: detail!.list, wish: w) { Task { await load() } } }
+        .sheet(item: $editing) { w in if let l = detail?.list { WishEditSheet(api: api, list: l, wish: w) { Task { await load() } } } }
         .sheet(isPresented: $creating) { if let l = detail?.list { WishEditSheet(api: api, list: l, wish: nil) { Task { await load() } } } }
         .sheet(isPresented: $editList) { if let l = detail?.list { WishListEditSheet(api: api, list: l) { _ in Task { await load() } } } }
         .sheet(isPresented: $sharing) { if let l = detail?.list { WishShareSheet(api: api, list: l) { Task { await load() } } } }
         .refreshable { await load() }
-        .task(id: "\(sort)-\(archived)") { await load() }
+        .task(id: "\(sort)-\(archived)") {
+            await load()
+            #if DEBUG
+            if let sub = WishDebugRoute.sub, WishDebugRoute.listId == listId, WishDebugRoute.once("detail") {
+                let wid = Int(sub.split(separator: ":").last ?? "")
+                let w = detail?.items.first { $0.id == wid }
+                switch sub.split(separator: ":").first.map(String.init) {
+                case "wish", "remind": viewing = w
+                case "edit-wish": editing = w
+                case "new-wish": creating = true
+                case "share": sharing = true
+                case "edit": editList = true
+                default: break
+                }
+            }
+            #endif
+        }
     }
 
     @ViewBuilder private func header(_ l: WishList) -> some View {
@@ -536,16 +657,22 @@ struct WishListDetailView: View {
             }
             FlowLayout(spacing: 12) {
                 Text((l.count ?? 0) == 1 ? L("1 wish") : LF("%d wishes", l.count ?? 0))
-                Label((l.people ?? 1) <= 1 ? L("only you") : LF("%d people", l.people ?? 1), systemImage: "person.2")
-                if l.link != nil { Label(L("guests with the link"), systemImage: "link") }
+                IconText(text: (l.people ?? 1) <= 1 ? L("only you") : LF("%d people", l.people ?? 1), symbol: "person.2")
+                if l.link != nil { IconText(text: L("guests with the link"), symbol: "link") }
                 if l.forMe == true { Text(L("For you – reservations stay a surprise")) } else if let n = l.forName { Text(LF("for %@", n)) }
                 if l.surprise == true && !l.reservable && l.forMe != true { Text(L("Reservations are a surprise for you")) }
             }
             .font(.footnote).foregroundStyle(Theme.ink2)
             if l.reservable, let c = l.count, c > 0 {
-                HStack(spacing: 10) {
-                    ProgressBar(value: Double(l.taken) / Double(c)).frame(maxWidth: 240)
-                    Text(LF("%d of %d taken", l.taken, c)).font(.footnote).foregroundStyle(Theme.ink2)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) {
+                        ProgressBar(value: Double(l.taken) / Double(c)).frame(maxWidth: 240)
+                        Text(LF("%d of %d taken", l.taken, c)).font(.footnote).foregroundStyle(Theme.ink2).fixedSize()
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(LF("%d of %d taken", l.taken, c)).font(.footnote).foregroundStyle(Theme.ink2)
+                        ProgressBar(value: Double(l.taken) / Double(c))
+                    }
                 }
             }
         }
@@ -577,10 +704,14 @@ private struct WishCard: View {
     let wish: Wish
     let list: WishList
     let api: APIClient
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            WishThumb(path: wish.photoPath, icon: wish.icon, title: wish.title, api: api, size: 72)
+        // accessibility sizes: picture above the text (side by side the title broke into syllables)
+        let ax = typeSize.isAccessibilitySize
+        let layout = ax ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 14))
+        layout {
+            WishThumb(path: wish.photoPath, icon: wish.icon, title: wish.title, api: api, size: ax ? 56 : 72)
             VStack(alignment: .leading, spacing: 5) {
                 Text(wish.title).font(.body.weight(.semibold))
                     .foregroundStyle(wish.status == "bought" && list.reservable ? Theme.ink2 : Theme.ink)
@@ -592,8 +723,10 @@ private struct WishCard: View {
                 }
                 if list.reservable { WishStatusLine(wish: wish) }
             }
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.ink3).accessibilityHidden(true)
+            if !ax {
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.ink3).accessibilityHidden(true)
+            }
         }
         .padding(.vertical, 6)
         .contentShape(Rectangle())
@@ -626,7 +759,8 @@ private struct WishDetailSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Space.s4) {
                     WishThumb(path: wish.photoPath, icon: wish.icon, title: wish.title, api: api, fill: true)
-                        .frame(height: 260)
+                        // a photo gets room; the symbol tile stays smaller so "Wunsch reservieren" is visible on an SE
+                        .frame(height: (wish.photoPath ?? "").isEmpty ? 170 : 260)
                     VStack(alignment: .leading, spacing: 10) {
                         if wish.priority == 3 { PriorityBadge() }
                         Text(wish.title).font(Theme.title(Theme.FontSize.h2)).foregroundStyle(Theme.ink)
@@ -641,17 +775,25 @@ private struct WishDetailSheet: View {
                             VStack(spacing: 0) {
                                 ForEach(wish.links) { k in
                                     Button { if let u = URL(string: k.url) { openURL(u) } } label: {
-                                        HStack(spacing: 10) {
-                                            Image(systemName: "link").foregroundStyle(Theme.ink2)
-                                            VStack(alignment: .leading, spacing: 1) {
-                                                Text(k.display).font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
-                                                if let t = k.title { Text(t).font(.footnote).foregroundStyle(Theme.ink3).lineLimit(1) }
+                                        // shop and price side by side; under each other when the text is large
+                                        ViewThatFits(in: .horizontal) {
+                                            HStack(spacing: 10) {
+                                                Image(systemName: "link").foregroundStyle(Theme.ink2)
+                                                VStack(alignment: .leading, spacing: 1) {
+                                                    Text(k.display).font(.body.weight(.semibold)).foregroundStyle(Theme.ink).fixedSize()
+                                                    if let t = k.title { Text(t).font(.footnote).foregroundStyle(Theme.ink3).lineLimit(1) }
+                                                }
+                                                Spacer(minLength: 8)
+                                                if let p = k.price { Text(wishPriceText(p, fromLinks: false) ?? "").monospacedDigit().fixedSize() }
+                                                Image(systemName: "arrow.up.right.square").foregroundStyle(Theme.ink3)
                                             }
-                                            Spacer()
-                                            if let p = k.price { Text(wishPriceText(p, fromLinks: false) ?? "").monospacedDigit() }
-                                            Image(systemName: "arrow.up.right.square").foregroundStyle(Theme.ink3)
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                IconText(text: k.display, symbol: "link").font(.body.weight(.semibold)).foregroundStyle(Theme.ink)
+                                                if let p = k.price { Text(wishPriceText(p, fromLinks: false) ?? "").monospacedDigit().foregroundStyle(Theme.ink2) }
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
                                         }
-                                        .padding(.horizontal, 12).frame(minHeight: 50)
+                                        .padding(.horizontal, 12).padding(.vertical, 6).frame(minHeight: 50)
                                     }
                                     .buttonStyle(.plain)
                                     if k.id != wish.links.last?.id { Divider() }
@@ -683,6 +825,9 @@ private struct WishDetailSheet: View {
             }
             .sheet(isPresented: $remind) { WishReminderSheet(api: api, wish: wish, eventDate: list.eventDate) { Task { await reload() } } }
             .sheet(isPresented: $toList) { WishToListSheet(api: api, wish: wish, list: list) { Task { await reload() } } }
+            #if DEBUG
+            .task { if WishDebugRoute.sub?.hasPrefix("remind:") == true, WishDebugRoute.once("remind") { remind = true } }
+            #endif
         }
         .presentationDetents([.large])
     }
@@ -700,27 +845,31 @@ private struct WishDetailSheet: View {
                     Label(L("Bought"), systemImage: "checkmark.circle").font(.headline).frame(maxWidth: .infinity, minHeight: 52)
                 }
                 .buttonStyle(.borderedProminent).tint(Theme.primary).disabled(busy)
-                HStack {
-                    Button { remind = true } label: { Label(wish.reminder == nil ? L("Remind me") : L("Change reminder"), systemImage: "bell") }
-                        .buttonStyle(.bordered)
-                    Button(L("Release")) { Task { await status("open") } }.buttonStyle(.borderless)
-                }
+                // "Erinnern" sits with the other tiles below; releasing stays a quiet text button
+                Button(L("Release")) { Task { await status("open") } }.buttonStyle(.borderless)
             }
             if list.reservable && wish.status == "bought" && wish.mineReserved {
                 Button(L("Not bought after all")) { Task { await status("reserved") } }.buttonStyle(.borderless)
             }
-            FlowLayout(spacing: 10) {
-                Button { dismiss(); edit() } label: { Label(L("Edit"), systemImage: "pencil") }.buttonStyle(.bordered)
-                if list.runs && !(list.reservable && wish.status == "reserved" && wish.mineReserved) {
-                    Button { remind = true } label: { Label(L("Remind me"), systemImage: "bell") }.buttonStyle(.bordered)
-                }
-                if wish.onShoppingList == true {
-                    Label(L("on the shopping list"), systemImage: "basket").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.primaryText)
-                } else {
-                    Button { toList = true } label: { Label(L("On the shopping list"), systemImage: "basket") }.buttonStyle(.bordered)
-                }
+            // the quiet actions as equal tiles in one row (Build 22: .bordered Labels in FlowLayout stood one under
+            // the other, indented); under each other only when the text is too big for one row
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) { secondary }
+                VStack(spacing: 10) { secondary }
             }
-            .controlSize(.regular)
+            .padding(.top, 4)
+        }
+    }
+
+    @ViewBuilder private var secondary: some View {
+        if list.runs || (list.reservable && wish.status == "reserved" && wish.mineReserved) {
+            WishActionTile(title: wish.reminder == nil ? L("Remind me") : L("Change reminder"), symbol: "bell") { remind = true }
+        }
+        WishActionTile(title: L("Edit"), symbol: "pencil") { dismiss(); edit() }
+        if wish.onShoppingList == true {
+            WishActionTile(title: L("on the shopping list"), symbol: "checkmark.circle.fill", done: true) {}
+        } else {
+            WishActionTile(title: L("On the shopping list"), symbol: "basket") { toList = true }
         }
     }
 
@@ -752,6 +901,16 @@ private struct WishReminderSheet: View {
     @State private var day = Date()
     @State private var error: String?
 
+    /// the day is set before the first frame (set in onAppear, the chip of the suggested day stayed unselected)
+    init(api: APIClient, wish: Wish, eventDate: String?, saved: @escaping () -> Void) {
+        self.api = api
+        self.wish = wish
+        self.eventDate = eventDate
+        self.saved = saved
+        _day = State(initialValue: Date())
+        if let r = wish.reminder, let d = wishLocalDay(r.remindOn) { _day = State(initialValue: d) } else { _day = State(initialValue: suggested) }
+    }
+
     private var today: Date { Calendar.current.startOfDay(for: Date()) }
     private var options: [(Date, String)] {
         let cal = Calendar.current
@@ -768,21 +927,18 @@ private struct WishReminderSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(L("Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications."))
+                    Text(L("Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications & calendar."))
                         .font(.footnote).foregroundStyle(Theme.ink2)
                 }
                 Section(L("When")) {
+                    // plain chips (not .bordered buttons): those measured wrongly inside FlowLayout in a Form row
                     FlowLayout(spacing: 8) {
                         ForEach(options, id: \.1) { d, label in
-                            let on = Calendar.current.isDate(d, inSameDayAs: day)
-                            Button { day = d } label: {
-                                Text(eventDate != nil && Calendar.current.isDate(d, inSameDayAs: suggested) ? "\(label) · \(L("suggested"))" : label)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(on ? Theme.primary : Theme.ink2)
-                            .accessibilityAddTraits(on ? .isSelected : [])
+                            ChoiceChip(title: eventDate != nil && Calendar.current.isDate(d, inSameDayAs: suggested) ? "\(label) · \(L("suggested"))" : label,
+                                       on: wishDayString(d) == wishDayString(day)) { day = d }
                         }
                     }
+                    .padding(.vertical, 4)
                     DatePicker(L("Or a day of your own"), selection: $day, in: today..., displayedComponents: .date)
                 }
                 if wish.reminder != nil {
@@ -796,9 +952,6 @@ private struct WishReminderSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button(L("Save")) { Task { await save(day) } } }
-            }
-            .onAppear {
-                if let r = wish.reminder, let d = wishLocalDay(r.remindOn) { day = d } else { day = suggested }
             }
         }
         .presentationDetents([.medium, .large])
@@ -867,6 +1020,36 @@ private struct WishToListSheet: View {
 
 // MARK: - list sheet (new / edit)
 
+/// The occasions as one row of compact chips (symbol + word, ~36 pt), scrolling sideways; the chosen one in the
+/// accent colour, "Ohne Anlass" last. Build 22 drew them with `.bordered` Labels inside FlowLayout in a Form row:
+/// FlowLayout measures with `.unspecified`, and a Label in a list row answers that with an icon-wide, very tall size
+/// – grey capsules without text, each a different height, the card as high as the screen.
+private struct OccasionChips: View {
+    let selection: WishOccasion?
+    let pick: (WishOccasion?) -> Void
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(WishOccasion.allCases) { o in
+                        ChoiceChip(title: o.label, systemImage: o.symbol, on: selection == o) { pick(selection == o ? nil : o) }
+                            .id(o.rawValue)
+                    }
+                    ChoiceChip(title: L("No occasion"), systemImage: "minus.circle", on: selection == nil) { pick(nil) }
+                        .id("none")
+                }
+                .padding(.horizontal, Theme.Space.s4)
+                .padding(.vertical, 2)
+            }
+            .onAppear { if let s = selection { proxy.scrollTo(s.rawValue, anchor: .center) } }
+            .onChange(of: selection) { _, s in withAnimation(.snappy) { proxy.scrollTo(s?.rawValue ?? "none", anchor: .center) } }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(L("Occasion"))
+    }
+}
+
 struct WishListEditSheet: View {
     let api: APIClient
     let list: WishList?
@@ -894,18 +1077,12 @@ struct WishListEditSheet: View {
         NavigationStack {
             Form {
                 Section(L("Occasion")) {
-                    FlowLayout(spacing: 8) {
-                        ForEach(WishOccasion.allCases) { o in
-                            Button {
-                                let wasDefault = name.isEmpty || WishOccasion.allCases.contains { $0.label == name }
-                                occasion = occasion == o ? nil : o
-                                if wasDefault, let oc = occasion { name = oc.label }
-                            } label: { Label(o.label, systemImage: o.symbol) }
-                            .buttonStyle(.bordered)
-                            .tint(occasion == o ? Theme.primary : Theme.ink2)
-                            .accessibilityAddTraits(occasion == o ? .isSelected : [])
-                        }
+                    OccasionChips(selection: occasion) { o in
+                        let wasDefault = name.isEmpty || WishOccasion.allCases.contains { $0.label == name }
+                        occasion = o
+                        if wasDefault, let oc = occasion { name = oc.label }
                     }
+                    .listRowInsets(EdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0))
                 }
                 Section(L("Name")) { TextField(L("e.g. Lina’s birthday"), text: $name) }
                 Section {
@@ -913,7 +1090,8 @@ struct WishListEditSheet: View {
                     if hasDate { DatePicker(L("Date"), selection: $date, displayedComponents: .date) }
                 } footer: { Text(L("A week before, ToHuus reminds whoever reserved something.")) }
                 if owner {
-                    Section(L("Who is it for?")) {
+                    // no section header: the picker row already says "Für wen?" (it stood there twice)
+                    Section {
                         Picker(L("Who is it for?"), selection: $forUser) {
                             Text(L("Nobody in particular")).tag(Int?.none)
                             ForEach(people) { m in Text(m.id == meId ? L("Me") : m.name).tag(Int?.some(m.id)) }
@@ -943,12 +1121,14 @@ struct WishListEditSheet: View {
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
             .themedList()
-            .navigationTitle(list == nil ? L("New wish list") : L("Edit list"))
+            // short: "Neue Wunschliste" was cut off between Abbrechen and Liste anlegen
+            .navigationTitle(list == nil ? L("New list") : L("Edit"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(list == nil ? L("Create list") : L("Save")) { Task { await save() } }
+                    // "Anlegen": with "Liste anlegen" the title "Neue Liste" had no room on an iPhone SE
+                    Button(list == nil ? L("Create") : L("Save")) { Task { await save() } }
                         .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
@@ -1135,12 +1315,13 @@ struct WishEditSheet: View {
                 if let error { Text(error).foregroundStyle(Theme.empty) }
             }
             .themedList()
-            .navigationTitle(wish == nil ? L("New wish") : L("Edit wish"))
+            .navigationTitle(wish == nil ? L("New wish") : L("Edit"))  // "Wunsch bearbeiten" was cut off next to Sichern
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(L("Cancel")) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(wish == nil ? L("Add wish") : L("Save")) { Task { await save() } }
+                    // "Hinzufügen", not "Wunsch hinzufügen": the long button pushed the title "Neuer Wunsch" out of the bar
+                    Button(wish == nil ? L("Add") : L("Save")) { Task { await save() } }
                         .disabled(busy || reading || title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
@@ -1366,6 +1547,7 @@ struct GivingView: View {
                         .font(.subheadline).foregroundStyle(Theme.ink2)
                 }
                 .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
                 if (giving?.count ?? 0) > 0 {
                     Picker(L("Show"), selection: $showBought) {
                         Text(LF("Still to get (%d)", giving?.todo.count ?? 0)).tag(false)
@@ -1412,17 +1594,20 @@ struct GivingView: View {
                     FlowLayout(spacing: 8) {
                         if let p = wishPriceText(w.price, fromLinks: w.priceFromLinks) { Text(p).font(.subheadline.weight(.bold)).monospacedDigit() }
                         if w.qty > 1 { Text(LF("%d×", w.qty)).font(.subheadline).foregroundStyle(Theme.ink2) }
-                        if let k = w.links.first, let u = URL(string: k.url) { Link(destination: u) { Label(k.display, systemImage: "link").font(.subheadline) } }
+                        if let k = w.links.first, let u = URL(string: k.url) { Link(destination: u) { IconText(text: k.display, symbol: "link").font(.subheadline) } }
                     }
                     if let r = w.reminder, r.sent != true, let d = wishFmtDay(r.remindOn, short: true) {
-                        Label(LF("Reminder on %@", d), systemImage: "bell").font(.footnote).foregroundStyle(Theme.ink2)
+                        IconText(text: LF("Reminder on %@", d), symbol: "bell").font(.footnote).foregroundStyle(Theme.ink2)
                     }
                 }
             }
             HStack(spacing: 10) {
                 if w.status == "reserved" {
-                    Button { Task { await set(w, "bought") } } label: { Label(L("Bought"), systemImage: "checkmark") }.buttonStyle(.borderedProminent).tint(Theme.primary)
-                    Button { remind = g } label: { Label(w.reminder == nil ? L("Remind me") : L("Reminder"), systemImage: "bell") }.buttonStyle(.bordered)
+                    // HStack labels: a Label in a List row drew the check in the accent colour on the accent button
+                    // (invisible) and left a wide gap before "Erinnern"
+                    Button { Task { await set(w, "bought") } } label: { IconText(text: L("Bought"), symbol: "checkmark").foregroundStyle(Theme.onPrimary) }
+                        .buttonStyle(.borderedProminent).tint(Theme.primary)
+                    Button { remind = g } label: { IconText(text: w.reminder == nil ? L("Remind me") : L("Reminder"), symbol: "bell") }.buttonStyle(.bordered)
                 } else {
                     Button(L("Not bought after all")) { Task { await set(w, "reserved") } }.buttonStyle(.borderless)
                 }

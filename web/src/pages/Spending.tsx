@@ -123,7 +123,7 @@ interface Drill {
   excluded?: boolean;
 }
 
-/** amounts in the household currency (Settings › Household › Region) */
+/** amounts in the household currency (Settings › Household › Region & currency) */
 export const eur = (n: number) => money(n);
 const pct = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toLocaleString(locale(), { maximumFractionDigits: 0 })} %`;
 const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toLocaleString(locale(), { maximumFractionDigits: 1 })}k` : Math.round(n).toLocaleString(locale()));

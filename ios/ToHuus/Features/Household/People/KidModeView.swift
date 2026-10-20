@@ -545,7 +545,7 @@ struct KidExitPad: View {
                     }
                     .buttonStyle(.plain)
                 } else {
-                    Text(L("No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Members › Kids."))
+                    Text(L("No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Household › Who lives here?."))
                         .multilineTextAlignment(.center)
                 }
                 Spacer(minLength: 0)

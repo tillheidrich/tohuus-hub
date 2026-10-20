@@ -25,7 +25,7 @@
   "Clean dishwasher filter": "Spülmaschinensieb reinigen",
   "Clean extractor hood filter": "Dunstabzugsfilter reinigen",
   "Codes": "Codes",
-  "Codes are never sent to the assistant, AI, Home Assistant, displays or notifications, and they stay out of the export unless you tick them.": "Codes gehen nie an den Assistenten, an KI, Home Assistant, Displays oder Benachrichtigungen und bleiben beim Export draußen, außer du hakst sie an.",
+  "Codes are never sent to the assistant, AI, Home Assistant, displays or notifications, and they stay out of the export unless you tick them.": "Codes gehen nie an den Assistenten, an KI, Home Assistant, Displays oder Mitteilungen und bleiben beim Export draußen, außer du hakst sie an.",
   "Data & backups": "Daten & Sicherung",
   "Date (e.g. expiry)": "Datum (z. B. Ablauf)",
   "Delete “%@”?": "„%@“ löschen?",
@@ -103,8 +103,8 @@
   "This link shows only what is ticked.": "Dieser Link zeigt nur, was angehakt ist.",
   "This one has a fixed date. What is the new date – e.g. the expiry date of the new passport?": "Hier gilt ein festes Datum. Wie lautet das neue – zum Beispiel das Ablaufdatum des neuen Passes?",
   "Tips": "Tipps",
-  "Treats": "Bring mir was",
-  "Treats & guests": "Bring mir was & Gäste",
+  "Bring me something": "Bring mir was",
+  "Bring me something & guests": "Bring mir was & Gäste",
   "Uses %@ each time · %@ in stock": "Braucht jedes Mal %@ · %@ im Vorrat",
   "Uses up a product (optional)": "Verbraucht ein Produkt (optional)",
   "Voice commands": "Sprachbefehle",
@@ -146,6 +146,6 @@
   "weeks": "Wochen",
   "years": "Jahre",
   "“%@” added": "„%@“ hinzugefügt",
-  "“Done” takes it from stock and puts it on the shopping list when none is left for next time.": "„Erledigt“ bucht es aus dem Bestand und setzt es auf die Einkaufsliste, wenn fürs nächste Mal keins mehr da ist.",
+  "“Done” takes it from stock and puts it on the shopping list when none is left for next time.": "„Erledigt“ bucht es aus dem Vorrat und setzt es auf die Einkaufsliste, wenn fürs nächste Mal keins mehr da ist.",
   "…and every card by room.": "… und alle Karten nach Raum."
 }

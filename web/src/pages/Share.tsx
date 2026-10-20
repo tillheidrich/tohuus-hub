@@ -324,7 +324,7 @@ export function ShareLanding({ me }: { me: Me }) {
                 </div>
               )}
               {images.length > 0 && !me.features.vision && (
-                <div className="small muted">{t('Reading photos needs a vision model (Settings → Access & AI). PDFs from REWE and most supermarkets work without one.')}</div>
+                <div className="small muted">{t('Reading photos needs a vision model (Settings › Connections & devices › AI). PDFs from REWE and most supermarkets work without one.')}</div>
               )}
             </section>
           )}

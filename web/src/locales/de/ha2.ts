@@ -24,9 +24,9 @@ export const ha2: Record<string, string> = {
   'If parts of this already run in Home Assistant, nothing needs doing twice: ToHuus Hub takes it over and plays changes back.':
     'Wenn Teile davon schon in Home Assistant laufen, muss nichts doppelt passieren: ToHuus Hub übernimmt es und spielt Änderungen zurück.',
   'Connected through the ToHuus Hub integration{v} · last contact {when}': 'Verbunden über die ToHuus-Hub-Integration{v} · zuletzt {when}',
-  'Connected with the Home Assistant address and token (Access & AI)': 'Verbunden mit Adresse und Token von Home Assistant (Zugänge & KI)',
-  'Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Access & AI.':
-    'Noch nicht verbunden – installier die Integration (empfohlen) oder trag Adresse und Token von Home Assistant unter Zugänge & KI ein.',
+  'Connected with the Home Assistant address and token (AI assistants & access)': 'Verbunden mit Adresse und Token von Home Assistant (KI-Assistenten & Zugänge)',
+  'Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Settings › Connections & devices › AI assistants & access.':
+    'Noch nicht verbunden – installier die Integration (empfohlen) oder trag Adresse und Token von Home Assistant unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge ein.',
   'Home Assistant checked': 'Home Assistant geprüft',
   'Looking …': 'Schaue nach …',
   'Look again': 'Neu nachsehen',
@@ -60,14 +60,14 @@ export const ha2: Record<string, string> = {
   'since {when}': 'seit {when}',
   'not a member': 'kein Mitglied',
   'Everyone has been away since {when}. Going on a trip? Away mode keeps things quiet.': 'Alle sind seit {when} unterwegs. Seid ihr verreist? Der Urlaubsmodus hält alles ruhig.',
-  'Notifications through the Home Assistant app': 'Benachrichtigungen über die Home-Assistant-App',
+  'Notifications through the Home Assistant app': 'Mitteilungen über die Home-Assistant-App',
   'If your household already gets its messages from the Home Assistant app, ToHuus Hub can use it instead of the browser push – per person.':
     'Wenn ihr eure Nachrichten schon über die Home-Assistant-App bekommt, kann ToHuus Hub sie statt des Browser-Push nutzen – pro Person.',
   'No Home Assistant app found. Install the companion app on a phone, then tap “Look again”.': 'Keine Home-Assistant-App gefunden. Installier die Companion-App auf einem Handy und tipp dann auf „Neu nachsehen“.',
   'Channel for {name}': 'Kanal für {name}',
   'Push in the browser app': 'Push in der Browser-App',
   'HA app: {device}': 'HA-App: {device}',
-  'Which messages go out at all is still set under Notifications.': 'Welche Nachrichten überhaupt rausgehen, legst du weiter unter Benachrichtigungen fest.',
+  'Which messages go out at all is still set under Notifications & calendar.': 'Welche Nachrichten überhaupt rausgehen, legst du weiter unter Mitteilungen & Kalender fest.',
   'one taken': 'eins genommen',
   'onto the shopping list': 'auf die Einkaufsliste',
   'Scan a tag with the Home Assistant app once – it shows up here. Then choose what a scan does, like a QR label.':
@@ -77,8 +77,8 @@ export const ha2: Record<string, string> = {
   '{n} scans · last {when}': '{n} Scans · zuletzt {when}',
   'What a scan does': 'Was ein Scan tut',
   'Nothing yet': 'Noch nichts',
-  'Print a QR label for a product or care task first (More › QR labels) – tags use the same actions.':
-    'Druck zuerst ein QR-Etikett für ein Produkt oder eine Pflegeaufgabe (Mehr › QR-Etiketten) – Tags nutzen dieselben Aktionen.',
+  'Print a QR label for a product or care task first (Settings › Connections & devices › QR labels) – tags use the same actions.':
+    'Druck zuerst ein QR-Etikett für ein Produkt oder eine Pflegeaufgabe (Einstellungen › Verbindungen & Geräte › QR-Etiketten) – Tags nutzen dieselben Aktionen.',
   Lamp: 'Lampe',
   'Plug / switch': 'Steckdose / Schalter',
   Blinds: 'Rollo / Jalousie',
@@ -115,9 +115,9 @@ export const ha2: Record<string, string> = {
   Kind: 'Art',
   'Say it to {assistant} – these are the things you may switch here.': 'Sag es {assistant} – das hier darfst du schalten.',
   'If something doesn’t react, the normal switch still works.': 'Wenn etwas nicht reagiert, geht der normale Schalter trotzdem.',
-  'Already using Bring!, Mealie or the HA app for some of this? Settings › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.':
-    'Ihr nutzt schon Bring!, Mealie oder die HA-App für einiges davon? Einstellungen › Home Assistant zeigt, was Home Assistant schon macht, und hält es im Gleichschritt – Vorschläge mit einem Tipp übernehmen.',
-  'Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.': 'Sprachbefehle für den Babysitter (Licht, Rollos, Musik – nie Schlösser oder Kameras): Einstellungen › Home Assistant › Sprachbefehle. Sie erscheinen auf Babysitter- und Haushüter-Links; pro Link abschaltbar.',
+  'Already using Bring!, Mealie or the HA app for some of this? Settings › Connections & devices › Home Assistant shows what Home Assistant already does and keeps it in step – take over the suggestions with one tap.':
+    'Ihr nutzt schon Bring!, Mealie oder die HA-App für einiges davon? Einstellungen › Verbindungen & Geräte › Home Assistant zeigt, was Home Assistant schon macht, und hält es im Gleichschritt – Vorschläge mit einem Tipp übernehmen.',
+  'Voice commands for the babysitter (lights, blinds, music – never locks or cameras): Settings › Connections & devices › Home Assistant › Voice commands. They show on babysitter and house-sitter links; switch them off per link if you like.': 'Sprachbefehle für den Babysitter (Licht, Rollos, Musik – nie Schlösser oder Kameras): Einstellungen › Verbindungen & Geräte › Home Assistant › Sprachbefehle. Sie erscheinen auf Babysitter- und Haushüter-Links; pro Link abschaltbar.',
   'On for every babysitter and house-sitter link unless switched off below': 'An für jeden Babysitter- und Haushüter-Link, außer du schaltest ihn unten ab',
   'out and about': 'unterwegs',
 };

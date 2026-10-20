@@ -18,6 +18,17 @@ export const toLang = (v: string | null | undefined): Lang => {
   const base = (v ?? '').toLowerCase().split(/[-_]/)[0];
   return isLang(base) ? base : 'en';
 };
+/**
+ * The first supported language in a list of browser languages (navigator.languages: "de-AT", "en-GB" …), German
+ * when none fits – ToHuus speaks German first (self-hosted first start, Paket D, lib/instance-lang.ts).
+ */
+export const pickLang = (candidates: readonly (string | null | undefined)[], fallback: Lang = 'de'): Lang => {
+  for (const c of candidates) {
+    const base = (c ?? '').toLowerCase().split(/[-_]/)[0];
+    if (isLang(base)) return base;
+  }
+  return fallback;
+};
 export const langInfo = (l: string | null | undefined) => LANGUAGES.find((x) => x.code === toLang(l))!;
 /** BCP-47 locale for Intl / toLocaleDateString */
 export const localeOf = (l: string | null | undefined) => langInfo(l).locale;

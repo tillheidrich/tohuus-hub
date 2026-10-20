@@ -1,5 +1,5 @@
 /**
- * Settings › Recipes: state of the recipe photos (area: recipes2, photos).
+ * Settings › Areas & places › Recipes & imports: state of the recipe photos (area: recipes2, photos).
  * Shows how many photos are stored, waiting or failed (with the reason), retries them on the server, and –
  * when the server cannot reach the image host – loads them through this browser and sends them to the server.
  *

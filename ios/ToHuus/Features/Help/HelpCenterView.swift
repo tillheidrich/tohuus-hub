@@ -66,7 +66,7 @@ struct HelpCenterView: View {
             Topic(id: "ausgehen", symbol: "repeat", title: L("Only track what runs out"),
                   lead: L("The calmest way to start: only the things that regularly run out are tracked."),
                   steps: [
-                      L("Settings › Household › “What should be tracked?” › “Only what runs out”, then tap your staples."),
+                      L("Settings › Areas & places › Pantry: what to track? › “Only what runs out”, then tap your staples."),
                       L("Everything else is simply not counted – no warnings, no reminders. Receipts still come in as before."),
                       L("Bought something on two different days? Today suggests tracking it too."),
                       L("Switch to “Everything” at any time – nothing is deleted."),
@@ -98,16 +98,16 @@ struct HelpCenterView: View {
             t.append(Topic(id: "recipes-import", symbol: "book", title: L("Bring your recipes along"),
                            lead: L("From Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, a CSV list, any recipe website – or via any AI."),
                            steps: [
-                               L("Settings › Recipes › “Import from another app”: choose the export file, check the preview, import."),
+                               L("Settings › Areas & places › Recipes & imports › “Import from another app”: choose the export file, check the preview, import."),
                                L("Importing the same file again updates the recipes – your own way of cooking, favourites and ratings stay."),
                                L("Cookidoo recipes keep their steps in Cookidoo – the recipe shows a link there."),
                            ], slug: "rezepte-importieren"))
         }
         if app.moduleOn("treats") && !app.singleHousehold {
-            t.append(Topic(id: "treats", symbol: "heart", title: L("Treats: doing each other a good turn"),
+            t.append(Topic(id: "treats", symbol: "heart", title: L("Bring me something: doing each other a good turn"),
                            lead: L("Stuck on the sofa, in bed or with bedtime? Ask for a little something – someone at home brings it."),
                            steps: [
-                               L("Treats › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey."),
+                               L("Bring me something › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey."),
                                L("“How would you like it?” is a note for the person bringing it. “Who brings it?” asks one person – or whoever can."),
                                L("The others get a push with “I’ll bring it” or “Can’t right now” and a short reason. You see “Coming right up – Mira is bringing it”."),
                                L("Once it’s there you can say thanks. Nobody keeps score – no points, no list of who brought what."),
@@ -121,7 +121,7 @@ struct HelpCenterView: View {
                                L("Guests › new link: pick a template – Visitors, Babysitter or Grandparents – and choose what they see, for example the house info, chosen places read-only and a note."),
                                L("Share the link or show the QR code. Give it an end date or revoke it at any time."),
                                L("Someone who is here often gets a permanent guest account with a level that decides what they see."),
-                               L("Wishes from guests are answered in Treats – the link for that is shared there under “Invite guests”."),
+                               L("Wishes from guests are answered in “Bring me something” – the link for that is shared there under “Invite guests”."),
                            ], slug: "gaeste"))
         }
         t.append(Topic(id: "people", symbol: "person.3", title: L("People: pictures, children, permanent guests, favourites"),
@@ -144,7 +144,7 @@ struct HelpCenterView: View {
                            L("Claude: Settings › Connectors › “Add custom connector”. ChatGPT: Settings › Connectors (developer mode on some plans)."),
                            L("Paste the MCP address from the help page below. On your own server it is your server's address with /mcp at the end."),
                            L("Sign in with your ToHuus account, pick the household and whether the assistant may only read or also change things."),
-                           L("It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once."),
+                           L("It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Connections & devices › AI assistants & access lists every connection; end one there and it stops at once."),
                            L("Your own assistant uses its own AI – it doesn't use up the messages of the ToHuus assistant."),
                        ], slug: "claude-chatgpt"))
         if app.moduleOn("ha") {
@@ -152,7 +152,7 @@ struct HelpCenterView: View {
                            lead: L("A real integration: shopping list as a to-do list for Assist, meal plan and care tasks as calendars, sensors for dashboards, actions and events for automations."),
                            steps: [
                                L("Install “ToHuus Hub” from HACS (custom repository github.com/tillheidrich/tohuus-hub-ha) and restart Home Assistant."),
-                               L("Settings › Access & AI › New access › “Home Assistant” – copy the token."),
+                               L("Settings › Connections & devices › AI assistants & access › “Home Assistant” – copy the token."),
                                L("In Home Assistant add the ToHuus Hub integration and paste this address and the token."),
                            ], slug: "home-assistant"))
         }
@@ -170,7 +170,7 @@ struct HelpCenterView: View {
                            lead: L("Everything lives in one file on your server. No cloud, no tracking."),
                            steps: [
                                L("A snapshot is made every night automatically; the last ones are kept."),
-                               L("Settings › Data & backups: download a backup, or restore one with a tap."),
+                               L("Settings › Data, plan & account › Data & backups: download a backup, or restore one with a tap."),
                                L("Off-site copy: add a WebDAV folder (e.g. Nextcloud) – use an app password."),
                                L("Export as JSON whenever you like. Passwords and access keys are never included."),
                            ], slug: "selbst-hosten"))
@@ -178,7 +178,7 @@ struct HelpCenterView: View {
             t.append(Topic(id: "data", symbol: "square.and.arrow.down", title: L("Your data"),
                            lead: L("Your household’s data is yours: export it any time, take it to your own server if you like."),
                            steps: [
-                               L("Settings › Data: download everything as a file."),
+                               L("Settings › Data, plan & account › Data & reset: download everything as a file."),
                                L("Moving to your own server: the same file brings the household along."),
                            ], slug: "daten-export"))
         }

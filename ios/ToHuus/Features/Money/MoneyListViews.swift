@@ -56,7 +56,7 @@ struct MoneyListsCard: View {
             let open = lists.filter { $0.settled != true }
             let done = lists.filter { $0.settled == true }
             if lists.isEmpty {
-                Text(L("Pizza evening, barbecue, a weekend away: put the costs on a money list and see who gives whom how much."))
+                Text(L("Pizza evening, barbecue, a weekend away: put the costs on a split and see who gives whom how much."))
                     .font(.subheadline).foregroundStyle(Theme.ink2)
             }
             ForEach(open + (showDone ? done : [])) { l in
@@ -82,7 +82,7 @@ struct MoneyListsCard: View {
                 Button(showDone ? L("Hide settled lists") : LF("Show settled lists (%lld)", done.count)) { showDone.toggle() }
                     .font(.subheadline)
             }
-            Button(action: onNew) { Label(L("New money list"), systemImage: "plus") }
+            Button(action: onNew) { Label(L("New split"), systemImage: "plus") }
                 .buttonStyle(SecondaryButtonStyle())
         }
     }
@@ -257,12 +257,12 @@ struct MoneyListView: View {
             }
         }
         .themedList()
-        .navigationTitle(list?.title ?? L("Money list"))
+        .navigationTitle(list?.title ?? L("Split"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .refreshable { await load() }
         .toast($toast)
-        .confirmationDialog(L("Delete this money list?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog(L("Delete this split?"), isPresented: $confirmDelete, titleVisibility: .visible) {
             Button(L("Delete"), role: .destructive) {
                 Task {
                     do {
@@ -446,12 +446,12 @@ struct NewMoneyListView: View {
             } header: { Text(L("Who sees the list?")) } footer: { Text(L("A private list never shows up for anyone else – handy for a present.")) }
             if let error { Section { Text(error).foregroundStyle(Theme.empty) } }
             Section {
-                Button { Task { await create() } } label: { HStack { Text(L("Create money list")); if busy { Spacer(); ProgressView() } } }
+                Button { Task { await create() } } label: { HStack { Text(L("Create split")); if busy { Spacer(); ProgressView() } } }
                     .disabled(busy || !ready)
             }
         }
         .themedList()
-        .navigationTitle(L("New money list"))
+        .navigationTitle(L("New split"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             meta = try? await store.api.spendMeta()

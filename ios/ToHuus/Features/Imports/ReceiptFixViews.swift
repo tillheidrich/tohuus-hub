@@ -341,7 +341,7 @@ struct RereadAISheet: View {
             if ai.paused == true || ai.left == 0 {
                 Text(L("No AI readings left for today. Tomorrow it works again – or add the missing row yourself."))
             } else {
-                Text(L("AI is off for you or this household. If you want it, switch it on in Settings › With or without AI."))
+                Text(L("AI is off for you or this household. If you want it, switch it on in Settings › Connections & devices › AI."))
             }
         }
         .font(.body).foregroundStyle(Theme.ink)

@@ -214,7 +214,7 @@ function DueCard({ items, legacy }: { items: RhythmItem[]; legacy?: boolean }) {
       <div className="hcard-h">
         <h2 id="h-due">
           <span className="shape c" aria-hidden="true" />
-          {t('Due')}
+          {t('Needed again soon')}
         </h2>
       </div>
       {items.length > 3 && (
@@ -273,7 +273,7 @@ function EntryLevels({ legacy }: { legacy?: boolean }) {
         {canTalk ? (
           <button className="entry-tile" onClick={() => openAssistant()}>
             <Microphone size={22} />
-            <b>{t('Just speak')}</b>
+            <b>{t('Just say it')}</b>
             <span>{t('“Milk is out”')}</span>
           </button>
         ) : (
@@ -460,7 +460,7 @@ function OrdersCard({ forMe, own }: { forMe: TodayOrder[]; own: TodayOrder[] }) 
   const nav = useNavigate();
   return (
     <section className="hcard" aria-labelledby="h-orders">
-      <CardHead title={t('Treats')} shape="c" link={{ label: t('Open'), to: '/bestellen' }} />
+      <CardHead title={t('Bring me something')} shape="c" link={{ label: t('Open'), to: '/bestellen' }} />
       <ul className="hrows">
         {forMe.slice(0, 3).map((o) => (
           <li key={`r${o.id}`} className="hrow">

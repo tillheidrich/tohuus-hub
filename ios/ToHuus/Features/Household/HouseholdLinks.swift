@@ -44,7 +44,7 @@ struct MoreSections: View {
                 }
                 // Haushaltswissen (18 Oct 2026): first row, its own symbol; guests see what is shared with them
                 if allows("/wissen") {
-                    NavigationLink { KnowledgeView(api: api) } label: { Label(L("What ToHuus remembers"), systemImage: "brain") }
+                    NavigationLink { KnowledgeView(api: api) } label: { Label(L("Household knowledge"), systemImage: "brain") }
                 }
                 if allows("/einstellungen/haushalt/leute") {
                     NavigationLink { HouseholdView(api: api) } label: { Label(L("People"), systemImage: "person.2") }
@@ -57,7 +57,7 @@ struct MoreSections: View {
                     NavigationLink { GuestLinksView(api: api, guestsArea: true) } label: { Label(L("Guests"), systemImage: "wineglass") }
                 }
                 if showTreats {
-                    NavigationLink { TreatsView(api: api) } label: { Label(L("Treats"), systemImage: "hand.raised") }
+                    NavigationLink { TreatsView(api: api) } label: { Label(L("Bring me something"), systemImage: "hand.raised") }
                 }
             }
             // permanent guests: what the Zuhause tab shows members (Hausinfo, Wo ist was?) and their handover

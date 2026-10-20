@@ -8,7 +8,7 @@ import UIKit
 // Own server (self-hosted ToHuus) in the App Store app – decision 14 Oct 2026, docs/ios-native-start.md.
 // Ways in: address + name/e-mail + password (+ two-step code), "Im Browser anmelden" (passkey, e-mail link, SSO –
 // whatever the server offers, through ASWebAuthenticationSession and a PKCE-bound one-time code), and a QR code /
-// tohuus://connect link from the web app (Settings › My account › "iPhone-App verbinden"). Server: routes/app-pair.ts.
+// tohuus://connect link from the web app (Settings › Me › Sign-in & security › "iPhone-App verbinden"). Server: routes/app-pair.ts.
 
 // MARK: - checking an address
 

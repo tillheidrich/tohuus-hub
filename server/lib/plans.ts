@@ -190,7 +190,7 @@ export const READONLY_ALLOW: RegExp[] = [
   /^\/ai\/settings$/,
   /^\/invites\/[^/]+\/accept$/,
   /^\/users\/\d+$/,
-  // deleting your own data (and undoing it) always works, also without a plan (Settings › Data & reset)
+  // deleting your own data (and undoing it) always works, also without a plan (Settings › Data, plan & account › Data & reset)
   /^\/data\/wipe(\/\d+\/(restore|final))?$/,
   /^\/tour\/(reset|demo\/remove)$/,
   /^\/demo\/reset$/,

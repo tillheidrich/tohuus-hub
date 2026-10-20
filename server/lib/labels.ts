@@ -901,7 +901,7 @@ export async function printBoxes(codes: string[], opts: { printer?: number | str
   const boxes = boxesByCodes(codes);
   if (!boxes.length) throw new LabelError(t('Nothing to print.'));
   const p = findPrinter(opts.printer ?? null);
-  if (!p) throw new LabelError(t('No printer set up yet. Add one under Settings › Printers & tickets.'), 409);
+  if (!p) throw new LabelError(t('No printer set up yet. Add one under Settings › Connections & devices › Printers.'), 409);
   const bytes = await thermalJob(boxes, p, opts.size ?? 'normal');
   const log = (ok: boolean, error: string | null) =>
     db.prepare('INSERT INTO print_jobs (printer_id, kind, ref, target, ok, error, actor) VALUES (?, ?, ?, ?, ?, ?, ?)').run(p.id, 'label', boxes.map((b) => b.code).join(',').slice(0, 200), 'printer', ok ? 1 : 0, error, opts.actor ?? null);

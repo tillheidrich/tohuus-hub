@@ -77,7 +77,7 @@ export const recipes2: Record<string, string> = {
   'The steps are only available in {app}. Ingredients, planning and shopping work here as usual.': 'Die Schritte gibt es nur in {app}. Zutaten, Planen und Einkaufen funktionieren hier wie gewohnt.',
   'Open in {app}': 'In {app} öffnen',
   'Original ingredient lines': 'Original-Zutatenzeilen',
-  'Settings › Data › Export recipes (zip), or a recipe JSON': 'Einstellungen › Daten › Rezepte exportieren (zip) oder ein Rezept-JSON',
+  'Settings › Data, plan & account › Data & backups › Export recipes (zip), or a recipe JSON': 'Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Rezepte exportieren (zip) oder ein Rezept-JSON',
   'Import/Export › Export › Default format (zip)': 'Import/Export › Export › Standardformat (zip)',
   'File › Export › Paprika Recipe Format (.paprikarecipes)': 'Datei › Exportieren › Paprika-Rezeptformat (.paprikarecipes)',
   'the folder “Recipes” from Nextcloud, zipped': 'den Ordner „Rezepte“ aus Nextcloud, gezippt',
@@ -90,8 +90,8 @@ export const recipes2: Record<string, string> = {
   'Bring your recipes along': 'Rezepte mitbringen',
   'From Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, a CSV list, any recipe website – or via any AI.':
     'Aus Mealie, Tandoor, Paprika, Nextcloud Cookbook, KitchenOwl, einer CSV-Liste, jeder Rezeptseite – oder über jede KI.',
-  'Settings › Recipes › “Import from another app”: choose the export file, check the preview, import.':
-    'Einstellungen › Rezepte › „Aus einer anderen App importieren“: Exportdatei wählen, Vorschau prüfen, importieren.',
+  'Settings › Areas & places › Recipes & imports › “Import from another app”: choose the export file, check the preview, import.':
+    'Einstellungen › Bereiche & Orte › Rezepte & Importe › „Aus einer anderen App importieren“: Exportdatei wählen, Vorschau prüfen, importieren.',
   'Importing the same file again updates the recipes – your own way of cooking, favourites and ratings stay.':
     'Dieselbe Datei noch einmal importieren aktualisiert die Rezepte – eure Art zu kochen, Favoriten und Bewertungen bleiben.',
   'No idea what to cook? Search the open recipe database; ingredients come over in your language and units.':

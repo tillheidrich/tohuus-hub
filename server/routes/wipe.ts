@@ -1,5 +1,5 @@
 /**
- * Settings › Data & reset (lib/wipe.ts, docs/data-and-reset.md).
+ * Settings › Data, plan & account › Data & reset (lib/wipe.ts, docs/data-and-reset.md).
  *
  * Only people who signed in themselves: no API/MCP tokens, no guests, no kids' devices – deleting whole areas is
  * deliberately not offered to the assistant, MCP or scripts. Admins clear areas, everything or the sample data;

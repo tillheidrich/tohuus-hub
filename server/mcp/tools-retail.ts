@@ -20,7 +20,7 @@ export function register(s: McpServer, _actorName: string) {
     },
     async () => {
       const cfg = publicConfig();
-      if (!cfg.configured) return text({ configured: false, message: 'The receipt inbox is not set up (Settings › Access & AI › Receipt inbox).', last: inboxStatus() });
+      if (!cfg.configured) return text({ configured: false, message: 'The receipt inbox is not set up (Settings › Connections & devices › Receipts by e-mail).', last: inboxStatus() });
       try {
         const st = await checkInbox({ force: true });
         return text({ configured: true, enabled: cfg.enabled, ...st, review_hint: st.imports.length ? 'Open the imports in the app or apply them with the import tools.' : undefined });

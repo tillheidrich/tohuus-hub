@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-/// Settings › Data & backups › Backups – own server only, admins (web: DataSettings.tsx `Backups`, `Offsite`).
+/// Settings › Data, plan & account › Data & backups › Backups – own server only, admins (web: DataSettings.tsx `Backups`, `Offsite`).
 /// Nightly snapshots, "Back up now", download into Files, restore (from a snapshot or a file; the server restarts),
 /// an off-site copy into a WebDAV folder. ToHuus Cloud answers 404 here and backs households up itself.
 /// API: GET/POST /api/backups, GET /api/backups/:name/download, DELETE /api/backups/:name,

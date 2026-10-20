@@ -331,7 +331,7 @@ struct SpendReceiptView: View {
                             .disabled(splitting)
                         Button { pick = [] } label: { Label(L("Split only some items"), systemImage: "checklist") }
                     }
-                } footer: { Text(L("A money list shows who gives whom how much. ToHuus never moves money.")) }
+                } footer: { Text(L("A split shows who gives whom how much. ToHuus never moves money.")) }
                 Section(L("Tags for the whole receipt")) {
                     TagEditor(label: L("Tags"), values: $tags, suggestions: meta?.tags ?? [])
                         .onChange(of: tags) { _, v in Task { try? await store.api.setReceiptTags(receiptId, tags: v); store.touch("imports") } }

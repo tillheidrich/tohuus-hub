@@ -105,7 +105,7 @@ export function TasksTodayCard({ today }: { today: string }) {
       <div className="row" style={{ gap: 14, alignItems: 'center', marginBottom: open.length ? 6 : 0 }}>
         <Ring done={doneToday} total={total} />
         <div className="grow">
-          <b>{open.length === 0 ? t('All done for today.') : focus?.gentle ? t('One thing at a time is enough.') : t('{done} of {total} done today', { done: doneToday, total })}</b>
+          <b>{open.length === 0 ? t('All done for today.') : focus?.gentle ? t('Just one is enough.') : t('{done} of {total} done today', { done: doneToday, total })}</b>
           <div className="meta">{open.length === 0 ? t('Nothing else is due.') : t('Tick off what’s done – the next date sets itself.')}</div>
         </div>
       </div>
@@ -157,7 +157,7 @@ export function TasksTodayCard({ today }: { today: string }) {
       )}
       {open.length > max && (
         <button className="linkish" style={{ marginTop: 8 }} onClick={() => nav(focus?.gentle ? '/fokus' : '/aufgaben')}>
-          {focus?.gentle ? t('One thing at a time') : t('{n} more', { n: open.length - max })} <ArrowRight size={12} />
+          {focus?.gentle ? t('Just one') : t('{n} more', { n: open.length - max })} <ArrowRight size={12} />
         </button>
       )}
     </section>

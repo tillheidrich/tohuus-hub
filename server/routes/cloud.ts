@@ -36,6 +36,7 @@ import { canSendMail } from '../lib/mail.js';
 import { emit } from '../lib/bus.js';
 import { buildExport } from '../lib/data.js';
 import { inAccountLang } from '../lib/account-mail.js';
+import { languageChosen, requestLang } from '../lib/instance-lang.js';
 import { exportCodes } from '../lib/house-guide.js';
 import { InviteError, acceptInvite, findInvite } from '../lib/invites.js';
 import { setHomeSetup } from '../lib/places.js';
@@ -105,7 +106,7 @@ function signupInfo() {
 
 // ================================================================= instance (both modes)
 
-instance.get('/instance', (_req, res) => {
+instance.get('/instance', (req, res) => {
   const inHousehold = !cloudMode() || Boolean(currentHousehold());
   res.setHeader('Cache-Control', 'no-cache');
   res.json({
@@ -115,7 +116,9 @@ instance.get('/instance', (_req, res) => {
     brand: 'tohuus',
     /** the public website (help, legal, Ratgeber) – SITE_URL, so the apps follow a domain change */
     siteUrl: config.siteUrl,
-    lang: lang(),
+    // self-hosted before anyone chose a language: the browser's, else German (lib/instance-lang.ts, Paket D)
+    lang: cloudMode() ? lang() : requestLang(req),
+    langChosen: languageChosen(),
     region: inHousehold ? regionInfo().code : defaultRegionCode(config.language),
     auth: {
       password: true,
@@ -1222,7 +1225,7 @@ wellKnown.get(['/.well-known/security.txt', '/security.txt'], (_req, res) => {
 // members join by invitation and sign in with their own account – no household passwords, PINs, TOTP or SSO here
 cloud.post('/users', (_req, res) => void res.status(400).json({ error: t('In ToHuus Cloud people join by invitation.') }));
 cloud.patch('/users/:id', (req, res, next) => {
-  if (req.body && typeof req.body === 'object' && 'password' in req.body) return void res.status(400).json({ error: t('Everyone changes their own password under My account.') });
+  if (req.body && typeof req.body === 'object' && 'password' in req.body) return void res.status(400).json({ error: t('Everyone changes their own password under Settings › Me › Sign-in & security.') });
   next();
 });
 cloud.delete('/users/:id', (req, res, next) => {

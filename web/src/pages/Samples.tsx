@@ -1,5 +1,5 @@
 /**
- * Sample data: sample rows carry a small "Beispiel" tag (`GET /api/tour/demo/marks`), Settings › Data & reset removes
+ * Sample data: sample rows carry a small "Beispiel" tag (`GET /api/tour/demo/marks`), Settings › Data, plan & account › Data & reset removes
  * them (with a 10-second undo), Today shows a small line for admins as long as there are samples and offers removing
  * them once after a few days (`GET /api/tour` → `demo.nudge`, "Behalten" = `POST /api/tour/demo/nudge`).
  */
@@ -36,7 +36,7 @@ export function useDemoMarks() {
 export function DemoTag({ on }: { on: boolean }) {
   if (!on) return null;
   return (
-    <span className="demo-tag" title={t('Sample data – remove it under Settings › Data')}>
+    <span className="demo-tag" title={t('Sample data – remove it under Settings › Data, plan & account › Data & reset')}>
       {t('Sample')}
     </span>
   );

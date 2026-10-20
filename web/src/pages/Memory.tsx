@@ -1,7 +1,7 @@
 /**
  * "Was ToHuus sich merkt" (GET/POST/DELETE /api/memory, docs/assistant.md): facts, preferences and routines the
  * household asked ToHuus to remember – a plain list where everyone can add a line or delete one. Outward the app
- * says "merkt sich", never "Gedächtnis". Plus the consent card for health data (Settings › Access & AI).
+ * says "merkt sich", never "Gedächtnis". Plus the consent card for health data (Settings › Connections & devices › AI).
  */
 import { Notebook, Plus, Trash } from '@phosphor-icons/react';
 import { useState } from 'react';
@@ -64,7 +64,7 @@ export function MemoryPage() {
       <header className="page-head">
         <div>
           <div className="eyebrow">{t('Assistant')}</div>
-          <h1>{t('What ToHuus remembers')}</h1>
+          <h1>{t('Household knowledge')}</h1>
           <p className="muted">{t('Things you asked ToHuus to remember – for example “we don’t eat pork” or “Mira shops on Saturdays”. Delete anything at any time.')}</p>
         </div>
       </header>
@@ -113,7 +113,7 @@ export function MemoryPage() {
   );
 }
 
-/** Settings › Access & AI: consent for health data (ai.healthShare, Art. 9 GDPR) – off by default. */
+/** Settings › Connections & devices › AI: consent for health data (ai.healthShare, Art. 9 GDPR) – off by default. */
 export function AssistantPrivacyCard({ admin }: { admin: boolean }) {
   const s = useApi<{ healthShare: boolean }>(['assistant', 'settings'], '/assistant/settings');
   const toast = useToast();

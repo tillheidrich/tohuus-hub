@@ -1,6 +1,6 @@
 // German server strings for „Bring mir was“ (wishes from home and from guests via link) – area: order
 export const de_order: Record<string, string> = {
-  Treats: 'Bring mir was',
+  'Bring me something': 'Bring mir was',
   'Not right now – {reason}': 'Geht gerade nicht – {reason}',
   'Not right now': 'Geht gerade nicht',
   'Being made': 'Wird gemacht',

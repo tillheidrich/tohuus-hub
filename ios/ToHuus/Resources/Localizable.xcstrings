@@ -4880,19 +4880,19 @@
         }
       }
     },
-    "A backup was saved first: %@. To undo, restore it under Settings › Data & backups › Backups.": {
+    "A backup was saved first: %@. To undo, restore it under Settings › Data, plan & account › Data & backups › Backups.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A backup was saved first: %@. To undo, restore it under Settings › Data & backups › Backups."
+            "value": "A backup was saved first: %@. To undo, restore it under Settings › Data, plan & account › Data & backups › Backups."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vorher wurde eine Sicherung gespeichert: %@. Zum Rückgängigmachen spielst du sie unter Einstellungen › Daten & Sicherung › Sicherungen wieder ein."
+            "value": "Vorher wurde eine Sicherung gespeichert: %@. Zum Rückgängigmachen spielst du sie unter Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Sicherungen wieder ein."
           }
         }
       }
@@ -5407,19 +5407,19 @@
         }
       }
     },
-    "A money list shows who gives whom how much. ToHuus never moves money.": {
+    "A split shows who gives whom how much. ToHuus never moves money.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A money list shows who gives whom how much. ToHuus never moves money."
+            "value": "A split shows who gives whom how much. ToHuus never moves money."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Geldliste zeigt, wer wem wie viel gibt. ToHuus bewegt nie Geld."
+            "value": "Eine Abrechnung zeigt, wer wem wie viel gibt. ToHuus bewegt nie Geld."
           }
         }
       }
@@ -6796,7 +6796,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aus dem Bestand"
+            "value": "Aus dem Vorrat"
           }
         }
       }
@@ -7714,7 +7714,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tippe nach dem Kochen auf „Reste“ – oder friere etwas aus dem Bestand ein. Jede Dose bekommt hier ihr eigenes Etikett."
+            "value": "Tippe nach dem Kochen auf „Reste“ – oder friere etwas aus dem Vorrat ein. Jede Dose bekommt hier ihr eigenes Etikett."
           }
         }
       }
@@ -7986,7 +7986,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles oben plus Pflegeaufgaben, Benachrichtigungen und übrige Haushaltseinträge"
+            "value": "Alles oben plus Pflegeaufgaben, Mitteilungen und übrige Haushaltseinträge"
           }
         }
       }
@@ -9266,19 +9266,19 @@
         }
       }
     },
-    "Apple lets the app create passkeys only for ToHuus Cloud. For %@ add one in Safari under My account › Passkeys. Swipe to rename or remove.": {
+    "Apple lets the app create passkeys only for ToHuus Cloud. For %@ add one in Safari under Settings › Me › Sign-in & security. Swipe to rename or remove.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple lets the app create passkeys only for ToHuus Cloud. For %@ add one in Safari under My account › Passkeys. Swipe to rename or remove."
+            "value": "Apple lets the app create passkeys only for ToHuus Cloud. For %@ add one in Safari under Settings › Me › Sign-in & security. Swipe to rename or remove."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apple lässt die App Passkeys nur für ToHuus Cloud anlegen. Für %@ legst du ihn in Safari unter Mein Konto › Passkeys an. Wischen zum Umbenennen oder Entfernen."
+            "value": "Apple lässt die App Passkeys nur für ToHuus Cloud anlegen. Für %@ legst du ihn in Safari unter Einstellungen › Ich › Anmeldung & Sicherheit an. Wischen zum Umbenennen oder Entfernen."
           }
         }
       }
@@ -11085,13 +11085,13 @@
         }
       }
     },
-    "Bonus: under “Treats” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it.": {
+    "Bonus: under “Bring me something” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bonus: under “Treats” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it."
+            "value": "Bonus: under “Bring me something” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it."
           }
         },
         "de": {
@@ -12542,7 +12542,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pflege-Bon"
+            "value": "Pflege-Zettel"
           }
         }
       }
@@ -14463,7 +14463,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Codes gehen nie an den Assistenten, an KI, Home Assistant, Displays oder Benachrichtigungen und bleiben beim Export draußen, außer du hakst sie an."
+            "value": "Codes gehen nie an den Assistenten, an KI, Home Assistant, Displays oder Mitteilungen und bleiben beim Export draußen, außer du hakst sie an."
           }
         }
       }
@@ -14859,19 +14859,19 @@
         }
       }
     },
-    "Connected with the Home Assistant address and token (Access & AI)": {
+    "Connected with the Home Assistant address and token (AI assistants & access)": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connected with the Home Assistant address and token (Access & AI)"
+            "value": "Connected with the Home Assistant address and token (AI assistants & access)"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbunden mit Adresse und Token von Home Assistant (Zugänge & KI)"
+            "value": "Verbunden mit Adresse und Token von Home Assistant (KI-Assistenten & Zugänge)"
           }
         }
       }
@@ -16185,19 +16185,19 @@
         }
       }
     },
-    "Create money list": {
+    "Create split": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create money list"
+            "value": "Create split"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geldliste anlegen"
+            "value": "Abrechnung anlegen"
           }
         }
       }
@@ -17001,19 +17001,19 @@
         }
       }
     },
-    "Delete this money list?": {
+    "Delete this split?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delete this money list?"
+            "value": "Delete this split?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Geldliste löschen?"
+            "value": "Diese Abrechnung löschen?"
           }
         }
       }
@@ -17919,19 +17919,19 @@
         }
       }
     },
-    "Done: %d entries, %d photos, %d receipt files. %d people without a sign-in yet – invite them under Members.": {
+    "Done: %d entries, %d photos, %d receipt files. %d people without a sign-in yet – invite them under Settings › Household › Who lives here?": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Done: %d entries, %d photos, %d receipt files. %d people without a sign-in yet – invite them under Members."
+            "value": "Done: %d entries, %d photos, %d receipt files. %d people without a sign-in yet – invite them under Settings › Household › Who lives here?"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fertig: %d Einträge, %d Fotos, %d Bon-Dateien. %d Personen haben noch keine Anmeldung – lad sie unter Mitglieder ein."
+            "value": "Fertig: %d Einträge, %d Fotos, %d Bon-Dateien. %d Personen haben noch keine Anmeldung – lad sie unter Einstellungen › Haushalt › Wer wohnt hier? ein."
           }
         }
       }
@@ -19546,7 +19546,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einmal die Daten eintragen. In den Tagen davor schlägt ToHuus Hub Gerichte vor, die aufbrauchen, was sonst schlecht wird, und setzt nichts Frisches mehr auf die Liste. Unterwegs kommen nur dringende Benachrichtigungen. Auf dem Heimweg wartet eine Willkommen-Liste."
+            "value": "Einmal die Daten eintragen. In den Tagen davor schlägt ToHuus Hub Gerichte vor, die aufbrauchen, was sonst schlecht wird, und setzt nichts Frisches mehr auf die Liste. Unterwegs kommen nur dringende Mitteilungen. Auf dem Heimweg wartet eine Willkommen-Liste."
           }
         }
       }
@@ -19954,7 +19954,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle anderen sehen diese Liste nicht – nicht unter Heute, nicht in Benachrichtigungen, nicht über den Assistenten, Home Assistant oder Exporte. Gäste sehen sie nie."
+            "value": "Alle anderen sehen diese Liste nicht – nicht unter Heute, nicht in Mitteilungen, nicht über den Assistenten, Home Assistant oder Exporte. Gäste sehen sie nie."
           }
         }
       }
@@ -20294,7 +20294,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles im Bestand wird verfolgt, mit Hinweisen, wenn es knapp wird oder bald weg muss."
+            "value": "Alles im Vorrat wird verfolgt, mit Hinweisen, wenn es knapp wird oder bald weg muss."
           }
         }
       }
@@ -20401,19 +20401,19 @@
         }
       }
     },
-    "Everything is included on your own server. The QR code is in the web app under Settings › My account.": {
+    "Everything is included on your own server. The QR code is in the web app under Settings › Me › Sign-in & security.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything is included on your own server. The QR code is in the web app under Settings › My account."
+            "value": "Everything is included on your own server. The QR code is in the web app under Settings › Me › Sign-in & security."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auf dem eigenen Server ist alles dabei. Den QR-Code findest du in der Web-App unter Einstellungen › Mein Konto."
+            "value": "Auf dem eigenen Server ist alles dabei. Den QR-Code findest du in der Web-App unter Einstellungen › Ich › Anmeldung & Sicherheit."
           }
         }
       }
@@ -21552,7 +21552,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für Tragetaschen, Gutscheine und alles, was nie in den Bestand gehört."
+            "value": "Für Tragetaschen, Gutscheine und alles, was nie in den Vorrat gehört."
           }
         }
       }
@@ -21603,7 +21603,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zum Beispiel aus dem REWE-Datenexport (DSGVO-Auskunft): Artikel, die du mindestens dreimal gekauft hast, werden als Produkte angelegt – inklusive der Bon-Abkürzungen, damit künftige eBons sofort erkannt werden. Es wird kein Bestand gebucht."
+            "value": "Zum Beispiel aus dem REWE-Datenexport (DSGVO-Auskunft): Artikel, die du mindestens dreimal gekauft hast, werden als Produkte angelegt – inklusive der Bon-Abkürzungen, damit künftige eBons sofort erkannt werden. Es wird kein Vorrat gebucht."
           }
         }
       }
@@ -22674,7 +22674,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aus %d gebuchten Verbräuchen (etwa %@ %@ pro Woche). Der Bestand ändert sich nie von allein."
+            "value": "Aus %d gebuchten Verbräuchen (etwa %@ %@ pro Woche). Der Vorrat ändert sich nie von allein."
           }
         }
       }
@@ -22691,7 +22691,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aus %d Einkäufen. Verbrauch wird selten gebucht, deshalb ist das grob. Der Bestand ändert sich nie von allein."
+            "value": "Aus %d Einkäufen. Verbrauch wird selten gebucht, deshalb ist das grob. Der Vorrat ändert sich nie von allein."
           }
         }
       }
@@ -22980,7 +22980,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aus dem Bestand"
+            "value": "Aus dem Vorrat"
           }
         }
       }
@@ -23932,7 +23932,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gäste scannen den QR-Code und bestellen; du bekommst einen Push und tippst auf „Fertig“. Der Bestand bucht sich von selbst."
+            "value": "Gäste scannen den QR-Code und bestellen; du bekommst einen Push und tippst auf „Fertig“. Der Vorrat bucht sich von selbst."
           }
         }
       }
@@ -26096,13 +26096,13 @@
         }
       }
     },
-    "If your household already gets its messages from the Home Assistant app, ToHuus Hub can use it instead of the browser push – per person. Which messages go out at all is still set under Notifications.": {
+    "If your household already gets its messages from the Home Assistant app, ToHuus Hub can use it instead of the browser push – per person. Which messages go out at all is still set under Notifications & calendar.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If your household already gets its messages from the Home Assistant app, ToHuus Hub can use it instead of the browser push – per person. Which messages go out at all is still set under Notifications."
+            "value": "If your household already gets its messages from the Home Assistant app, ToHuus Hub can use it instead of the browser push – per person. Which messages go out at all is still set under Notifications & calendar."
           }
         },
         "de": {
@@ -26193,7 +26193,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Im Bild-Modus wird der Bon als Grafik gedruckt: Umlaute, schwedische Buchstaben und der QR-Code kommen immer richtig raus. Der Text-Modus ist auf alten Druckern schneller und nutzt die Codepage CP858 oder Windows-1252."
+            "value": "Im Bild-Modus wird der Zettel als Grafik gedruckt: Umlaute, schwedische Buchstaben und der QR-Code kommen immer richtig raus. Der Text-Modus ist auf alten Druckern schneller und nutzt die Codepage CP858 oder Windows-1252."
           }
         }
       }
@@ -26742,19 +26742,19 @@
         }
       }
     },
-    "In the web app: Settings › My account › “Connect the iPhone app”. The QR code brings address and sign-in along.": {
+    "In the web app: Settings › Me › Sign-in & security › “Connect the iPhone app”. The QR code brings address and sign-in along.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In the web app: Settings › My account › “Connect the iPhone app”. The QR code brings address and sign-in along."
+            "value": "In the web app: Settings › Me › Sign-in & security › “Connect the iPhone app”. The QR code brings address and sign-in along."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In der Web-App: Einstellungen › Mein Konto › „iPhone-App verbinden“. Der QR-Code bringt Adresse und Anmeldung mit."
+            "value": "In der Web-App: Einstellungen › Ich › Anmeldung & Sicherheit › „iPhone-App verbinden“. Der QR-Code bringt Adresse und Anmeldung mit."
           }
         }
       }
@@ -26924,7 +26924,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zutat aus dem Bestand"
+            "value": "Zutat aus dem Vorrat"
           }
         }
       }
@@ -27847,19 +27847,19 @@
         }
       }
     },
-    "Just speak": {
+    "Just say it": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Just speak"
+            "value": "Just say it"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einfach sprechen"
+            "value": "Einfach sagen"
           }
         }
       }
@@ -30324,7 +30324,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bon erstellen"
+            "value": "Zettel erstellen"
           }
         }
       }
@@ -30499,19 +30499,19 @@
         }
       }
     },
-    "Mark a tablet as shared under My account; members with a PIN can switch there.": {
+    "Mark a tablet as shared under Settings › Me › Sign-in & security; members with a PIN can switch there.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mark a tablet as shared under My account; members with a PIN can switch there."
+            "value": "Mark a tablet as shared under Settings › Me › Sign-in & security; members with a PIN can switch there."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Markier ein Tablet unter „Mein Konto“ als gemeinsam; Mitglieder mit PIN können dort wechseln."
+            "value": "Markier ein Tablet unter Einstellungen › Ich › Anmeldung & Sicherheit als gemeinsam; Mitglieder mit PIN können dort wechseln."
           }
         }
       }
@@ -30788,19 +30788,19 @@
         }
       }
     },
-    "Members can then pick light or dark in “My account”.": {
+    "Then everyone picks light or dark under Settings › Me › Appearance & readability.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Members can then pick light or dark in “My account”."
+            "value": "Then everyone picks light or dark under Settings › Me › Appearance & readability."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dann wählt jedes Mitglied unter „Mein Konto“ hell oder dunkel."
+            "value": "Dann wählt jede Person unter Einstellungen › Ich › Darstellung & Lesbarkeit hell oder dunkel."
           }
         }
       }
@@ -31264,19 +31264,19 @@
         }
       }
     },
-    "Money list": {
+    "Split": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Money list"
+            "value": "Split"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geldliste"
+            "value": "Abrechnung"
           }
         }
       }
@@ -32483,7 +32483,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie an den Assistenten, Home Assistant oder Benachrichtigungen. Erledigtes bleibt zwei Wochen hier und zählt in deinem Wochenrückblick."
+            "value": "Nie an den Assistenten, Home Assistant oder Mitteilungen. Erledigtes bleibt zwei Wochen hier und zählt in deinem Wochenrückblick."
           }
         }
       }
@@ -32947,19 +32947,19 @@
         }
       }
     },
-    "New money list": {
+    "New split": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New money list"
+            "value": "New split"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neue Geldliste"
+            "value": "Neue Abrechnung"
           }
         }
       }
@@ -33491,19 +33491,19 @@
         }
       }
     },
-    "No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Members › Kids.": {
+    "No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Household › Who lives here?.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Members › Kids."
+            "value": "No PIN is set for this profile. To end kid mode, remove this tablet in the app under Settings › Household › Who lives here?."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für dieses Profil ist keine PIN gesetzt. Um den Kindermodus zu beenden, entferne das Tablet in der App unter Einstellungen › Mitglieder › Kinder."
+            "value": "Für dieses Profil ist keine PIN gesetzt. Um den Kindermodus zu beenden, entferne das Tablet in der App unter Einstellungen › Haushalt › Wer wohnt hier?."
           }
         }
       }
@@ -33894,7 +33894,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch keine Getränke, Snacks oder Eis im Bestand – such nach etwas anderem."
+            "value": "Noch keine Getränke, Snacks oder Eis im Vorrat – such nach etwas anderem."
           }
         }
       }
@@ -34086,19 +34086,19 @@
         }
       }
     },
-    "No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus” – you’ll find the connection under Settings › Access.": {
+    "No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus” – you’ll find the connection under Settings › Connections & devices › AI assistants & access.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus” – you’ll find the connection under Settings › Access."
+            "value": "No image model is set up on this server. Send the photo to Claude or ChatGPT and say “add this to ToHuus” – you’ll find the connection under Settings › Connections & devices › AI assistants & access."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auf diesem Server ist kein Bildmodell eingerichtet. Schick das Foto an Claude oder ChatGPT und sag „trag das in ToHuus ein“. Die Verbindung findest du unter Einstellungen › Zugänge."
+            "value": "Auf diesem Server ist kein Bildmodell eingerichtet. Schick das Foto an Claude oder ChatGPT und sag „trag das in ToHuus ein“. Die Verbindung findest du unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge."
           }
         }
       }
@@ -35395,19 +35395,19 @@
         }
       }
     },
-    "Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Access & AI.": {
+    "Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Settings › Connections & devices › AI assistants & access.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Access & AI."
+            "value": "Not connected yet – install the integration (recommended) or enter the Home Assistant address and token under Settings › Connections & devices › AI assistants & access."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch nicht verbunden – installier die Integration (empfohlen) oder trag Adresse und Token von Home Assistant unter Zugänge & KI ein."
+            "value": "Noch nicht verbunden – installier die Integration (empfohlen) oder trag Adresse und Token von Home Assistant unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge ein."
           }
         }
       }
@@ -35458,7 +35458,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wird im Bestand nicht gezählt – ist einfach da (Leitungswasser, Kaffee)."
+            "value": "Wird im Vorrat nicht gezählt – ist einfach da (Leitungswasser, Kaffee)."
           }
         }
       }
@@ -36359,7 +36359,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nichts im Bestand passt zu „%@“."
+            "value": "Nichts im Vorrat passt zu „%@“."
           }
         }
       }
@@ -36427,7 +36427,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch steht nichts auf der Karte oder im Bestand – „Was anderes“ geht immer."
+            "value": "Noch steht nichts auf der Karte oder im Vorrat – „Was anderes“ geht immer."
           }
         }
       }
@@ -37124,7 +37124,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Benachrichtigungen über die Home-Assistant-App"
+            "value": "Mitteilungen über die Home-Assistant-App"
           }
         }
       }
@@ -38013,19 +38013,19 @@
         }
       }
     },
-    "On your own server: Settings › Data › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household.": {
+    "On your own server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On your own server: Settings › Data › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household."
+            "value": "On your own server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud. Then choose the file here. This works in a new, empty household."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auf deinem eigenen Server: Einstellungen › Daten › Umzug in die ToHuus Cloud. Dann hier die Datei auswählen. Das geht in einem neuen, leeren Haushalt."
+            "value": "Auf deinem eigenen Server: Einstellungen › Daten, Abo & Konto › Daten & Sicherung › Umzug in die ToHuus Cloud. Dann hier die Datei auswählen. Das geht in einem neuen, leeren Haushalt."
           }
         }
       }
@@ -38506,36 +38506,36 @@
         }
       }
     },
-    "One thing at a time": {
+    "Just one": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One thing at a time"
+            "value": "Just one"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eins nach dem anderen"
+            "value": "Nur eins"
           }
         }
       }
     },
-    "One thing at a time is enough.": {
+    "Just one is enough.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One thing at a time is enough."
+            "value": "Just one is enough."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eins nach dem anderen reicht."
+            "value": "Nur eins reicht."
           }
         }
       }
@@ -39215,7 +39215,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur dringende Benachrichtigungen"
+            "value": "Nur dringende Mitteilungen"
           }
         }
       }
@@ -39895,7 +39895,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Im Bestand öffnen"
+            "value": "Im Vorrat öffnen"
           }
         }
       }
@@ -42450,19 +42450,19 @@
         }
       }
     },
-    "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night.": {
+    "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and splits for a pizza night.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and money lists for splitting a pizza night."
+            "value": "Photo, PDF or e-receipt: ToHuus sees what you bought and what it cost. Budgets per week, month or year, for the household or just for you, and splits for a pizza night."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Foto, PDF oder eBon: ToHuus sieht, was ihr gekauft habt und was es gekostet hat. Budgets pro Woche, Monat oder Jahr, für den Haushalt oder nur für dich, und Geldlisten zum Aufteilen, etwa für den Pizzaabend."
+            "value": "Foto, PDF oder eBon: ToHuus sieht, was ihr gekauft habt und was es gekostet hat. Budgets pro Woche, Monat oder Jahr, für den Haushalt oder nur für dich, und Abrechnungen zum Teilen, etwa für den Pizzaabend."
           }
         }
       }
@@ -42564,7 +42564,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fotografier einen Bon, wähl ein PDF oder scann den QR-Code eines digitalen Bons – ToHuus liest ihn, und du prüfst ihn hier."
+            "value": "Fotografier einen Bon, wähl ein PDF oder scann den QR-Code eines digitalen Bon – ToHuus liest ihn, und du prüfst ihn hier."
           }
         }
       }
@@ -42768,7 +42768,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähl etwas, das im Bestand gezählt wird."
+            "value": "Wähl etwas, das im Vorrat gezählt wird."
           }
         }
       }
@@ -43045,19 +43045,19 @@
         }
       }
     },
-    "Pizza evening, barbecue, a weekend away: put the costs on a money list and see who gives whom how much.": {
+    "Pizza evening, barbecue, a weekend away: put the costs on a split and see who gives whom how much.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pizza evening, barbecue, a weekend away: put the costs on a money list and see who gives whom how much."
+            "value": "Pizza evening, barbecue, a weekend away: put the costs on a split and see who gives whom how much."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pizzaabend, Grillen, ein Wochenende weg: Schreib die Kosten auf eine Geldliste und sieh, wer wem wie viel gibt."
+            "value": "Pizzaabend, Grillen, ein Wochenende weg: Schreib die Kosten in eine Abrechnung und sieh, wer wem wie viel gibt."
           }
         }
       }
@@ -43227,7 +43227,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Plan & Speicher"
+            "value": "Abo & Speicher"
           }
         }
       }
@@ -43805,7 +43805,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bon ansehen"
+            "value": "Zettel ansehen"
           }
         }
       }
@@ -44082,19 +44082,19 @@
         }
       }
     },
-    "Print a QR label for a product or care task first (More › QR labels) – tags use the same actions.": {
+    "Print a QR label for a product or care task first (Settings › Connections & devices › QR labels) – tags use the same actions.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Print a QR label for a product or care task first (More › QR labels) – tags use the same actions."
+            "value": "Print a QR label for a product or care task first (Settings › Connections & devices › QR labels) – tags use the same actions."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Druck zuerst ein QR-Etikett für ein Produkt oder eine Pflegeaufgabe (Mehr › QR-Etiketten) – Tags nutzen dieselben Aktionen."
+            "value": "Druck zuerst ein QR-Etikett für ein Produkt oder eine Pflegeaufgabe (Einstellungen › Verbindungen & Geräte › QR-Etiketten) – Tags nutzen dieselben Aktionen."
           }
         }
       }
@@ -44333,23 +44333,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Drucker"
-          }
-        }
-      }
-    },
-    "Printers & tickets": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Printers & tickets"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drucker & Bons"
           }
         }
       }
@@ -44621,7 +44604,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Produkte, Bestand, Verlauf, Barcodes"
+            "value": "Produkte, Vorrat, Verlauf, Barcodes"
           }
         }
       }
@@ -44978,7 +44961,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "In den Bestand buchen"
+            "value": "In den Vorrat buchen"
           }
         }
       }
@@ -48582,7 +48565,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dasselbe Bild wie im Bestand."
+            "value": "Dasselbe Bild wie im Vorrat."
           }
         }
       }
@@ -49551,7 +49534,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etikett mit der Handykamera scannen: gegessen, eine Portion genommen, aufgetaut oder weggeworfen – der Bestand zieht mit. Was drin ist, sehen nur angemeldete Haushaltsmitglieder."
+            "value": "Etikett mit der Handykamera scannen: gegessen, eine Portion genommen, aufgetaut oder weggeworfen – der Vorrat zieht mit. Was drin ist, sehen nur angemeldete Haushaltsmitglieder."
           }
         }
       }
@@ -49908,7 +49891,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Im Bestand suchen – Cola, Chips, Eis …"
+            "value": "Im Vorrat suchen – Cola, Chips, Eis …"
           }
         }
       }
@@ -50214,7 +50197,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als digitalen Bon schicken"
+            "value": "Als digitalen Zettel schicken"
           }
         }
       }
@@ -50690,7 +50673,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beim Servieren wird es aus dem Bestand ausgebucht."
+            "value": "Beim Servieren wird es aus dem Vorrat ausgebucht."
           }
         }
       }
@@ -50899,104 +50882,104 @@
         }
       }
     },
-    "Settings › Access & AI › New access › “AI assistant”.": {
+    "Settings › Connections & devices › AI assistants & access › “AI assistant”.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings › Access & AI › New access › “AI assistant”."
+            "value": "Settings › Connections & devices › AI assistants & access › “AI assistant”."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einstellungen › Zugänge & KI › Neuer Zugang › „KI-Assistent“."
+            "value": "Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge › „KI-Assistent“."
           }
         }
       }
     },
-    "Settings › Access & AI › New access › “Home Assistant” – copy the token.": {
+    "Settings › Connections & devices › AI assistants & access › “Home Assistant” – copy the token.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings › Access & AI › New access › “Home Assistant” – copy the token."
+            "value": "Settings › Connections & devices › AI assistants & access › “Home Assistant” – copy the token."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einstellungen › Zugänge & KI › Neuer Zugang › „Home Assistant“ – Token kopieren."
+            "value": "Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge › „Home Assistant“ – Token kopieren."
           }
         }
       }
     },
-    "Settings › Data & backups: download a backup, or restore one with a tap.": {
+    "Settings › Data, plan & account › Data & backups: download a backup, or restore one with a tap.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings › Data & backups: download a backup, or restore one with a tap."
+            "value": "Settings › Data, plan & account › Data & backups: download a backup, or restore one with a tap."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einstellungen › Daten & Sicherung: Sicherung herunterladen oder mit einem Tipp wiederherstellen."
+            "value": "Einstellungen › Daten, Abo & Konto › Daten & Sicherung: Sicherung herunterladen oder mit einem Tipp wiederherstellen."
           }
         }
       }
     },
-    "Settings › Data: download everything as a file.": {
+    "Settings › Data, plan & account › Data & reset: download everything as a file.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings › Data: download everything as a file."
+            "value": "Settings › Data, plan & account › Data & reset: download everything as a file."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einstellungen › Daten: alles als Datei herunterladen."
+            "value": "Einstellungen › Daten, Abo & Konto › Daten & Zurücksetzen: alles als Datei herunterladen."
           }
         }
       }
     },
-    "Settings › Household › “What should be tracked?” › “Only what runs out”, then tap your staples.": {
+    "Settings › Areas & places › Pantry: what to track? › “Only what runs out”, then tap your staples.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings › Household › “What should be tracked?” › “Only what runs out”, then tap your staples."
+            "value": "Settings › Areas & places › Pantry: what to track? › “Only what runs out”, then tap your staples."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einstellungen › Haushalt › „Was soll verfolgt werden?“ › „Nur was ausgeht“, dann deine Grundsachen antippen."
+            "value": "Einstellungen › Bereiche & Orte › Vorrat: was verfolgen? › „Nur was ausgeht“, dann deine Grundsachen antippen."
           }
         }
       }
     },
-    "Settings › Recipes › “Import from another app”: choose the export file, check the preview, import.": {
+    "Settings › Areas & places › Recipes & imports › “Import from another app”: choose the export file, check the preview, import.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Settings › Recipes › “Import from another app”: choose the export file, check the preview, import."
+            "value": "Settings › Areas & places › Recipes & imports › “Import from another app”: choose the export file, check the preview, import."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einstellungen › Rezepte › „Aus einer anderen App importieren“: Exportdatei wählen, Vorschau prüfen, importieren."
+            "value": "Einstellungen › Bereiche & Orte › Rezepte & Importe › „Aus einer anderen App importieren“: Exportdatei wählen, Vorschau prüfen, importieren."
           }
         }
       }
@@ -54770,7 +54753,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fang mit einer Vorlage an, nimm Getränke und Snacks aus dem Bestand oder leg eigene Sachen an wie Leitungswasser oder Kaffee."
+            "value": "Fang mit einer Vorlage an, nimm Getränke und Snacks aus dem Vorrat oder leg eigene Sachen an wie Leitungswasser oder Kaffee."
           }
         }
       }
@@ -54940,7 +54923,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bleibt im Haushalt: Assistent, Home Assistant und Benachrichtigungen sagen immer nur „weg“."
+            "value": "Bleibt im Haushalt: Assistent, Home Assistant und Mitteilungen sagen immer nur „weg“."
           }
         }
       }
@@ -55229,7 +55212,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bestand"
+            "value": "Vorrat"
           }
         }
       }
@@ -56453,7 +56436,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stattdessen aus dem Bestand nehmen"
+            "value": "Stattdessen aus dem Vorrat nehmen"
           }
         }
       }
@@ -56742,7 +56725,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "„%@“ von der Karte nehmen? Im Bestand bleibt es."
+            "value": "„%@“ von der Karte nehmen? Im Vorrat bleibt es."
           }
         }
       }
@@ -56810,7 +56793,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nimmt ein %@ aus dem Bestand (%d übrig)."
+            "value": "Nimmt ein %@ aus dem Vorrat (%d übrig)."
           }
         }
       }
@@ -58379,19 +58362,19 @@
         }
       }
     },
-    "The code is in the web app under Settings › My account › “Connect the iPhone app”. It works once and for 10 minutes.": {
+    "The code is in the web app under Settings › Me › Sign-in & security › “Connect the iPhone app”. It works once and for 10 minutes.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The code is in the web app under Settings › My account › “Connect the iPhone app”. It works once and for 10 minutes."
+            "value": "The code is in the web app under Settings › Me › Sign-in & security › “Connect the iPhone app”. It works once and for 10 minutes."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den Code findest du in der Web-App unter Einstellungen › Mein Konto › „iPhone-App verbinden“. Er gilt einmal und 10 Minuten lang."
+            "value": "Den Code findest du in der Web-App unter Einstellungen › Ich › Anmeldung & Sicherheit › „iPhone-App verbinden“. Er gilt einmal und 10 Minuten lang."
           }
         }
       }
@@ -58544,7 +58527,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Haushaltssprache gilt für Mails, Benachrichtigungen und neue Kategorien. Die App selbst folgt der Sprache deines Geräts."
+            "value": "Die Haushaltssprache gilt für Mails, Mitteilungen und neue Kategorien. Die App selbst folgt der Sprache deines Geräts."
           }
         }
       }
@@ -58736,19 +58719,19 @@
         }
       }
     },
-    "The list, suggestions, cooking and money work without any AI. You can change both switches later in Settings › With or without AI.": {
+    "The list, suggestions, cooking and money work without any AI. You can change both switches later in Settings › Connections & devices › AI.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The list, suggestions, cooking and money work without any AI. You can change both switches later in Settings › With or without AI."
+            "value": "The list, suggestions, cooking and money work without any AI. You can change both switches later in Settings › Connections & devices › AI."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Liste, Vorschläge, Kochen und Geld funktionieren ganz ohne KI. Beide Schalter kannst du später unter Einstellungen › Mit oder ohne KI ändern."
+            "value": "Liste, Vorschläge, Kochen und Geld funktionieren ganz ohne KI. Beide Schalter kannst du später unter Einstellungen › Verbindungen & Geräte › KI ändern."
           }
         }
       }
@@ -59088,7 +59071,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Produkt, Bestand und Verlauf werden entfernt."
+            "value": "Produkt, Vorrat und Verlauf werden entfernt."
           }
         }
       }
@@ -59734,7 +59717,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sie bleiben ausgegraut in den Listen sichtbar und werden getrennt summiert. Produkte und Bestand bleiben unverändert."
+            "value": "Sie bleiben ausgegraut in den Listen sichtbar und werden getrennt summiert. Produkte und Vorrat bleiben unverändert."
           }
         }
       }
@@ -59875,19 +59858,19 @@
         }
       }
     },
-    "This QR code isn’t from ToHuus. In the web app: Settings › My account › “Connect the iPhone app”.": {
+    "This QR code isn’t from ToHuus. In the web app: Settings › Me › Sign-in & security › “Connect the iPhone app”.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This QR code isn’t from ToHuus. In the web app: Settings › My account › “Connect the iPhone app”."
+            "value": "This QR code isn’t from ToHuus. In the web app: Settings › Me › Sign-in & security › “Connect the iPhone app”."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieser QR-Code ist nicht von ToHuus. In der Web-App: Einstellungen › Mein Konto › „iPhone-App verbinden“."
+            "value": "Dieser QR-Code ist nicht von ToHuus. In der Web-App: Einstellungen › Ich › Anmeldung & Sicherheit › „iPhone-App verbinden“."
           }
         }
       }
@@ -59938,7 +59921,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Damit heißt es auch im Bestand so."
+            "value": "Damit heißt es auch im Vorrat so."
           }
         }
       }
@@ -61422,19 +61405,19 @@
         }
       }
     },
-    "ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “Access & AI”.": {
+    "ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “AI assistants & access”.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “Access & AI”."
+            "value": "ToHuus Hub sends events as JSON (title, message, url, data). You’ll find a ready-made automation under “AI assistants & access”."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "ToHuus Hub schickt Ereignisse als JSON (title, message, url, data). Eine fertige Automation gibt es unter „Zugänge & KI“."
+            "value": "ToHuus Hub schickt Ereignisse als JSON (title, message, url, data). Eine fertige Automation gibt es unter „KI-Assistenten & Zugänge“."
           }
         }
       }
@@ -62170,30 +62153,13 @@
         }
       }
     },
-    "Treats": {
+    "Bring me something & shopping list": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Treats"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bring mir was"
-          }
-        }
-      }
-    },
-    "Treats & shopping list": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Treats & shopping list"
+            "value": "Bring me something & shopping list"
           }
         },
         "de": {
@@ -62204,13 +62170,13 @@
         }
       }
     },
-    "Treats › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey.": {
+    "Bring me something › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Treats › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey."
+            "value": "Bring me something › For me: tap a tile – something sweet, something to drink, from the fridge – or “Something else” for a free wish like tea with honey."
           }
         },
         "de": {
@@ -62221,13 +62187,13 @@
         }
       }
     },
-    "Treats: doing each other a good turn": {
+    "Bring me something: doing each other a good turn": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Treats: doing each other a good turn"
+            "value": "Bring me something: doing each other a good turn"
           }
         },
         "de": {
@@ -63530,13 +63496,13 @@
         }
       }
     },
-    "Valid for %@ more. Use it once; it gives Home Assistant its own access, which you can revoke under Access & AI.": {
+    "Valid for %@ more. Use it once; it gives Home Assistant its own access, which you can revoke under Settings › Connections & devices › AI assistants & access.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Valid for %@ more. Use it once; it gives Home Assistant its own access, which you can revoke under Access & AI."
+            "value": "Valid for %@ more. Use it once; it gives Home Assistant its own access, which you can revoke under Settings › Connections & devices › AI assistants & access."
           }
         },
         "de": {
@@ -63734,13 +63700,13 @@
         }
       }
     },
-    "Visitors, the babysitter or grandparents: Treats › Guests – a link with what they may ask for, chosen places read-only and a note.": {
+    "Visitors, the babysitter or grandparents: Bring me something › Guests – a link with what they may ask for, chosen places read-only and a note.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visitors, the babysitter or grandparents: Treats › Guests – a link with what they may ask for, chosen places read-only and a note."
+            "value": "Visitors, the babysitter or grandparents: Bring me something › Guests – a link with what they may ask for, chosen places read-only and a note."
           }
         },
         "de": {
@@ -64465,19 +64431,19 @@
         }
       }
     },
-    "What ToHuus remembers": {
+    "Household knowledge": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What ToHuus remembers"
+            "value": "Household knowledge"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was ToHuus sich merkt"
+            "value": "Haushaltswissen"
           }
         }
       }
@@ -65055,7 +65021,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was soll verfolgt werden?"
+            "value": "Vorrat: was verfolgen?"
           }
         }
       }
@@ -66126,7 +66092,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unterwegs: nur dringende Benachrichtigungen; nichts landet von selbst auf der Liste, wenn niemand zu Hause ist. Bleibt jemand da (Großeltern)? Dann läuft für sie alles weiter. Kochen in der Ferienwohnung bekommt einen eigenen kleinen Plan samt Liste."
+            "value": "Unterwegs: nur dringende Mitteilungen; nichts landet von selbst auf der Liste, wenn niemand zu Hause ist. Bleibt jemand da (Großeltern)? Dann läuft für sie alles weiter. Kochen in der Ferienwohnung bekommt einen eigenen kleinen Plan samt Liste."
           }
         }
       }
@@ -66942,7 +66908,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wunsch-Bon"
+            "value": "Wunsch-Zettel"
           }
         }
       }
@@ -67134,36 +67100,19 @@
         }
       }
     },
-    "With or without AI": {
+    "AI: you decide": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "With or without AI"
+            "value": "AI: you decide"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mit oder ohne KI"
-          }
-        }
-      }
-    },
-    "With or without AI: you decide": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "With or without AI: you decide"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mit oder ohne KI: du entscheidest"
+            "value": "KI: du entscheidest"
           }
         }
       }
@@ -68035,19 +67984,19 @@
         }
       }
     },
-    "You can change this any time under More › With or without AI.": {
+    "You can change this any time under Settings › Connections & devices › AI.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You can change this any time under More › With or without AI."
+            "value": "You can change this any time under Settings › Connections & devices › AI."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du kannst das jederzeit unter Mehr › Mit oder ohne KI ändern."
+            "value": "Du kannst das jederzeit unter Einstellungen › Verbindungen & Geräte › KI ändern."
           }
         }
       }
@@ -72416,7 +72365,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "aus dem Bestand · %@"
+            "value": "aus dem Vorrat · %@"
           }
         }
       }
@@ -77057,7 +77006,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "„%@“ kommt jetzt aus dem Bestand"
+            "value": "„%@“ kommt jetzt aus dem Vorrat"
           }
         }
       }
@@ -77210,7 +77159,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "„Erledigt“ bucht es aus dem Bestand und setzt es auf die Einkaufsliste, wenn fürs nächste Mal keins mehr da ist."
+            "value": "„Erledigt“ bucht es aus dem Vorrat und setzt es auf die Einkaufsliste, wenn fürs nächste Mal keins mehr da ist."
           }
         }
       }
@@ -77227,7 +77176,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sachen „aus dem Bestand“ werden als alle markiert, wenn nichts mehr da ist, und beim Servieren ausgebucht. Sachen „nur auf der Karte“ (Leitungswasser, Kaffee) werden nie gezählt – gib ihnen Zutaten aus dem Bestand, dann siehst du, wenn Milch oder Kaffee knapp wird."
+            "value": "Sachen „aus dem Vorrat“ werden als alle markiert, wenn nichts mehr da ist, und beim Servieren ausgebucht. Sachen „nur auf der Karte“ (Leitungswasser, Kaffee) werden nie gezählt – gib ihnen Zutaten aus dem Vorrat, dann siehst du, wenn Milch oder Kaffee knapp wird."
           }
         }
       }
@@ -78371,13 +78320,13 @@
         }
       }
     },
-    "That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Plan.": {
+    "That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Data, plan & account › Plan & storage.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "That’s a gift code for a plan, not an access code. It can’t be used in the app."
+            "value": "That’s a gift code for a plan, not an access code. It can’t be used in the app. After you’ve signed in, it’s redeemed in the browser under Settings › Data, plan & account › Plan & storage."
           }
         },
         "de": {
@@ -79884,19 +79833,19 @@
         }
       }
     },
-    "Your household memory": {
+    "Your household knowledge": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your household memory"
+            "value": "Your household knowledge"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Euer Haushaltsgedächtnis"
+            "value": "Euer Haushaltswissen"
           }
         }
       }
@@ -80389,7 +80338,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Dinge, die ToHuus sich für euch merkt"
+            "value": "%d Sachen, die ToHuus sich für euch merkt"
           }
         }
       }
@@ -81533,19 +81482,19 @@
         }
       }
     },
-    "Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More.": {
+    "Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there, like “Bring me something” or Knowledge. Everything else is under More.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Your bar) to choose what goes there, like Treats or Knowledge. Everything else is under More."
+            "value": "Today, Shopping, Cooking and Tasks sit at the bottom. Press and hold the bar (or Settings › Me › Your bar) to choose what goes there, like “Bring me something” or Knowledge. Everything else is under More."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unten stehen Heute, Einkauf, Kochen und Aufgaben. Halt die Leiste lange gedrückt (oder Einstellungen › Deine Leiste) und leg selbst fest, was dort steht, zum Beispiel Bring mir was oder Wissen. Alles andere findest du unter Mehr."
+            "value": "Unten stehen Heute, Einkauf, Kochen und Aufgaben. Halt die Leiste lange gedrückt (oder Einstellungen › Ich › Deine Leiste) und leg selbst fest, was dort steht, zum Beispiel Bring mir was oder Wissen. Alles andere findest du unter Mehr."
           }
         }
       }
@@ -82621,23 +82570,6 @@
         }
       }
     },
-    "Household knowledge": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Household knowledge"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Haushaltswissen"
-          }
-        }
-      }
-    },
     "Household knowledge: sizes, measurements, meter readings": {
       "extractionState": "manual",
       "localizations": {
@@ -82655,19 +82587,19 @@
         }
       }
     },
-    "It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once.": {
+    "It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Connections & devices › AI assistants & access lists every connection; end one there and it stops at once.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Access & AI lists every connection; end one there and it stops at once."
+            "value": "It sees the list, tasks, recipes and household knowledge by the same rules as you – never house info codes. Settings › Connections & devices › AI assistants & access lists every connection; end one there and it stops at once."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er sieht Liste, Aufgaben, Rezepte und Haushaltswissen nach denselben Regeln wie du, Codes aus der Hausinfo nie. Unter Einstellungen › Zugänge & KI steht jede Verbindung. Beendest du eine, ist sie sofort getrennt."
+            "value": "Er sieht Liste, Aufgaben, Rezepte und Haushaltswissen nach denselben Regeln wie du, Codes aus der Hausinfo nie. Unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge steht jede Verbindung. Beendest du eine, ist sie sofort getrennt."
           }
         }
       }
@@ -83075,7 +83007,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das Gedächtnis eures Haushalts"
+            "value": "Das Wissen eures Haushalts"
           }
         }
       }
@@ -83624,19 +83556,19 @@
         }
       }
     },
-    "AI is off for you or this household. If you want it, switch it on in Settings › With or without AI.": {
+    "AI is off for you or this household. If you want it, switch it on in Settings › Connections & devices › AI.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "AI is off for you or this household. If you want it, switch it on in Settings › With or without AI."
+            "value": "AI is off for you or this household. If you want it, switch it on in Settings › Connections & devices › AI."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "KI ist für dich oder euren Haushalt aus. Wenn du magst, schalt sie unter Einstellungen › Mit oder ohne KI ein."
+            "value": "KI ist für dich oder euren Haushalt aus. Wenn du magst, schalt sie unter Einstellungen › Verbindungen & Geräte › KI ein."
           }
         }
       }
@@ -83777,13 +83709,13 @@
         }
       }
     },
-    "Wishes from guests are answered in Treats – the link for that is shared there under “Invite guests”.": {
+    "Wishes from guests are answered in “Bring me something” – the link for that is shared there under “Invite guests”.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wishes from guests are answered in Treats – the link for that is shared there under “Invite guests”."
+            "value": "Wishes from guests are answered in “Bring me something” – the link for that is shared there under “Invite guests”."
           }
         },
         "de": {
@@ -83879,13 +83811,13 @@
         }
       }
     },
-    "That runs through Treats: share the link there – guests wish for something, you bring it.": {
+    "That runs through “Bring me something”: share the link there – guests wish for something, you bring it.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "That runs through Treats: share the link there – guests wish for something, you bring it."
+            "value": "That runs through “Bring me something”: share the link there – guests wish for something, you bring it."
           }
         },
         "de": {
@@ -83896,13 +83828,13 @@
         }
       }
     },
-    "Open Treats": {
+    "Open “Bring me something”": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Treats"
+            "value": "Open “Bring me something”"
           }
         },
         "de": {
@@ -83925,7 +83857,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die kleinen Dinge, um die ihr euch zu Hause bitten könnt – und was Gäste sehen. Änderungen gelten sofort."
+            "value": "Die kleinen Sachen, um die ihr euch zu Hause bitten könnt – und was Gäste sehen. Änderungen gelten sofort."
           }
         }
       }
@@ -84214,7 +84146,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Beispielprodukte und %d Beispielrezepte, mit Bestand, Verlauf und Listeneinträgen. Entfernen löscht nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast."
+            "value": "%d Beispielprodukte und %d Beispielrezepte, mit Vorrat, Verlauf und Listeneinträgen. Entfernen löscht nur, was die Beispiele angelegt haben – nichts, was du selbst eingetragen hast."
           }
         }
       }
@@ -84231,7 +84163,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d Beispielprodukte oder -rezepte habt ihr inzwischen benutzt (Bestand geändert, gekocht oder geplant). Die bleiben erst mal, weil sie wohl eure sind."
+            "value": "%d Beispielprodukte oder -rezepte habt ihr inzwischen benutzt (Vorrat geändert, gekocht oder geplant). Die bleiben erst mal, weil sie wohl eure sind."
           }
         }
       }
@@ -84792,7 +84724,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Produkte, Bestand und Verlauf, Barcodes, Bon-Namen, Reste-Boxen"
+            "value": "Produkte, Vorrat und Verlauf, Barcodes, Bon-Namen, Reste-Boxen"
           }
         }
       }
@@ -85205,23 +85137,6 @@
         }
       }
     },
-    "Just one": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Just one"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nur eins"
-          }
-        }
-      }
-    },
     "Kids may do it": {
       "extractionState": "manual",
       "localizations": {
@@ -85303,23 +85218,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gerade wartet nichts."
-          }
-        }
-      }
-    },
-    "One at a time": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "One at a time"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eins nach dem anderen"
           }
         }
       }
@@ -87687,13 +87585,13 @@
         }
       }
     },
-    "Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications.": {
+    "Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications & calendar.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications."
+            "value": "Only you get this reminder, on your own devices. You can switch reminders off under Settings › Notifications & calendar."
           }
         },
         "de": {
@@ -88635,6 +88533,91 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einstellungen & Hilfe"
+          }
+        }
+      }
+    },
+    "Needed again soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needed again soon"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bald wieder nötig"
+          }
+        }
+      }
+    },
+    "AI on or off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI on or off"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KI an oder aus"
+          }
+        }
+      }
+    },
+    "The purchase rhythm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The purchase rhythm"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Kaufrhythmus"
+          }
+        }
+      }
+    },
+    "The assistant": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Assistent"
+          }
+        }
+      }
+    },
+    "No occasion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No occasion"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Anlass"
           }
         }
       }

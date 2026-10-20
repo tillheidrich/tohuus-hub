@@ -57,7 +57,7 @@ migrate(
   ALTER TABLE recipe_ingredients ADD COLUMN orig TEXT;`,
 );
 
-// why a photo could not be downloaded (shown in Settings › Recipes, so nobody has to read server logs)
+// why a photo could not be downloaded (shown in Settings › Areas & places › Recipes & imports, so nobody has to read server logs)
 migrate('recipes2-photos-1', `ALTER TABLE recipes ADD COLUMN image_error TEXT;`);
 
 export const MAX_BULK = 1000;

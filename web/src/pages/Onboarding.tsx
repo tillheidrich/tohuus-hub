@@ -730,7 +730,7 @@ function StepSpots({ g, onBack, onNext }: { g: GettingStarted; onBack: () => voi
       )}
       <div className="card pad onb-anytime">
         <b>{t('You can add or change anything at any time.')}</b>
-        <p className="small muted" style={{ margin: '4px 0 0' }}>{t('Settings › Places: rename, sort, nest, archive – and set what is chilled or frozen.')}</p>
+        <p className="small muted" style={{ margin: '4px 0 0' }}>{t('Settings › Areas & places › Places & categories: rename, sort, nest, archive – and set what is chilled or frozen.')}</p>
       </div>
       <div className="onb-foot">
         <button className="btn ghost" onClick={onBack}>
@@ -783,7 +783,7 @@ function StepInvite({ form, title, onBack, onNext }: { form: HouseholdForm; titl
         </p>
         {/* area: order – the everyday side of having the others in the app */}
         <p className="small muted" style={{ margin: '8px 0 0', maxWidth: 520 }}>
-          {t('Bonus: under “Treats” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it.')}
+          {t('Bonus: under “Bring me something” you can ask each other for a little something – “vanilla ice cream, please” from the sofa – and someone brings it.')}
         </p>
       </header>
 

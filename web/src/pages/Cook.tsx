@@ -61,7 +61,7 @@ export function Kitchen({ me }: { me: Me }) {
       <header className="page-head">
         <div>
           <div className="eyebrow">{(recipes.data?.length ?? 0) === 1 ? t('1 recipe') : t('{n} recipes', { n: recipes.data?.length ?? 0 })}</div>
-          <h1>{t('Cook')}</h1>
+          <h1>{t('Cooking')}</h1>
         </div>
         <div className="actions">
           <button className="btn ghost" onClick={() => nav('/lieblinge')}>

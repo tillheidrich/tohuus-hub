@@ -431,7 +431,7 @@ export async function resetData(opts: { scopes: Scope[]; places?: boolean; actor
     : (await createBackup('manual')).name;
   const plan = resetPlan(scopes, Boolean(opts.places));
   const deleted: Record<string, number> = {};
-  // the same 7-day restore as Settings › Data & reset (wipe.ts): the rows are copied first, then deleted below
+  // the same 7-day restore as Settings › Data, plan & account › Data & reset (wipe.ts): the rows are copied first, then deleted below
   const candidates = [...plan];
   if (scopes.includes('everything'))
     for (const tb of ['kid_profiles', 'guest_links']) {

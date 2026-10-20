@@ -1,5 +1,5 @@
 /**
- * "Treats" (DE „Bring mir was“, formerly „Verwöhnen“, SV „Ompyssling“): someone in the household asks for a little something from the sofa or
+ * "Bring me something" (DE „Bring mir was“, formerly „Verwöhnen“, SV „Ompyssling“): someone in the household asks for a little something from the sofa or
  * from bed and somebody else brings it – and guests (visit, babysitter, grandparents) do the same through a shared link.
  * One „Bring mir was“: both land in the same list with the same buttons; `orderKind()` only changes the wording.
  */

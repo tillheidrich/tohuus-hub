@@ -51,7 +51,7 @@ interface JobState {
 
 const FILE_ACCEPT = '.json,.zip,.csv,.txt,.html,.htm,.paprikarecipes,.paprikarecipe,application/json,application/zip,text/csv,text/html';
 
-/** Settings › Recipes */
+/** Settings › Areas & places › Recipes & imports */
 export function RecipeImportCenter() {
   const [staged, setStaged] = useState<Staged | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
@@ -239,7 +239,7 @@ function OpenRecipeSheet({ id, onClose }: { id: string | null; onClose: () => vo
 // ---------------------------------------------------------------- file import
 
 const APP_HINTS: [string, string][] = [
-  ['Mealie', 'Settings › Data › Export recipes (zip), or a recipe JSON'],
+  ['Mealie', 'Settings › Data, plan & account › Data & backups › Export recipes (zip), or a recipe JSON'],
   ['Tandoor', 'Import/Export › Export › Default format (zip)'],
   ['Paprika', 'File › Export › Paprika Recipe Format (.paprikarecipes)'],
   ['Nextcloud Cookbook', 'the folder “Recipes” from Nextcloud, zipped'],

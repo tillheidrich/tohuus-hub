@@ -240,7 +240,7 @@ export function revokeInvite(id: number) {
   return ok;
 }
 
-/** Open, used and recently closed invitations for Settings › Members (newest first). */
+/** Open, used and recently closed invitations for Settings › Household › Who lives here? (newest first). */
 export function listInvites() {
   const rows = db
     .prepare(

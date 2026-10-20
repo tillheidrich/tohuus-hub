@@ -47,7 +47,7 @@ enum GuestLevels {
         case "stock": return L("+ Stock & where is what")
         case "recipes": return L("+ Recipes & week plan")
         case "family": return L("Like family")
-        default: return L("Treats & shopping list")
+        default: return L("Bring me something & shopping list")
         }
     }
 
@@ -65,7 +65,7 @@ enum GuestLevels {
     /// server/lib/people-policy.ts LEVEL_AREAS → readable names
     static func areaName(_ a: String) -> String {
         switch a {
-        case "order": return L("Treats")
+        case "order": return L("Bring me something")
         case "shopping": return L("Shopping list")
         case "stock": return L("Stock")
         case "find": return L("Where is what")
