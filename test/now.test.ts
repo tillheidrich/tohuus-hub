@@ -54,6 +54,9 @@ beforeAll(async () => {
   samId = Number(db.prepare(`INSERT INTO users (name, role, password_hash) VALUES ('Sam', 'member', ?)`).run(auth.hashPassword('test1234')).lastInsertRowid);
   kidId = Number(db.prepare(`INSERT INTO kid_profiles (name) VALUES ('Mika')`).run().lastInsertRowid);
   token = kids.pairDevice(kidId, 'Tablet', null).token;
+  // No quiet time for this tablet: the default (19:30–07:00) hides every task at night, and these tests are about the
+  // order, not the clock. Quiet time itself is tested in kids.test.ts.
+  db.prepare('UPDATE kid_profiles SET rules = ? WHERE id = ?').run(JSON.stringify({ quiet: null }), kidId);
   const app = express();
   app.use(express.json());
   app.use(cookieParser());

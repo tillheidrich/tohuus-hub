@@ -114,16 +114,44 @@ export function storeImageBytes(name: string, buf: Buffer): string {
 sharpLib.cache(false);
 sharpLib.concurrency(Math.min(2, sharpLib.concurrency()));
 
+/**
+ * Headers for stored foreign files served inline on the app's own origin (receipt originals, expense attachments):
+ * `sandbox` gives the document an opaque origin without scripts, forms or popups – a crafted PDF/SVG can neither reach
+ * the session nor the API. nosniff keeps the declared type.
+ */
+export const SANDBOX_CSP = "sandbox; default-src 'none'; img-src 'self' data: blob:; media-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'";
+export function sandboxedFile(res: Response) {
+  res.setHeader('Content-Security-Policy', SANDBOX_CSP);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+}
+
+/** 415 with a plain message – never the decoder's own text (A10). */
+export const notAPicture = () => Object.assign(userError(t('This is not a picture we can read.')), { status: 415 });
+
+/** Uploaded bytes must be a picture (magic bytes) before any decoder sees them; otherwise 415. */
+export function assertImage(buf: Buffer | null | undefined): asserts buf is Buffer {
+  if (!buf || !looksLikeImage(buf)) throw notAPicture();
+}
+
+/** Decode → re-encode an uploaded picture; a file that only looks like one still ends in 415, not in a 500. */
+export async function reencodeImage(buf: Buffer, run: (img: ReturnType<typeof sharp>) => Promise<Buffer>): Promise<Buffer> {
+  assertImage(buf);
+  try {
+    return await run(sharp(buf, { failOn: 'none' }));
+  } catch (e) {
+    if ((e as { status?: number }).status) throw e;
+    console.warn('[images] not decodable:', (e as Error).message);
+    throw notAPicture();
+  }
+}
+
 /** Store an image as webp (max 800 px, or `max`) and return the public path `/img/<file>`. */
 export async function saveImage(buf: Buffer, prefix: string, max = 800): Promise<string> {
   if (!/^[a-z]\d+$/.test(prefix)) throw userError(t('Invalid image name'));
   const name = `${prefix}-${crypto.randomBytes(6).toString('hex')}.webp`;
+  assertImage(buf);
   assertStorage(Math.min(buf.length, 400_000));
-  const out = await sharp(buf, { failOn: 'none' })
-    .rotate()
-    .resize({ width: max, height: max, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer();
+  const out = await reencodeImage(buf, (img) => img.rotate().resize({ width: max, height: max, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toBuffer());
   return storeImageBytes(name, out);
 }
 
@@ -140,6 +168,8 @@ export function looksLikeImage(b: Buffer): boolean {
   if (b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP') return true;
   if (b.toString('latin1', 4, 8) === 'ftyp') return true;
   if (b[0] === 0x42 && b[1] === 0x4d) return true;
+  // tiff (II*\0 / MM\0*)
+  if ((b[0] === 0x49 && b[1] === 0x49 && b[2] === 0x2a && b[3] === 0x00) || (b[0] === 0x4d && b[1] === 0x4d && b[2] === 0x00 && b[3] === 0x2a)) return true;
   return false;
 }
 

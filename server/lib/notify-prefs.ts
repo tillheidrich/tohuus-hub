@@ -56,6 +56,7 @@ export const PERSON_EVENTS = [
   // wish lists (20 Oct 2026): only the person who reserved the gift (or set the reminder) – wish-jobs.ts
   { key: 'wish.reminder', label: 'Reminder for a gift or wish', module: null, on: true },
   { key: 'wish.occasion', label: 'A week before an occasion: gifts not bought yet', module: null, on: true },
+  { key: 'wish.removed', label: 'A wish I wanted to give was taken off the list', module: null, on: true },
   // cloud: only admins of a household in the trial get it, twice at most (trial-end.ts, 18 Oct 2026)
   { key: 'billing.trial', label: 'My trial ends soon', module: null, on: true },
 ] as const;

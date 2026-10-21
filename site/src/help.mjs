@@ -107,7 +107,7 @@ export function helpCopy(k) {
             'Aus Versehen abgehakt, gelöscht oder etwas Falsches importiert? „Rückgängig“ holt es zurück, auch bei dem, was der Assistent eingetragen hat.',
           )],
           ['Deine Leiste', p(
-            'Unten stehen am Anfang Heute, Einkauf, Kochen, Aufgaben und Vorrat. Geld, Wissen, Bring mir was, Wünsche oder die Hausinfo holst du dir bei Bedarf dazu, jede Person für sich (siehe <a href="deine-leiste.html">Deine Leiste</a>).',
+            'Unten stehen am Anfang Heute, Einkauf, Kochen, Aufgaben und Zuhause. Geld, Wissen, Bring mir was, Wünsche oder die Hausinfo holst du dir bei Bedarf dazu, jede Person für sich (siehe <a href="deine-leiste.html">Deine Leiste</a>).',
           )],
           ['KI, wenn ihr wollt', p(
             'Das meiste geht ohne KI. Mit KI liest ToHuus schwierige Bons und versteht freie Fragen, in der Cloud über Mistral und nur mit eurer Zustimmung. Pro Monat gibt es eine offene Grenze, siehe <a href="ki-grenzen.html">Faire KI-Grenzen</a>.',
@@ -203,10 +203,10 @@ export function helpCopy(k) {
         slug: 'vorrat', pair: 'stock', group: 'home', title: 'Vorrat (freiwillig)',
         desc: 'Wer mag, zählt seinen Vorrat. Nötig ist das für ToHuus nicht.',
         sections: [
-          ['Freiwillig', p('ToHuus braucht keinen Vorrat, um zu wissen, was fehlt. Der Rhythmus kommt aus Bons und Häkchen. Wer trotzdem Vorrat zählen will, findet den Vorrat als eigenen Bereich unten in der Leiste. Wer ihn nicht braucht, schaltet ihn unter „Was nutzt ihr?“ ab.')],
+          ['Freiwillig', p('ToHuus braucht keinen Vorrat, um zu wissen, was fehlt. Der Rhythmus kommt aus Bons und Häkchen. Wer trotzdem Vorrat zählen will, findet ihn unter Zuhause, unter den Kacheln Hausinfo, Haushaltswissen und „Wo ist was?“. Wer ihn nicht braucht, schaltet ihn unter „Was nutzt ihr?“ ab.')],
           ['Nur was ausgeht', p('Statt alles zu zählen, kannst du nur die Sachen verfolgen, die regelmäßig ausgehen. Umstellen geht jederzeit, ohne dass Daten verloren gehen.')],
           ['Zählen oder Füllstand', p('Pro Produkt: gezählt, als Füllstand (voll, halb, wenig, leer) oder gar nicht. Dazu Mindesthaltbarkeit pro Packung, geöffnet und eingefroren.')],
-          ['Ab wann etwas knapp ist', p('Das legst du pro Produkt selbst fest. Beim Zählen mit „Mindestens vorrätig“: Fällt der Vorrat darunter, gilt es als knapp und kommt auf Wunsch auf die Liste. Beim Füllstand wählst du „Knapp ab wenig“ oder schon „ab halb“. Ob du dazu eine Mitteilung bekommst, stellst du unter Mitteilungen für dich selbst ein.')],
+          ['Ab wann etwas knapp ist', p('Das legst du pro Produkt selbst fest. Beim Zählen mit „Mindestens vorrätig“: Fällt der Vorrat darunter, gilt es als knapp und kommt auf Wunsch auf die Liste. Beim Füllstand wählst du „Knapp ab wenig“ oder schon „ab halb“. Ob du dazu eine Mitteilung bekommst, stellst du unter Einstellungen › Mitteilungen & Kalender › Was dich erreicht für dich selbst ein.')],
           ['Schnell abgleichen', p('Der Schnell-Abgleich geht einen Ort durch, ein Tipp pro Produkt: stimmt, weniger, leer, weg. Barcodes scannst du mit der Kamera.')],
           ['Orte', p('Ihr legt fest, welche Orte es bei euch gibt. Keller, Gefriertruhe oder Vorratskammer setzt ToHuus nicht voraus.')],
         ],
@@ -342,7 +342,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
         sections: [
           ['Für wen', p('Mit ADHS, Autismus oder einfach in einer vollen Woche ist oft der Anfang das Schwerste. Diese Funktionen sind dafür gebaut, und sie helfen allen im Haushalt. Niemand muss erklären, warum er sie nutzt. ToHuus ist kein Gesundheits- oder Therapieangebot und ersetzt keine Beratung.')],
           ['Kleine Schritte', p('Jede Aufgabe lässt sich in kleine Schritte teilen, die du einzeln abhakst. „In kleine Schritte teilen“ schlägt welche vor: mit KI, wenn euer Haushalt KI erlaubt, sonst aus fertigen Schritten für häufige Aufgaben wie Bad putzen, Küche, Wäsche, Staubsaugen oder Bett beziehen. Du kannst jeden Vorschlag ändern oder löschen. Ist die Aufgabe erledigt, stehen die Schritte beim nächsten Mal wieder offen da.')],
-          ['Nur eins', p('Die Fokusansicht zeigt nur eine Sache: die nächste Aufgabe und darin den nächsten Schritt, groß und ohne Liste drumherum.'), ul(
+          ['Nur eins', p('Die Seite „Nur eins“ zeigt nur eine Sache: die nächste Aufgabe und darin den nächsten Schritt, groß und ohne Liste drumherum. Du öffnest sie oben unter Aufgaben oder schaltest „Nur eins“ auf Heute ein (siehe <a href="eine-sache.html">Nur eins</a>).'), ul(
             '<b>Geschafft</b>: hakt den Schritt ab und zeigt den nächsten.',
             '<b>Später</b>: legt die Aufgabe zur Seite, ohne Vorwurf.',
             '<b>Zu groß? Kleiner machen</b>: teilt die Aufgabe in kleinere Schritte.',
@@ -352,7 +352,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'Keine roten Warnungen für Überfälliges und keine Zähler. Was fällig ist, „wäre dran“.',
             '„Neu anfangen“ legt alles Überfällige auf einen frischen Start, ohne schlechtes Gewissen.',
             'Mitteilungen kommen gebündelt in einer Nachricht, zu der Uhrzeit, die du wählst.',
-            'Auf Heute stehen höchstens drei Sachen.',
+            'Auf Heute stehen weniger Aufgaben. Wie viele, stellst du unter Einstellungen › Ich › Ruhe & Fokus ein.',
           ), p('Die anderen im Haushalt sehen nicht, ob du den sanften Modus eingeschaltet hast.')],
           ['Extras im Wocheneinkauf', p('Ihr legt ein Kontingent für Extras fest, also für Luxus- und Spaßartikel: pro Woche als Betrag oder als Anzahl. Einträge auf der Liste markiert ihr als Extra, und die Liste zeigt, wie viel vom Kontingent schon verplant ist. ToHuus sperrt nichts, es hält nur den Überblick, gerade bei spontanen Käufen.')],
           ['Was es schon gibt', ul(
@@ -363,13 +363,13 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
             'ToHuus richtet sich nach „Bewegung reduzieren“ auf deinem Gerät.',
           )],
         ],
-        related: ['aufgaben', 'sprechen', 'benachrichtigungen'],
+        related: ['eine-sache', 'aufgaben', 'sprechen'],
       },
       {
         slug: 'eine-sache', pair: 'one-thing-at-a-time', group: 'home', title: 'Nur eins',
-        desc: '„Jetzt“ zeigt immer nur die nächste Aufgabe. Erst wenn sie erledigt ist, kommt die nächste: auf Heute mit „Nur eins“ und auf dem Kinder-Tablet.',
+        desc: '„Nur eins“ zeigt immer nur die nächste Aufgabe. Erst wenn sie erledigt ist, kommt die nächste: auf Heute, unter Aufgaben und auf dem Kinder-Tablet.',
         sections: [
-          ['Worum es geht', p('Eine lange Liste kann lähmen. „Jetzt“ nimmt dir das Sortieren ab: ToHuus zeigt eine einzige Aufgabe als große Karte mit „Fertig“. Danach kommt die nächste. Das hilft bei ADHS, an vollen Tagen und Kindern sowieso. ToHuus ist kein Gesundheits- oder Therapieangebot.')],
+          ['Worum es geht', p('Eine lange Liste kann lähmen. „Nur eins“ nimmt dir das Sortieren ab: ToHuus zeigt eine einzige Aufgabe als große Karte mit „Fertig“. Danach kommt die nächste. Das hilft bei ADHS, an vollen Tagen und Kindern sowieso. ToHuus ist kein Gesundheits- oder Therapieangebot.')],
           ['Welche Aufgabe zuerst kommt', p('Die Reihenfolge ist immer gleich, du musst nichts sortieren:'), ul(
             'Zuerst, was schon länger dran wäre.',
             'Dann, was heute fällig ist, mit Uhrzeit nach der Uhrzeit.',
@@ -386,7 +386,7 @@ Behalte die Sprache des Rezepts bei und erfinde nichts.`), p('Die Antwort lädst
           ['Auf dem Kinder-Tablet', p('Das Kinder-Tablet zeigt unter „Zu tun“ eine große Karte mit Bild, Titel und einem großen „Fertig“. Darunter steht nur „noch 3 danach“, keine Liste. Nach „Fertig“ gibt es kurz ein „Super, geschafft!“, dann kommt die nächste. Sind alle erledigt, wird es ruhig.'), ul(
             'Das Kind sieht nur seine eigenen Aufgaben und solche, bei denen ihr „Kinder dürfen das machen“ eingeschaltet habt.',
             'Private Aufgaben stehen nie auf dem Tablet.',
-            'Unter Einstellungen › Kinder könnt ihr pro Kind auf „Als Liste“ umstellen.',
+            'Unter Einstellungen › Haushalt › Wer wohnt hier? könnt ihr pro Kind auf „Als Liste“ umstellen.',
           )],
           ['Was es nicht gibt', p('Keine Punkte, keine Streaks, keine Ranglisten. Gezählt wird nichts.')],
         ],
@@ -789,7 +789,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
         sections: [
           ['Der Anfang', p('Am Anfang stehen unten Heute, Einkauf, Kochen, Aufgaben und Zuhause. Habt ihr Kochen oder den Vorrat abgeschaltet, rückt Geld nach. Alles andere findest du unter „Mehr“.')],
           ['Was du nach unten holen kannst', p('Heute bleibt immer vorn. Dazu wählst du bis zu vier Bereiche in deiner Reihenfolge:'), ul(
-            'Einkauf, Kochen, Aufgaben, Vorrat und Geld',
+            'Einkauf, Kochen, Aufgaben, Zuhause und Geld',
             'Wissen, also das <a href="haushaltswissen.html">Haushaltswissen</a>',
             '<a href="bring-mir-was.html">Bring mir was</a>',
             'Wünsche und Hausinfo',
@@ -833,8 +833,15 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Wünsche eintragen', p('Mit „Wunsch hinzufügen“ trägst du Titel, Foto, Preis, Menge, Priorität, Shop-Link und eine Notiz ein. Fügst du einen Link ein, schlägt ToHuus einen Titel aus der Adresse vor, auf dem iPhone liest es Titel und Bild der Seite. Ohne Foto bekommt der Wunsch ein passendes Symbol.', 'Ist eine KI eingerichtet und für dich erlaubt, füllt „Foto → KI füllt aus“ Titel, Details und einen sichtbaren Preis aus einem Foto. Das zählt auf euer KI-Guthaben. Ohne KI fehlt der Knopf einfach.', 'Die Reihenfolge änderst du per Ziehen, auf dem iPhone über „Reihenfolge ändern“.')],
           ['Reservieren und Überraschung', p('Wer schenken will, öffnet einen Wunsch und tippt auf „Wunsch reservieren“. Die anderen sehen dann, dass Sam ihn reserviert hat. Mit „Noch frei“ blendest du alles Vergebene aus.', 'Steht „Reservierungen bleiben eine Überraschung“ an, sehen du und alle, die mitbearbeiten, nie, ob oder von wem etwas reserviert ist. Das gilt überall: in der App, in der Suche, im Export, über MCP und in Mitteilungen. Bei einer Kinderliste schaltest du es aus, dann siehst du, wer was besorgt. Die Person, für die die Liste ist, sieht Reservierungen nie.')],
           ['Du schenkst', p('Unter „Du schenkst“ steht alles, was du reserviert hast, über alle Listen, mit Summe, getrennt nach „Noch zu besorgen“ und „Gekauft“. Das ist dein Geschenke-Einkauf und bleibt getrennt von der gemeinsamen Einkaufsliste, damit nichts die Überraschung verrät.')],
-          ['Erinnerungen', p('Bei einem reservierten Wunsch tippst du auf „Erinnern“ und wählst „2 Wochen vorher“, „1 Woche vorher“, „3 Tage vorher“ oder einen eigenen Tag. Hat die Liste ein Datum, schlägt ToHuus 10 Tage vorher vor. Auch eigene Wünsche, die du dir selbst kaufen willst, bekommen so eine Erinnerung.', 'Eine Woche vor dem Anlass bekommst du einmal einen Hinweis, wenn du dort etwas reserviert, aber noch nicht gekauft hast. Beides geht nur an dich, nie an den Haushalt. Abschalten kannst du es unter Einstellungen › Mitteilungen.')],
+          ['Erinnerungen', p('Bei einem reservierten Wunsch tippst du auf „Erinnern“ und wählst „2 Wochen vorher“, „1 Woche vorher“, „3 Tage vorher“ oder einen eigenen Tag. Hat die Liste ein Datum, schlägt ToHuus 10 Tage vorher vor. Auch eigene Wünsche, die du dir selbst kaufen willst, bekommen so eine Erinnerung.', 'Eine Woche vor dem Anlass bekommst du einmal einen Hinweis, wenn du dort etwas reserviert, aber noch nicht gekauft hast. Beides geht nur an dich, nie an den Haushalt. Abschalten kannst du es unter Einstellungen › Mitteilungen & Kalender › Was dich erreicht.')],
           ['Teilen mit Gästen', p('Über „Teilen“ erstellst du einen Link für Gäste. Oma, Freunde oder Kollegen öffnen die Liste im Browser und reservieren mit ihrem Namen, ganz ohne Konto. Sie sehen „vergeben“, aber nie, von wem. Einen neuen Link machst oder den alten beendest du an derselben Stelle.', 'Die Liste geht auch als Text, Markdown, Tabelle (CSV) oder zum Drucken raus. Geteilter Text verrät nie, wer etwas reserviert hat, und nennt aus eurem Haushalt nur die Person, der die Liste gehört.')],
+          ['Wünsche und Listen löschen', p(
+            'Auf dem iPhone wischst du einen Wunsch nach links und tippst auf „Löschen“. Im Web nimmst du den Papierkorb in der Zeile. Der Wunsch verschwindet sofort, ein paar Sekunden lang kannst du „Rückgängig“ tippen.',
+            'Nach rechts gewischt reservierst du einen freien Wunsch oder hakst deinen als gekauft ab. In „Du schenkst“ gibst du einen Wunsch per Wischen wieder frei.',
+            'Ganze Listen wischst du in der Übersicht zum Archivieren oder Löschen. Hat die Liste noch Wünsche oder ist sie geteilt (Gäste-Link, Mitbearbeiter), fragt ToHuus vorher nach.',
+            'Löschen darf, wer die Liste führt: wer sie angelegt hat, wer mitbearbeitet, und bei gemeinsamen Haushaltslisten die Admins. Einen Wunsch, den du selbst eingetragen hast, darfst du auch selbst wieder löschen. Gäste und Kinder sehen kein Löschen.',
+            'Bleibt die Überraschung? Ja. Löschst du einen Wunsch, den schon jemand besorgen wollte, erfährst du davon nichts. Die Person bekommt nur einen kurzen Hinweis, dass der Wunsch von der Liste genommen wurde, ohne deinen Namen.',
+          )],
           ['Abgrenzung', p('<a href="bring-mir-was.html">Bring mir was</a> ist etwas anderes: Dort wünschst du dir eine Kleinigkeit zu Hause, und jemand bringt sie gleich. Kinder-Tablets und Gäste mit festem Zugang sehen Wunschlisten nicht.')],
         ],
         related: ['bring-mir-was', 'deine-leiste', 'haushalt-teilen'],
@@ -885,7 +892,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['Geht die iPhone-App mit meinem eigenen Server?', p('Ja. Auf dem Startbildschirm der App tippst du auf „Eigener Server“. Wie die Anmeldung geht, steht unter <a href="selbst-hosten.html">Selbst hosten</a>.')],
           ['Gibt es ToHuus als iPhone-App?', p(`Ja, <a href="${k.APP_DE}">im App Store</a>, für iPhone, iPad und Apple Watch.`)],
           ['Brauche ich einen Thermomix?', p('Nein. Der Kochplaner zeigt Rezepte mit und ohne Thermomix.')],
-          ['Ist ToHuus für ADHS geeignet?', p('Für alle, in deren Kopf viel los ist, gibt es kleine Schritte, eine Ansicht mit nur einer Sache, einen sichtbaren Timer und einen sanften Modus, und nirgends Ranglisten. Sterne gibt es nur, wenn ihr sie einschaltet. Siehe <a href="kopf-voll.html">Wenn der Kopf voll ist</a>.')],
+          ['Ist ToHuus für ADHS geeignet?', p('Für alle, in deren Kopf viel los ist, gibt es kleine Schritte, „Nur eins“ mit immer nur der nächsten Aufgabe, einen sichtbaren Timer und einen sanften Modus, und nirgends Ranglisten. Sterne gibt es nur, wenn ihr sie einschaltet. Siehe <a href="kopf-voll.html">Wenn der Kopf voll ist</a>.')],
           ['Brauchen Babysitter ein Konto?', p('Nein. Sie bekommen einen Link oder QR-Code und sehen die <a href="hausinfo.html">Hausinfo</a> und was ihr sonst freigebt.')],
           ['Ist ToHuus ein Familienkalender?', p('Nein. ToHuus kümmert sich um Einkauf, Kochen, Geld und das, was zu Hause zu tun ist. Dafür gibt es <a href="aufgaben.html">Aufgaben</a>, auch mit Uhrzeit als Termin, und die stehen auf Wunsch in eurem Kalender. Chat und Ranglisten gibt es bewusst nicht, Sterne nur, wenn ihr sie selbst einschaltet.')],
           ['Wo melde ich einen Fehler?', p(`Per Mail an <a href="mailto:${k.MAIL}">${k.MAIL}</a> oder als Issue auf <a href="${k.GH}/issues">GitHub</a>.`)],
@@ -937,10 +944,10 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             '<b>Cooking</b>: ideas from what is at home, recipes, favourites and the week plan.',
             '<b>Tasks</b>: what needs doing at home, appointments included.',
             '<b>Home</b>: at the top the house info, the <a href="household-knowledge.html">household knowledge</a> and “Where’s what?”, below it the pantry: what is at home and what should be used soon.',
-          ), p('Money, wishes, <a href="bring-me-something.html">Bring me something</a>, trip & handover and the rest are under “More”. Whatever you need often goes into the bar at the bottom, see <a href="your-bar.html">Your bar</a>. If you switch off cooking, stock or money under “What do you use?”, they disappear everywhere.', 'The round button with the sparkle is the assistant, on every page. At the top right of every page you find search and your picture. Your picture opens “More” with everyday things, family & guests, mind & fairness, the settings and help.')],
+          ), p('Money, wishes, <a href="bring-me-something.html">Bring me something</a>, trip & handover and the rest are under “More”. Whatever you need often goes into the bar at the bottom, see <a href="your-bar.html">Your bar</a>. If you switch off cooking, the pantry or money under “What do you use?”, they disappear everywhere.', 'The round button with the sparkle is the assistant, on every page. At the top right of every page you find search and your picture. Your picture opens “More” with everyday things, family & guests, mind & fairness, the settings and help.')],
           ['Search', p(
             'The magnifier at the top right is on every page; in the browser there is also the search field in the sidebar. Press ⌘K, Ctrl+K or “/” to open it from anywhere, as long as you are not typing somewhere else.',
-            'It finds what you can reach in ToHuus: functions and settings (also with words like “password”, “print labels” or “dark mode”), products in stock, what is on the list, recipes, also by an ingredient, tasks, house info cards and people in the household. If nothing fits, it offers to put your words on the list or create a new task.',
+            'It finds what you can reach in ToHuus: functions and settings (also with words like “password”, “print labels” or “dark mode”), products in the pantry, what is on the list, recipes, also by an ingredient, tasks, house info cards and people in the household. If nothing fits, it offers to put your words on the list or create a new task.',
           ), tip('Search follows the same rules as everything else: private items and private tasks only for their owner, house info codes never, and guests only what their level shows.')],
           ['The first week', p('Write what is missing on the list, tick off what you buy, share receipts if you have them and invite the others. If you like, add what comes up again and again at home under Tasks (see <a href="tasks.html">Tasks</a>). Nothing needs upkeep. After a few weeks ToHuus knows your rhythm and suggests what is due again.')],
         ],
@@ -1005,11 +1012,11 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
       },
       {
         slug: 'a-lot-on-your-mind', pair: 'kopf-voll', group: 'home', title: 'When your head is full',
-        desc: 'Small steps, one thing at a time, a visible timer and gentle mode: for heads with a lot going on.',
+        desc: 'Small steps, “Just one”, a visible timer and gentle mode: for heads with a lot going on.',
         sections: [
           ['Who it is for', p('With ADHD, autism or just a packed week, starting is often the hardest part. These features are built for that, and they help everyone in the household. Nobody has to explain why they use them. ToHuus is not a health or therapy service and does not replace advice.')],
           ['Small steps', p('Every task can be split into small steps you tick off one by one. “Split into small steps” suggests some: with AI if your household allows AI, otherwise from ready-made steps for common chores such as cleaning the bathroom, the kitchen, laundry, hoovering or changing the bed. You can change or delete every suggestion. When the task is done, the steps are open again for next time.')],
-          ['Just one', p('The focus view shows just one thing: the next task and its next step, large and without a list around it.'), ul(
+          ['Just one', p('The “Just one” page shows just one thing: the next task and its next step, large and without a list around it. Open it at the top of Tasks or switch on “Just one” in Today (see <a href="one-thing-at-a-time.html">Just one</a>).'), ul(
             '<b>Done</b>: ticks off the step and shows the next one.',
             '<b>Later</b>: puts the task aside, no guilt.',
             '<b>Too big? Make it smaller</b>: splits the task into smaller steps.',
@@ -1019,24 +1026,24 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'No red overdue warnings and no counters. Things that are due say “could be done”.',
             '“Fresh start” moves everything overdue to a new start, without a guilty conscience.',
             'Notifications arrive bundled in one message at a time you choose.',
-            'Today shows at most three things.',
+            'Today shows fewer tasks. You set how many under Settings › Me › Calm & focus.',
           ), p('The others in the household do not see whether you have switched gentle mode on.')],
           ['Extras in the weekly shop', p('You set an allowance for extras, the treats and fun things: per week as an amount or a number of items. Mark items on the list as an extra, and the list shows how much of the allowance is used. ToHuus blocks nothing, it just keeps the overview, especially with impulse buys.')],
           ['Already there', ul(
             'No streaks, no rankings. Stars only exist if you switch them on in the household settings, and gentle mode hides them. “Who keeps what in mind” lists names alphabetically, shares only if everyone agrees (see <a href="tasks.html">Tasks</a>).',
-            '“Where is what?” knows where things are, and the stock list shows what is at home and what is running out.',
+            '“Where’s what?” knows where things are, and the <a href="stock.html">pantry</a> shows what is at home and what is running out.',
             'With the <a href="speak.html">assistant</a> a thought is on the list or with the tasks in one sentence.',
             '“Bring me something” for days when getting up is hard.',
             'ToHuus follows “Reduce motion” on your device.',
           )],
         ],
-        related: ['tasks', 'speak', 'getting-started'],
+        related: ['one-thing-at-a-time', 'tasks', 'speak'],
       },
       {
         slug: 'one-thing-at-a-time', pair: 'eine-sache', group: 'home', title: 'Just one',
-        desc: '“Now” only ever shows the next task. The next one comes once it is done: on Today with “Just one” and on the kid tablet.',
+        desc: '“Just one” only ever shows the next task. The next one comes once it is done: on Today, in Tasks and on the kid tablet.',
         sections: [
-          ['What it is about', p('A long list can freeze you. “Now” does the sorting for you: ToHuus shows a single task as one big card with “Done”. Then the next one comes. It helps with ADHD, on full days and with kids anyway. ToHuus is not a health or therapy service.')],
+          ['What it is about', p('A long list can freeze you. “Just one” does the sorting for you: ToHuus shows a single task as one big card with “Done”. Then the next one comes. It helps with ADHD, on full days and with kids anyway. ToHuus is not a health or therapy service.')],
           ['Which task comes first', p('The order is always the same, you sort nothing:'), ul(
             'First, what could have been done a while ago.',
             'Then what is due today, those with a time by their time.',
@@ -1053,7 +1060,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
           ['On the kid tablet', p('Under “To do” the kid tablet shows one big card with a picture, the title and a big “Done”. Below it only “3 more after this”, no list. After “Done” there is a short “Great, done!”, then the next one. Once everything is done, it gets quiet.'), ul(
             'A child only sees their own tasks and those where you switched on “Kids may do it”.',
             'Private tasks never show on the tablet.',
-            'Under Settings › Kids you can switch each child to “As a list”.',
+            'Under Settings › Household › Who lives here? you can switch each child to “As a list”.',
           )],
           ['What there isn’t', p('No points, no streaks, no rankings. Nothing is counted.')],
         ],
@@ -1078,7 +1085,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'A code stays hidden until someone taps “Show”, and you see who looked when, never the code itself.',
             'Codes never go to the assistant or any other AI, to AI assistants over MCP, Home Assistant, displays or notifications. They only go into an export or onto the printed sheet if an admin ticks that.',
           )],
-          ['The babysitter link', p('Under Guests you create a link with the “Babysitter” template. It works without an account or app, as a link or a QR code. It shows the house info, “Where is what?” for the places you choose and your note. Once opened, the house info stays readable without a connection. “Print” turns it into an A4 sheet “For the babysitter”. Give the link an end date or revoke it at any time.')],
+          ['The babysitter link', p('Under Guests you create a link with the “Babysitter” template. It works without an account or app, as a link or a QR code. It shows the house info, “Where’s what?” for the places you choose and your note. Once opened, the house info stays readable without a connection. “Print” turns it into an A4 sheet “For the babysitter”. Give the link an end date or revoke it at any time.')],
           ['Holiday handover', p('For a trip you set what the house sitter should do and when: feed the cat, water the plants, collect the post, with photos. They see it through their link and tick off what is done. The house sitter link ends the day after you are back.')],
         ],
         related: ['tasks', 'privacy-in-short'],
@@ -1096,7 +1103,7 @@ docker compose up -d --build`), p('In <code>.env</code> trägst du <code>BASE_UR
             'Log a purchase without a receipt.',
             'Add, tick off and hand out tasks: “Clean the bathroom every Saturday, Mira and Sam take turns.” With a time it becomes an appointment.',
             'Say what is on today and who keeps what in mind.',
-            'Look up and add home knowledge: “What shoe size is Mika?” or “Remember, the bathroom blind is 65 wide.”',
+            'Look up and add household knowledge: “What shoe size is Mika?” or “Remember, the bathroom blind is 65 wide.”',
           )],
           ['Everything can be undone', p('Under every answer it says what it added, with “Undo”. It only writes when you ask it to.')],
           ['Private', p('Only the person who had a conversation sees it. Conversations are deleted 30 days after the last message. Voice recordings are turned into text and not stored. Tasks that are only for you never reach the assistant.')],
@@ -1206,7 +1213,7 @@ cards:
           ['Signing in', p('When connecting you sign in with your ToHuus account (OAuth), choose the household and what the assistant may do: read, or read and change; allergies and details about children only if you tick it. Settings › Connections & devices › AI assistants & access lists every connection, and you can end it there.', 'For Home Assistant and older apps there is still an access with a key in the address: Settings › Connections & devices › AI assistants & access › AI assistant. Treat it like a password.')],
           ['In Claude and ChatGPT', ul('Claude: Settings › Connectors › Add custom connector, paste the address.', 'ChatGPT: Settings › Connectors (developer mode on some plans), paste the address.')],
           ['What the assistant may see', ul(
-            'Your household’s list, tasks, stock, recipes, week plan, spending and home knowledge.',
+            'Your household’s list, tasks, stock, recipes, week plan, spending and household knowledge.',
             'Discreet items only as a placeholder, private ones not at all.',
             'Allergies and details about children only if an admin explicitly allows it.',
             'House info codes never.',
@@ -1246,7 +1253,7 @@ cards:
         slug: 'move-to-the-cloud', pair: 'umzug-in-die-cloud', group: 'account', title: 'From your own server to the cloud',
         desc: 'Taking a self-hosted household into ToHuus Cloud.',
         sections: [
-          ['In one go', ol('On your server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud › Download move file. It holds list, stock, recipes, receipts, rhythm and photos.', 'In ToHuus Cloud, create a new household.', 'There: Settings › Data, plan & account › Data & backups › Bring a household from your own server, enter your password, choose the file.'), p('People are matched by e-mail or name; anyone without a cloud account yet appears as a person you can invite.')],
+          ['In one go', ol('On your server: Settings › Data, plan & account › Data & backups › Move to ToHuus Cloud › Download move file. It holds list, pantry, recipes, receipts, rhythm and photos.', 'In ToHuus Cloud, create a new household.', 'There: Settings › Data, plan & account › Data & backups › Bring a household from your own server, enter your password, choose the file.'), p('People are matched by e-mail or name; anyone without a cloud account yet appears as a person you can invite.')],
           ['What stays behind', ul('Sign-ins, devices, accesses and links.', 'Conversations with the assistant and what others marked “only for me”.', 'House info codes, unless you tick “take the codes along”.')],
         ],
         related: ['self-hosting', 'recipe-pack'],
@@ -1298,18 +1305,18 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         desc: 'One place for the household: how ToHuus remembers what is missing, what is coming up and what you know.',
         sections: [
           ['One place for the household', p('ToHuus is one place for the household: what is missing, what is coming up, what needs doing, what it costs and what you know about your home. Shopping is where it starts, not the whole app.', 'It does not replace your calendar, notes app or chat. It takes what belongs to the household from them, like bin collection dates from your calendar, and puts tasks back there if you like.')],
-          ['Write it in, ToHuus sorts it', p('Type it, say it or take a photo of a receipt: “Out of milk”, “Yellow bin every two weeks”, “Mika is shoe size 12 now”. The milk goes on the list, the bin to the tasks and the shoe size into <a href="household-knowledge.html">home knowledge</a>. Whatever ToHuus is not sure about, it asks you to confirm instead of guessing.')],
+          ['Write it in, ToHuus sorts it', p('Type it, say it or take a photo of a receipt: “Out of milk”, “Yellow bin every two weeks”, “Mika is shoe size 12 now”. The milk goes on the list, the bin to the tasks and the shoe size into <a href="household-knowledge.html">household knowledge</a>. Whatever ToHuus is not sure about, it asks you to confirm instead of guessing.')],
           ['Suggestions, not automation', p('From receipts and ticks on the list ToHuus learns how often you buy things. When something is due again, it shows up as a suggestion with its reason. Nothing lands on your list without a tap.')],
-          ['Your household’s memory', p('Sizes, measurements, meter readings and whatever else only one person keeps in mind live as cards in home knowledge. From then on you ask ToHuus instead of that one person, and there is nothing to maintain.', 'It helps AI too: an assistant can only work with what it knows about you. With home knowledge it answers without guessing, the assistant in ToHuus as well as Claude or ChatGPT over <a href="connect-claude-chatgpt.html">MCP</a>.')],
+          ['Your household’s memory', p('Sizes, measurements, meter readings and whatever else only one person keeps in mind live as cards in household knowledge. From then on you ask ToHuus instead of that one person, and there is nothing to maintain.', 'It helps AI too: an assistant can only work with what it knows about you. With household knowledge it answers without guessing, the assistant in ToHuus as well as Claude or ChatGPT over <a href="connect-claude-chatgpt.html">MCP</a>.')],
           ['Today: five cards, one hint', p('Today shows at most five cards, always in the same order: <b>Up now</b> (your tasks for today), the <b>list</b> with “Needed again soon”, <b>Use soon</b>, <b>Cook today</b> and at the bottom <b>one</b> hint, such as “Tonight: put out the bins”, a receipt to check or a birthday with wishes still free. When there is none of that, it only says that everything important is done for today.', 'How many tasks Today shows and whether the money card is there, you set in Settings › Me › Calm & focus. What comes in the next days is under Tasks.')],
           ['Everything can be undone', p('Ticked off, deleted or imported by mistake? “Undo” brings it back, also for what the assistant added.')],
-          ['Your bar', p('The bar at the bottom starts with Today, Shopping, Cooking, Tasks and Stock. Money, home knowledge, Bring me something and more can go in, per person (see <a href="your-bar.html">Your bar</a>).')],
+          ['Your bar', p('The bar at the bottom starts with Today, Shopping, Cooking, Tasks and Home. Money, household knowledge, Bring me something and more can go in, per person (see <a href="your-bar.html">Your bar</a>).')],
           ['AI if you want it', p('Most things work without AI. With AI, ToHuus reads tricky receipts and understands open questions, in the cloud through Mistral and only with your consent. There is an open monthly limit, see <a href="ai-limits.html">Fair AI limits</a>.')],
         ],
         related: ['getting-started', 'household-knowledge', 'your-bar'],
       },
       {
-        slug: 'household-knowledge', pair: 'haushaltswissen', group: 'home', title: 'Home knowledge',
+        slug: 'household-knowledge', pair: 'haushaltswissen', group: 'home', title: 'Household knowledge',
         desc: 'Sizes, measurements, meter readings and whatever else you know about your home: add it, find it, bring it in, save it as a file.',
         sections: [
           ['What belongs here', ul(
@@ -1318,7 +1325,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
             '<b>Things</b>: meter numbers and readings, filters for the cooker hood and the hoover, tyre size, when the boiler was last serviced.',
             '<b>Rules</b>: what goes in which bin at your place.',
           ), tip('Codes, PINs and Wi-Fi keys are not accepted here. They belong in the house info under Codes.')],
-          ['Why it helps', p('Usually one person knows these things and keeps getting asked. Once it is in ToHuus, you ask ToHuus. There is nothing to maintain: whoever notices a change adds the new value, and the old one stays in the history.', 'It helps AI too. With home knowledge the assistant answers “What shoe size is Mika?” without guessing, and so do Claude or ChatGPT over <a href="connect-claude-chatgpt.html">MCP</a>.')],
+          ['Why it helps', p('Usually one person knows these things and keeps getting asked. Once it is in ToHuus, you ask ToHuus. There is nothing to maintain: whoever notices a change adds the new value, and the old one stays in the history.', 'It helps AI too. With household knowledge the assistant answers “What shoe size is Mika?” without guessing, and so do Claude or ChatGPT over <a href="connect-claude-chatgpt.html">MCP</a>.')],
           ['Adding', p('Find it at the top of Home or in your bar. Type a sentence like “Mika shoe size 12” or “Living room blind 120 x 160”, or tell the assistant. ToHuus understands short sentences like these without AI too.')],
           ['Bringing notes and lists in', p('Under Import, paste text from notes or emails, or pick a list: Excel, Numbers or Google Sheets as CSV, or a text file. Markdown, for example from Obsidian or Notion, and JSON work too.', 'Before anything is saved you see every card found, marked “new”, “new value” or “unchanged”, and tick what goes in. Codes and passwords stay out, health details become private. “Undo” takes back the whole import.')],
           ['Saving it as a file', p('Under Export you get everything, or what the search shows, as Markdown, CSV or JSON. On the iPhone use “Save to Files”. Only what you may see is exported, and every one of these files can be read in again.')],
@@ -1331,7 +1338,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         desc: 'Everyone chooses which areas sit in the bar at the bottom.',
         sections: [
           ['The start', p('The bar starts with Today, Shopping, Cooking, Tasks and Home. If cooking or the pantry is switched off, Money moves up. Everything else is under “More”.')],
-          ['What you can add', p('Today always stays first. Then up to four areas in your order: Shopping, Cooking, Tasks, Stock, Money, Knowledge, <a href="bring-me-something.html">Bring me something</a>, Wishes or House info. The assistant stays the round button at the bottom right.')],
+          ['What you can add', p('Today always stays first. Then up to four areas in your order: Shopping, Cooking, Tasks, Home, Money, Knowledge, <a href="bring-me-something.html">Bring me something</a>, Wishes or House info. The assistant stays the round button at the bottom right.')],
           ['How', ol('Touch and hold the bar, or open Settings › Me › Your bar.', 'The green plus adds an area, the red minus removes it.', 'Drag the handles into the order you like. “Back to the start” resets it.')],
           ['Who it is for', p('Your bar is yours, the same on iPhone, iPad and in the browser. The others keep theirs. Regular guests always get the standard bar.')],
         ],
@@ -1352,6 +1359,13 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['You give', p('“You give” lists everything you reserved, over all lists, with the total, split into “Still to get” and “Bought”. It is your gift shopping and stays apart from the shared shopping list, so nothing gives the surprise away.')],
           ['Reminders', p('On a wish you reserved, tap “Remind me” and pick 2 weeks, 1 week or 3 days before, or a day of your own. With a date on the list, ToHuus suggests 10 days before. Wishes you want to buy yourself can get a reminder too.', 'A week before the occasion you get one hint if you reserved something there that is not bought yet. Both go only to you, never to the household. Switch them off under Settings › Notifications & calendar.')],
           ['Share with guests', p('“Share” creates a link for guests. Grandma, friends or colleagues open the list in the browser and reserve with their name, no account needed. They see “taken”, never who. Make a new link or stop the old one in the same place.', 'The list also goes out as text, Markdown, a table (CSV) or for printing. Shared text never says who reserved something and names nobody from your household except the list’s owner.')],
+          ['Deleting wishes and lists', p(
+            'On the iPhone, swipe a wish to the left and tap “Delete”. On the web, use the bin in the row. The wish is gone at once, and for a few seconds you can tap “Undo”.',
+            'Swipe to the right to reserve a free wish or to tick yours off as bought. In “You give” a swipe lets a wish go again.',
+            'Whole lists you swipe in the overview to archive or delete them. If the list still has wishes or is shared (guest link, people who help), ToHuus asks first.',
+            'Whoever runs the list may delete: the person who made it, the people who help with it, and for shared household lists the admins. A wish you added yourself you may delete yourself, too. Guests and children don’t see delete.',
+            'Does the surprise stay? Yes. If you delete a wish someone already meant to get, you learn nothing about it. That person only gets a short note that the wish was taken off the list, without your name.',
+          )],
           ['Not the same as', p('<a href="bring-me-something.html">Bring me something</a> is different: there you ask for a small thing at home and someone brings it right away. Kid tablets and permanent guests never see wish lists.')],
         ],
         related: ['bring-me-something', 'your-bar', 'sharing-the-household'],
@@ -1378,17 +1392,17 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
             '<b>Cost cap</b>: every household also has a fixed maximum AI spend per month. If it is reached, for example after a great many receipt photos, AI pauses earlier.',
             '<b>Self-hosted</b>: no limit from us.',
           ), p('A voice message counts once. Settings › Data, plan & account › Plan & storage shows how many messages you have used this month.')],
-          ['What keeps working', p('The list, suggestions, tasks, stock, the cook planner, money and home knowledge with import and export. The assistant still understands the common short sentences, text recognition reads receipt photos, PDF receipts work as always. Your own AI assistant over MCP does not count.', 'Nothing is charged extra. Next month AI is back.')],
+          ['What keeps working', p('The list, suggestions, tasks, the pantry, the cook planner, money and household knowledge with import and export. The assistant still understands the common short sentences, text recognition reads receipt photos, PDF receipts work as always. Your own AI assistant over MCP does not count.', 'Nothing is charged extra. Next month AI is back.')],
         ],
         related: ['ai-on-or-off', 'speak', 'subscription'],
       },
       {
-        slug: 'what-tohuus-remembers', pair: 'merkt-sich', group: 'shop', title: 'Household knowledge',
-        desc: 'Buying rhythm, suggestions, “We still have it”, why you need no stock, and where home knowledge lives.',
+        slug: 'what-tohuus-remembers', pair: 'merkt-sich', group: 'shop', title: 'The purchase rhythm',
+        desc: 'Buying rhythm, suggestions, “We still have it”, why you need no pantry, and where household knowledge lives.',
         sections: [
-          ['Two kinds of remembering', p('ToHuus remembers how often you buy things, and that is what this page is about. It also remembers what you know about your home, such as sizes, measurements and meter readings. That lives in the app under “Knowledge”, see <a href="household-knowledge.html">Home knowledge</a>.')],
+          ['Two kinds of remembering', p('ToHuus remembers how often you buy things, and that is what this page is about. It also remembers what you know about your home, such as sizes, measurements and meter readings. That lives in the app under “Knowledge”, see <a href="household-knowledge.html">Household knowledge</a>.')],
           ['The buying rhythm', p('After three purchases of a product, ToHuus estimates how often you buy it. The more purchases, the better the estimate. Gaps like a holiday are left out.')],
-          ['When a suggestion comes', p('When a product is due again, is not already on the list and you have not just turned it down twice. If you keep stock for a product and there is enough at home, no suggestion comes.', 'Every suggestion says why, for example “remembers: every ~9 days”. It only goes on the list when you tap it. “We still have it” puts it off for a while.')],
+          ['When a suggestion comes', p('When a product is due again, is not already on the list and you have not just turned it down twice. If you track a product in the pantry and there is enough at home, no suggestion comes.', 'Every suggestion says why, for example “remembers: every ~9 days”. It only goes on the list when you tap it. “We still have it” puts it off for a while.')],
           ['What never shows up', p('Discreet and private items never appear as suggestions.')],
           ['How far back', p('With Household and Plus the whole history stays, and self-hosted anyway. Without a subscription you can still look at it and export it.')],
         ],
@@ -1475,10 +1489,10 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         related: ['shopping-together', 'what-tohuus-remembers', 'who-sees-what'],
       },
       {
-        slug: 'stock', pair: 'vorrat', group: 'home', title: 'Stock (optional)',
-        desc: 'Keep stock if you like. ToHuus does not need it.',
+        slug: 'stock', pair: 'vorrat', group: 'home', title: 'Pantry (optional)',
+        desc: 'Keep a pantry if you like. ToHuus does not need it.',
         sections: [
-          ['Optional', p('ToHuus does not need stock to know what is missing. The rhythm comes from receipts and ticks. If you want to keep stock anyway, Stock is its own area in the bar at the bottom. If you do not need it, switch it off under “What do you use?”.')],
+          ['Optional', p('ToHuus does not need a pantry to know what is missing. The rhythm comes from receipts and ticks. If you want to keep one anyway, it is under Home, below the tiles House info, Household knowledge and “Where’s what?”. If you do not need it, switch it off under “What do you use?”.')],
           ['Only what runs out', p('Instead of counting everything, you can track only the things that regularly run out. Switch at any time, nothing is lost.')],
           ['Counting or fill level', p('Per product: counted, as a fill level (full, half, low, empty) or not at all. Plus best-before per pack, opened and frozen.')],
           ['When something is low', p('You decide per product. When counting, with “keep at least”: below that it counts as low and goes on the list if you like. With fill levels choose “low from low” or already “from half”.')],
@@ -1490,9 +1504,9 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         slug: 'who-sees-what', pair: 'wer-sieht-was', group: 'people', title: 'Who sees what?',
         desc: 'What is shared, what stays private and what only you see.',
         sections: [
-          ['Shared', p('The list, the week plan, recipes, stock and the household’s tasks belong to everyone. Every row shows who added it.')],
+          ['Shared', p('The list, the week plan, recipes, the pantry and the household’s tasks belong to everyone. Every row shows who added it.')],
           ['Discreet and only for you', p('Others see discreet items only as a placeholder, private ones not at all. Neither ever goes to Home Assistant, displays, guest links or AI assistants.')],
-          ['Only for you', p('Your conversations with the assistant, your sign-ins and devices, your personal settings, including whether you switched AI off for yourself, tasks that are “Only for me” and home knowledge cards you keep private.', '“Who keeps what in mind” shows names only. Only you see your own number, shares only once everyone agrees.')],
+          ['Only for you', p('Your conversations with the assistant, your sign-ins and devices, your personal settings, including whether you switched AI off for yourself, tasks that are “Only for me” and household knowledge cards you keep private.', '“Who keeps what in mind” shows names only. Only you see your own number, shares only once everyone agrees.')],
           ['Guests and children', p('They only see what you share (see <a href="guests.html">Guests and permissions</a>).')],
         ],
         related: ['shopping-list', 'guests', 'privacy-in-short'],
@@ -1514,7 +1528,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
           ['Creating it', p('Under Guests create a link with the “Babysitter” template. It works without an account or app, as a link or QR code.')],
           ['What they see', ul(
             'The <a href="house-info.html">house info</a> with the cards shared with babysitter links, and the codes you explicitly share.',
-            '“Where is what?” for the places you choose, read-only and without amounts.',
+            '“Where’s what?” for the places you choose, read-only and without amounts.',
             'Your note, for example when you will be back.',
             'With Home Assistant, a list of voice commands for lights, blinds and music.',
           )],
@@ -1552,10 +1566,10 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
       },
       {
         slug: 'your-data', pair: 'daten-export', group: 'account', title: 'Taking your data with you',
-        desc: 'Export, recipe pack, home knowledge as a file and what happens when you delete.',
+        desc: 'Export, recipe pack, household knowledge as a file and what happens when you delete.',
         sections: [
           ['Export', p('Settings › Data, plan & account › Data & backups › Download export gives you a JSON file with all your household’s data. Passwords, access keys and integration secrets are left out. Only admins can do this.')],
-          ['Recipes and home knowledge', p('Your recipes with photos go along as a <a href="recipe-pack.html">recipe pack</a>. Home knowledge exports as Markdown, CSV or JSON (see <a href="household-knowledge.html">Home knowledge</a>).')],
+          ['Recipes and household knowledge', p('Your recipes with photos go along as a <a href="recipe-pack.html">recipe pack</a>. Household knowledge exports as Markdown, CSV or JSON (see <a href="household-knowledge.html">Household knowledge</a>).')],
           ['Spending', p('On the Money page as CSV.')],
           ['Deleting the household', p('In the cloud, deleting first destroys the household’s key, so the database can no longer be read. Then files and backups are deleted. You delete your account under Settings › Me › Sign-in & security.')],
         ],
@@ -1588,7 +1602,7 @@ docker compose up -d --build`), p('In <code>.env</code> set <code>BASE_URL</code
         desc: 'Short answers to what people often ask.',
         sections: [
           ['Do I have to type everything in?', p('No. Receipts come in as a PDF or a photo, and what you tick off the list counts as a purchase too. You do not have to keep stock.')],
-          ['Is ToHuus just a shopping list?', p('No. The list is where most people start. Then there are tasks with appointments, stock, cooking, money, <a href="household-knowledge.html">home knowledge</a> and the assistant, all in the same household.')],
+          ['Is ToHuus just a shopping list?', p('No. The list is where most people start. Then there are tasks with appointments, the pantry, cooking, money, <a href="household-knowledge.html">household knowledge</a> and the assistant, all in the same household.')],
           ['Is there a free version?', p('Not in ToHuus Cloud. Every new household gets 14 days of everything, then you subscribe, or you keep seeing and exporting everything without adding new things. ToHuus is free on your own server (see <a href="self-hosting.html">Self-hosting</a>).')],
           ['Do I need AI?', p('No. See <a href="ai-on-or-off.html">AI on or off</a>. In the cloud there is an open monthly limit, see <a href="ai-limits.html">Fair AI limits</a>.')],
           ['Is there an Android app?', p('No. In the browser ToHuus runs as a web app you can add to your home screen.')],

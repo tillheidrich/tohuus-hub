@@ -57,4 +57,9 @@ export const de_wish: Record<string, string> = {
   "Reminder for a gift or wish": "Erinnerung an ein Geschenk oder einen Wunsch",
   "A week before an occasion: gifts not bought yet": "Eine Woche vor einem Anlass: Geschenke, die noch fehlen",
   "Gifts": "Geschenke",
+  "A wish I wanted to give was taken off the list": "Ein Wunsch, den ich schenken wollte, wurde von der Liste genommen",
+  "A wish you wanted to get was taken off the list": "Ein Wunsch, den du besorgen wolltest, wurde von der Liste genommen",
+  "A wish you already got was taken off the list": "Ein Wunsch, den du schon besorgt hast, wurde von der Liste genommen",
+  "A wish list you wanted to give something from was deleted": "Eine Wunschliste, aus der du etwas schenken wolltest, wurde gelöscht",
+  "Only the people who run this list can delete wishes.": "Wünsche löschen kann nur, wer die Liste führt.",
 };

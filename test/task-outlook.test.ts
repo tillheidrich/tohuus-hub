@@ -120,8 +120,10 @@ describe('task outlook', () => {
     // after the switch to winter time: 16:30 UTC = 17:30 in Berlin
     expect(o.localHour(new Date('2026-11-01T16:30:00Z'), B)).toBe(17);
     expect(o.localHour(new Date('2026-10-18T22:30:00Z'), B)).toBe(0);
-    // the test run itself is on UTC (test/setup-env.ts) and follows config.timezone
-    expect(o.localHour(new Date('2026-10-18T15:30:00Z'))).toBe(15);
+    // without a zone it follows config.timezone (the test run's TZ, UTC unless TEST_TZ is set – test/setup-env.ts)
+    const tz = process.env.TZ || 'Europe/Berlin';
+    expect(o.localHour(new Date('2026-10-18T15:30:00Z'))).toBe(o.localHour(new Date('2026-10-18T15:30:00Z'), tz));
+    if (tz === 'UTC') expect(o.localHour(new Date('2026-10-18T15:30:00Z'))).toBe(15);
   });
 });
 

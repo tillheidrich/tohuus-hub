@@ -18,6 +18,7 @@ import { addToShopping, matchProduct } from './catalog.js';
 import { deleteImage, saveImage } from './images.js';
 import { canUseList } from './lists.js';
 import { fmtMoney } from './money.js';
+import { notify } from './notify.js';
 import { isGuestUser } from './people-policy.js';
 import { addHidden } from './share.js';
 import { tokenPrefix } from './tenancy.js';
@@ -99,6 +100,26 @@ const cleanText = (s: string | null | undefined, max: number) => (s ?? '').repla
 const cleanNote = (s: string | null | undefined) => (s ?? '').trim().slice(0, 2000) || null;
 const money = (v: number | null | undefined) => (v == null || !Number.isFinite(v) || v < 0 ? null : Math.round(v * 100) / 100);
 
+const isAdminUser = (id: number | null | undefined) =>
+  Boolean(id) && (db.prepare(`SELECT role FROM users WHERE id = ? AND COALESCE(kind, 'member') NOT IN ('guest', 'child')`).get(id) as { role: string } | undefined)?.role === 'admin';
+
+/**
+ * Who may take wishes off a list (swipe to delete, 21 Oct 2026): the owner and the co-editors; on a household list
+ * without an owner, the admins. Everyone else who sees the list (the person it is for, members who reserve) may only
+ * remove a wish they added themselves. Permanent guests and children never reach wishes at all.
+ */
+export function mayEditWishes(l: Pick<WishListAccess, 'owner_id' | 'editors'>, userId: number | null | undefined) {
+  if (!userId || isGuestUser(userId)) return false;
+  return runsWishList(l, userId) || (l.owner_id == null && isAdminUser(userId));
+}
+/** Delete the whole list: the owner; a household list without an owner: an admin. */
+export function mayDeleteWishList(l: Pick<WishListAccess, 'owner_id'>, userId: number | null | undefined) {
+  if (!userId || isGuestUser(userId)) return false;
+  return l.owner_id === userId || (l.owner_id == null && isAdminUser(userId));
+}
+const mayDeleteWish = (i: Pick<ItemRow, 'created_by_id'>, l: ListRow, userId: number | null | undefined) =>
+  mayEditWishes(l, userId) || (Boolean(userId) && !isGuestUser(userId!) && i.created_by_id === userId);
+
 function requirePerson(v: WishViewer) {
   if (!v.userId || isGuestUser(v.userId)) throw err(t('Only members with an account can keep wish lists.'), 403);
   return v.userId;
@@ -159,6 +180,8 @@ export interface WishItemView {
   /** the viewer's own reminder for this wish (nobody else's) */
   reminder: { remind_on: string; sent: boolean } | null;
   on_shopping_list: boolean;
+  /** the viewer may take this wish off the list (swipe to delete) */
+  can_delete: boolean;
   archived: boolean;
   created_by: string | null;
   created_at: string;
@@ -192,6 +215,10 @@ export interface WishListView {
   for_me: boolean;
   /** the viewer may see and set reservations */
   can_reserve: boolean;
+  /** the viewer may take any wish off the list (owner, co-editor, admin on a household list) */
+  can_edit: boolean;
+  /** the viewer may delete the whole list */
+  can_delete: boolean;
   count: number;
   /** null when hidden for this viewer */
   reserved: number | null;
@@ -261,6 +288,7 @@ function itemView(i: ItemRow, list: ListRow, v: WishViewer, links: LinkRow[]): W
     reminder: rem ? { remind_on: rem.remind_on, sent: Boolean(rem.sent_at) } : null,
     // "steht auf der Einkaufsliste" would tell the wished-for person that someone is buying it
     on_shopping_list: hide ? false : onList,
+    can_delete: mayDeleteWish(i, list, v.userId),
     archived: Boolean(i.archived),
     created_by: i.created_by,
     created_at: i.created_at,
@@ -297,6 +325,8 @@ function listView(l: ListRow, v: WishViewer): WishListView {
     role: Boolean(v.userId) && l.owner_id === v.userId ? 'owner' : v.userId && editors.includes(v.userId) ? 'editor' : 'member',
     for_me: Boolean(v.userId) && l.for_user_id === v.userId,
     can_reserve: !hide,
+    can_edit: mayEditWishes(l, v.userId),
+    can_delete: mayDeleteWishList(l, v.userId),
     count: items.length,
     reserved: hide ? null : reserved,
     bought: hide ? null : bought,
@@ -461,7 +491,9 @@ export function updateWishList(id: number, input: WishListInput, v: WishViewer) 
 export function deleteWishList(id: number, v: WishViewer) {
   const uid = requirePerson(v);
   const l = visibleList(id, v);
-  if (l.owner_id !== null && l.owner_id !== uid) throw err(t('Only the person who made the list can delete it.'), 403);
+  if (!mayDeleteWishList(l, uid)) throw err(t('Only the person who made the list can delete it.'), 403);
+  // who reserved something here hears about it (neutrally, never who deleted it or who else reserved)
+  const reservers = db.prepare(`SELECT DISTINCT status_user_id AS uid FROM wish_items WHERE list_id = ? AND status != 'open' AND status_user_id IS NOT NULL`).all(id) as { uid: number }[];
   const photos = db.prepare('SELECT photo_path FROM wish_items WHERE list_id = ? AND photo_path IS NOT NULL UNION ALL SELECT k.preview_image FROM wish_links k JOIN wish_items i ON i.id = k.item_id WHERE i.list_id = ? AND k.preview_image IS NOT NULL').all(id, id) as { photo_path: string }[];
   db.transaction(() => {
     db.prepare('DELETE FROM wish_links WHERE item_id IN (SELECT id FROM wish_items WHERE list_id = ?)').run(id);
@@ -471,8 +503,28 @@ export function deleteWishList(id: number, v: WishViewer) {
     db.prepare('DELETE FROM wish_lists WHERE id = ?').run(id);
   })();
   for (const p of photos) deleteImage(p.photo_path);
+  for (const r of reservers) if (r.uid !== uid) tellRemoved(r.uid, { list: l, title: null, bought: false, key: `list:${id}` });
   emit('wishes');
   return { ok: true };
+}
+
+/**
+ * A wish someone reserved (or bought) was taken off the list, or the whole list was deleted: a calm personal note to
+ * that person only (personalOnly, wish.removed). Never who deleted it, and nothing goes back to the deleter – on a
+ * surprise list the owner must not learn from the answer that it was reserved.
+ */
+function tellRemoved(userId: number, o: { list: ListRow; title: string | null; bought: boolean; key: string }) {
+  if (isGuestUser(userId) || !maySeeWishList(o.list, userId) || statusHidden(o.list, userId)) return;
+  void notify({
+    event: 'wish.removed',
+    title: o.title == null ? t('A wish list you wanted to give something from was deleted') : o.bought ? t('A wish you already got was taken off the list') : t('A wish you wanted to get was taken off the list'),
+    message: o.title == null ? o.list.name : `${o.title} · ${o.list.name}`,
+    path: '/einkauf/wuensche/schenken',
+    toUserId: userId,
+    personalOnly: true,
+    dedupeKey: `wish-del:${o.key}:${userId}`,
+    dedupeHours: 24 * 30,
+  }).catch(() => undefined);
 }
 
 // ------------------------------------------------------------------ item writes
@@ -634,14 +686,18 @@ export function updateWish(id: number, input: WishItemInput, v: WishViewer) {
 }
 
 export function deleteWish(id: number, v: WishViewer) {
-  requirePerson(v);
-  const { item } = visibleItem(id, v);
+  const uid = requirePerson(v);
+  const { item, list } = visibleItem(id, v);
+  if (!mayDeleteWish(item, list, uid)) throw err(t('Only the people who run this list can delete wishes.'), 403);
   const imgs = db.prepare('SELECT preview_image FROM wish_links WHERE item_id = ? AND preview_image IS NOT NULL').all(id) as { preview_image: string }[];
   db.prepare('DELETE FROM wish_reminders WHERE item_id = ?').run(id);
   db.prepare('DELETE FROM wish_links WHERE item_id = ?').run(id);
   db.prepare('DELETE FROM wish_items WHERE id = ?').run(id);
   if (item.photo_path) deleteImage(item.photo_path);
   for (const i of imgs) deleteImage(i.preview_image);
+  // the person who reserved it hears about it neutrally; the answer is the same either way (surprise lists)
+  if (item.status !== 'open' && item.status_user_id && item.status_user_id !== uid)
+    tellRemoved(item.status_user_id, { list, title: item.title, bought: item.status === 'bought', key: `item:${id}` });
   emit('wishes');
   return { ok: true };
 }

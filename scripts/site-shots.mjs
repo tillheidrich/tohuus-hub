@@ -13,16 +13,62 @@
  * --only shoots just the named slots and leaves every other image as it is (receipts, tasks and the shared seed are
  * only written when a slot needs them).
  *
+ * Always daytime (21 Oct 2026, "heute 02:22" on the website when shot at night): with --serve the script builds
+ * nothing but starts dist/server.mjs itself (run `npm run build` first) on a fresh data folder with the clock at
+ * --time (default 10:30, today, Europe/Berlin) – JavaScript and SQLite (scripts/fixed-clock.mjs) – and the browser's
+ * clock (Playwright clock) at the same moment. Greeting, "heute 10:31", quiet hours and "today" all read like a
+ * morning, whenever the script runs. Without --serve it uses the server at the URL with that server's real time.
+ *
+ *   NODE_PATH=<scratch>/node_modules node scripts/site-shots.mjs --serve [--time 10:30] [--port 8711]
+ *
  * Look at every image before committing.
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
+import os from 'node:os';
+import { spawn } from 'node:child_process';
 import sharp from 'sharp';
+import { clockOffset } from './fixed-clock.mjs';
 import { args, loadPlaywright, seed, setBase } from './audit-shared.mjs';
 
 const A = args({ out: 'site/assets/shots' });
 const OUT = path.resolve(A.opt('out', 'site/assets/shots'));
 const LANGS = String(A.opt('lang', 'de,en')).split(',');
+const TIME = String(A.opt('time', '10:30'));
+if (!/^\d{2}:\d{2}$/.test(TIME)) throw new Error('--time needs HH:MM');
+
+const SERVE = A.flag('serve');
+const OFFSET = SERVE ? clockOffset(TIME, 'Europe/Berlin') : 0;
+let serverProc = null;
+if (SERVE) {
+  const port = Number(A.opt('port', '8711'));
+  const base = `http://localhost:${port}`;
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tohuus-site-shots-'));
+  if (!fs.existsSync('dist/server.mjs')) throw new Error('dist/server.mjs missing – run npm run build first');
+  serverProc = spawn(process.execPath, ['--import', './scripts/fixed-clock.mjs', 'dist/server.mjs'], {
+    env: { ...process.env, TOHUUS_CLOCK: TIME, TZ: 'Europe/Berlin', MULTI_TENANT: 'true', CLOUD_SIGNUP: 'open', TOHUUS_MASTER_KEY: crypto.randomBytes(32).toString('base64'), BASE_URL: base, DATA_DIR: dataDir, PORT: String(port) },
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+  const stop = () => {
+    serverProc?.kill();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  };
+  process.on('exit', stop);
+  let up = false;
+  for (let i = 0; i < 60 && !up; i++) {
+    up = await fetch(base + '/').then((r) => r.ok, () => false);
+    if (!up) await new Promise((r) => setTimeout(r, 500));
+  }
+  if (!up) throw new Error(`server on ${base} did not start`);
+  A.BASE = base;
+  setBase(base);
+  console.log(`server with the clock at ${TIME} (Europe/Berlin) on ${base}`);
+}
+/** the browser's clock at the server's moment (Playwright clock keeps ticking from there) */
+const browserClock = async (ctx) => {
+  if (SERVE) await ctx.clock.install({ time: Date.now() + OFFSET });
+};
 const { chromium } = loadPlaywright();
 setBase(A.BASE);
 
@@ -105,7 +151,7 @@ const TASKS = {
 };
 async function tasks(ctx, lang) {
   const T = TASKS[lang];
-  const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+  const day = (n) => new Date(Date.now() + OFFSET + n * 864e5).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
   const people = ((await (await ctx.request.get(`${A.BASE}/api/people/directory`)).json().catch(() => [])) ?? []).filter((p) => p.kind !== 'guest');
   const keys = people.slice(0, 2).map((p) => p.key);
   const post = (data) => ctx.request.post(`${A.BASE}/api/care`, { data });
@@ -151,7 +197,7 @@ async function receipts(ctx, lang) {
   const rand = () => ((rnd = (rnd * 9301 + 49297) % 233280) / 233280);
   const last = new Map();
   for (let back = 120; back >= 1; back -= 3 + Math.floor(rand() * 3)) {
-    const day = new Date(Date.now() - back * 864e5);
+    const day = new Date(Date.now() + OFFSET - back * 864e5);
     const items = [];
     for (const [name, price, every] of P.every) if (!last.has(name) || back <= last.get(name) - every + Math.floor(rand() * 2)) {
       items.push([name, price]);
@@ -169,7 +215,7 @@ async function receipts(ctx, lang) {
 
 const browser = await chromium.launch({ executablePath: A.EXEC });
 for (const lang of LANGS) {
-  const setup = await browser.newContext({ locale: lang === 'de' ? 'de-DE' : 'en-GB' });
+  const setup = await browser.newContext({ locale: lang === 'de' ? 'de-DE' : 'en-GB', timezoneId: 'Europe/Berlin' });
   const email = `site-${lang}-${Date.now()}@example.org`;
   const r = await setup.request.post(`${A.BASE}/api/cloud/signup`, {
     data: { email, password: 'site-shots-1234', name: 'Sam', householdName: lang === 'de' ? 'Familie Berg' : 'The Bergs', form: 'family', lang, region: lang === 'de' ? 'DE' : 'GB', client: 'web' },
@@ -205,7 +251,8 @@ for (const lang of LANGS) {
   await setup.close();
   fs.mkdirSync(path.join(OUT, lang), { recursive: true });
   for (const s of PICK) {
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, colorScheme: s.dark ? 'dark' : 'light', reducedMotion: 'reduce', ...(s.guest ? {} : { storageState: storage }), locale: lang === 'de' ? 'de-DE' : 'en-GB', hasTouch: true, isMobile: true });
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, colorScheme: s.dark ? 'dark' : 'light', reducedMotion: 'reduce', ...(s.guest ? {} : { storageState: storage }), locale: lang === 'de' ? 'de-DE' : 'en-GB', timezoneId: 'Europe/Berlin', hasTouch: true, isMobile: true });
+    await browserClock(ctx);
     await ctx.addInitScript(() => {
       try {
         sessionStorage.setItem('sw.onb.redirected', '1');
@@ -236,3 +283,4 @@ for (const lang of LANGS) {
   }
 }
 await browser.close();
+process.exit(0);

@@ -142,6 +142,87 @@ final class WishNavigationTests: XCTestCase {
         XCTAssertFalse(ten.isSelected)
     }
 
+    /// GET with the test account; returns the HTTP status
+    private func status(_ path: String) throws -> Int {
+        let (s, t, h) = try server()
+        var req = URLRequest(url: URL(string: "\(s)\(path)")!)
+        req.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization")
+        req.setValue(h, forHTTPHeaderField: "X-Household")
+        req.setValue("ios", forHTTPHeaderField: "X-ToHuus-Client")
+        let done = expectation(description: path)
+        var code = 0
+        URLSession.shared.dataTask(with: req) { _, res, _ in
+            code = (res as? HTTPURLResponse)?.statusCode ?? 0
+            done.fulfill()
+        }.resume()
+        wait(for: [done], timeout: 10)
+        return code
+    }
+
+    /// swipe left on a wish → gone at once with "Rückgängig"; undo brings it back; without undo the server deletes it
+    /// once the toast is gone (21 Oct 2026, "Wünsche per Swipe löschen")
+    func testSwipeDeletesWishWithUndo() throws {
+        let (id, _) = try makeEmptyList()
+        let keep = try post("/api/wishes/lists/\(id)/items", ["title": "Pinsel"])
+        let wid = try post("/api/wishes/lists/\(id)/items", ["title": "Malkasten", "price": 24.9])
+        let app = try launch(["-debugTab", "wishes", "-debugWishes", "list:\(id)"])
+        let row = app.buttons["wish.row.\(wid)"]
+        XCTAssertTrue(row.waitForExistence(timeout: 20), "the wish row")
+        XCTAssertTrue(app.buttons["wish.row.\(keep)"].exists)
+        snap("swipe-1-list")
+        row.swipeLeft()
+        let del = app.buttons["Löschen"]
+        if del.waitForExistence(timeout: 2) { snap("swipe-2-button"); del.tap() }
+        let undo = app.buttons["Rückgängig"]
+        XCTAssertTrue(undo.waitForExistence(timeout: 5), "the toast offers Undo")
+        snap("swipe-3-toast")
+        XCTAssertFalse(row.exists, "the row is gone at once")
+        undo.tap()
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "Undo brings it back")
+        XCTAssertEqual(try status("/api/wishes/items/\(wid)"), 200, "nothing reached the server")
+        // again, this time without undo: deleted once the toast is gone
+        row.swipeLeft()
+        if del.waitForExistence(timeout: 2) { del.tap() }
+        XCTAssertTrue(undo.waitForExistence(timeout: 5))
+        let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: undo)
+        wait(for: [gone], timeout: 12)
+        sleep(2)
+        snap("swipe-4-deleted")
+        XCTAssertEqual(try status("/api/wishes/items/\(wid)"), 404, "deleted on the server")
+        XCTAssertTrue(app.buttons["wish.row.\(keep)"].exists, "the other wish stays")
+    }
+
+    /// swipe right on a free wish reserves it; in "Du schenkst" swipe left releases it (with Undo); in the overview a
+    /// list swipes to Archive / Delete
+    func testSwipeReserveReleaseAndListActions() throws {
+        let (id, _) = try makeEmptyList()
+        let wid = try post("/api/wishes/lists/\(id)/items", ["title": "Fernglas", "price": 59])
+        let app = try launch(["-debugTab", "wishes", "-debugWishes", "list:\(id)"])
+        let wishRow = app.buttons["wish.row.\(wid)"]
+        XCTAssertTrue(wishRow.waitForExistence(timeout: 20))
+        wishRow.swipeRight()
+        let reserve = app.buttons["Reservieren"]
+        if reserve.waitForExistence(timeout: 2) { snap("swipe-5-reserve"); reserve.tap() }
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'reserviert'")).firstMatch.waitForExistence(timeout: 8), "reserved")
+        snap("swipe-6-reserved")
+        // back to the overview: the list swipes to Archive / Delete
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        let listRow = row(app, id)
+        XCTAssertTrue(listRow.waitForExistence(timeout: 8))
+        listRow.swipeLeft()
+        XCTAssertTrue(app.buttons["Archivieren"].waitForExistence(timeout: 3), "archive on the list")
+        snap("swipe-7-list-actions")
+        listRow.swipeRight()
+        // Du schenkst: release with Undo
+        let app2 = try launch(["-debugTab", "wishes", "-debugWishes", "giving"])
+        let gift = app2.staticTexts["Fernglas"]
+        XCTAssertTrue(gift.waitForExistence(timeout: 20))
+        gift.swipeLeft()
+        let release = app2.buttons["Freigeben"].firstMatch
+        if release.waitForExistence(timeout: 2) { snap("swipe-8-release-button") }
+        _ = app2
+    }
+
     /// a new list opens right away, with its empty state
     func testNewListOpensIt() throws {
         _ = try server()

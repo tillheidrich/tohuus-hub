@@ -16,3 +16,7 @@ site
 docs
 design-prototypes
 ha-integration
+# Apple keys and every env file stay out of the build context too (G3 21.10.2026 P2-15)
+*.p8
+AuthKey_*
+.env*

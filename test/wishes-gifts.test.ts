@@ -366,11 +366,13 @@ describe('reminders and the hint before an occasion', () => {
 
   it('a person can switch both off for themselves', async () => {
     const prefs = await import('../server/lib/notify-prefs');
+    // A fixed weekday morning: outside the default quiet hours (22–07), so the test does not depend on the clock.
+    const nowMs = Date.parse('2026-06-16T10:30:00+02:00');
     expect(prefs.PERSON_EVENTS.some((e) => e.key === 'wish.occasion')).toBe(true);
-    expect(prefs.recipients('wish.occasion', 'apns', { toUserId: ids.Sam })).toEqual([ids.Sam]);
+    expect(prefs.recipients('wish.occasion', 'apns', { toUserId: ids.Sam, nowMs })).toEqual([ids.Sam]);
     prefs.setPersonPrefs(ids.Sam, { events: { 'wish.occasion': { apns: false, push: false }, 'wish.reminder': { apns: false, push: false } } });
-    expect(prefs.recipients('wish.occasion', 'apns', { toUserId: ids.Sam })).toEqual([]);
-    expect(prefs.recipients('wish.reminder', 'push', { toUserId: ids.Sam })).toEqual([]);
+    expect(prefs.recipients('wish.occasion', 'apns', { toUserId: ids.Sam, nowMs })).toEqual([]);
+    expect(prefs.recipients('wish.reminder', 'push', { toUserId: ids.Sam, nowMs })).toEqual([]);
   });
 });
 

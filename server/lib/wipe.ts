@@ -10,8 +10,10 @@
  * those 7 days and are removed afterwards (purgeExpired, also from the scheduler) – only when nothing references
  * them any more. The row in `data_wipes` stays as the audit entry: who, when, which area, how many rows – no content.
  *
- * Other members' private entries (tasks "only for me", private knowledge, "Im Kopf", private wish lists) are never
- * touched by an admin's wipe; each member removes their own ("mine"). Not offered to the assistant or MCP.
+ * Other members' private entries (the central list in privacy-columns.ts: tasks "only for me", private knowledge,
+ * "Im Kopf", private wish/shopping/money lists, personal receipts incl. originals, private expenses, personal budgets …)
+ * are never touched or counted by an admin's wipe; each member removes their own ("mine"). The history shows a
+ * member's own "mine" entries only to that member. Not offered to the assistant or MCP.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,6 +24,7 @@ import { t } from '../i18n.js';
 import { emit } from './bus.js';
 import { liveDemoRows } from './demo.js';
 import { deleteImage, imageFile, importsDir, removeStoredFile } from './images.js';
+import { minePrivate, spareOthersPrivate } from './privacy-columns.js';
 import { householdId } from './tenancy.js';
 import { classifyTables, orderChildrenFirst, removeDemo, type TableScope } from './tour.js';
 import { demoSignatures, ensureBaseData } from '../seed.js';
@@ -106,21 +109,6 @@ const SPLIT: Record<string, Partial<Record<Bucket, string>>> = {
 /** Recipes themselves (kept with "keep recipes"). */
 const RECIPE_TABLE = (n: string) => n === 'recipes' || n.startsWith('recipe_') || n === 'swap_rules';
 
-/** Rows of OTHER members that are private – never part of an admin's wipe. */
-const OTHERS_PRIVATE: Record<string, { cols: string[]; sql: (me: number) => string }> = {
-  care_tasks: { cols: ['visibility', 'owner_user_id'], sql: (me) => `visibility = 'private' AND owner_user_id IS NOT NULL AND owner_user_id <> ${me}` },
-  ai_memory: { cols: ['private_to'], sql: (me) => `private_to IS NOT NULL AND private_to <> ${me}` },
-  mind_items: { cols: ['visibility', 'user_id'], sql: (me) => `visibility = 'private' AND user_id <> ${me}` },
-  wish_lists: { cols: ['visibility', 'owner_id'], sql: (me) => `visibility = 'private' AND owner_id IS NOT NULL AND owner_id <> ${me}` },
-};
-/** A member's own private rows ("Meine privaten Einträge löschen"). */
-const MINE: Record<string, { cols: string[]; sql: (me: number) => string }> = {
-  care_tasks: { cols: ['visibility', 'owner_user_id'], sql: (me) => `visibility = 'private' AND owner_user_id = ${me}` },
-  ai_memory: { cols: ['private_to'], sql: (me) => `private_to = ${me}` },
-  mind_items: { cols: ['visibility', 'user_id'], sql: (me) => `visibility = 'private' AND user_id = ${me}` },
-  wish_lists: { cols: ['visibility', 'owner_id'], sql: (me) => `visibility = 'private' AND owner_id = ${me}` },
-};
-
 interface Fk {
   table: string;
   from: string;
@@ -165,21 +153,6 @@ export interface Item {
   where: string;
 }
 
-/** Condition for rows of `table` that belong to another member's private entries (directly or through their owner). */
-function protectCond(table: string, me: number | null, seen = new Set<string>()): string | null {
-  if (seen.has(table)) return null;
-  seen.add(table);
-  const conds: string[] = [];
-  const own = OTHERS_PRIVATE[table];
-  if (own && hasCols(table, own.cols)) conds.push(me == null ? own.sql(-1) : own.sql(me));
-  for (const f of fks(table)) {
-    if (f.table === table || f.on_delete !== 'CASCADE') continue;
-    const parent = protectCond(f.table, me, seen);
-    if (parent) conds.push(`${q(f.from)} IN (SELECT ${q(f.to ?? intPk(f.table) ?? 'rowid')} FROM ${q(f.table)} WHERE ${parent})`);
-  }
-  return conds.length ? conds.map((c) => `(${c})`).join(' OR ') : null;
-}
-
 export interface PlanOptions {
   /** places and categories stay (default) */
   keepPlaces?: boolean;
@@ -208,17 +181,15 @@ export function planFor(areas: (Area | 'everything')[], opts: PlanOptions, me: n
       where = '1';
     }
     if (!where) continue;
-    const protect = protectCond(table, me);
-    out.push({ table, where: protect ? `(${where}) AND NOT (${protect})` : where });
+    // other members' private rows (privacy-columns.ts) are never part of an admin's wipe – and not counted either
+    out.push({ table, where: spareOthersPrivate(table, where, me) });
   }
   return out;
 }
 
 /** A member's own private rows. */
 export function minePlan(me: number): Item[] {
-  return Object.entries(MINE)
-    .filter(([table, m]) => exists(table) && hasCols(table, m.cols))
-    .map(([table, m]) => ({ table, where: m.sql(me) }));
+  return minePrivate(me);
 }
 
 const SYNC_STATE = /^ha2_/;
@@ -691,7 +662,8 @@ export const mineCount = (me: number) => minePlan(me).reduce((s, i) => s + count
 export function wipeHistory(viewer: number | null, admin: boolean, limit = 20): WipeView[] {
   purgeExpired();
   const rows = db.prepare('SELECT * FROM data_wipes ORDER BY id DESC LIMIT ?').all(limit) as WipeRow[];
-  return rows.filter((r) => admin || r.by_user_id === viewer).map((r) => view(r, viewer));
+  // admins see the household's wipes, but never another member's "mine" (it would tell how many private entries they had)
+  return rows.filter((r) => (r.kind === 'mine' ? r.by_user_id != null && r.by_user_id === viewer : admin || r.by_user_id === viewer)).map((r) => view(r, viewer));
 }
 
 export function getWipe(id: number): WipeRow | undefined {

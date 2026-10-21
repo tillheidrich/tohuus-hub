@@ -16,13 +16,12 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import sharp from './sharp-safe.js';
 import { config } from '../config.js';
 import { db, migrate } from '../db.js';
 import { t, userError } from '../i18n.js';
 import { emit } from './bus.js';
 import { matchIngredient } from './catalog.js';
-import { deleteImage, fetchImageDetailed, storeImageBytes, warnImage } from './images.js';
+import { assertImage, deleteImage, fetchImageDetailed, reencodeImage, storeImageBytes, warnImage } from './images.js';
 import { ScopedMap, householdId, perHousehold, runInHousehold } from './tenancy.js';
 import { assertStorage } from './plans.js';
 import { downloadCandidates, serverMayFetchImage } from './recipe-images.js';
@@ -310,12 +309,9 @@ export function writeRecipe(rec: ImportRecipe, existingId: number | null): { id:
 /** Store a recipe photo as webp, long side capped at IMAGE_MAX_PX; returns `/img/<file>`. */
 export async function saveRecipeImage(buf: Buffer, recipeId: number): Promise<string> {
   const name = `r${recipeId}-${crypto.randomBytes(6).toString('hex')}.webp`;
+  assertImage(buf);
   assertStorage(Math.min(buf.length, 600_000));
-  const out = await sharp(buf, { failOn: 'none' })
-    .rotate()
-    .resize({ width: IMAGE_MAX_PX, height: IMAGE_MAX_PX, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 80 })
-    .toBuffer();
+  const out = await reencodeImage(buf, (img) => img.rotate().resize({ width: IMAGE_MAX_PX, height: IMAGE_MAX_PX, fit: 'inside', withoutEnlargement: true }).webp({ quality: 80 }).toBuffer());
   return storeImageBytes(name, out);
 }
 

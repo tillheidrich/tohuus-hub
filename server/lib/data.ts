@@ -5,6 +5,7 @@
 import { db, getSetting, onDbReady } from '../db.js';
 import { randomToken, sha256 } from './auth.js';
 import { mayUseList, parseIds } from './list-privacy.js';
+import { exportPrivacyWhere } from './privacy-columns.js';
 import { wishExportFilter } from './wish-policy.js';
 
 // ---------------------------------------------------------------- schema
@@ -129,8 +130,11 @@ export function buildExport(opts: { viewer?: number | null } = {}) {
   };
   const tables: Record<string, unknown[]> = {};
   for (const name of exportTables()) {
-    let rows = db.prepare(`SELECT * FROM "${name}"`).all() as Record<string, unknown>[];
     const keep = personalFilter(name, viewer);
+    // everything else from the central list of private rows (privacy-columns.ts): personal receipts and their lines,
+    // private expenses, personal budgets, private money lists, private trips …
+    const central = keep ? null : exportPrivacyWhere(name, viewer);
+    let rows = db.prepare(`SELECT * FROM "${name}"${central ? ` WHERE ${central}` : ''}`).all() as Record<string, unknown>[];
     if (keep) rows = rows.filter(keep);
     if (name === 'settings') {
       tables.settings = rows

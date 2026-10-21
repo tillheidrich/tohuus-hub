@@ -88893,6 +88893,125 @@
           }
         }
       }
+    },
+    "“%@” is back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is back."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ ist wieder da."
+          }
+        }
+      }
+    },
+    "“%@” archived.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” archived."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ archiviert."
+          }
+        }
+      }
+    },
+    "“%@” deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” deleted."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ gelöscht."
+          }
+        }
+      }
+    },
+    "Delete “%@”? It is shared, the others lose it too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete “%@”? It is shared, the others lose it too."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ löschen? Die Liste ist geteilt, die anderen verlieren sie auch."
+          }
+        }
+      }
+    },
+    "You reserved “%@”.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You reserved “%@”."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast „%@“ reserviert."
+          }
+        }
+      }
+    },
+    "“%@” is free again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is free again."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ ist wieder frei."
+          }
+        }
+      }
+    },
+    "Ticked off. Well done!": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticked off. Well done!"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgehakt. Gut gemacht!"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

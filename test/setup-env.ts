@@ -5,6 +5,15 @@ process.env.CLOUD_SIGNUP ??= 'open';
 // Europe/Berlin), so between 22:00 and 24:00 UTC the two disagreed and date tests failed. Tests run on UTC (TEST_TZ overrides);
 // a file may still set TZ itself after this.
 process.env.TZ = process.env.TEST_TZ ?? 'UTC';
+
+// Night check (21 Oct 2026): tests with quiet hours (22–07, kid tablet 19:30–07) or "today" used to fail at night.
+// TEST_CLOCK=HH:MM moves the clock of every test file (server code included, it runs in the same worker) to the next
+// time it is HH:MM in Europe/Berlin (the server's default timezone) and lets it keep ticking from there – JavaScript's
+// Date and SQLite's 'now' alike (scripts/fixed-clock.mjs). Example: TEST_TZ=Europe/Berlin TEST_CLOCK=02:30 npx vitest run
+if (/^\d{2}:\d{2}$/.test(process.env.TEST_CLOCK ?? '')) {
+  Object.assign(process.env, { TOHUUS_CLOCK: process.env.TEST_CLOCK, TOHUUS_CLOCK_TZ: 'Europe/Berlin', TOHUUS_CLOCK_NEXT: '1', TOHUUS_CLOCK_QUIET: '1' });
+  await import(new URL('../scripts/fixed-clock.mjs', import.meta.url).href);
+}
 // sharp/libvips starts one thread per core in every worker; with several workers that oversubscribes the CPU
 // (vitest.config.ts). One thread per worker is plenty for the small test images.
 process.env.VIPS_CONCURRENCY ??= '1';

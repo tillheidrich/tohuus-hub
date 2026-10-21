@@ -80,6 +80,8 @@ export interface Wish {
   status_at: string | null;
   reminder: { remind_on: string; sent: boolean } | null;
   on_shopping_list: boolean;
+  /** the viewer may take it off the list (owner, co-editor, admin on a household list, or who added it) */
+  can_delete?: boolean;
   archived: boolean;
   created_by: string | null;
   created_at: string;
@@ -108,6 +110,10 @@ export interface WishListInfo {
   role: 'owner' | 'editor' | 'member';
   for_me: boolean;
   can_reserve: boolean;
+  /** the viewer may delete any wish here (owner, co-editor, admin on a household list) */
+  can_edit?: boolean;
+  /** the viewer may delete the whole list */
+  can_delete?: boolean;
   count: number;
   reserved: number | null;
   bought: number | null;

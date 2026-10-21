@@ -105,6 +105,41 @@ describe('reading without a model (pure)', () => {
     expect(parse.looksLikeTask('Fahrrad Reifen', 'tasks')).toBe(true);
     expect(parse.looksLikeTask('Milch kaufen', 'tasks')).toBe(false);
   });
+  it('shopping, tasks and appointments apart, German and English (21 Oct 2026: "Milk is out" became a task)', () => {
+    const names = (x: any) => x.items.map((i: any) => `${i.qty ?? 1}×${i.name}${i.usedUp ? '!' : ''}`);
+    const shopping: [string, string[]][] = [
+      ['Milk is out, 2 peppers and bread', ['1×Milk!', '2×Peppers', '1×Bread']],
+      ['milk is out', ['1×Milk!']],
+      ["Milk's out", ['1×Milk!']],
+      ["we're out of eggs and coffee", ['1×Eggs!', '1×Coffee']],
+      ['we ran out of coffee', ['1×Coffee!']],
+      ['We have no butter left', ['1×Butter!']],
+      ['need 2 peppers, milk and bread', ['2×Peppers', '1×Milk', '1×Bread']],
+      ['buy bread', ['1×Bread']],
+      ['get milk, eggs and 3 apples', ['1×Milk', '1×Eggs', '3×Apples']],
+      ['could you add milk and eggs to the list', ['1×Milk', '1×Eggs']],
+      ['Milch ist alle, 2 Paprika und Brot', ['1×Milch!', '2×Paprika', '1×Brot']],
+      ['Wir haben keine Butter mehr', ['1×Butter!']],
+      ['Hol Milch und Eier', ['1×Milch', '1×Eier']],
+    ];
+    for (const [text, want] of shopping) {
+      const r = p(text) as any;
+      expect(r.kind, text).toBe('add');
+      expect(names(r), text).toEqual(want);
+      // also typed on the tasks screen: still shopping
+      expect(parse.looksLikeTask(text, 'tasks'), text).toBe(false);
+      expect(parse.looksLikeTask(text), text).toBe(false);
+    }
+    // jobs done stay jobs done: what goes outside is "out"
+    expect(p('the bins are out')).toEqual({ kind: 'task_done', what: 'bins', verb: 'done' });
+    expect(p('the recycling is out')).toEqual({ kind: 'task_done', what: 'recycling', verb: 'done' });
+    expect(p('Müll ist raus')).toMatchObject({ kind: 'task_done', what: 'Müll' });
+    // chores and appointments stay tasks, in both languages
+    for (const m of ['Dentist Tuesday at 10', 'Call grandma tomorrow', 'Take out the bins tomorrow', 'Clean the windows every Saturday', 'Zahnarzt Dienstag um 10', 'Oma morgen anrufen', 'Fenster putzen'])
+      expect(parse.looksLikeTask(m), m).toBe(true);
+    expect(parse.taskWhen('Dentist Tuesday at 10', '2026-10-21')).toEqual({ name: 'Dentist', day: '2026-10-27', time: '10:00' });
+    expect(parse.taskWhen('Zahnarzt Dienstag um 10', '2026-10-21')).toEqual({ name: 'Zahnarzt', day: '2026-10-27', time: '10:00' });
+  });
   it('"Was steht heute an?" and "Was ist morgen?" ask for the tasks of that day (audit 17.10.)', () => {
     for (const m of ['Was steht heute an?', 'Was steht an?', 'Was ist heute zu tun', 'Was müssen wir heute machen?', 'Was ist heute fällig?', 'Und heute?', "What's on today?"])
       expect(p(m), m).toEqual({ kind: 'tasks', day: 'today' });
@@ -230,6 +265,24 @@ describe('without a model configured', () => {
     expect(openTexts()).toEqual(['Eier', 'Butter']);
     expect(v.json.reply).toMatch(/Was braucht ihr für Sonntag\?$/);
     await till.req('POST', `/api/assistant/undo/${v.json.actions[0].undo}`);
+  });
+
+  it('"Milk is out, 2 peppers and bread" on the tasks screen goes on the list, not into the tasks', async () => {
+    db.prepare('DELETE FROM shopping_items').run();
+    const tasksBefore = db.prepare('SELECT COUNT(*) FROM care_tasks').pluck().get();
+    const r = await till.req('POST', '/api/assistant/chat', { message: 'Milk is out, 2 peppers and bread', context: 'tasks' });
+    expect(r.status).toBe(200);
+    // "Milk" is no known product here, so it goes straight onto the list (with a product it is stock_used_up)
+    expect(r.json.actions.length).toBeGreaterThan(0);
+    for (const a of r.json.actions) expect(['stock_used_up', 'list_add']).toContain(a.kind);
+    expect(openTexts()).toHaveLength(3);
+    expect(db.prepare('SELECT COUNT(*) FROM care_tasks').pluck().get()).toBe(tasksBefore);
+    for (const a of [...r.json.actions].reverse()) await till.req('POST', `/api/assistant/undo/${a.undo}`);
+    expect(openTexts()).toEqual([]);
+    const one = await till.chat('milk is out');
+    expect(['stock_used_up', 'list_add']).toContain(one.json.actions[0]?.kind);
+    expect(one.json.reply).not.toMatch(/open task/i);
+    await till.req('POST', `/api/assistant/undo/${one.json.actions[0].undo}`);
   });
 
   it('"Milch ist alle" puts it on the list (and undo takes it off again)', async () => {

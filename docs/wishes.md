@@ -95,13 +95,13 @@ button is hidden – self-host without AI), AI switches and consent respected (`
 | `POST /api/wishes/lists` | `{ name, note?, for_user_id?, for_name?, visibility?, share_with?, editors?, surprise?, occasion?, event_date? }` | `WishList` |
 | `GET /api/wishes/lists/:id` | `?sort=manual\|priority\|price\|newest\|title&archived=1` | `{ list: WishList, items: [Wish] }` |
 | `PATCH /api/wishes/lists/:id` | any of the above + `archived` (privacy fields: owner only, 403) | `WishList` |
-| `DELETE /api/wishes/lists/:id` | | `{ ok }` (owner only) |
+| `DELETE /api/wishes/lists/:id` | | `{ ok }` (owner; a list without owner: an admin – 403 otherwise) |
 | `POST /api/wishes/lists/:id/order` | `{ ids: [id] }` (drag to sort) | `{ ok }` |
 | `POST`/`DELETE /api/wishes/lists/:id/link` | | `WishList` with/without `link` |
 | `POST /api/wishes/lists/:id/items` | `{ title, note?, price?, quantity? (1–99), priority? (1\|2\|3), giver_user_id?, giver_name?, links?: [{ label?, url, price?, title?, site? }] }` | `Wish` |
 | `GET /api/wishes/items/:id` | | `Wish` |
 | `PATCH /api/wishes/items/:id` | item fields, `links` (with `id` to keep a link), `archived`, `list_id` (move) | `Wish` |
-| `DELETE /api/wishes/items/:id` | | `{ ok }` |
+| `DELETE /api/wishes/items/:id` | | `{ ok }` (`can_delete`, 403 otherwise; the same answer whether it was reserved) |
 | `POST /api/wishes/items/:id/status` | `{ status: open\|reserved\|bought, by_user_id?, by_name? }` | `Wish` (409 when someone else, also a guest, reserved it) |
 | `PUT /api/wishes/items/:id/reminder` | `{ remind_on }` | `Wish` |
 | `POST /api/wishes/items/:id/photo` | multipart `image` (storage quota counted, encrypted) | `Wish` |
@@ -113,17 +113,35 @@ button is hidden – self-host without AI), AI switches and consent respected (`
 | `POST /api/wishes/ai/photo` | multipart `image` | `{ title, note, price, icon }` |
 
 `WishList`: `{ id, name, note, owner_id, owner, for_user_id, for_name, occasion, event_date, days_until, visibility,
-share_with, editors, surprise, archived, mine, role, for_me, can_reserve, count, reserved, bought, open, people, link,
+share_with, editors, surprise, archived, mine, role, for_me, can_reserve, can_edit, can_delete, count, reserved, bought, open, people, link,
 photos[≤3], icons[≤3], updated_at }`.
 `Wish`: `{ id, list_id, title, note, photo_path, icon, price, price_from_links, quantity, priority, links: [{ id, label,
 url, price, title, site, image_path, preview }], giver, status, status_by: { user_id, name, mine, guest }, status_at,
-reminder, on_shopping_list, archived, created_by, created_at, updated_at }`. `icon` is a symbol key (`bricks`, `teddy`,
+reminder, on_shopping_list, can_delete, archived, created_by, created_at, updated_at }`. `icon` is a symbol key (`bricks`, `teddy`,
 `book`, `bike`, `music`, … `gift`) the clients draw (web Phosphor, iOS SF Symbols).
 
 Tables (migration `wish-2`): `wish_lists` + `occasion, event_date, surprise, editors`; `wish_items` + `quantity,
 status_claim, status_link_id`; `wish_share_links (list_id, token_hash, nonce, created_by_id, revoked, last_seen_at)`;
 `wish_reminders (item_id, user_id, remind_on, sent_at)`. Demo data: „Sams Geburtstag“ in 12 days with three wishes,
 marked as demo (removed with „Beispieldaten entfernen“).
+
+## Deleting („Wünsche per Swipe löschen“, 21 Oct 2026)
+
+- **Who:** a wish – the owner, the co-editors, on a household list without an owner the admins, and whoever added that
+  wish themselves (`Wish.can_delete`); a whole list – the owner, on a list without an owner an admin
+  (`WishList.can_delete`). `WishList.can_edit` = may delete every wish there. Permanent guests and children never reach
+  wishes; the server checks every delete (test/wishes-delete.test.ts).
+- **Clients:** iPhone – swipe left on a wish → „Löschen“ (red), on a list in the overview → „Löschen“ / „Archivieren“
+  (archived view: „Wiederherstellen“); swipe right on a free wish → „Reservieren“, on my own reservation → „Gekauft“;
+  „Du schenkst“: right „Gekauft“ / „Doch nicht gekauft“, left „Freigeben“. Web – the same as a trash / archive button in
+  the row (desktop on hover, touch always), „Freigeben“ in „Du schenkst“. All with „Rückgängig“ in the toast; the request
+  goes out only when the toast is gone or the screen is left (iOS `PendingRemovals`, web `deferred-removal.ts`), so the
+  server deletes at once (no soft delete). A list with wishes or shared (guest link, co-editors) asks first instead.
+- **Surprise:** the answer never tells whether a wish was reserved. The person who reserved (or bought) it gets a
+  personal note `wish.removed` („Ein Wunsch, den du besorgen wolltest, wurde von der Liste genommen“, body: wish · list;
+  for a deleted list „Eine Wunschliste, aus der du etwas schenken wolltest, wurde gelöscht“) – never who deleted it,
+  never to the deleter, never when they delete it themselves. Guests via link get nothing (no account).
+- **Reminders** of a deleted wish (or of every wish of a deleted list) are removed with it.
 
 ## Share into ToHuus (iPhone)
 

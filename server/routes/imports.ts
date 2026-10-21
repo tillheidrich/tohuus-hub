@@ -7,7 +7,7 @@ import { db } from '../db.js';
 import { requireAuth } from '../lib/auth.js';
 import { emit } from '../lib/bus.js';
 import { createProduct, learnAlias, matchProduct } from '../lib/catalog.js';
-import { importsDir, readStoredFile, toVisionJpeg } from '../lib/images.js';
+import { importsDir, readStoredFile, sandboxedFile, toVisionJpeg } from '../lib/images.js';
 import {
   addAdjustment,
   addImportLine,
@@ -107,6 +107,8 @@ r.get('/imports/:id/original/:n', (req, res) => {
   if (!fs.existsSync(file)) return void res.status(404).json({ error: t('The original of this receipt is not stored (photos go once it is booked).') });
   const isPdf = /\.pdf$/i.test(name);
   res.setHeader('Cache-Control', 'private, no-store');
+  // foreign content (mail inbox, uploads) on the app's own origin: no scripts, no forms, own opaque origin (G3 P2-16)
+  sandboxedFile(res);
   res.setHeader('Content-Disposition', `inline; filename="${isPdf ? 'bon.pdf' : 'bon.jpg'}"`);
   res.type(isPdf ? 'application/pdf' : /\.png$/i.test(name) ? 'image/png' : /\.webp$/i.test(name) ? 'image/webp' : 'image/jpeg').send(readStoredFile(file));
 });

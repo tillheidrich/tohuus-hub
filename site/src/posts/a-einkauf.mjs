@@ -36,7 +36,7 @@ export default [
       ['So hilft ToHuus beim Teilen',
         '<p>ToHuus ist eine Einkaufs- und Haushalts-App für Familien, Paare und WGs. Die Einkaufsliste ist live auf allen Handys und im Browser. Hakt jemand im Laden etwas ab, verschwindet es bei den anderen innerhalb von Sekunden, und was zu Hause dazukommt, sieht die Person im Laden sofort an der richtigen Stelle.</p>' +
         '<p>Mit „Ich hol’s“ zeigt ihr, wer einen Eintrag übernimmt. Jede Zeile zeigt, wer sie wann eingetragen hat. Im Modus „Im Laden“ sortiert ToHuus die Liste nach Gängen und funktioniert auch ohne Netz. Ihr könnt mehrere Listen anlegen, private Listen führen und einzelne Einträge diskret machen, dann sehen die anderen nur einen Platzhalter. Was schon auf der Liste steht, kommt nicht doppelt drauf.</p>' +
-        '<p>Für die WG gibt es unter Geld die Geldlisten zum Aufteilen, die mit möglichst wenigen Überweisungen ausgleichen. Mehr dazu steht in der Hilfe unter <a href="../hilfe/gemeinsam-einkaufen.html">Gemeinsam einkaufen</a> und <a href="../hilfe/haushalt-teilen.html">Haushalt teilen</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
+        '<p>Für die WG gibt es unter Geld die Abrechnung zum Aufteilen, die mit möglichst wenigen Überweisungen ausgleicht. Mehr dazu steht in der Hilfe unter <a href="../hilfe/gemeinsam-einkaufen.html">Gemeinsam einkaufen</a> und <a href="../hilfe/haushalt-teilen.html">Haushalt teilen</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Wie teile ich eine Einkaufsliste mit meinem Partner oder meiner Partnerin?', 'Am einfachsten mit einer App, in der ihr beide im selben Haushalt seid und in dieselbe Liste schreibt. Änderungen kommen dann sofort auf beiden Handys an, und ihr seht, wer was holt.'],
@@ -91,7 +91,7 @@ export default [
       ['So hilft ToHuus beim Rhythmus',
         '<p>ToHuus merkt sich aus Kassenbons und abgehakten Einträgen, wie oft ihr etwas kauft. Wenn etwas wieder fällig ist, erscheint ein Vorschlag mit Grund, zum Beispiel „merkt sich: alle ~20 Tage, zuletzt vor 19 Tagen“. Ein Tipp setzt es auf die Liste, „Haben wir noch“ schiebt es auf. So ist die Liste für den großen Einkauf schon fast fertig, bevor ihr losgeht.</p>' +
         '<p>Im Kochplaner seht ihr, was mit dem Vorhandenen sofort geht und was bald weg muss. Plant ihr die Woche, kommt, was fehlt, mit einem Tipp auf die Liste, und mit Plus füllt ToHuus freie Abende aus dem Vorrat. Unter Geld zeigt ToHuus, was ihr pro Woche und Monat ausgebt, im Vergleich zum Vormonat. Daran seht ihr, ob ein neuer Rhythmus wirklich etwas spart.</p>' +
-        '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/merkt-sich.html">Was ToHuus sich merkt</a> und <a href="../hilfe/geld.html">Geld</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
+        '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/merkt-sich.html">Der Kaufrhythmus</a> und <a href="../hilfe/geld.html">Geld</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Ist ein Wocheneinkauf günstiger als mehrere kleine Einkäufe?', 'Oft ja, weil jeder zusätzliche Gang Gelegenheit für Spontankäufe bietet. Günstiger ist er aber nur, wenn ihr mit Liste einkauft und am Ende der Woche nicht viel Frisches wegwerft.'],
@@ -144,7 +144,7 @@ export default [
       ['So hilft ToHuus beim Drandenken',
         '<p>ToHuus ist dafür gebaut, dass nicht eine Person alles im Kopf haben muss. Die Einkaufsliste ist live auf allen Handys, und jeder Eintrag zeigt, wer ihn wann eingetragen hat. Mit „Ich hol’s“ seht ihr, wer was übernimmt.</p>' +
         '<p>Was ihr regelmäßig kauft, merkt sich ToHuus aus Kassenbons und abgehakten Einträgen. Ist etwas wieder fällig, erscheint ein Vorschlag mit Grund, und ein Tipp setzt es auf die Liste. ToHuus schreibt dabei nie heimlich auf die Liste. Wer gerade keine Hand frei hat, tippt auf den runden Knopf für den Assistenten und sagt zum Beispiel „Milch ist alle, und wir brauchen was für Sonntag“. Der Assistent trägt es ein und sagt, was er gemacht hat. Die KI lässt sich auch ganz abschalten, Liste und Vorschläge laufen dann weiter.</p>' +
-        '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/merkt-sich.html">Was ToHuus sich merkt</a> und <a href="../hilfe/sprechen.html">Der Assistent</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
+        '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/merkt-sich.html">Der Kaufrhythmus</a> und <a href="../hilfe/sprechen.html">Der Assistent</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Was ist Mental Load im Haushalt?', 'Mental Load ist die Denk- und Planungsarbeit hinter der Hausarbeit: merken, was fehlt, Termine im Blick haben, vorausplanen. Sie ist unsichtbar, kostet aber Zeit und Kraft.'],
@@ -200,7 +200,7 @@ export default [
       ['So hilft ToHuus gegen Doppelkäufe',
         '<p>In ToHuus gibt es eine gemeinsame Einkaufsliste, live auf allen Handys. Was schon auf der Liste steht, kommt nicht doppelt drauf. Mit „Ich hol’s“ sehen alle, wer einen Eintrag übernimmt, und jede Zeile zeigt, wer sie wann eingetragen hat.</p>' +
         '<p>Aus Kassenbons und abgehakten Einträgen merkt sich ToHuus, wie oft ihr etwas kauft. Ein Vorschlag kommt erst, wenn etwas wieder fällig ist. Ist noch genug da, tippt ihr „Haben wir noch“, und nach zweimal Ablehnen fragt ToHuus nicht mehr. Wer mag, führt zusätzlich einen Vorrat mit Mindesthaltbarkeit und dem Hinweis „wird bald knapp“. Das ist freiwillig, die Vorschläge funktionieren auch ohne.</p>' +
-        '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/merkt-sich.html">Was ToHuus sich merkt</a> und <a href="../hilfe/vorrat.html">Vorrat</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
+        '<p>Mehr dazu in der Hilfe unter <a href="../hilfe/merkt-sich.html">Der Kaufrhythmus</a> und <a href="../hilfe/vorrat.html">Vorrat</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
       ['Warum kaufen wir ständig Dinge doppelt?', 'Meist kaufen mehrere Leute ein, ohne voneinander zu wissen, oder es fehlt der Überblick, was noch zu Hause ist. Eine gemeinsame Liste und ein kurzer Vorratsblick vor dem Einkauf helfen dagegen.'],

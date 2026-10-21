@@ -41,6 +41,8 @@ export type NotifyEvent =
   // wish lists (20 Oct 2026): personal only – a reminder someone set, and the hint before an occasion (wish-jobs.ts)
   | 'wish.reminder'
   | 'wish.occasion'
+  // a wish the person reserved was taken off the list (wishes.ts tellRemoved, 21 Oct 2026)
+  | 'wish.removed'
   | 'test';
 
 export interface NotifySettings {
@@ -101,6 +103,7 @@ const EVENT_EYEBROW: Partial<Record<NotifyEvent, string>> = {
   'plan.reminder': 'Meal plan',
   'wish.reminder': 'Gifts',
   'wish.occasion': 'Gifts',
+  'wish.removed': 'Gifts',
   test: 'Test',
 };
 
@@ -141,6 +144,7 @@ export const DEFAULT_NOTIFY: NotifySettings = {
     // only ever to the one person (personalOnly) – never a household channel: a gift must stay a surprise
     'wish.reminder': { ha: false, webhook: false, ntfy: false, email: false, push: false, telegram: false, gotify: false, matrix: false },
     'wish.occasion': { ha: false, webhook: false, ntfy: false, email: false, push: false, telegram: false, gotify: false, matrix: false },
+    'wish.removed': { ha: false, webhook: false, ntfy: false, email: false, push: false, telegram: false, gotify: false, matrix: false },
     test: { ha: true, webhook: true, ntfy: true, email: true, push: true },
   },
 };

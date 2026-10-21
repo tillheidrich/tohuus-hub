@@ -295,7 +295,9 @@ describe('rights', () => {
     const row = wipe.getWipe(out.id)!;
     expect(wipe.mayHandle(row, { userId: admin, admin: true })).toBe(false);
     expect(wipe.mayHandle(row, { userId: member, admin: false })).toBe(true);
-    expect(wipe.wipeHistory(admin, true).some((w) => w.id === out.id)).toBe(true); // admins see that it happened (counts only)
+    // G3 21.10.2026 P2-13: admins do not see another member's "mine" wipe (its counts would tell how many private entries there were)
+    expect(wipe.wipeHistory(admin, true).some((w) => w.id === out.id)).toBe(false);
+    expect(wipe.wipeHistory(member, false).some((w) => w.id === out.id)).toBe(true);
     wipe.restoreWipe(out.id, MEMBER());
     expect(count('care_tasks', `owner_user_id = ${member}`)).toBe(mine.tasks);
     expect(count('mind_items', `user_id = ${member}`)).toBe(mine.mind);

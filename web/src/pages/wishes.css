@@ -734,3 +734,50 @@
   text-align: center;
   margin-top: 16px;
 }
+
+/* delete / archive in the row (21 Oct 2026): a trash button instead of a swipe – on hover at the desktop, always on touch */
+.wish-list-wrap {
+  position: relative;
+}
+.wish-list-wrap.has-actions-1 .wish-list-card {
+  padding-right: 52px;
+}
+.wish-list-wrap.has-actions-2 .wish-list-card {
+  padding-right: 88px;
+}
+.wish-row-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+}
+.wish-row-actions .icon-btn,
+.wish-row-del {
+  color: var(--ink-3);
+}
+.wish-row-actions .wish-del:hover,
+.wish-row-del:hover {
+  color: var(--empty);
+}
+.wish-row-del {
+  align-self: center;
+  order: 2;
+}
+/* the button must not push the row into two lines on a phone */
+.wish-card:has(.wish-row-del) .wish-card-main {
+  flex-basis: 180px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .wish-row-actions,
+  .wish-row-del {
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+  .wish-list-wrap:hover .wish-row-actions,
+  .wish-list-wrap:focus-within .wish-row-actions,
+  .wish-card:hover .wish-row-del,
+  .wish-card:focus-within .wish-row-del {
+    opacity: 1;
+  }
+}

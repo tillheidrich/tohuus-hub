@@ -41,6 +41,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { Me } from '../App';
 import { api, del, invalidate, patch, post, put, useApi } from '../api';
+import { canRemove, useDeferredRemoval } from '../deferred-removal';
 import { useDrag } from '../dnd';
 import { t } from '../i18n';
 import { money } from '../region';
@@ -71,6 +72,9 @@ export type { Wish, WishListInfo } from './wish-ui';
 
 const useMe = () => useApi<Me>('me', '/me');
 const errText = (e: unknown) => (e as Error).message;
+/** owner, co-editor, or a household list without an owner: may archive it */
+const runsList = (l: WishListInfo) => l.role !== 'member' || l.owner_id == null;
+const mayDeleteList = (l: WishListInfo) => l.can_delete ?? (l.mine || l.owner_id == null);
 
 // ------------------------------------------------------------------ overview
 
@@ -97,6 +101,34 @@ export function WishesPage() {
   const search = useApi<Wish[]>(['wishes', 'search', q], q.trim().length >= 2 ? `/wishes/search?q=${encodeURIComponent(q.trim())}` : null);
   const [creating, setCreating] = useState(false);
   const nav = useNavigate();
+  const toast = useToast();
+  const removal = useDeferredRemoval();
+  const mayRemove = canRemove(me.data);
+  // archive with "Undo"; delete with "Undo" – or with a question first when the list holds wishes or is shared
+  // (guest link, co-editors): then the others lose it too (swipe to delete, 21 Oct 2026)
+  const archiveList = (l: WishListInfo) =>
+    removal.remove(`list:${l.id}`, l.archived ? t('“{name}” is back.', { name: l.name }) : t('“{name}” archived.', { name: l.name }), async () => {
+      await patch(`/wishes/lists/${l.id}`, { archived: !l.archived });
+      invalidate('wishes');
+    });
+  const deleteList = async (l: WishListInfo) => {
+    if (l.count > 0 || l.link || l.editors.length > 0) {
+      const q = l.count > 0 ? t('Delete “{name}” with all wishes?', { name: l.name }) : t('Delete “{name}”? It is shared, the others lose it too.', { name: l.name });
+      if (!confirm(q)) return;
+      try {
+        await del(`/wishes/lists/${l.id}`);
+        invalidate('wishes');
+        toast({ text: t('“{name}” deleted.', { name: l.name }) });
+      } catch (e) {
+        toast({ text: errText(e), error: true });
+      }
+      return;
+    }
+    removal.remove(`list:${l.id}`, t('“{name}” deleted.', { name: l.name }), async () => {
+      await del(`/wishes/lists/${l.id}`);
+      invalidate('wishes');
+    });
+  };
   if (me.data?.actor.houseGuest)
     return (
       <div className="wishes-page">
@@ -105,7 +137,7 @@ export function WishesPage() {
         </Empty>
       </div>
     );
-  const all = lists.data ?? [];
+  const all = (lists.data ?? []).filter((l) => !removal.isHidden(`list:${l.id}`));
   const groups = groupLists(all);
   const g = giving.data;
   return (
@@ -184,7 +216,12 @@ export function WishesPage() {
             </div>
             <div className="wish-lists">
               {gr.lists.map((l) => (
-                <ListCard key={l.id} l={l} />
+                <ListCard
+                  key={l.id}
+                  l={l}
+                  onArchive={mayRemove && runsList(l) ? () => archiveList(l) : undefined}
+                  onDelete={mayRemove && mayDeleteList(l) ? () => void deleteList(l) : undefined}
+                />
               ))}
             </div>
           </section>
@@ -207,11 +244,13 @@ export function WishesPage() {
   );
 }
 
-function ListCard({ l }: { l: WishListInfo }) {
+function ListCard({ l, onArchive, onDelete }: { l: WishListInfo; onArchive?: () => void; onDelete?: () => void }) {
   const line = occasionLine(l);
   const taken = (l.reserved ?? 0) + (l.bought ?? 0);
   const soon = l.days_until != null && l.days_until >= 0 && l.days_until <= 14;
+  const n = (onArchive ? 1 : 0) + (onDelete ? 1 : 0);
   return (
+    <div className={`wish-list-wrap ${n ? `has-actions-${n}` : ''}`}>
     <Link to={`/einkauf/wuensche/${l.id}`} className="wish-list-card">
       <div className="wish-list-mosaic" aria-hidden>
         {l.photos[0] ? <img src={l.photos[0]} alt="" loading="lazy" /> : <WishThumb photo={null} icon={l.icons[0] ?? 'gift'} size="fill" />}
@@ -253,6 +292,26 @@ function ListCard({ l }: { l: WishListInfo }) {
         </span>
       </div>
     </Link>
+      {n > 0 && (
+        <span className="wish-row-actions">
+          {onArchive && (
+            <button
+              className="icon-btn plain sm"
+              onClick={onArchive}
+              aria-label={l.archived ? t('Restore “{name}”', { name: l.name }) : t('Archive “{name}”', { name: l.name })}
+              title={l.archived ? t('Restore') : t('Archive')}
+            >
+              <Archive size={18} />
+            </button>
+          )}
+          {onDelete && (
+            <button className="icon-btn plain sm wish-del" onClick={onDelete} aria-label={t('Delete “{title}”', { title: l.name })} title={t('Delete list')}>
+              <Trash size={18} />
+            </button>
+          )}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -427,8 +486,17 @@ export function WishListPage() {
   const [order, setOrder] = useState<number[] | null>(null);
   const toast = useToast();
   const nav = useNavigate();
+  const me = useMe();
+  const removal = useDeferredRemoval();
+  const mayRemove = canRemove(me.data);
   const l = q.data?.list;
-  const items = q.data?.items ?? [];
+  const items = (q.data?.items ?? []).filter((w) => !removal.isHidden(`wish:${w.id}`));
+  // the trash button in the row: gone at once, "Undo" in the toast, the server hears about it when the toast is gone
+  const removeWish = (w: Wish) =>
+    removal.remove(`wish:${w.id}`, t('“{title}” deleted.', { title: w.title }), async () => {
+      await del(`/wishes/items/${w.id}`);
+      invalidate('wishes');
+    });
   // drag to sort (own order, all wishes shown): optimistic, then the server
   const ordered = useMemo(() => (order ? order.map((i) => items.find((w) => w.id === i)).filter((w): w is Wish => Boolean(w)) : items), [order, items]);
   useEffect(() => setOrder(null), [q.data]);
@@ -584,6 +652,11 @@ export function WishListPage() {
                   {l?.can_reserve && <StatusLine w={w} />}
                 </span>
               </button>
+              {mayRemove && w.can_delete && (
+                <button className="icon-btn plain wish-del wish-row-del" data-no-drag onClick={() => removeWish(w)} aria-label={t('Delete “{title}”', { title: w.title })} title={t('Delete')}>
+                  <Trash size={18} />
+                </button>
+              )}
               {canDrag && (
                 <span className="wish-move" data-no-drag>
                   <button className="icon-btn plain sm" onClick={() => move(w, -1)} disabled={i === 0} aria-label={t('Move up')}>
@@ -625,7 +698,7 @@ export function WishListPage() {
             <button className="wish-menu-row" onClick={() => (setMenu(false), void archiveList())}>
               <Archive size={20} /> {l.archived ? t('Restore') : t('Archive')}
             </button>
-            {(l.mine || l.owner_id == null) && (
+            {mayDeleteList(l) && (
               <button className="wish-menu-row danger-text" onClick={() => (setMenu(false), void removeList())}>
                 <Trash size={20} /> {t('Delete list')}
               </button>
@@ -1117,9 +1190,11 @@ function WishEditSheet({ open, wish, list, onClose }: { open: boolean; wish: Wis
         )}
         {wish && (
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="btn ghost sm danger-text" onClick={remove}>
-              <Trash size={16} /> {t('Delete')}
-            </button>
+            {wish.can_delete !== false && (
+              <button type="button" className="btn ghost sm danger-text" onClick={remove}>
+                <Trash size={16} /> {t('Delete')}
+              </button>
+            )}
             <button type="button" className="btn ghost sm" onClick={archive}>
               <Archive size={16} /> {wish.archived ? t('Restore') : t('Archive')}
             </button>
@@ -1309,8 +1384,15 @@ export function GivingPage() {
   const [tab, setTab] = useState<'todo' | 'bought'>('todo');
   const [remind, setRemind] = useState<GiftItem | null>(null);
   const toast = useToast();
+  const removal = useDeferredRemoval();
   const d = g.data;
-  const rows = d ? (tab === 'todo' ? d.todo : d.bought) : [];
+  const rows = (d ? (tab === 'todo' ? d.todo : d.bought) : []).filter((w) => !removal.isHidden(`gift:${w.id}`));
+  // "Freigeben" with "Undo": someone else could take it the moment it is free, so it waits for the toast
+  const release = (w: GiftItem) =>
+    removal.remove(`gift:${w.id}`, t('“{title}” is free again.', { title: w.title }), async () => {
+      await post(`/wishes/items/${w.id}/status`, { status: 'open' });
+      invalidate('wishes');
+    });
   // grouped by occasion (list), the next one first – the server sorts
   const groups = rows.reduce<{ key: number; list: GiftItem['list']; items: GiftItem[] }[]>((acc, x) => {
     const last = acc[acc.length - 1];
@@ -1404,6 +1486,9 @@ export function GivingPage() {
                         </button>
                         <button className="btn sm" onClick={() => setRemind(w)}>
                           <Bell size={14} /> {w.reminder ? t('Reminder') : t('Remind me')}
+                        </button>
+                        <button className="btn sm ghost" onClick={() => release(w)} aria-label={t('Release “{title}”', { title: w.title })}>
+                          {t('Release')}
                         </button>
                       </>
                     ) : (

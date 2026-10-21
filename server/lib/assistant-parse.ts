@@ -70,8 +70,15 @@ export const TASKY =
 export function looksLikeTask(text: string, context?: string | null): boolean {
   // "Eier und was für Sonntag" is shopping for Sunday – a day after für/for does not make a task
   if (TASKY.test(text.replace(/\b(?:für|fuer|for|zum|zu)\s+\S+/gi, ' '))) return true;
-  return context === 'tasks' && !/\b(?:kaufen|einkaufen|besorgen|liste|brauchen|fehlt|alle|buy|need|list)\b/i.test(text);
+  return context === 'tasks' && !SHOPPING_SIGNAL.test(text) && !/^(?:(?:please|bitte)\s+)?(?:get|grab|hol(?:e|t)?)\s/i.test(text.trim());
 }
+
+/**
+ * Words that make a sentence shopping even on the tasks screen: "Milch ist alle", "kein Brot mehr", "Milk is out,
+ * 2 peppers and bread", "we're out of eggs", "add milk to the list" (21 Oct 2026: English households got a task).
+ */
+const SHOPPING_SIGNAL =
+  /\b(?:kaufen|einkaufen|besorgen|liste|einkaufsliste|brauchen|brauche|fehlt|fehlen|alle|leer|aufgebraucht|kein\w*\s+(?:\S+\s+){1,3}mehr|buy|need|list|shopping|groceries|out\s+of|ran\s+out|run\s+out|(?:is|are|'s|'re)\s+(?:all\s+)?(?:out|empty|gone|used\s+up|finished)|no\s+(?:\S+\s+){1,3}left)\b/i;
 
 /** "Was steht heute an?", "Was ist morgen?", "Was müssen wir heute machen?", "What's on tomorrow?" → which day, else null.
  *  Only questions; cooking, shopping and money questions with a day keep their own meaning. */
@@ -132,9 +139,13 @@ export function doneOf(text: string): { what: string; verb: string } | null {
   if ((m = s.match(/^(?:i|we)\s+(?:just\s+|have\s+|'ve\s+|already\s+)*(took\s+out|taken\s+out|emptied|unloaded|vacuumed|hoovered|cleaned|watered|fed|changed|washed|mopped)\s+(.+?)(?:\s+out)?$/i)))
     return { what: strip(m[2]), verb: m[1].toLowerCase() };
   if ((m = s.match(/^(?:i|we)\s+(?:just\s+|have\s+|'ve\s+|already\s+)*(?:took|taken)\s+(.+?)\s+out$/i))) return { what: strip(m[1]), verb: 'took out' };
-  if ((m = s.match(/^(.+?)\s+(?:is|are)\s+(?:now\s+)?(?:done|out|emptied)$/i))) return { what: strip(m[1]), verb: 'done' };
+  // "the bins are out" is a job done, "milk is out" is used up (readClause) – "out" only for what is taken outside
+  if ((m = s.match(/^(.+?)\s+(?:is|are)\s+(?:now\s+)?(done|out|emptied)$/i)) && (m[2].toLowerCase() !== 'out' || OUTSIDE.test(m[1]))) return { what: strip(m[1]), verb: 'done' };
   return null;
 }
+
+/** What goes outside (bins, the dog, the washing) – "the bins are out" is done; "milk is out" is not. */
+const OUTSIDE = /\b(?:bins?|trash|rubbish|garbage|recycling|waste|compost|paper|cardboard|glass|bottles|dog|cat|washing|laundry|bags?)\b/i;
 
 /** "Was muss heute Abend raus?", "Welche Tonne muss raus?", "Was kommt demnächst?" */
 export function outlookAsked(text: string): boolean {
@@ -373,15 +384,17 @@ function readClause(raw: string): { item?: ListItem; vague?: string } | null {
   c = c
     .replace(/^(?:bitte\s+)?(?:setz(?:e)?|schreib(?:e)?|pack|tu|füg(?:e)?|fueg(?:e)?|nimm)\s+/i, '')
     .replace(/\s+(?:auf\s+(?:die|unsere|meine)|zur|in\s+die|mit\s+auf\s+die)\s+(?:einkaufs)?liste(?:\s+(?:hinzu|drauf))?$/i, '')
-    .replace(/^(?:please\s+)?(?:add|put)\s+/i, '')
+    .replace(/^(?:(?:can|could|would)\s+you\s+)?(?:please\s+)?(?:add|put)\s+/i, '')
     .replace(/\s+(?:to|on)\s+(?:the|our|my)\s+(?:shopping\s+)?list$/i, '');
   if ((m = c.match(/^(?:wir\s+|ich\s+)?(?:brauchen|brauche|braucht|benötigen|benoetigen|kauf(?:e|t)?|besorg(?:e|t)?|hol(?:e|t)?)\s+(.+)$/i))) c = m[1];
   else if ((m = c.match(/^(?:we\s+|i\s+)?(?:need|buy|get|grab)\s+(.+)$/i))) c = m[1];
-  if ((m = c.match(/^(?:we(?:'re|\s+are)|i'm|i\s+am)\s+out\s+of\s+(.+)$/i))) [c, usedUp] = [m[1], true];
+  if ((m = c.match(/^(?:(?:we(?:'re|\s+are)|i'm|i\s+am)\s+(?:all\s+)?out\s+of|(?:we|i)(?:'ve|\s+have)?\s+(?:just\s+)?(?:ran|run)\s+out\s+of|out\s+of)\s+(.+)$/i))) [c, usedUp] = [m[1], true];
+  else if ((m = c.match(/^(?:wir\s+haben|ich\s+habe|ich\s+hab|haben\s+wir|we\s+have|we've\s+got|we\s+got)\s+(?:kein(?:e|en)?|no)\s+(.+?)\s+(?:mehr|left)$/i))) [c, usedUp] = [m[1], true];
   else if ((m = c.match(/^(?:kein(?:e|en)?|no)\s+(.+?)\s+(?:mehr|left)$/i))) [c, usedUp] = [m[1], true];
   else if ((m = c.match(/^(.+?)\s+(?:ist|sind|is|are)?\s*(?:fast|bald|almost|nearly)\s+(?:leer|alle|aus|empty|out|gone)$/i))) c = m[1];
   else if ((m = c.match(/^(.+?)\s+(?:ist|sind)\s+(?:alle|leer|aus|aufgebraucht|verbraucht|weg)$/i))) [c, usedUp] = [m[1], true];
-  else if ((m = c.match(/^(.+?)\s+(?:is|are)\s+(?:out|gone|used\s+up|finished|empty)$/i))) [c, usedUp] = [m[1], true];
+  else if ((m = c.match(/^(.+?)(?:\s+(?:is|are)\s+|'s\s+|'re\s+)(?:all\s+)?(?:out|gone|used\s+up|finished|empty)$/i))) [c, usedUp] = [m[1], true];
+  else if ((m = c.match(/^(.+?)\s+(?:ran|has\s+run|have\s+run)\s+out$/i))) [c, usedUp] = [m[1], true];
   else if ((m = c.match(/^(.+?)\s+(?:fehlt|fehlen|alle)$/i))) c = m[1];
   c = clean(c.replace(ARTICLE, '').replace(FILLER, ' '));
   if (!c) return {};

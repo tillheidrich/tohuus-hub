@@ -16,3 +16,7 @@ store-assets/_wiki/
 # Apple keys never belong in git
 *.p8
 AuthKey_*
+
+# env files (G3 21.10.2026 P2-15); examples may be committed
+.env*
+!.env.example

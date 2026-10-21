@@ -65,9 +65,9 @@ export default [
   },
 
   {
-    slug: 'haushalt-mit-adhs', status: 'published', date: '2026-10-14',
+    slug: 'haushalt-mit-adhs', status: 'published', date: '2026-10-14', updated: '2026-10-21',
     title: 'Haushalt mit ADHS: Was hilft, wenn der Kopf voll ist?',
-    desc: 'Mit ADHS ist im Haushalt oft der Anfang das Schwerste. Kleine Schritte, eins nach dem anderen, ein Timer und Erinnerungen außerhalb des Kopfes helfen.',
+    desc: 'Mit ADHS ist im Haushalt oft der Anfang das Schwerste. Kleine Schritte, immer nur eine Aufgabe, ein Timer und Erinnerungen außerhalb des Kopfes helfen.',
     answer: 'Mit ADHS hakt es im Haushalt selten am Wollen. Schwer fallen oft das Anfangen, das Planen und das Drandenken. Was vielen hilft: Aufgaben in sehr kleine Schritte teilen, immer nur eine Sache vor sich haben, mit einem kurzen Timer anfangen und Erinnerungen dorthin legen, wo man sie sieht. Das ersetzt keine Diagnose oder Behandlung, kann den Alltag aber spürbar leichter machen.',
     sections: [
       ['Warum der Anfang so schwer ist',
@@ -87,10 +87,10 @@ export default [
         + '<p>Zu viele Erinnerungen bewirken allerdings das Gegenteil. Zwanzig Mitteilungen am Tag erzeugen Stress statt Ordnung. Besser ist eine gebündelte Nachricht zu einer Uhrzeit, die man selbst wählt, und eine Liste, die nicht rot leuchtet, wenn etwas liegen geblieben ist.</p>'],
       ['Ein Beispiel: Sam und der Samstag',
         '<p>Sam fällt das Anfangen schwer, besonders bei großen Aufgaben. Samstags soll das Bad dran sein, und lange war das der Tag, an dem es nicht passierte. Jetzt hat Sam in ToHuus den sanften Modus an. Auf Heute stehen nur drei Sachen, und die Erinnerungen kommen gesammelt um zehn Uhr.</p>'
-        + '<p>Um zehn öffnet Sam „Eins nach dem anderen“. Dort steht nur „Bad putzen“ und darunter der erste Schritt: „Spiegel abwischen“. Sam startet den Timer mit fünf Minuten. Danach tippt Sam auf „Geschafft“, der nächste Schritt ist das Waschbecken. Beim Boden ist die Luft raus, Sam tippt auf „Später“. Das Bad ist nicht perfekt, aber zu drei Vierteln sauber, und niemand im Haushalt sieht, dass Sam den sanften Modus nutzt.</p>'],
+        + '<p>Um zehn tippt Sam unter Aufgaben auf „Nur eins“. Dort steht nur „Bad putzen“ und darunter der erste Schritt: „Spiegel abwischen“. Sam startet den Timer mit fünf Minuten. Danach tippt Sam auf „Geschafft“, der nächste Schritt ist das Waschbecken. Beim Boden ist die Luft raus, Sam tippt auf „Später“. Das Bad ist nicht perfekt, aber zu drei Vierteln sauber, und niemand im Haushalt sieht, dass Sam den sanften Modus nutzt.</p>'],
       ['So hilft ToHuus, wenn der Kopf voll ist',
         '<p>Unter Aufgaben gibt es dafür ein paar Werkzeuge, die allen im Haushalt offenstehen, ohne dass jemand erklären muss, warum er sie nutzt:</p>'
-        + '<ul><li><b>Kleine Schritte</b>: Jede Aufgabe lässt sich in Schritte teilen. „In kleine Schritte teilen“ schlägt welche vor, mit KI, wenn euer Haushalt das erlaubt, sonst aus fertigen Schritten für häufige Aufgaben.</li><li><b>Eins nach dem anderen</b>: nur die nächste Aufgabe und darin der nächste Schritt, mit „Geschafft“, „Später“ und „Zu groß? Kleiner machen“.</li><li><b>Sichtbarer Timer</b>: 5, 10, 15 oder 25 Minuten, ein Ring und ein sanftes Signal am Ende. Gespeichert wird nichts.</li><li><b>Sanfter Modus</b>: kein Rot für Überfälliges, „wäre dran“ statt „überfällig“, wenige Sachen auf Heute, Erinnerungen gebündelt einmal am Tag.</li><li><b>Neu anfangen</b>: Überfälliges rückt auf einen frischen Start, zwei Aufgaben pro Tag. Nichts wird als verpasst festgehalten.</li></ul>'
+        + '<ul><li><b>Kleine Schritte</b>: Jede Aufgabe lässt sich in Schritte teilen. „In kleine Schritte teilen“ schlägt welche vor, mit KI, wenn euer Haushalt das erlaubt, sonst aus fertigen Schritten für häufige Aufgaben.</li><li><b>Nur eins</b>: nur die nächste Aufgabe und darin der nächste Schritt, mit „Geschafft“, „Später“ und „Zu groß? Kleiner machen“. Welche Aufgabe als nächste kommt, entscheidet ToHuus immer nach denselben Regeln, sortieren musst du nichts. Auf Heute schaltest du „Nur eins“ mit einem Tipp ein.</li><li><b>Sichtbarer Timer</b>: 5, 10, 15 oder 25 Minuten, ein Ring und am Ende ein leiser Hinweis statt Alarm. Auf dem iPhone läuft die Zeit auch auf dem Sperrbildschirm mit. Gespeichert wird nichts.</li><li><b>Zu tun auf dem Kinder-Tablet</b>: Kinder sehen eine große Karte mit „Fertig“ und darunter nur, wie viele noch danach kommen.</li><li><b>Sanfter Modus</b>: kein Rot für Überfälliges, „wäre dran“ statt „überfällig“, wenige Sachen auf Heute, Erinnerungen gebündelt einmal am Tag.</li><li><b>Neu anfangen</b>: Überfälliges rückt auf einen frischen Start, zwei Aufgaben pro Tag. Nichts wird als verpasst festgehalten.</li></ul>'
         + '<p>Es gibt keine Streaks und keine Statistik über dich, und im sanften Modus siehst du auch keine Sterne. Deine Einstellungen sieht niemand sonst im Haushalt. ToHuus ist kein Gesundheits- oder Therapieangebot und ersetzt keine Beratung. Mehr dazu in der Hilfe unter <a href="../hilfe/kopf-voll.html">Wenn der Kopf voll ist</a>. Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],
     faq: [
@@ -103,6 +103,7 @@ export default [
     facts: [
       { value: '4,7 %', text: 'So viele Erwachsene zwischen 18 und 64 zeigten 2012 in einer repräsentativen Befragung in Deutschland ADHS-Anzeichen (Selbsteinschätzung, keine Diagnose).', source: 'de Zwaan u. a. 2012', url: 'https://link.springer.com/doi/10.1007/s00406-011-0211-9' },
       { value: '25,7', text: 'So viele neue ADHS-Diagnosen pro 10.000 gesetzlich versicherte Erwachsene gab es 2024, nach 8,6 im Jahr 2015 (vorläufig).', source: 'Zi, Ärzteblatt 2025', url: 'https://www.aerzteblatt.de/archiv/inzidenz-von-adhs-spektrum-stoerungen-bei-erwachsenen' },
+      { value: 'Nur eins', text: 'ToHuus zeigt auf Wunsch immer nur die nächste Aufgabe. Welche das ist, entscheidet die App nach festen Regeln, sortieren musst du nichts.', source: 'ToHuus', url: help('eine-sache') },
       { value: '5 Minuten', text: 'Mit einem kurzen, sichtbaren Timer fällt das Anfangen leichter. In ToHuus wird dabei nichts gezählt oder gespeichert.', source: 'ToHuus', url: help('kopf-voll') },
     ],
     sources: [
@@ -113,7 +114,7 @@ export default [
       ['Gollwitzer, Sheeran: Implementation intentions and goal achievement, a meta-analysis, 2006', 'https://doi.org/10.1016/S0065-2601(06)38002-1'],
       ['Risko, Gilbert: Cognitive Offloading, Trends in Cognitive Sciences 2016', 'https://doi.org/10.1016/j.tics.2016.07.002'],
     ],
-    help: ['kopf-voll', 'aufgaben', 'benachrichtigungen'],
+    help: ['kopf-voll', 'eine-sache', 'aufgaben'],
   },
 
   {
@@ -142,7 +143,7 @@ export default [
         '<p>Ben öffnet am Montag ein Glas Pesto und eine Packung Aufschnitt und tippt in ToHuus bei beiden auf „Angebrochen“. Am Donnerstag stehen beide unter „Zuerst essen“, der Aufschnitt weiter oben. Mira kocht abends Nudeln mit dem Pesto, der Aufschnitt wird am Freitag in die Brotdosen gepackt.</p>'
         + '<p>Die Eier vom Wochenmarkt hat Sam ohne Datum eingetragen. ToHuus zeigt bei ihnen „etwa bis“ und den Hinweis „geschätzt“. Als Sam das Datum vom Eierkarton nachträgt, verschwindet der Hinweis.</p>'],
       ['So hilft ToHuus bei der Haltbarkeit',
-        '<p>Wer im <a href="../hilfe/vorrat.html">Vorrat</a> Bestand führt, bekommt zu frischen Sachen ein geschätztes Haltbarkeitsdatum, ausgehend von der üblichen Haltbarkeit ab dem Kauf. Das Datum steht als „geschätzt“ da, bis jemand das Datum von der Packung einträgt. Tippst du auf „Angebrochen“, rechnet ToHuus mit der üblichen Haltbarkeit nach dem Öffnen, etwa vier Tage für Milch oder Aufschnitt, und zeigt „hält etwa bis“. Pro Produkt kannst du diese Tage selbst ändern.</p>'
+        '<p>Wer einen <a href="../hilfe/vorrat.html">Vorrat</a> führt, bekommt zu frischen Sachen ein geschätztes Haltbarkeitsdatum, ausgehend von der üblichen Haltbarkeit ab dem Kauf. Das Datum steht als „geschätzt“ da, bis jemand das Datum von der Packung einträgt. Tippst du auf „Angebrochen“, rechnet ToHuus mit der üblichen Haltbarkeit nach dem Öffnen, etwa vier Tage für Milch oder Aufschnitt, und zeigt „hält etwa bis“. Pro Produkt kannst du diese Tage selbst ändern.</p>'
         + '<p>Was bald weg sollte, steht auf Heute unter „Zuerst essen“, und der <a href="../hilfe/kochen.html">Kochplaner</a> schlägt bevorzugt Gerichte damit vor. Reste aus dem Kochen landen auf Wunsch ebenfalls dort, am besten innerhalb von drei Tagen. Alle Schätzungen sind Richtwerte und ersetzen nie den Blick auf die Packung und den eigenen Geruchssinn. Beim Verbrauchsdatum gilt immer das, was aufgedruckt ist.</p>'
         + '<p>Die iPhone-App findest du <a href="https://apps.apple.com/de/app/tohuus/id6822059656">im App Store</a>, mehr zu ToHuus auf der <a href="../de/">Startseite</a>.</p>'],
     ],

@@ -47,6 +47,7 @@ import { cleanupAttachments, readAttachment, readInvoice, SpendFileError, storeA
 import { uploadQuota } from '../lib/plans.js';
 import { householdJobs } from '../lib/scheduler.js';
 import { upload } from './core.js';
+import { sandboxedFile } from '../lib/images.js';
 import { db } from '../db.js';
 
 householdJobs.push({ name: 'spend.files', run: () => cleanupAttachments() });
@@ -181,6 +182,7 @@ r.get('/spend/expenses/:id/attachment', (req, res) => {
   const a = expenseAttachment(Number(req.params.id) || 0, uid(req));
   const buf = a ? readAttachment(a.name) : null;
   if (!a || !buf) return void res.status(404).json({ error: 'not found' });
+  sandboxedFile(res);
   res
     .type(a.type)
     .setHeader('Cache-Control', 'private, no-store')

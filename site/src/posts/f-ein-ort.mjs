@@ -32,7 +32,7 @@ export default [
         '<p>Bei Familie Berg trägt Sam an einem Abend ein paar Sachen ein, jeweils mit einem Satz: „Mika Schuhgröße 31“, „Rollo Wohnzimmer 120 x 160“, „Zählernummer Strom 1ESY1160“. ToHuus macht daraus Karten und hängt sie an Mika, ans Wohnzimmer und an „Strom“. Im Frühjahr ist Mika gewachsen, Mira schreibt „Mika hat jetzt 32“. Die Karte zeigt 32, im Verlauf steht noch die 31 mit Datum.</p>'
         + '<p>Als Mira im Schuhladen steht, fragt sie den Assistenten: „Welche Schuhgröße hat Mika?“ Die Antwort steht da, ohne dass jemand zu Hause ans Telefon muss.</p>'],
       ['So hilft ToHuus dabei',
-        '<p>In ToHuus heißt das Haushaltswissen „Was ToHuus sich merkt“. Jede Karte gehört zu einem Mitglied, einem Kinderprofil, einem Ort aus „Wo ist was?“, einem Produkt oder einer freien Bezeichnung wie „Rollo Erdgeschoss“. Ihr tippt einen Satz oder sagt ihn dem Assistenten, kurze Sätze wie „Rollo Wohnzimmer 120 x 160“ versteht ToHuus auch ganz ohne KI. Gibt es zur selben Sache schon eine Karte, bekommt sie den neuen Wert, und der alte bleibt im Verlauf.</p>'
+        '<p>In ToHuus heißt das Haushaltswissen genau so und liegt unter Zuhause, gleich neben der Hausinfo. Jede Karte gehört zu einem Mitglied, einem Kinderprofil, einem Ort aus „Wo ist was?“, einem Produkt oder einer freien Bezeichnung wie „Rollo Erdgeschoss“. Ihr tippt einen Satz oder sagt ihn dem Assistenten, kurze Sätze wie „Rollo Wohnzimmer 120 x 160“ versteht ToHuus auch ganz ohne KI. Gibt es zur selben Sache schon eine Karte, bekommt sie den neuen Wert, und der alte bleibt im Verlauf.</p>'
         + '<ul><li>Jede Karte gilt für den ganzen Haushalt oder nur für dich. Private Karten sieht niemand sonst.</li><li>Gesundheitsangaben wie die Telefonnummer der Kinderärztin bleiben privat, bis du sie ausdrücklich teilst, und gehen ohne eure Zustimmung nie an eine KI.</li><li>Codes und Passwörter nimmt ToHuus hier nicht an und verweist auf die Hausinfo.</li><li>Feste Gäste sehen nur Karten, die ihr für Gäste freigebt.</li><li>Was schon irgendwo steht, holt ihr rein: Text aus Notizen oder Mails einfügen oder eine Liste wählen (Excel, Numbers, Google Tabellen als CSV, Textdatei). Ihr seht vorher alles. Wie das geht, steht im Beitrag <a href="notizen-und-listen-uebernehmen.html">Notizen und Listen in den Haushalt holen</a>.</li><li>Sichern geht jederzeit als Datei, in Markdown, CSV oder JSON.</li></ul>'
         + tail],
     ],
@@ -203,7 +203,7 @@ export default [
         '<p>Mira steht im Baumarkt und will Ersatzbirnen für die Flurlampe mitnehmen. Früher hätte sie Sam angerufen, und der hätte auf die Leiter steigen müssen. Jetzt fragt sie den Assistenten in ToHuus: „Welche Birne gehört in die Flurlampe?“ Die Antwort kommt aus einer Karte, die Sam vor ein paar Wochen angelegt hat: „Flurlampe · Sockel: E14, warmweiß“.</p>'
         + '<p>Am Abend fragt Sam seinen eigenen KI-Assistenten, den er über MCP mit ToHuus verbunden hat, welche Winterreifen er bestellen muss. Der Assistent liest die Reifengröße aus dem Haushaltswissen. Raten muss er nicht.</p>'],
       ['So hilft ToHuus dabei',
-        '<p>Das Haushaltswissen ist das Gedächtnis eures Haushalts. Jede Karte gehört zu einer Person, einem Raum oder einem Ding und hat einen Verlauf. Der Assistent in ToHuus schaut dort nach, wenn ihr ihn etwas fragt, und trägt auf Wunsch etwas ein. Wer lieber Claude, ChatGPT oder einen anderen Assistenten nutzt, verbindet ihn über MCP und gibt ihm damit denselben Zugang.</p>'
+        '<p>Im Haushaltswissen steht, was ihr übers Zuhause wisst. Jede Karte gehört zu einer Person, einem Raum oder einer Sache und hat einen Verlauf. Der Assistent in ToHuus schaut dort nach, wenn ihr ihn etwas fragt, und trägt auf Wunsch etwas ein. Wer lieber Claude, ChatGPT oder einen anderen Assistenten nutzt, verbindet ihn über MCP und gibt ihm damit denselben Zugang.</p>'
         + '<ul><li>Ohne KI geht es auch: Kurze Sätze wie „Mika Schuhgröße 32“ liest ToHuus selbst, und die Suche findet jede Karte.</li><li>Private Karten sieht nur, wem sie gehören, auch kein Assistent einer anderen Person.</li><li>Gesundheitsangaben wie Allergien gehen nur an eine KI, wenn ihr das ausdrücklich erlaubt.</li><li>Codes und Passwörter gehören in die Hausinfo und gehen nie an eine KI.</li></ul>'
         + tail],
     ],
@@ -254,32 +254,32 @@ export default [
     help: ['haushaltswissen', 'daten-export'],
   },
   {
-    slug: 'haushalts-app-leiste-anpassen', area: 'zuhause', status: 'published', date: '2026-10-18',
+    slug: 'haushalts-app-leiste-anpassen', area: 'zuhause', status: 'published', date: '2026-10-18', updated: '2026-10-21',
     title: 'Die Leiste unten so, wie ihr lebt',
-    desc: 'Heute, Einkauf, Kochen, Aufgaben und Vorrat sind der Anfang. Was ihr öfter braucht, etwa Geld oder das Haushaltswissen, holt jede Person für sich nach unten.',
-    answer: 'In ToHuus stellt jede Person die Leiste unten selbst zusammen. Heute bleibt vorn, dazu kommen bis zu vier Bereiche in eigener Reihenfolge: Einkauf, Kochen, Aufgaben, Vorrat, Geld, Wissen, Bring mir was, Wünsche oder Hausinfo. Was nicht in der Leiste ist, steht unter „Mehr“. Einstellen geht unter Einstellungen › Deine Leiste oder mit langem Drücken auf die Leiste.',
+    desc: 'Heute, Einkauf, Kochen, Aufgaben und Zuhause sind der Anfang. Was ihr öfter braucht, etwa Geld oder das Haushaltswissen, holt jede Person für sich nach unten.',
+    answer: 'In ToHuus stellt jede Person die Leiste unten selbst zusammen. Heute bleibt vorn, dazu kommen bis zu vier Bereiche in eigener Reihenfolge: Einkauf, Kochen, Aufgaben, Zuhause, Geld, Wissen, Bring mir was, Wünsche oder Hausinfo. Was nicht in der Leiste ist, steht unter „Mehr“. Einstellen geht unter Einstellungen › Ich › Deine Leiste oder mit langem Drücken auf die Leiste.',
     sections: [
       ['Warum nicht alle dieselbe Leiste brauchen',
         '<p>Im Haushalt macht selten jede Person dasselbe. Wer einkauft und kocht, braucht Liste und Kochplaner jeden Tag. Wer die Ausgaben im Blick hat, schaut eher auf Geld. Und wer abends ständig nach dem WLAN-Passwort oder Mikas Schuhgröße gefragt wird, hätte Hausinfo oder Haushaltswissen gern mit einem Tipp erreichbar.</p>'
         + '<p>Mehr als fünf Plätze bleiben auf dem Handy kaum gut bedienbar. Deshalb wählt jede Person selbst, was dort steht.</p>'],
-      ['Der Anfang: Heute, Einkauf, Kochen, Aufgaben, Vorrat',
-        '<p>So startet ToHuus. <b>Heute</b> zeigt, was fällig ist, was bald weg muss und was demnächst kommt. <b>Einkauf</b> ist die gemeinsame Liste, <b>Kochen</b> der Kochplaner, <b>Aufgaben</b> das, was zu Hause zu tun ist, und <b>Vorrat</b> das, was da ist. Habt ihr Kochen oder Vorrat unter „Was nutzt ihr?“ abgeschaltet, rückt Geld nach.</p>'],
+      ['Der Anfang: Heute, Einkauf, Kochen, Aufgaben, Zuhause',
+        '<p>So startet ToHuus. <b>Heute</b> zeigt höchstens fünf Karten: was jetzt dran ist, die Liste, was bald weg muss, was ihr kochen könnt und einen Hinweis. <b>Einkauf</b> ist die gemeinsame Liste, <b>Kochen</b> der Kochplaner, <b>Aufgaben</b> das, was zu Hause zu tun ist, und <b>Zuhause</b> hält oben Hausinfo, Haushaltswissen und „Wo ist was?“ bereit, darunter den Vorrat. Habt ihr Kochen oder Vorrat unter „Was nutzt ihr?“ abgeschaltet, rückt Geld nach.</p>'],
       ['Was ihr nach unten holen könnt',
         '<ul><li><b>Geld</b>: was Essen und Haushalt kosten</li><li><b>Wissen</b>: das Haushaltswissen mit Größen, Maßen und Zählerständen</li><li><b>Bring mir was</b>: sich zu Hause eine Kleinigkeit wünschen</li><li><b>Wünsche</b>: Wunschlisten und Merklisten</li><li><b>Hausinfo</b>: WLAN, wie die Heizung geht, wichtige Nummern</li></ul>'
-        + '<p>Heute bleibt immer vorn, und der Assistent bleibt der runde Knopf unten rechts. Werkzeuge und Einstellungen wie Personen, Urlaub oder „Wo ist was?“ findet ihr weiter unter „Mehr“.</p>'],
+        + '<p>Heute bleibt immer vorn, und der Assistent bleibt der runde Knopf unten rechts. Leute, Urlaub & Übergabe und die Einstellungen findet ihr unter „Mehr“, das sich über dein Bild oben rechts öffnet.</p>'],
       ['So stellt ihr sie um',
-        '<ol><li>Lange auf die Leiste drücken oder unter „Mehr“ auf „Leiste anpassen“ tippen. Im Browser geht es auch über Einstellungen › Deine Leiste.</li><li>Mit dem grünen Plus holt ihr einen Bereich dazu, mit dem roten Minus nehmt ihr ihn raus.</li><li>Am Griff zieht ihr die Bereiche in die Reihenfolge, die ihr wollt.</li><li>„Wie am Anfang“ setzt alles zurück.</li></ol>'
+        '<ol><li>Lange auf die Leiste drücken oder Einstellungen › Ich › Deine Leiste öffnen. Am Computer geht es auch mit einem Rechtsklick auf die Seitenleiste.</li><li>Mit dem grünen Plus holt ihr einen Bereich dazu, mit dem roten Minus nehmt ihr ihn raus.</li><li>Am Griff zieht ihr die Bereiche in die Reihenfolge, die ihr wollt.</li><li>„Wie am Anfang“ setzt alles zurück.</li></ol>'
         + '<p>Die Leiste gilt für dich, auf dem iPhone und im Browser gleich. Die anderen im Haushalt behalten ihre eigene.</p>'],
       ['Ein Beispiel: Familie Berg',
-        '<p>Sam kocht fast jeden Abend und kauft dafür ein, in den Vorrat schaut er selten. Seine Leiste: Heute, Einkauf, Kochen, Aufgaben, Wissen. Mira behält die Ausgaben im Blick und wird ständig nach Mikas Größen gefragt. Ihre Leiste: Heute, Einkauf, Aufgaben, Geld, Wissen. Bring mir was nutzen beide eher abends und holen es sich bei Bedarf über „Mehr“.</p>'],
+        '<p>Sam kocht fast jeden Abend und kauft dafür ein, unter Zuhause schaut er selten nach. Seine Leiste: Heute, Einkauf, Kochen, Aufgaben, Wissen. Mira behält die Ausgaben im Blick und wird ständig nach Mikas Größen gefragt. Ihre Leiste: Heute, Einkauf, Aufgaben, Geld, Wissen. Bring mir was nutzen beide eher abends und holen es sich bei Bedarf über „Mehr“.</p>'],
       ['So hilft ToHuus dabei',
         '<p>ToHuus speichert die Leiste pro Person, damit iPhone, iPad und Browser gleich aussehen. Auf dem iPad und am Computer zeigt die Seitenleiste zuerst deine Bereiche, die übrigen folgen darunter. Schaltet ihr einen Bereich für den Haushalt ab, fällt er aus allen Leisten weg. Feste Gäste bekommen immer die Standardleiste.</p>'
         + tail],
     ],
     faq: [
-      ['Kann ich die Leiste in ToHuus anpassen?', 'Ja. Heute bleibt vorn, dazu kommen bis zu vier Bereiche in deiner Reihenfolge. Lange auf die Leiste drücken oder Einstellungen › Deine Leiste öffnen.'],
+      ['Kann ich die Leiste in ToHuus anpassen?', 'Ja. Heute bleibt vorn, dazu kommen bis zu vier Bereiche in deiner Reihenfolge. Lange auf die Leiste drücken oder Einstellungen › Ich › Deine Leiste öffnen.'],
       ['Ändert das die Leiste für alle?', 'Nein. Jede Person hat ihre eigene Leiste, auf dem iPhone und im Browser gleich.'],
-      ['Wo finde ich Bereiche, die nicht in der Leiste sind?', 'Unter „Mehr“. Dort stehen oben die Hauptbereiche, die übrigen behalten ihre gewohnte Zeile.'],
+      ['Wo finde ich Bereiche, die nicht in der Leiste sind?', 'Unter „Mehr“, das sich über dein Bild oben rechts öffnet. Dort stehen oben die Hauptbereiche, die nicht in deiner Leiste sind, darunter Alltag, Familie & Gäste, Kopf & Fairness und die Einstellungen.'],
     ],
     help: ['deine-leiste', 'erste-schritte'],
   },
@@ -298,7 +298,7 @@ export default [
         '<ol><li>In Claude unter Einstellungen › Connectors › Eigenen Connector hinzufügen, in ChatGPT unter Einstellungen › Connectors, je nach Tarif im Entwicklermodus.</li><li>Die MCP-Adresse eintragen. Sie steht in der Hilfe unter <a href="../hilfe/claude-chatgpt.html">Mit Claude oder ChatGPT verbinden</a>.</li><li>Mit dem ToHuus-Konto anmelden, den Haushalt wählen und festlegen, ob der Assistent nur lesen oder auch ändern darf.</li></ol>'],
       ['Was er nicht sieht',
         '<ul><li>private Einträge und Aufgaben anderer</li><li>Codes aus der Hausinfo</li><li>Allergien, Angaben zu Kindern und andere Gesundheitsangaben, außer ihr kreuzt das beim Verbinden an und der Haushalt erlaubt es</li></ul>'
-        + '<p>Unter Einstellungen › Zugänge & KI seht ihr jede Verbindung und könnt sie beenden. Ein Admin kann MCP für den ganzen Haushalt abschalten.</p>'],
+        + '<p>Unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge seht ihr jede Verbindung und könnt sie beenden. Ein Admin kann MCP für den ganzen Haushalt abschalten.</p>'],
       ['Und die KI-Grenzen?',
         '<p>Fragt ihr euren eigenen Assistenten, arbeitet dort dessen Sprachmodell, bei dem Anbieter, den ihr ohnehin nutzt. Von den Nachrichten an den Assistenten in ToHuus geht dabei nichts ab. Wer viel mit KI arbeitet, fährt mit diesem Weg oft gut.</p>'],
       ['Ein Beispiel: Familie Berg',
@@ -311,7 +311,7 @@ export default [
       ['Was ist MCP?', 'Das Model Context Protocol ist ein offener Standard, über den KI-Assistenten auf andere Programme zugreifen. ToHuus bietet dafür eine eigene Adresse an.'],
       ['Welche Assistenten gehen?', 'Claude, ChatGPT und andere Assistenten, die eigene MCP-Verbindungen mit Anmeldung erlauben.'],
       ['Sieht der Assistent alles?', 'Nur, was du selbst sehen darfst. Gesundheitsangaben nur mit ausdrücklicher Erlaubnis, Codes aus der Hausinfo nie.'],
-      ['Kann ich die Verbindung wieder trennen?', 'Ja, unter Einstellungen › Zugänge & KI, jederzeit und sofort.'],
+      ['Kann ich die Verbindung wieder trennen?', 'Ja, unter Einstellungen › Verbindungen & Geräte › KI-Assistenten & Zugänge, jederzeit und sofort.'],
     ],
     help: ['claude-chatgpt', 'haushaltswissen', 'ki-an-oder-aus'],
   },
@@ -326,7 +326,7 @@ export default [
         + '<p>Wir haben die Grenze deshalb so gelegt, dass sie im Alltag kaum jemand erreicht, und schreiben offen hin, wo sie liegt. Eine „unbegrenzte“ KI, die dann doch irgendwo still gedrosselt wird, wollten wir nicht.</p>'],
       ['Die Grenzen im Monat',
         '<ul><li><b>Plus und Testphase</b>: 800 Nachrichten in voller Länge. Danach kommen kürzere Antworten, ab 1.500 Nachrichten pausiert die KI bis zum Monatsende.</li><li><b>Haushalt</b>: 100 Nachrichten an den Assistenten, gedacht für ab und zu.</li><li><b>Kostenbremse</b>: Für jeden Haushalt gibt es zusätzlich einen festen Höchstbetrag für KI im Monat. Wird er erreicht, etwa durch sehr viele Bon-Fotos auf einmal, pausiert die KI auch früher.</li><li><b>Selbst gehostet</b>: keine Grenze von uns, ihr nehmt euren eigenen Schlüssel oder gar keinen.</li></ul>'
-        + '<p>Eine gesprochene Nachricht zählt einmal, egal wie lang sie ist. Wie viele Nachrichten euer Haushalt in diesem Monat schon hatte, steht unter Einstellungen › Abo.</p>'],
+        + '<p>Eine gesprochene Nachricht zählt einmal, egal wie lang sie ist. Wie viele Nachrichten euer Haushalt in diesem Monat schon hatte, steht unter Einstellungen › Daten, Abo & Konto › Abo & Speicher.</p>'],
       ['Was ohne KI weiterläuft',
         '<p>Die Pause betrifft nur das Sprachmodell. Alles andere bleibt, wie es ist:</p>'
         + '<ul><li>Liste, Vorschläge aus dem Kaufrhythmus, Aufgaben, Vorrat, Kochplaner und Geld</li><li>das Haushaltswissen mit Suche, Import und Export, neue Karten auch mit einem Satz wie „Mika Schuhgröße 32“</li><li>die häufigen kurzen Sätze an den Assistenten, etwa „Milch ist alle und 2 Paprika“ oder „Merk dir …“</li><li>Bon-Fotos, die dann die Texterkennung auf dem Server liest, und PDF-Bons wie immer</li><li>euer eigener KI-Assistent über MCP</li></ul>'

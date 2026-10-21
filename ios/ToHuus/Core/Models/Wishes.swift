@@ -32,6 +32,10 @@ struct WishList: Decodable, Sendable, Identifiable, Hashable {
     var role: String?
     var forMe: Bool?
     var canReserve: Bool?
+    /// may delete any wish here (owner, co-editor, admin on a household list) – server rule, 21 Oct 2026
+    var canEdit: Bool?
+    /// may delete the whole list
+    var canDelete: Bool?
     var count: Int?
     var reserved: Int?
     var bought: Int?
@@ -42,6 +46,8 @@ struct WishList: Decodable, Sendable, Identifiable, Hashable {
     var icons: [String]?
 
     var isOwner: Bool { mine == true || ownerId == nil }
+    /// delete the whole list (older servers: the owner)
+    var mayDelete: Bool { canDelete ?? isOwner }
     /// owner or co-editor: may share the guest link
     var runs: Bool { role == "owner" || role == "editor" || ownerId == nil }
     var reservable: Bool { canReserve == true }
@@ -84,6 +90,8 @@ struct Wish: Decodable, Sendable, Identifiable, Hashable {
     var statusBy: StatusBy?
     var reminder: Reminder?
     var onShoppingList: Bool?
+    /// may take this wish off the list (swipe to delete)
+    var canDelete: Bool?
     var archived: Bool?
     var createdBy: String?
     var createdAt: String?

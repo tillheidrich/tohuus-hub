@@ -238,4 +238,14 @@ export const wish: Record<string, string> = {
   "e.g. Grandma Ilse": "z. B. Oma Ilse",
   "The people running the list may see your name. On this device you can release it again.": "Wer die Liste führt, sieht unter Umständen deinen Namen. Auf diesem Gerät kannst du die Reservierung wieder freigeben.",
   "Wish lists & gifts": "Wunschlisten & Geschenke",
+  // swipe / trash button to delete (21 Oct 2026)
+  "“{name}” is back.": "„{name}“ ist wieder da.",
+  "“{name}” archived.": "„{name}“ archiviert.",
+  "“{name}” deleted.": "„{name}“ gelöscht.",
+  "“{title}” deleted.": "„{title}“ gelöscht.",
+  "“{title}” is free again.": "„{title}“ ist wieder frei.",
+  "Delete “{name}”? It is shared, the others lose it too.": "„{name}“ löschen? Die Liste ist geteilt, die anderen verlieren sie auch.",
+  "Restore “{name}”": "„{name}“ zurückholen",
+  "Archive “{name}”": "„{name}“ archivieren",
+  "Release “{title}”": "„{title}“ freigeben",
 };

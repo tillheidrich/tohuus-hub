@@ -312,6 +312,12 @@ struct WishesView: View {
     @State private var loading = true
     @State private var creating = false
     @State private var error: String?
+    @State private var toast: ToastMessage?
+    @State private var removals = PendingRemovals()
+    @State private var confirmDelete: WishList?
+    @Environment(AppModel.self) private var app
+    /// guests and children only look (no swipe actions)
+    private var canRemove: Bool { !app.isGuest && !app.isChild }
 
     private struct Group: Identifiable { let id: String; let title: String; let hint: String?; let lists: [WishList] }
 
@@ -366,9 +372,23 @@ struct WishesView: View {
                 }
                 ForEach(groups) { g in
                     Section {
-                        ForEach(g.lists) { l in
+                        ForEach(g.lists.filter { !removals.isHidden("list:\($0.id)") }) { l in
                             NavigationLink { WishListDetailView(api: api, listId: l.id) } label: { WishListCard(list: l, api: api) }
                                 .accessibilityIdentifier("wishes.list.\(l.id)")
+                                // swipe left: delete (owner) and archive (whoever runs the list) – "Undo" in the toast;
+                                // a list with wishes or shared (guest link, co-editors) asks first (21 Oct 2026)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    if canRemove && l.mayDelete {
+                                        Button(role: .destructive) { deleteList(l) } label: { Label(L("Delete"), systemImage: "trash") }
+                                            .tint(Theme.empty)
+                                    }
+                                    if canRemove && l.runs {
+                                        Button { archiveList(l) } label: {
+                                            Label(l.archived == true ? L("Restore") : L("Archive"), systemImage: l.archived == true ? "tray.and.arrow.up" : "archivebox")
+                                        }
+                                        .tint(Theme.ink2)
+                                    }
+                                }
                         }
                     } header: {
                         VStack(alignment: .leading, spacing: 2) {
@@ -387,6 +407,16 @@ struct WishesView: View {
             if let error { Text(error).foregroundStyle(Theme.empty) }
         }
         .themedList()
+        .toast($toast)
+        .onChange(of: toast) { old, _ in removals.toastChanged(from: old) }
+        .onDisappear { removals.flush() }
+        .confirmationDialog(confirmDelete.map { ($0.count ?? 0) > 0 ? LF("Delete “%@” with all wishes?", $0.name) : LF("Delete “%@”? It is shared, the others lose it too.", $0.name) } ?? "",
+                            isPresented: Binding(get: { confirmDelete != nil }, set: { if !$0 { confirmDelete = nil } }), titleVisibility: .visible) {
+            Button(L("Delete"), role: .destructive) {
+                if let l = confirmDelete { Task { await deleteNow(l) } }
+                confirmDelete = nil
+            }
+        }
         .navigationTitle(archived ? L("Archived lists") : L("Wishes"))
         .assistantScreen("wishes")
         .searchable(text: $query, prompt: L("Search all wishes"))
@@ -432,6 +462,45 @@ struct WishesView: View {
             giving = try? await api.giving()
             error = nil
         } catch { self.error = APIError.from(error).localizedDescription }
+    }
+
+    private func archiveList(_ l: WishList) {
+        let back = l.archived == true
+        toast = removals.remove("list:\(l.id)", text: back ? LF("“%@” is back.", l.name) : LF("“%@” archived.", l.name)) { [api] in
+            do {
+                _ = try await api.saveWishList(id: l.id, body: try JSONSerialization.data(withJSONObject: ["archived": !back]))
+                await load()
+            } catch {
+                removals.restore("list:\(l.id)")
+                toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+            }
+        }
+    }
+
+    /// an empty list nobody else runs: gone with "Undo"; otherwise ask first (the others lose it too)
+    private func deleteList(_ l: WishList) {
+        if (l.count ?? 0) > 0 || l.link != nil || !(l.editors ?? []).isEmpty {
+            confirmDelete = l
+            return
+        }
+        toast = removals.remove("list:\(l.id)", text: LF("“%@” deleted.", l.name)) { [api] in
+            do {
+                try await api.deleteWishList(l.id)
+                await load()
+            } catch {
+                removals.restore("list:\(l.id)")
+                toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+            }
+        }
+    }
+
+    private func deleteNow(_ l: WishList) async {
+        do {
+            try await api.deleteWishList(l.id)
+            Haptics.success()
+            toast = ToastMessage(text: LF("“%@” deleted.", l.name))
+            await load()
+        } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
 
     private func search() async {
@@ -522,9 +591,14 @@ struct WishListDetailView: View {
     @State private var error: String?
     @State private var confirmDelete = false
     @State private var editMode: EditMode = .inactive
+    @State private var toast: ToastMessage?
+    @State private var removals = PendingRemovals()
+    @Environment(AppModel.self) private var app
+    /// guests and children only look (no swipe actions)
+    private var canRemove: Bool { !app.isGuest && !app.isChild }
 
     private var items: [Wish] {
-        let all = detail?.items ?? []
+        let all = (detail?.items ?? []).filter { !removals.isHidden("wish:\($0.id)") }
         return onlyFree && detail?.list.reservable == true ? all.filter { $0.status == "open" } : all
     }
     private var canMove: Bool { sort == "manual" && !onlyFree && !archived && (detail?.items.count ?? 0) > 1 }
@@ -562,6 +636,26 @@ struct WishListDetailView: View {
                         Button { viewing = w } label: { WishCard(wish: w, list: l, api: api) }
                             .buttonStyle(.plain)
                             .accessibilityHint(L("Opens the wish"))
+                            .accessibilityIdentifier("wish.row.\(w.id)")
+                            // swipe left: delete with "Undo" (who may: the server's can_delete); swipe right, calm: reserve
+                            // a free wish, or tick off my own reservation as bought. VoiceOver lists both as actions.
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                if canRemove && w.canDelete == true && editMode == .inactive {
+                                    Button(role: .destructive) { removeWish(w) } label: { Label(L("Delete"), systemImage: "trash") }
+                                        .tint(Theme.empty)
+                                }
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                if canRemove && l.reservable && l.forMe != true && w.archived != true && editMode == .inactive {
+                                    if w.status == "open" {
+                                        Button { Task { await setStatus(w, "reserved") } } label: { Label(L("Reserve"), systemImage: "gift") }
+                                            .tint(Theme.primary)
+                                    } else if w.status == "reserved" && w.mineReserved {
+                                        Button { Task { await setStatus(w, "bought") } } label: { Label(L("Bought"), systemImage: "checkmark") }
+                                            .tint(Theme.primary)
+                                    }
+                                }
+                            }
                     }
                     .onMove(perform: canMove ? move : nil)
                 }
@@ -574,6 +668,9 @@ struct WishListDetailView: View {
             if let error { Text(error).foregroundStyle(Theme.empty) }
         }
         .themedList()
+        .toast($toast)
+        .onChange(of: toast) { old, _ in removals.toastChanged(from: old) }
+        .onDisappear { removals.flush() }
         .accessibilityIdentifier("wishlist.detail")
         .environment(\.editMode, $editMode)
         .motion(value: (detail?.items ?? []).map { "\($0.id):\($0.status)" })
@@ -609,7 +706,7 @@ struct WishListDetailView: View {
                         if canMove { Button { editMode = .active } label: { Label(L("Change the order"), systemImage: "arrow.up.arrow.down") } }
                         Button { editList = true } label: { Label(L("Edit list"), systemImage: "pencil") }
                         Button { Task { await archiveList() } } label: { Label(detail?.list.archived == true ? L("Restore") : L("Archive"), systemImage: "archivebox") }
-                        if detail?.list.isOwner == true {
+                        if detail?.list.mayDelete == true {
                             Button(role: .destructive) { confirmDelete = true } label: { Label(L("Delete list"), systemImage: "trash") }
                         }
                     } label: { Image(systemName: "ellipsis.circle") }
@@ -696,6 +793,26 @@ struct WishListDetailView: View {
     }
     private func deleteList() async {
         do { try await api.deleteWishList(listId); dismiss() } catch { self.error = APIError.from(error).localizedDescription }
+    }
+    /// gone at once, "Undo" in the toast; the server hears about it when the toast is gone or the list is left
+    private func removeWish(_ w: Wish) {
+        toast = removals.remove("wish:\(w.id)", text: LF("“%@” deleted.", w.title)) { [api] in
+            do {
+                try await api.deleteWish(w.id)
+                await load()
+            } catch {
+                removals.restore("wish:\(w.id)")
+                toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+            }
+        }
+    }
+    private func setStatus(_ w: Wish, _ s: String) async {
+        do {
+            try await api.setWishStatus(w.id, status: s)
+            if s == "bought" { Haptics.success() } else { Haptics.tick() }
+            toast = ToastMessage(text: s == "bought" ? L("Ticked off. Well done!") : LF("You reserved “%@”.", w.title))
+            await load()
+        } catch { toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true) }
     }
 }
 
@@ -1309,7 +1426,7 @@ struct WishEditSheet: View {
                 if let wish {
                     Section {
                         Button(wish.archived == true ? L("Restore") : L("Archive")) { Task { await archive() } }
-                        Button(L("Delete"), role: .destructive) { confirmDelete = true }
+                        if wish.canDelete != false { Button(L("Delete"), role: .destructive) { confirmDelete = true } }
                     }
                 }
                 if let error { Text(error).foregroundStyle(Theme.empty) }
@@ -1525,8 +1642,10 @@ struct GivingView: View {
     @State private var showBought = false
     @State private var remind: GiftItem?
     @State private var error: String?
+    @State private var toast: ToastMessage?
+    @State private var removals = PendingRemovals()
 
-    private var rows: [GiftItem] { showBought ? (giving?.bought ?? []) : (giving?.todo ?? []) }
+    private var rows: [GiftItem] { (showBought ? (giving?.bought ?? []) : (giving?.todo ?? [])).filter { !removals.isHidden("gift:\($0.id)") } }
     private var groups: [(GiftItem.ListInfo, [GiftItem])] {
         var out: [(GiftItem.ListInfo, [GiftItem])] = []
         for r in rows {
@@ -1566,7 +1685,23 @@ struct GivingView: View {
             }
             ForEach(groups, id: \.0.id) { info, items in
                 Section {
-                    ForEach(items) { g in giftRow(g) }
+                    ForEach(items) { g in
+                        giftRow(g)
+                            // swipe right: bought / not bought after all; swipe left: release (with "Undo" – someone
+                            // else could take it the moment it is free). VoiceOver lists them as actions.
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                if g.wish.status == "reserved" {
+                                    Button { Task { await set(g.wish, "bought") } } label: { Label(L("Bought"), systemImage: "checkmark") }.tint(Theme.primary)
+                                } else {
+                                    Button { Task { await set(g.wish, "reserved") } } label: { Label(L("Not bought after all"), systemImage: "arrow.uturn.backward") }.tint(Theme.ink2)
+                                }
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                if g.wish.status == "reserved" {
+                                    Button { release(g) } label: { Label(L("Release"), systemImage: "gift") }.tint(Theme.ink2)
+                                }
+                            }
+                    }
                 } header: {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(info.name).font(Theme.title(Theme.FontSize.l)).foregroundStyle(Theme.ink).textCase(nil)
@@ -1578,6 +1713,9 @@ struct GivingView: View {
             if let error { Text(error).foregroundStyle(Theme.empty) }
         }
         .themedList()
+        .toast($toast)
+        .onChange(of: toast) { old, _ in removals.toastChanged(from: old) }
+        .onDisappear { removals.flush() }
         .navigationTitle(L("You give"))
         .sheet(item: $remind) { g in WishReminderSheet(api: api, wish: g.wish, eventDate: g.list.eventDate) { Task { await load() } } }
         .refreshable { await load() }
@@ -1623,6 +1761,17 @@ struct GivingView: View {
             if s == "bought" { Haptics.success() } else { Haptics.tick() }
             await load()
         } catch { self.error = APIError.from(error).localizedDescription }
+    }
+    private func release(_ g: GiftItem) {
+        toast = removals.remove("gift:\(g.id)", text: LF("“%@” is free again.", g.wish.title)) { [api] in
+            do {
+                try await api.setWishStatus(g.wish.id, status: "open")
+                await load()
+            } catch {
+                removals.restore("gift:\(g.id)")
+                toast = ToastMessage(text: APIError.from(error).localizedDescription, isError: true)
+            }
+        }
     }
     private func load() async {
         do { giving = try await api.giving(); error = nil } catch { self.error = APIError.from(error).localizedDescription }

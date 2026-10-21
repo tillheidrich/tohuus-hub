@@ -25,7 +25,7 @@ import { CATALOG_SEED_DEVICES, type DeviceSeedRecipe } from '../data/catalog-see
 import { CATALOG_SEED_BAKING } from '../data/catalog-seed-baking.js';
 import { decryptBlob, deriveKey, encryptBlob } from './crypto-keys.js';
 import { normalizeRecipe, type ImportRecipe } from './recipes2.js';
-import sharp from './sharp-safe.js';
+import { reencodeImage } from './images.js';
 
 export const catalogDir = () => path.join(config.dataDir, 'catalog');
 
@@ -150,7 +150,7 @@ export interface CatalogInput {
 
 /** Store a photo once (by content hash), encrypted. Returns the file name. */
 export async function storeCatalogImage(buf: Buffer): Promise<string> {
-  const out = await sharp(buf, { failOn: 'none' }).rotate().resize({ width: 1400, height: 1400, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toBuffer();
+  const out = await reencodeImage(buf, (img) => img.rotate().resize({ width: 1400, height: 1400, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toBuffer());
   const name = `${crypto.createHash('sha256').update(out).digest('hex').slice(0, 32)}.webp`;
   const file = path.join(catalogDir(), 'images', name);
   if (!fs.existsSync(file)) fs.writeFileSync(file, encryptBlob(deriveKey('catalog-files'), out));

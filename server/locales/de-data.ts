@@ -20,6 +20,7 @@ export const de_data: Record<string, string> = {
   'This invitation has expired or was already used.': 'Diese Einladung ist abgelaufen oder wurde schon benutzt.',
   'This is not a ToHuus Hub export.': 'Das ist kein ToHuus-Hub-Export.',
   'This is not a database backup.': 'Das ist keine Datenbank-Sicherung.',
+  'This is not a picture we can read.': 'Das ist kein Bild, das wir lesen können.',
   'address not found': 'Adresse nicht gefunden',
   'certificate not trusted': 'Zertifikat nicht vertrauenswürdig',
   'connection refused': 'Verbindung abgelehnt',

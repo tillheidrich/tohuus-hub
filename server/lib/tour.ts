@@ -8,6 +8,7 @@
  * "everything". New tables from other modules are therefore always covered without touching this file.
  */
 import path from 'node:path';
+import { spareOthersPrivate } from './privacy-columns.js';
 import { config } from '../config.js';
 import { db, getSetting, migrate, setSetting } from '../db.js';
 import { householdId } from './tenancy.js';
@@ -429,7 +430,9 @@ export async function resetData(opts: { scopes: Scope[]; places?: boolean; actor
   const backup = config.multiTenant
     ? path.basename((await import('./cloud-backup.js')).backupHousehold(householdId(), 'manual', true) ?? '') || null
     : (await createBackup('manual')).name;
-  const plan = resetPlan(scopes, Boolean(opts.places));
+  // other members' private entries (privacy-columns.ts) stay – also in this older "start over"
+  const me = opts.actor?.userId ?? null;
+  const plan = resetPlan(scopes, Boolean(opts.places)).map((p) => ({ ...p, where: spareOthersPrivate(p.table, p.where, me) }));
   const deleted: Record<string, number> = {};
   // the same 7-day restore as Settings › Data, plan & account › Data & reset (wipe.ts): the rows are copied first, then deleted below
   const candidates = [...plan];
